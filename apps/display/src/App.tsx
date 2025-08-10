@@ -1,12 +1,12 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { connect, onState } from '@qhe/net/client';
+import { connect, onState } from '@qhe/net';
 import { Card, DigitChip } from '@qhe/ui';
 import type { GameState } from '@qhe/core';
 
 function DisplayApp() {
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [roomCode, setRoomCode] = useState('DISPLAY');
+  const [roomCode] = useState('DISPLAY');
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {

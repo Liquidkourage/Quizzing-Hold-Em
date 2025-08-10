@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { connect, onState } from '@qhe/net/client';
+import { connect, onState } from '@qhe/net';
 import { Card, NeonButton, DigitChip } from '@qhe/ui';
 import type { GameState } from '@qhe/core';
 
@@ -13,7 +13,7 @@ function PlayerApp() {
 
   const handleJoin = () => {
     if (!playerName || !roomCode) return;
-    const socket = connect('player', playerName, roomCode);
+    connect('player', playerName, roomCode);
     setIsConnected(true);
     setIsJoined(true);
     

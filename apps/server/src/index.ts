@@ -45,4 +45,4 @@ app.get('/', (_req, res) => {
 });
 
 const PORT = Number(process.env.PORT || 5174);
-server.listen(PORT, () => console.log([server] listening on :));
+server.listen(PORT, () => console.log(`[server] listening on :${PORT}`));

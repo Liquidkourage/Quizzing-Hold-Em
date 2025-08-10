@@ -20,3 +20,6 @@ export interface ClientToServerEvents {
 
 export type InterServerEvents = Record<string, never>;
 export type SocketData = { role: ClientRole; name: string; room: string; userId: string };
+
+// Re-export client utilities
+export * from './client';

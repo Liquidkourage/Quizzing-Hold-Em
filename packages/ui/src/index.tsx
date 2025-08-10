@@ -8,7 +8,7 @@ export function NeonButton({ children, className, ...props }: React.ButtonHTMLAt
       whileHover={{ scale: 1.05, boxShadow: '0 0 24px rgba(0,255,180,0.6)' }}
       whileTap={{ scale: 0.98 }}
       className={clsx('px-5 py-3 rounded-full font-semibold text-black bg-emerald-300', className)}
-      {...props}
+      {...(props as any)}
     >
       {children}
     </motion.button>

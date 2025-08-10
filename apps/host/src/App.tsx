@@ -1,19 +1,19 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { connect, onState } from '@qhe/net/client';
+import { connect, onState } from '@qhe/net';
 import { Card, NeonButton } from '@qhe/ui';
 import type { GameState } from '@qhe/core';
 
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [roomCode, setRoomCode] = useState('HOST01');
+  const [roomCode] = useState('HOST01');
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const socket = connect('host', 'Host', roomCode);
     setIsConnected(true);
     
-    onState((state) => {
+    onState((state: GameState) => {
       setGameState(state);
     });
 
