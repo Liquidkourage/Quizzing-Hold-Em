@@ -1,0 +1,26 @@
+﻿{
+  "name": "quizzing-hold-em",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Quizzing Hold-Em monorepo: host, player, display apps with realtime server and shared packages.",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": {"node": ">=18.18.0", "npm": ">=9"},
+  "scripts": {
+    "dev": "concurrently -n server,host,player,display -c cyan,magenta,green,yellow \"npm --workspace apps/server run dev\" \"npm --workspace apps/host run dev\" \"npm --workspace apps/player run dev\" \"npm --workspace apps/display run dev\"",
+    "build": "npm run build --workspace packages/core && npm run build --workspace packages/net && npm run build --workspace packages/ui && npm run build --workspace apps/server && npm run build --workspace apps/host && npm run build --workspace apps/player && npm run build --workspace apps/display",
+    "lint": "eslint . --ext .ts,.tsx,.js,.cjs --max-warnings 0",
+    "typecheck": "tsc -b",
+    "format": "prettier --write .",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "concurrently": "^9.0.1",
+    "eslint": "^9.7.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.35.0",
+    "husky": "^9.1.5",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  }
+}

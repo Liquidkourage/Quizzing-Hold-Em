@@ -1,0 +1,24 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-casino-dark via-purple-900 to-casino-dark text-white;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .casino-card {
+    @apply bg-zinc-900/70 border border-zinc-700/60 backdrop-blur rounded-xl;
+  }
+  
+  .neon-glow {
+    @apply shadow-[0_0_20px_rgba(0,255,180,0.6)];
+  }
+  
+  .digit-chip {
+    @apply w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 text-black font-bold grid place-items-center shadow-lg;
+  }
+}

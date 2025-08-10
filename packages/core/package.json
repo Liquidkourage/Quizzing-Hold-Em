@@ -1,0 +1,15 @@
+﻿{
+  "name": "@qhe/core",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --out-dir dist --clean"
+  },
+  "devDependencies": {
+    "tsup": "^8.2.4",
+    "typescript": "^5.6.2"
+  }
+}

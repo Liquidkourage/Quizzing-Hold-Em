@@ -1,0 +1,21 @@
+﻿{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@qhe/core": ["packages/core/src"],
+      "@qhe/net": ["packages/net/src"],
+      "@qhe/ui": ["packages/ui/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build"]
+}
