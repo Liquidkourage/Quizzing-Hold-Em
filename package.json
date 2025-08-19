@@ -1,13 +1,22 @@
-﻿{
+{
   "name": "quizzing-hold-em",
   "private": true,
   "version": "0.1.0",
   "description": "Quizzing Hold-Em monorepo: host, player, display apps with realtime server and shared packages.",
-  "workspaces": ["apps/*", "packages/*"],
-  "engines": {"node": ">=18.18.0", "npm": ">=9"},
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18.18.0",
+    "npm": ">=9"
+  },
   "scripts": {
     "dev": "concurrently -n server,host,player,display -c cyan,magenta,green,yellow \"npm --workspace apps/server run dev\" \"npm --workspace apps/host run dev\" \"npm --workspace apps/player run dev\" \"npm --workspace apps/display run dev\"",
     "build": "npm run build --workspace packages/core && npm run build --workspace packages/net && npm run build --workspace packages/ui && npm run build --workspace apps/server && npm run build --workspace apps/host && npm run build --workspace apps/player && npm run build --workspace apps/display",
+    "serve": "npm start --workspace apps/server",
+    "open": "powershell -Command Start-Process http://localhost:7777",
+    "one": "npm run build && powershell -Command Start-Process http://localhost:7777 && npm start --workspace apps/server",
     "lint": "eslint . --ext .ts,.tsx,.js,.cjs --max-warnings 0",
     "typecheck": "tsc -b",
     "format": "prettier --write .",
@@ -22,5 +31,8 @@
     "husky": "^9.1.5",
     "prettier": "^3.3.3",
     "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "@tailwindcss/forms": "^0.5.10"
   }
 }

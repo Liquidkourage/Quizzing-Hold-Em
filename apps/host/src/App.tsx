@@ -1,111 +1,258 @@
-﻿import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { connect, onState } from '@qhe/net';
-import { Card, NeonButton } from '@qhe/ui';
-import type { GameState } from '@qhe/core';
+﻿import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Card, NeonButton, JackpotDisplay } from '@qhe/ui'
+import { connect, onState, onToast, useSocket } from '@qhe/net'
+import type { GameState } from '@qhe/core'
 
 function HostApp() {
-  const [gameState, setGameState] = useState<GameState | null>(null);
-  const [roomCode] = useState('HOST01');
-  const [isConnected, setIsConnected] = useState(false);
+  const [gameState, setGameState] = useState<GameState | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const socket = useSocket()
 
   useEffect(() => {
-    const socket = connect('host', 'Host', roomCode);
-    setIsConnected(true);
-    
-    onState((state: GameState) => {
-      setGameState(state);
-    });
+    const cleanup = connect('host', 'HOST01')
+    return cleanup
+  }, [])
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [roomCode]);
+  useEffect(() => {
+    const unsubscribe = onState(setGameState)
+    return unsubscribe
+  }, [])
 
-  if (!isConnected) {
+  useEffect(() => {
+    const unsubscribe = onToast((message) => {
+      setToastMessage(message)
+      setTimeout(() => setToastMessage(null), 3000)
+    })
+    return unsubscribe
+  }, [])
+
+  const handleStartGame = () => {
+    if (socket) {
+      socket.emit('action', { type: 'startGame' })
+    }
+  }
+
+  const handleSetQuestion = () => {
+    if (socket) {
+      socket.emit('action', { type: 'setQuestion' })
+    }
+  }
+
+  const handleDealInitialCards = () => {
+    if (socket) {
+      socket.emit('action', { type: 'dealInitialCards' })
+    }
+  }
+
+  const handleDealCommunityCards = () => {
+    if (socket) {
+      socket.emit('action', { type: 'dealCommunityCards' })
+    }
+  }
+
+  const handleRevealAnswer = () => {
+    if (socket) {
+      socket.emit('action', { type: 'revealAnswer' })
+    }
+  }
+
+  const handleEndRound = () => {
+    if (socket) {
+      socket.emit('action', { type: 'endRound' })
+    }
+  }
+
+  if (!gameState) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-400 mx-auto'></div>
-          <p className='mt-4 text-xl'>Connecting to server...</p>
+      <div className="min-h-screen bg-casino-gradient flex items-center justify-center">
+        <div className="text-center">
+          <motion.h1 
+            className="text-6xl font-black text-casino-emerald mb-8"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            🎰 QUIZZING HOLD-EM
+          </motion.h1>
+          <motion.div 
+            className="text-2xl text-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          >
+            Connecting to server...
+          </motion.div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-casino-dark via-purple-900 to-casino-dark p-8'>
-      <div className='max-w-6xl mx-auto'>
+    <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 animate-pulse-slow"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-blue-500/10 animate-float"></div>
+        <div className="absolute inset-0 bg-gradient-to-bl from-yellow-400/5 via-transparent to-purple-500/5 animate-glow"></div>
+      </div>
+
+      {/* Toast Messages */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            className="fixed top-4 right-4 z-50 bg-glass-gradient backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-4 text-white"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ duration: 0.3 }}
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="relative z-10 p-8">
+        {/* Header */}
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          className='text-center mb-8'
+          transition={{ duration: 0.8 }}
         >
-          <h1 className='text-6xl font-bold text-casino-gold mb-4 animate-glow'>
-             Quizzing Hold-Em
+          <h1 className="text-6xl font-black text-casino-emerald mb-4">
+            🎰 QUIZZING HOLD-EM
           </h1>
-          <p className='text-2xl text-emerald-300'>Host Control Panel</p>
-          <div className='mt-4 p-4 casino-card inline-block'>
-            <p className='text-lg'>Room Code: <span className='text-casino-gold font-bold text-2xl'>{roomCode}</span></p>
+          <div className="text-xl text-white">
+            Room Code: <span className="text-casino-emerald font-bold">{gameState.code}</span>
+          </div>
+          <div className="text-lg text-white mt-2">
+            Phase: <span className="text-casino-gold font-bold">{gameState.phase}</span>
           </div>
         </motion.div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
-          <Card className='p-6'>
-            <h2 className='text-2xl font-bold text-casino-gold mb-4'>Game Controls</h2>
-            <div className='space-y-4'>
-              <NeonButton className='w-full' onClick={() => console.log('Start Game')}>
-                 Start Game
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Game Controls */}
+          <Card variant="glass" className="p-6">
+            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game Controls</h2>
+            
+            <div className="space-y-4">
+              <NeonButton
+                variant="emerald"
+                size="large"
+                onClick={handleStartGame}
+                disabled={gameState.phase !== 'lobby'}
+                className="w-full"
+              >
+                Start Game
               </NeonButton>
-              <NeonButton className='w-full' onClick={() => console.log('Next Question')}>
-                 Next Question
+
+              <NeonButton
+                variant="purple"
+                size="large"
+                onClick={handleSetQuestion}
+                disabled={gameState.phase !== 'lobby'}
+                className="w-full"
+              >
+                Set Question
               </NeonButton>
-              <NeonButton className='w-full' onClick={() => console.log('Deal Cards')}>
-                 Deal Cards
+
+              <NeonButton
+                variant="blue"
+                size="large"
+                onClick={handleDealInitialCards}
+                disabled={gameState.phase !== 'question'}
+                className="w-full"
+              >
+                Deal Initial Cards
               </NeonButton>
-              <NeonButton className='w-full' onClick={() => console.log('Reveal Answer')}>
-                 Reveal Answer
+
+              <NeonButton
+                variant="blue"
+                size="large"
+                onClick={handleDealCommunityCards}
+                disabled={gameState.phase !== 'betting'}
+                className="w-full"
+              >
+                Deal Community Cards
+              </NeonButton>
+
+              <NeonButton
+                variant="gold"
+                size="large"
+                onClick={handleRevealAnswer}
+                disabled={gameState.phase !== 'betting'}
+                className="w-full"
+              >
+                Reveal Answer
+              </NeonButton>
+
+              <NeonButton
+                variant="red"
+                size="large"
+                onClick={handleEndRound}
+                disabled={gameState.phase !== 'showdown'}
+                className="w-full"
+              >
+                End Round
               </NeonButton>
             </div>
           </Card>
 
-          <Card className='p-6'>
-            <h2 className='text-2xl font-bold text-casino-gold mb-4'>Players ({gameState?.players.length || 0})</h2>
-            <div className='space-y-2'>
-              {gameState?.players.map((player) => (
-                <div key={player.id} className='flex justify-between items-center p-3 bg-zinc-800/50 rounded-lg'>
-                  <span className='text-emerald-300'>{player.name}</span>
-                  <span className='text-casino-gold'></span>
+          {/* Game Status */}
+          <Card variant="glass" className="p-6">
+            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game Status</h2>
+            
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-lg text-white">Current Pot:</div>
+                <span className="text-casino-emerald font-bold text-xl">${gameState.round.pot}</span>
+              </div>
+
+              {gameState.round.question && (
+                <div className="text-center">
+                  <div className="text-lg text-white">Current Question:</div>
+                  <div className="text-casino-gold font-bold">{gameState.round.question.text}</div>
                 </div>
-              ))}
+              )}
+
+              <div className="text-center">
+                <div className="text-lg text-white">Players:</div>
+                <span className="text-casino-emerald font-bold">{gameState.players.length}</span>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <JackpotDisplay amount={gameState.round.pot} />
             </div>
           </Card>
         </div>
 
-        <Card className='mt-8 p-6'>
-          <h2 className='text-2xl font-bold text-casino-gold mb-4'>Game Status</h2>
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-            <div className='text-center p-4 bg-zinc-800/50 rounded-lg'>
-              <p className='text-sm text-gray-400'>Phase</p>
-              <p className='text-xl font-bold text-emerald-300'>{gameState?.phase || 'lobby'}</p>
-            </div>
-            <div className='text-center p-4 bg-zinc-800/50 rounded-lg'>
-              <p className='text-sm text-gray-400'>Pot</p>
-              <p className='text-xl font-bold text-casino-gold'></p>
-            </div>
-            <div className='text-center p-4 bg-zinc-800/50 rounded-lg'>
-              <p className='text-sm text-gray-400'>Big Blind</p>
-              <p className='text-xl font-bold text-purple-300'></p>
-            </div>
-            <div className='text-center p-4 bg-zinc-800/50 rounded-lg'>
-              <p className='text-sm text-gray-400'>Small Blind</p>
-              <p className='text-xl font-bold text-purple-300'></p>
-            </div>
+        {/* Player List */}
+        <Card variant="glass" className="mt-8 p-6">
+          <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Players</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {gameState.players.map((player) => (
+              <div key={player.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-4">
+                <div className="text-lg font-bold text-casino-emerald">{player.name}</div>
+                <div className="text-white">
+                  Bankroll: <span className="text-casino-gold font-bold">${player.bankroll}</span>
+                </div>
+                <div className="text-white">
+                  Cards: <span className="text-casino-purple font-bold">{player.hand.length}</span>
+                </div>
+                {player.hasFolded && (
+                  <div className="text-red-400 font-bold">FOLDED</div>
+                )}
+              </div>
+            ))}
           </div>
         </Card>
       </div>
     </div>
-  );
+  )
 }
 
-export default HostApp;
+export default HostApp
+

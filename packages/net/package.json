@@ -9,6 +9,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --out-dir dist --clean"
   },
   "dependencies": {
+    "@qhe/core": "file:../core",
     "socket.io": "^4.8.1",
     "zod": "^3.25.76"
   },

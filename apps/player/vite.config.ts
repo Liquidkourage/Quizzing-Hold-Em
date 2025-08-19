@@ -12,7 +12,13 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5175,
-    host: true,
+    port: 7777,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:7777',
+        changeOrigin: true,
+      },
+    },
   },
+  base: '/player/',
 })

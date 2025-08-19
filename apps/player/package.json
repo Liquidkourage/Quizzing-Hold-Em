@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@qhe/core": "^0.1.0",
-    "@qhe/net": "^0.1.0",
-    "@qhe/ui": "^0.1.0",
+    "@qhe/core": "file:../../packages/core",
+    "@qhe/net": "file:../../packages/net",
+    "@qhe/ui": "file:../../packages/ui",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "react": "^19.1.1",

@@ -84,7 +84,7 @@ export function bestHandDistanceToAnswer(hand: NumericCard[], community: Numeric
   return compareHandsToAnswer(candidates, answer);
 }
 
-export function createEmptyGame(code: string, hostId: string): GameState {
+export function createEmptyGame(code: string, hostId: string = ''): GameState {
   return {
     code,
     hostId,
@@ -138,4 +138,108 @@ export function nextRoundId(prev: string): string {
 
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+}
+
+// Sample questions for gameplay
+export const SAMPLE_QUESTIONS: ReadonlyArray<{ id: string; text: string; answer: number; category?: string; difficulty?: number }> = [
+  { id: 'q1', text: 'How many minutes are there in a day?', answer: 1440, category: 'Time', difficulty: 1 },
+  { id: 'q2', text: 'What is the boiling point of water in Kelvin?', answer: 373, category: 'Science', difficulty: 1 },
+  { id: 'q3', text: 'How many bones are in the adult human body?', answer: 206, category: 'Biology', difficulty: 2 },
+  { id: 'q4', text: 'What year did the Apollo 11 land on the moon?', answer: 1969, category: 'History', difficulty: 2 },
+  { id: 'q5', text: 'What is the average distance from Earth to the Moon in km?', answer: 384400, category: 'Astronomy', difficulty: 3 },
+];
+
+// Game flow functions
+export function startGame(state: GameState): GameState {
+  return { ...state, phase: 'question' };
+}
+
+export function setQuestion(state: GameState): GameState {
+  const randomQuestion = SAMPLE_QUESTIONS[Math.floor(Math.random() * SAMPLE_QUESTIONS.length)];
+  return {
+    ...state,
+    phase: 'betting',
+    round: {
+      ...state.round,
+      question: randomQuestion,
+    },
+  };
+}
+
+export function dealInitialCards(state: GameState): GameState {
+  const updatedPlayers = state.players.map(player => ({
+    ...player,
+    hand: [dealCard(), dealCard()],
+  }));
+  return { ...state, phase: 'betting', players: updatedPlayers };
+}
+
+export function dealCommunityCards(state: GameState): GameState {
+  const communityCards = [dealCard(), dealCard(), dealCard()];
+  return {
+    ...state,
+    round: { ...state.round, communityCards },
+  };
+}
+
+export function placeBet(state: GameState, playerId: string, amount: number): GameState {
+  if (amount <= 0) return state;
+  const updatedPlayers = state.players.map(player => {
+    if (player.id === playerId) {
+      const newBankroll = Math.max(0, player.bankroll - amount);
+      return { ...player, bankroll: newBankroll, isAllIn: newBankroll === 0 };
+    }
+    return player;
+  });
+  return {
+    ...state,
+    round: { ...state.round, pot: state.round.pot + amount },
+    players: updatedPlayers,
+  };
+}
+
+export function foldPlayer(state: GameState, playerId: string): GameState {
+  const updatedPlayers = state.players.map(player => (player.id === playerId ? { ...player, hasFolded: true } : player));
+  return { ...state, players: updatedPlayers };
+}
+
+export function revealAnswer(state: GameState): GameState {
+  return { ...state, phase: 'showdown' };
+}
+
+export function determineWinner(state: GameState): { winnerId: string; distance: number } | null {
+  if (!state.round.question) return null;
+  let bestPlayer: PlayerState | null = null;
+  let bestDistance = Infinity;
+  for (const player of state.players) {
+    if (player.hasFolded) continue;
+    const distance = bestHandDistanceToAnswer(player.hand, state.round.communityCards, state.round.question.answer);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestPlayer = player;
+    }
+  }
+  return bestPlayer ? { winnerId: bestPlayer.id, distance: bestDistance } : null;
+}
+
+export function payoutWinner(state: GameState, winnerId: string): GameState {
+  const updatedPlayers = state.players.map(player => (player.id === winnerId ? { ...player, bankroll: player.bankroll + state.round.pot } : player));
+  return { ...state, round: { ...state.round, pot: 0 }, players: updatedPlayers };
+}
+
+export function endRound(state: GameState): GameState {
+  const winner = determineWinner(state);
+  const afterPayout = winner ? payoutWinner(state, winner.winnerId) : state;
+  return {
+    ...afterPayout,
+    phase: 'lobby',
+    round: {
+      roundId: nextRoundId(state.round.roundId),
+      question: null,
+      communityCards: [],
+      pot: 0,
+      dealerIndex: (state.round.dealerIndex + 1) % Math.max(1, state.players.length),
+    },
+    players: afterPayout.players.map(p => ({ ...p, hand: [], hasFolded: false, isAllIn: false })),
+  };
 }
