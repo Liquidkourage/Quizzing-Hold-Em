@@ -93,13 +93,18 @@ function DisplayApp() {
     )
   }
 
-  // Calculate player positions around the table (adjusted for better 8-player layout)
+  // Calculate player positions around the table (responsive layout)
   const getPlayerPosition = (index: number, total: number) => {
     const angle = (index / total) * 2 * Math.PI - Math.PI / 2 // Start from top
-    let radiusX = 280 // Horizontal radius - compressed inward
-    const radiusY = 360 // Vertical radius - expanded outward  
-    const centerX = 45 // Shifted left from center (percentage)
-    const centerY = 40 // Shifted up more from center (percentage) - moved up ~50px equivalent
+    
+    // Responsive radius based on viewport size
+    const viewportWidth = window.innerWidth
+    const isSmallScreen = viewportWidth < 1200
+    
+    let radiusX = isSmallScreen ? 25 : 28 // Responsive horizontal radius
+    const radiusY = isSmallScreen ? 32 : 36 // Responsive vertical radius  
+    const centerX = 50 // Centered horizontally
+    const centerY = 50 // Centered vertically
     
     // For players at 3 and 9 o'clock positions (side positions), reduce horizontal radius
     const normalizedAngle = angle + Math.PI / 2
@@ -107,11 +112,11 @@ function DisplayApp() {
     const isLeftSide = Math.abs(normalizedAngle - 3 * Math.PI / 2) < 0.4 // ~9 o'clock
     
     if (isRightSide || isLeftSide) {
-      radiusX = 250 // Reduced horizontal radius for side positions (30px closer)
+      radiusX = isSmallScreen ? 22 : 25 // Responsive reduced radius for side positions
     }
     
-    const x = centerX + Math.cos(angle) * radiusX / 10 // Scale down for percentage
-    const y = centerY + Math.sin(angle) * radiusY / 10
+    const x = centerX + Math.cos(angle) * radiusX
+    const y = centerY + Math.sin(angle) * radiusY
     
     return { x: `${x}%`, y: `${y}%` }
   }
@@ -192,7 +197,7 @@ function DisplayApp() {
         </motion.div>
 
         {/* Main Game Area */}
-        <div className="relative w-full h-[700px] max-w-7xl mx-auto">
+        <div className="relative w-full aspect-[16/9] max-w-7xl mx-auto">
           {/* Players positioned around the table */}
           {displayGameState.players.map((player, index) => {
             const position = getPlayerPosition(index, displayGameState.players.length)
@@ -234,10 +239,10 @@ function DisplayApp() {
           {/* Realistic Poker Table - Centered and properly sized */}
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
             {/* Table shadow */}
-            <div className="absolute inset-0 w-[520px] h-[395px] bg-black/40 rounded-full blur-lg transform translate-y-2"></div>
+            <div className="absolute inset-0 w-[40vw] h-[30vw] max-w-[520px] max-h-[395px] bg-black/40 rounded-full blur-lg transform translate-y-2"></div>
             
             {/* Table base/rail */}
-            <div className="w-[500px] h-[375px] bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative">
+            <div className="w-[38vw] h-[28vw] max-w-[500px] max-h-[375px] bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative">
                             {/* FELT SURFACE - Direct application to rail padding */}
               <div 
                 className="absolute inset-2 rounded-full border-4 border-amber-500"
@@ -273,9 +278,9 @@ function DisplayApp() {
               {displayGameState.players.map((_, index) => {
                 const angle = (index / displayGameState.players.length) * 2 * Math.PI - Math.PI / 2
                 
-                // Base ellipse dimensions
-                const baseRadiusX = 242  // Slightly increased horizontal to push corners out to rail
-                const baseRadiusY = 195  // Increased vertical radius by 5 pixels
+                // Base ellipse dimensions - responsive to viewport
+                const baseRadiusX = Math.min(242, window.innerWidth * 0.15)  // Responsive horizontal radius
+                const baseRadiusY = Math.min(195, window.innerHeight * 0.12)  // Responsive vertical radius
                 
                 // Calculate base position
                 let x = Math.cos(angle) * baseRadiusX
@@ -293,13 +298,13 @@ function DisplayApp() {
                                (normalizedAngle > 0.625 && normalizedAngle < 0.875)
                 
                 if (isTopRegion) {
-                  // Create more pronounced inward bow for top line - brought in 5 pixels
-                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Increased bow inward
-                  y = -180 + bowAmount // Brought in 5 pixels closer to center
+                  // Create more pronounced inward bow for top line - responsive
+                  const bowAmount = Math.abs(Math.cos(angle)) * Math.min(15, window.innerHeight * 0.01) // Responsive bow
+                  y = -Math.min(180, window.innerHeight * 0.12) + bowAmount // Responsive positioning
                 } else if (isBottomRegion) {
-                  // Create more pronounced inward bow for bottom line - brought in 5 pixels
-                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Increased bow inward
-                  y = 180 - bowAmount // Brought in 5 pixels closer to center
+                  // Create more pronounced inward bow for bottom line - responsive
+                  const bowAmount = Math.abs(Math.cos(angle)) * Math.min(15, window.innerHeight * 0.01) // Responsive bow
+                  y = Math.min(180, window.innerHeight * 0.12) - bowAmount // Responsive positioning
                 } else if (isCorner) {
                   // Push corners out by increasing radius - minimal boost for nearly flat
                   x = Math.cos(angle) * (baseRadiusX + 0.5)
@@ -313,10 +318,10 @@ function DisplayApp() {
                     key={`cupholder-${index}`}
                     className="absolute bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
                     style={{ 
-                      left: `${243 + x}px`, 
-                      top: `${181 + y}px`,
-                      width: '20px',
-                      height: '20px'
+                      left: `calc(50% + ${x}px)`, 
+                      top: `calc(50% + ${y}px)`,
+                      width: 'min(20px, 1.5vw)',
+                      height: 'min(20px, 1.5vw)'
                     }}
                                       >
                     </div>

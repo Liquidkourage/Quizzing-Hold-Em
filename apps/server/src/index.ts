@@ -824,19 +824,9 @@ io.on('connection', (socket) => {
           break
           
         case 'newGame':
-          // Create a completely new game with the same room code
-          const newGameState = createEmptyGame(roomCode, gameState.hostId)
-          // Keep any existing players but reset their game state
-          newGameState.players = gameState.players.map(player => ({
-            ...player,
-            bankroll: 1000, // Reset bankroll
-            cards: [],
-            bet: 0,
-            folded: false,
-            allIn: false
-          }))
-          gameState = newGameState
-          io.to(roomCode).emit('toast', 'New game started!')
+          // Create a completely new game with the same room code - remove all players
+          gameState = createEmptyGame(roomCode, gameState.hostId)
+          io.to(roomCode).emit('toast', 'New game started! All players removed.')
           break
           
         default:
