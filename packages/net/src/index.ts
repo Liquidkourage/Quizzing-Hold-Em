@@ -56,6 +56,11 @@ export const EndRoundAction = z.object({
 })
 export type EndRoundAction = z.infer<typeof EndRoundAction>
 
+export const NewGameAction = z.object({
+  type: z.literal('newGame')
+})
+export type NewGameAction = z.infer<typeof NewGameAction>
+
 // Socket Events
 export interface ServerToClientEvents {
   state: (state: GameState) => void

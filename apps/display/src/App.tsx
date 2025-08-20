@@ -267,21 +267,77 @@ function DisplayApp() {
                 <div className="absolute inset-12 border border-white/10 rounded-full"></div>
               </div>
                 
-              {/* Cup holders on the rail edge - one per player */}
+
+
+              {/* Cup holders centered on the middle rail stripe - one per player */}
               {displayGameState.players.map((_, index) => {
                 const angle = (index / displayGameState.players.length) * 2 * Math.PI - Math.PI / 2
-                // Position cupholders on the actual rail edge (table radius is ~250px, rail is ~8px border)
-                const railRadius = 258 // Just outside the main table surface
-                const x = Math.cos(angle) * railRadius
-                const y = Math.sin(angle) * railRadius * 0.75 // Match the elliptical shape
+                
+                // Base ellipse dimensions
+                const baseRadiusX = 242  // Slightly increased horizontal to push corners out to rail
+                const baseRadiusY = 195  // Increased vertical radius by 5 pixels
+                
+                // Calculate base position
+                let x = Math.cos(angle) * baseRadiusX
+                let y = Math.sin(angle) * baseRadiusY
+                
+                // Adjust positioning based on angle regions
+                const normalizedAngle = ((angle + Math.PI/2) % (2 * Math.PI)) / (2 * Math.PI)
+                
+                // Identify top and bottom regions for straight line alignment
+                const isTopRegion = normalizedAngle > 0.9 || normalizedAngle < 0.1
+                const isBottomRegion = normalizedAngle > 0.4 && normalizedAngle < 0.6
+                
+                // Identify corner regions
+                const isCorner = (normalizedAngle > 0.125 && normalizedAngle < 0.375) || 
+                               (normalizedAngle > 0.625 && normalizedAngle < 0.875)
+                
+                if (isTopRegion) {
+                  // Create more pronounced inward bow for top line - brought in 5 pixels
+                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Increased bow inward
+                  y = -180 + bowAmount // Brought in 5 pixels closer to center
+                } else if (isBottomRegion) {
+                  // Create more pronounced inward bow for bottom line - brought in 5 pixels
+                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Increased bow inward
+                  y = 180 - bowAmount // Brought in 5 pixels closer to center
+                } else if (isCorner) {
+                  // Push corners out by increasing radius - minimal boost for nearly flat
+                  x = Math.cos(angle) * (baseRadiusX + 0.5)
+                  y = Math.sin(angle) * (baseRadiusY + 0.5)
+                }
+                
+                // Note: Individual adjustments removed since we now have 8 cupholders instead of 50
                 
                 return (
                   <div 
                     key={`cupholder-${index}`}
+                    className="absolute bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
+                    style={{ 
+                      left: `${243 + x}px`, 
+                      top: `${181 + y}px`,
+                      width: '20px',
+                      height: '20px'
+                    }}
+                                      >
+                    </div>
+                )
+              })}
+              
+              {/* Original cupholders (hidden for now) */}
+              {false && displayGameState.players.map((_, index) => {
+                const angle = (index / displayGameState.players.length) * 2 * Math.PI - Math.PI / 2
+                const railCenterRadiusX = 248
+                const railCenterRadiusY = 180
+                const x = Math.cos(angle) * railCenterRadiusX
+                const y = Math.sin(angle) * railCenterRadiusY
+                
+                return (
+                  <div 
+                    key={`original-cupholder-${index}`}
                     className="absolute w-6 h-6 bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2"
                     style={{ 
-                      left: `${250 + x}px`, 
-                      top: `${187.5 + y}px` 
+                      left: `${243 + x}px`, 
+                      top: `${181 + y}px` 
                     }}
                   ></div>
                 )

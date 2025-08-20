@@ -63,6 +63,12 @@ function HostApp() {
     }
   }
 
+  const handleNewGame = () => {
+    if (socket) {
+      socket.emit('action', { type: 'newGame' })
+    }
+  }
+
   if (!gameState) {
     return (
       <div className="min-h-screen bg-casino-gradient flex items-center justify-center">
@@ -195,6 +201,15 @@ function HostApp() {
                 className="w-full"
               >
                 End Round
+              </NeonButton>
+
+              <NeonButton
+                variant="gold"
+                size="large"
+                onClick={handleNewGame}
+                className="w-full"
+              >
+                🆕 New Game
               </NeonButton>
             </div>
           </Card>
