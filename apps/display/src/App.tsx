@@ -93,26 +93,25 @@ function DisplayApp() {
     )
   }
 
-  // Calculate player positions around the table (responsive layout)
+  // Calculate player positions around the table (larger ring around table)
   const getPlayerPosition = (index: number, total: number) => {
     const angle = (index / total) * 2 * Math.PI - Math.PI / 2 // Start from top
     
-    // Responsive radius based on viewport size
-    const viewportWidth = window.innerWidth
-    const isSmallScreen = viewportWidth < 1200
+    // Center position (table is centered)
+    const centerX = 50
+    const centerY = 50
     
-    let radiusX = isSmallScreen ? 25 : 28 // Responsive horizontal radius
-    const radiusY = isSmallScreen ? 32 : 36 // Responsive vertical radius  
-    const centerX = 50 // Centered horizontally
-    const centerY = 50 // Centered vertically
+    // Large radius to position players well outside the table
+    let radiusX = 35 // Large horizontal radius
+    let radiusY = 35 // Large vertical radius
     
-    // For players at 3 and 9 o'clock positions (side positions), reduce horizontal radius
+    // For players at 3 and 9 o'clock positions, adjust horizontal positioning
     const normalizedAngle = angle + Math.PI / 2
     const isRightSide = Math.abs(normalizedAngle - Math.PI / 2) < 0.4 // ~3 o'clock
     const isLeftSide = Math.abs(normalizedAngle - 3 * Math.PI / 2) < 0.4 // ~9 o'clock
     
     if (isRightSide || isLeftSide) {
-      radiusX = isSmallScreen ? 22 : 25 // Responsive reduced radius for side positions
+      radiusX = 32 // Slightly smaller for side positions
     }
     
     const x = centerX + Math.cos(angle) * radiusX
@@ -178,10 +177,10 @@ function DisplayApp() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 p-4">
+      <div className="relative z-10 p-2">
         {/* Header */}
         <motion.div 
-          className="text-center mb-4"
+          className="text-center mb-2"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -196,15 +195,15 @@ function DisplayApp() {
           </div>
         </motion.div>
 
-        {/* Main Game Area */}
-        <div className="relative w-full aspect-[16/9] max-w-7xl mx-auto">
+        {/* Main Game Area - adjusted for bottom info panel */}
+        <div className="relative w-full h-[calc(100vh-200px)] max-w-7xl mx-auto">
           {/* Players positioned around the table */}
           {displayGameState.players.map((player, index) => {
             const position = getPlayerPosition(index, displayGameState.players.length)
             return (
               <motion.div
                 key={player.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20"
                 style={{ left: position.x, top: position.y }}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -236,13 +235,13 @@ function DisplayApp() {
             )
           })}
 
-          {/* Realistic Poker Table - Centered and properly sized */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          {/* Realistic Poker Table - Centered vertically in available space */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
             {/* Table shadow */}
-            <div className="absolute inset-0 w-[40vw] h-[30vw] max-w-[520px] max-h-[395px] bg-black/40 rounded-full blur-lg transform translate-y-2"></div>
+            <div className="absolute inset-0 w-[520px] h-[395px] bg-black/40 rounded-full blur-lg transform translate-y-2"></div>
             
             {/* Table base/rail */}
-            <div className="w-[38vw] h-[28vw] max-w-[500px] max-h-[375px] bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative">
+            <div className="w-[500px] h-[375px] bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative">
                             {/* FELT SURFACE - Direct application to rail padding */}
               <div 
                 className="absolute inset-2 rounded-full border-4 border-amber-500"
@@ -278,9 +277,9 @@ function DisplayApp() {
               {displayGameState.players.map((_, index) => {
                 const angle = (index / displayGameState.players.length) * 2 * Math.PI - Math.PI / 2
                 
-                // Base ellipse dimensions - responsive to viewport
-                const baseRadiusX = Math.min(242, window.innerWidth * 0.15)  // Responsive horizontal radius
-                const baseRadiusY = Math.min(195, window.innerHeight * 0.12)  // Responsive vertical radius
+                // Base ellipse dimensions - back to working pixel values
+                const baseRadiusX = 242  // Horizontal radius
+                const baseRadiusY = 195  // Vertical radius
                 
                 // Calculate base position
                 let x = Math.cos(angle) * baseRadiusX
@@ -298,13 +297,13 @@ function DisplayApp() {
                                (normalizedAngle > 0.625 && normalizedAngle < 0.875)
                 
                 if (isTopRegion) {
-                  // Create more pronounced inward bow for top line - responsive
-                  const bowAmount = Math.abs(Math.cos(angle)) * Math.min(15, window.innerHeight * 0.01) // Responsive bow
-                  y = -Math.min(180, window.innerHeight * 0.12) + bowAmount // Responsive positioning
+                  // Create more pronounced inward bow for top line
+                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Bow inward
+                  y = -180 + bowAmount // Positioning
                 } else if (isBottomRegion) {
-                  // Create more pronounced inward bow for bottom line - responsive
-                  const bowAmount = Math.abs(Math.cos(angle)) * Math.min(15, window.innerHeight * 0.01) // Responsive bow
-                  y = Math.min(180, window.innerHeight * 0.12) - bowAmount // Responsive positioning
+                  // Create more pronounced inward bow for bottom line
+                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Bow inward
+                  y = 180 - bowAmount // Positioning
                 } else if (isCorner) {
                   // Push corners out by increasing radius - minimal boost for nearly flat
                   x = Math.cos(angle) * (baseRadiusX + 0.5)
@@ -318,10 +317,10 @@ function DisplayApp() {
                     key={`cupholder-${index}`}
                     className="absolute bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
                     style={{ 
-                      left: `calc(50% + ${x}px)`, 
-                      top: `calc(50% + ${y}px)`,
-                      width: 'min(20px, 1.5vw)',
-                      height: 'min(20px, 1.5vw)'
+                      left: `${243 + x}px`, 
+                      top: `${181 + y}px`,
+                      width: '20px',
+                      height: '20px'
                     }}
                                       >
                     </div>
@@ -381,9 +380,12 @@ function DisplayApp() {
           </div>
         </div>
 
-        {/* Game Info Panel */}
-        <div className="mt-6 max-w-4xl mx-auto">
-          <div className="bg-black/80 backdrop-blur-md border border-yellow-600 rounded-lg p-4">
+      </div>
+
+      {/* Game Info Panel - Docked to bottom of screen */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-lg p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
                 <div className="text-white text-sm">Players</div>
