@@ -148,22 +148,33 @@ function DisplayApp() {
   const triggerCommunityDealingAnimation = useCallback(() => {
     console.log('🎰 Triggering community card dealing animation!')
     
-    // Add delay to wait for server state update
-    setTimeout(() => {
-      console.log('🎰 Starting community cards animation after server delay')
+    // Function to start animation when server cards are ready
+    const startAnimation = () => {
+      console.log('🎰 Starting community cards animation')
       setIsDealingCommunity(true)
       setDealingCommunityCards([])
       setHasDealtCommunityCards(false) // Hide static cards during animation
       setShowDeck(true) // Show deck for community cards animation
       
-      // Get actual community cards from server state, with fallback to demo cards
+      // Get actual community cards from server state
       const actualCommunityCards = displayGameState.round.communityCards || []
       console.log('🎰 Using actual community cards from server:', actualCommunityCards)
       
-      // Use server cards if available, otherwise use demo cards
-      const cardsToUse = actualCommunityCards.length > 0 ? actualCommunityCards : [
-        { digit: 3 }, { digit: 7 }, { digit: 9 }, { digit: 2 }, { digit: 5 }
-      ]
+      if (actualCommunityCards.length === 0) {
+        console.log('🎰 No server cards available, using demo cards')
+        // Use demo cards as fallback
+        const demoCards = [
+          { digit: 3 }, { digit: 7 }, { digit: 9 }, { digit: 2 }, { digit: 5 }
+        ]
+        runAnimation(demoCards)
+      } else {
+        console.log('🎰 Server cards available, using them')
+        runAnimation(actualCommunityCards)
+      }
+    }
+    
+    // Function to run the actual animation
+    const runAnimation = (cardsToUse: Array<{digit: number}>) => {
       console.log('🎰 Cards to use for animation:', cardsToUse)
       
       // Create dealing cards using the selected cards
@@ -202,7 +213,17 @@ function DisplayApp() {
         setShowDeck(false) // Hide deck after community cards deal
         setHasDealtCommunityCards(true) // Mark that community cards have been dealt
       }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
-    }, 500) // Wait 500ms for server state update
+    }
+    
+    // Try to start animation immediately, but retry if no server cards
+    if (displayGameState.round.communityCards && displayGameState.round.communityCards.length > 0) {
+      console.log('🎰 Server cards already available, starting immediately')
+      startAnimation()
+    } else {
+      console.log('🎰 Waiting for server cards...')
+      // Wait a bit and then start (server cards should be available by then)
+      setTimeout(startAnimation, 1000)
+    }
   }, [displayGameState]) // Add dependency to get fresh server state
 
   useEffect(() => {
