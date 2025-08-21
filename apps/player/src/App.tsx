@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connect, onState, onToast, bet, fold } from '@qhe/net'
-import { Card, NeonButton, JackpotDisplay, NumericPlayingCard } from '@qhe/ui'
+import { Card, NeonButton, JackpotDisplay, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
 
 function PlayerApp() {
@@ -103,7 +103,7 @@ function PlayerApp() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            🎰 QUIZZING HOLD-EM
+            🎰 ALL <PokerChip size="lg" className="mx-1" /> INQUIZITION
           </motion.h1>
           <motion.div 
             className="text-2xl text-white"

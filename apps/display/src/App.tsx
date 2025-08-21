@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { NumericPlayingCard } from '@qhe/ui'
+import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { connect, onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
 import type { GameState } from '@qhe/core'
 
@@ -394,8 +394,8 @@ function DisplayApp() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="text-4xl font-black text-yellow-400 mb-2">
-            🎰 QUIZZING HOLD-EM
+          <h1 className="text-4xl font-black text-yellow-400 mb-2 flex items-center justify-center gap-2">
+            🎰 ALL <PokerChip size="lg" className="mx-1" /> INQUIZITION
           </h1>
           <div className="text-lg text-white">
             Room: <span className="text-yellow-400 font-bold">{displayGameState.code}</span> | 

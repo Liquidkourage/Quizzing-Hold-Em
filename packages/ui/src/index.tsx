@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
+import { PokerChip } from './PokerChip';
 
 export function NeonButton({ 
   children, 
@@ -621,4 +622,5 @@ export function NumericPlayingCard({
   );
 }
 
+export { PokerChip };
 export default {};

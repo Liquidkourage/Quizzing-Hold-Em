@@ -1,8 +1,8 @@
 {
-  "name": "quizzing-hold-em",
+  "name": "all-in-quizition",
   "private": true,
   "version": "0.1.0",
-  "description": "Quizzing Hold-Em monorepo: host, player, display apps with realtime server and shared packages.",
+  "description": "All*InQuizition monorepo: host, player, display apps with realtime server and shared packages.",
   "workspaces": [
     "apps/*",
     "packages/*"

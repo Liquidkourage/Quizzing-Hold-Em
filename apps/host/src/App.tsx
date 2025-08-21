@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Card, NeonButton, JackpotDisplay } from '@qhe/ui'
+import { Card, NeonButton, JackpotDisplay, PokerChip } from '@qhe/ui'
 import { connect, onState, onToast, useSocket } from '@qhe/net'
 import type { GameState } from '@qhe/core'
 
@@ -79,7 +79,7 @@ function HostApp() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            🎰 QUIZZING HOLD-EM
+            🎰 ALL <PokerChip size="lg" className="mx-1" /> INQUIZITION
           </motion.h1>
           <motion.div 
             className="text-2xl text-white"
@@ -127,7 +127,7 @@ function HostApp() {
           transition={{ duration: 0.8 }}
         >
           <h1 className="text-6xl font-black text-casino-emerald mb-4">
-            🎰 QUIZZING HOLD-EM
+            🎰 ALL <PokerChip size="lg" className="mx-1" /> INQUIZITION
           </h1>
           <div className="text-xl text-white">
             Room Code: <span className="text-casino-emerald font-bold">{gameState.code}</span>

@@ -1,4 +1,4 @@
-﻿#  Quizzing Hold-Em
+﻿# All*InQuizition
 
 A real-time trivia and Texas Hold-Em hybrid game where players use numeric cards to get closest to the correct answer.
 
@@ -40,7 +40,7 @@ npm run dev
 ##  Project Structure
 
 \\\
-quizzing-hold-em/
+all-in-quizition/
  apps/
     host/          # Host control panel
     player/        # Player interface

@@ -649,7 +649,7 @@ app.get('/', (req, res) => {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Quizzing Hold-Em</title>
+              <title>All*InQuizition</title>
       <style>
         body { 
           font-family: Arial, sans-serif; 
@@ -701,7 +701,7 @@ app.get('/', (req, res) => {
     </head>
     <body>
       <div class="container">
-        <h1>🎰 QUIZZING HOLD-EM</h1>
+        <h1>🎰 ALL*INQUIZITION</h1>
         <p>Welcome to the ultimate Vegas casino experience!</p>
         
         <div class="links">
@@ -869,7 +869,7 @@ io.on('connection', (socket) => {
 
 const PORT = 7777
 httpServer.listen(PORT, () => {
-  console.log(`🎰 Quizzing Hold-Em Server running on port ${PORT}`)
+      console.log(`🎰 All*InQuizition Server running on port ${PORT}`)
   console.log(`🌐 WebSocket server ready for connections`)
   console.log(`📱 Host: http://localhost:${PORT}/host`)
   console.log(`👤 Player: http://localhost:${PORT}/player`)
