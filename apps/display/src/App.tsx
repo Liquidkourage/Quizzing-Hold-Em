@@ -156,19 +156,20 @@ function DisplayApp() {
       setHasDealtCommunityCards(false) // Hide static cards during animation
       setShowDeck(true) // Show deck for community cards animation
       
-      // Get actual community cards from server state
+      // Get actual community cards from server state, with fallback to demo cards
       const actualCommunityCards = displayGameState.round.communityCards || []
       console.log('🎰 Using actual community cards from server:', actualCommunityCards)
       
-      if (actualCommunityCards.length === 0) {
-        console.log('🎰 No community cards available, skipping animation')
-        return
-      }
+      // Use server cards if available, otherwise use demo cards
+      const cardsToUse = actualCommunityCards.length > 0 ? actualCommunityCards : [
+        { digit: 3 }, { digit: 7 }, { digit: 9 }, { digit: 2 }, { digit: 5 }
+      ]
+      console.log('🎰 Cards to use for animation:', cardsToUse)
       
-      // Create dealing cards using actual server cards
+      // Create dealing cards using the selected cards
       const cards: Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}> = []
       
-      actualCommunityCards.forEach((card, index) => {
+      cardsToUse.forEach((card, index) => {
         cards.push({
           id: `community-dealing-${index}`,
           cardIndex: index,
@@ -201,7 +202,7 @@ function DisplayApp() {
         setShowDeck(false) // Hide deck after community cards deal
         setHasDealtCommunityCards(true) // Mark that community cards have been dealt
       }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
-    }, 1000) // Wait 1 second for server state update
+    }, 500) // Wait 500ms for server state update
   }, [displayGameState]) // Add dependency to get fresh server state
 
   useEffect(() => {
