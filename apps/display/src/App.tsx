@@ -723,7 +723,7 @@ function DisplayApp() {
                   const cardSpacing = 8 // gap between cards
                   const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
                   // Move left so that the 3rd card (index 2) is centered - smaller offset
-                  const startX = tableCenterX - (totalWidth / 2) - ((cardWidth + cardSpacing) / 2)
+                  const startX = tableCenterX - (totalWidth / 2) - ((cardWidth + cardSpacing) * 0.75)
                   
                   const cardX = startX + (cardIndex * (cardWidth + cardSpacing)) + (cardWidth / 2)
                     const cardY = tableCenterY
@@ -946,7 +946,7 @@ function DisplayApp() {
                     const cardSpacing = 8 // gap between cards
                     const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
                     // Move left so that the 3rd card (index 2) is centered - smaller offset
-                    const startX = -(totalWidth / 2) - ((cardWidth + cardSpacing) / 2) // Start from center and go left by half total width plus smaller offset for 3rd card
+                    const startX = -(totalWidth / 2) - ((cardWidth + cardSpacing) * 0.75) // Start from center and go left by half total width plus smaller offset for 3rd card
                     
                     const cardX = startX + (i * (cardWidth + cardSpacing)) + (cardWidth / 2)
                     const cardY = 0 // Center vertically
