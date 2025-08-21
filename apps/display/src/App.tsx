@@ -664,13 +664,13 @@ function DisplayApp() {
                   {dealingCommunityCards.map(card => `${card.cardIndex}`).join(', ')}
                 </div>
                 
-                {/* Dealer deck of cards - positioned to the left of community cards */}
+                {/* Dealer deck of cards - positioned below the tableau */}
                 {showDeck && (
                   <motion.div
                     className="absolute"
                     style={{
-                      left: 'calc(50% - 200px)', // Move deck to the left
-                      top: '50%',
+                      left: 'calc(50% - 100px)', // Move deck more to the right
+                      top: 'calc(50% + 100px)', // Move deck down below the tableau
                       transform: 'translate(-50%, -50%)'
                     }}
                     initial={{ scale: 0, opacity: 0, rotateY: 0 }}
@@ -734,8 +734,8 @@ function DisplayApp() {
                   const { x: finalX, y: finalY, scale: finalScale } = calculateCommunityCardEndpoint(dealingCard.cardIndex)
                   
                   // Calculate center for animation start (same as deck position)
-                  const centerX = (window.innerWidth / 2) - 200 // Match deck position
-                  const centerY = window.innerHeight / 2
+                  const centerX = (window.innerWidth / 2) - 100 // Match deck position
+                  const centerY = window.innerHeight / 2 + 100 // Match deck position
                   
                   return (
                     <motion.div
