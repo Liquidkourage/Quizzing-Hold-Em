@@ -718,13 +718,14 @@ function DisplayApp() {
                     const tableCenterX = window.innerWidth / 2
                     const tableCenterY = window.innerHeight / 2
                     
-                    // Calculate position for each community card in a horizontal row
-                    const cardWidth = 64 // small card width (64px)
-                    const cardSpacing = 8 // gap between cards
-                    const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
-                    const startX = tableCenterX - (totalWidth / 2)
-                    
-                    const cardX = startX + (cardIndex * (cardWidth + cardSpacing)) + (cardWidth / 2)
+                                      // Calculate position for each community card in a horizontal row
+                  const cardWidth = 64 // small card width (64px)
+                  const cardSpacing = 8 // gap between cards
+                  const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
+                  // Move left so that the 3rd card (index 2) is centered
+                  const startX = tableCenterX - (totalWidth / 2) - ((2 * (cardWidth + cardSpacing)) + (cardWidth / 2))
+                  
+                  const cardX = startX + (cardIndex * (cardWidth + cardSpacing)) + (cardWidth / 2)
                     const cardY = tableCenterY
                     
                     return { x: cardX, y: cardY, scale: 1.5 } // larger scale for community cards (more dramatic growth from deck)
@@ -944,7 +945,8 @@ function DisplayApp() {
                     const cardWidth = 64 // small card width (64px)
                     const cardSpacing = 8 // gap between cards
                     const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
-                    const startX = -(totalWidth / 2) // Start from center and go left by half total width
+                    // Move left so that the 3rd card (index 2) is centered
+                    const startX = -(totalWidth / 2) - ((2 * (cardWidth + cardSpacing)) + (cardWidth / 2)) // Start from center and go left by half total width plus offset for 3rd card
                     
                     const cardX = startX + (i * (cardWidth + cardSpacing)) + (cardWidth / 2)
                     const cardY = 0 // Center vertically
