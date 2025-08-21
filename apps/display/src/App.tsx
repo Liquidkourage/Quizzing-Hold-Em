@@ -490,12 +490,12 @@ function DisplayApp() {
                   {dealingCards.map(card => `${card.playerIndex}-${card.cardIndex}`).join(', ')}
                 </div>
                 
-                {/* Dealer deck of cards - positioned to the left of player cards */}
+                {/* Dealer deck of cards - positioned below the tableau */}
                 <motion.div
                   className="absolute"
                   style={{
-                    left: 'calc(50% - 200px)', // Move deck to the left
-                    top: '50%',
+                    left: 'calc(50% - 50px)', // Move deck more to the right
+                    top: 'calc(50% + 100px)', // Move deck down below the tableau
                     transform: 'translate(-50%, -50%)'
                   }}
                   initial={{ scale: 0, opacity: 0, rotateY: 0 }}
