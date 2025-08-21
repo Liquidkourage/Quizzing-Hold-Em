@@ -440,8 +440,8 @@ function DisplayApp() {
                     const containerScale = 1.40625 * scaleFactor
                     const cardScale = 0.5
                     
-                    // Container dimensions after scaling
-                    const scaledHeight = scale(130) * containerScale
+                    // Container dimensions after scaling (now just the base scale factor)
+                    const scaledHeight = scale(130 * 1.40625)
                     
                     // Cards are positioned at bottom-0 (bottom of container)
                     const cardsBottomY = playerCenterY + (scaledHeight / 2)
@@ -451,7 +451,7 @@ function DisplayApp() {
                     // Second card (index 1): -50px margin (before scale)
                     const baseCardWidth = scale(96) // Normal NumericPlayingCard width
                     const baseCardHeight = scale(144) // Normal NumericPlayingCard height
-                    const scaledCardWidth = baseCardWidth * cardScale * containerScale
+                    const scaledCardWidth = baseCardWidth * cardScale
                     const cardOverlap = scale(-50) // px overlap before scaling
                     
                     // Calculate card X position
@@ -474,7 +474,7 @@ function DisplayApp() {
                     const scaledCardHeight = baseCardHeight * cardScale * containerScale
                     const cardY = cardsBottomY - scaledCardHeight + verticalOffset
                     
-                    return { x: cardX, y: cardY, scale: cardScale * containerScale }
+                    return { x: cardX, y: cardY, scale: cardScale }
                   }
                   
                   const endpoint = calculateCardEndpoint(dealingCard.playerIndex, dealingCard.cardIndex)
@@ -550,11 +550,10 @@ function DisplayApp() {
                 transition={{ delay: index * 0.1, duration: 0.5 }}
               >
                 <div 
-                  className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center shadow-lg transform origin-center relative"
+                  className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center shadow-lg origin-center relative"
                   style={{
-                    width: scale(120),
-                    height: scale(130),
-                    transform: `scale(${1.40625 * scaleFactor})`
+                    width: scale(120 * 1.40625),
+                    height: scale(130 * 1.40625)
                   }}
                 >
                   <div 
@@ -578,7 +577,7 @@ function DisplayApp() {
                           key={i} 
                           className="transform origin-bottom" 
                           style={{ 
-                            transform: `scale(${0.5 * scaleFactor})`,
+                            transform: `scale(${0.5})`,
                             marginLeft: i === 0 ? '0' : `${scale(-50)}px` 
                           }}
                         >
