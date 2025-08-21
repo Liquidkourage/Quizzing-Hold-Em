@@ -726,7 +726,7 @@ function DisplayApp() {
                   const startX = tableCenterX - (totalWidth / 2) - ((cardWidth + cardSpacing) * 0.75)
                   
                   const cardX = startX + (cardIndex * (cardWidth + cardSpacing)) + (cardWidth / 2)
-                    const cardY = tableCenterY
+                    const cardY = tableCenterY - 32 // Move up by same amount as static cards (-translate-y-8 = -32px)
                     
                     return { x: cardX, y: cardY, scale: 1.5 } // larger scale for community cards (more dramatic growth from deck)
                   }
