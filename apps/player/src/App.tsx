@@ -280,7 +280,14 @@ function PlayerApp() {
                 {player.hand.length > 0 && (
                   <div className="flex gap-1 justify-center mt-3">
                     {player.hand.map((card, i) => (
-                      <NumericPlayingCard key={i} digit={card.digit} variant="purple" size="small" />
+                      <NumericPlayingCard 
+                        key={i} 
+                        digit={card.digit} 
+                        variant="purple" 
+                        size="small" 
+                        faceDown={gameState.phase !== 'showdown' || player.hasFolded}
+                        backDesign="star"
+                      />
                     ))}
                   </div>
                 )}

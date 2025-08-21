@@ -723,9 +723,15 @@ function DisplayApp() {
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
                   {player.hand.length > 0 && !isDealing && hasDealtCards && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex">
-                  {player.hand.map((card, i) => (
+                      {player.hand.map((card, i) => (
                         <div key={i} className="transform scale-50 origin-bottom" style={{ marginLeft: i === 0 ? '0' : '-50px' }}>
-                          <NumericPlayingCard digit={card.digit} variant="cyan" size="normal" faceDown={true} backDesign="star" />
+                          <NumericPlayingCard 
+                            digit={card.digit} 
+                            variant="cyan" 
+                            size="normal" 
+                            faceDown={displayGameState.phase !== 'showdown' || player.hasFolded} 
+                            backDesign="star" 
+                          />
                         </div>
                       ))}
                     </div>
