@@ -954,8 +954,8 @@ function DisplayApp() {
                         key={i}
                         className="absolute"
                         style={{
-                          left: cardX - (64 * 1.5 / 2) + 8, // Offset by half the scaled card width + small right offset
-                          top: cardY - (96 * 1.5 / 2) + 12, // Offset by half the scaled card height + small down offset (about 5%)
+                          left: cardX - (64 * 1.5 / 2) + 16, // Offset by half the scaled card width + larger right offset (about 5% more)
+                          top: cardY - (96 * 1.5 / 2) + 32, // Offset by half the scaled card height + larger down offset (about 10% more)
                           transform: 'scale(1.5)', // Scale to match animation
                           transformOrigin: '0 0' // Scale from top-left corner
                         }}
