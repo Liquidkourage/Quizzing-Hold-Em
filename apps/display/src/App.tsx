@@ -179,24 +179,33 @@ function DisplayApp() {
       
       console.log('🎰 Created animation cards from game state:', communityCards)
       
-      // Phase 1: Deal all cards face down simultaneously (deck to table)
-      console.log('🎰 Phase 1: Dealing all cards face down from deck')
+      // Phase 1: Deal cards one by one from deck to table positions
+      console.log('🎰 Phase 1: Dealing cards one by one from deck')
       
-      // Deal all cards at once, face down
-      const initialCards = actualCommunityCards.map((card, index) => ({
-        id: `community-dealing-${index}`,
-        cardIndex: index,
-        digit: card.digit,
-        isRevealed: false // Start face down
-      }))
+      // Start with empty array and add cards sequentially
+      setDealingCommunityCards([])
       
-      setDealingCommunityCards(initialCards)
+      // Deal cards one by one with delays
+      actualCommunityCards.forEach((card, index) => {
+        setTimeout(() => {
+          console.log(`🎰 Dealing card ${index + 1}: ${card.digit}`)
+          setDealingCommunityCards(prev => [
+            ...prev,
+            {
+              id: `community-dealing-${index}`,
+              cardIndex: index,
+              digit: card.digit,
+              isRevealed: false // Start face down
+            }
+          ])
+        }, index * 400) // 400ms delay between each card
+      })
       
-      // Phase 2: After cards are dealt, reveal them all
+      // Phase 2: After all cards are dealt, reveal them all
       setTimeout(() => {
         console.log('🎰 Phase 2: Revealing all cards')
         setDealingCommunityCards(prev => prev.map(card => ({ ...card, isRevealed: true })))
-      }, 2000) // Wait 2 seconds for dealing animation
+      }, (actualCommunityCards.length * 400) + 500) // Wait for all cards to be dealt + 500ms
       
       // End dealing animation after reveal
       setTimeout(() => {
@@ -205,7 +214,7 @@ function DisplayApp() {
         setDealingCommunityCards([])
         setShowDeck(false) // Hide deck
         setHasDealtCommunityCards(true) // Mark that community cards have been dealt
-      }, 4000) // Wait 4 seconds total (2s dealing + 2s reveal)
+      }, (actualCommunityCards.length * 400) + 500 + 2000) // Wait for dealing + reveal + 2s extra
       
       // Safety timeout to ensure animation completes even if something goes wrong
       setTimeout(() => {
