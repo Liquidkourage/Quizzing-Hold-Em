@@ -10,19 +10,21 @@ export const PokerChip: React.FC<PokerChipProps> = ({
   className = '' 
 }) => {
   const sizeClasses = {
-    sm: 'w-2 h-2',
-    md: 'w-3 h-3',
-    lg: 'w-4 h-4'
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg'
   };
 
   return (
-    <div 
+    <span 
       className={`inline-block ${sizeClasses[size]} ${className}`}
       style={{
-        background: '#ff6b6b',
-        borderRadius: '50%',
-        boxShadow: '0 0 4px rgba(255,107,107,0.6)',
+        color: '#ff6b6b',
+        fontWeight: 'bold',
+        textShadow: '0 0 4px rgba(255,107,107,0.6)',
       }}
-    />
+    >
+      -
+    </span>
   );
 };
