@@ -600,8 +600,8 @@ function DisplayApp() {
                   const endpoint = calculateCardEndpoint(dealingCard.playerIndex, dealingCard.cardIndex)
                   
                   // Calculate exact center for animation start (same as deck position)
-                  const centerX = (window.innerWidth / 2) - 200 // Match deck position
-                  const centerY = window.innerHeight / 2
+                  const centerX = (window.innerWidth / 2) - 50 // Match deck position
+                  const centerY = window.innerHeight / 2 + 100 // Match deck position
                   
                   const finalX = endpoint.x
                   const finalY = endpoint.y
