@@ -16,6 +16,9 @@ function DisplayApp() {
   const [dealingCommunityCards, setDealingCommunityCards] = useState<Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}>>([])
   const [hasDealtCommunityCards, setHasDealtCommunityCards] = useState(false) // Start false - cards only show after dealing animation
   const [showDeck, setShowDeck] = useState(false) // Control deck visibility during animation
+  
+  // Shared community cards state - used by both animation and static display
+  const [sharedCommunityCards, setSharedCommunityCards] = useState<Array<{digit: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}>>([])
 
   useEffect(() => {
     const cleanup = connect('display', 'DISPLAY01')
@@ -158,6 +161,9 @@ function DisplayApp() {
     
     console.log('🎰 Generated random community cards:', randomCards)
     
+    // IMMEDIATELY set the shared community cards so static display uses the same values
+    setSharedCommunityCards(randomCards)
+    
     // Start animation immediately with these random cards
     setIsDealingCommunity(true)
     setDealingCommunityCards([])
@@ -200,17 +206,7 @@ function DisplayApp() {
       setShowDeck(false) // Hide deck after community cards deal
       setHasDealtCommunityCards(true) // Mark that community cards have been dealt
       
-      // Update the demo game state with these random cards so static cards match
-      if (!gameState) {
-        console.log('🎰 Updating demo state with random community cards:', randomCards)
-        setDemoGameState(prev => ({
-          ...prev,
-          round: {
-            ...prev.round,
-            communityCards: randomCards
-          }
-        }))
-      }
+      // No need to update demo state - we're using shared community cards state
     }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
   }, []) // No dependencies needed
 
@@ -903,8 +899,8 @@ function DisplayApp() {
 
               {/* Community Cards - positioned inside table at center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12">
-                {displayGameState.round.communityCards && displayGameState.round.communityCards.length > 0 && (!isDealingCommunity && hasDealtCommunityCards) ? (
-                  displayGameState.round.communityCards.map((card, i) => {
+                {sharedCommunityCards && sharedCommunityCards.length > 0 && (!isDealingCommunity && hasDealtCommunityCards) ? (
+                  sharedCommunityCards.map((card, i) => {
                     // Use relative positioning within the table
                     const cardWidth = 64 // small card width (64px)
                     const cardSpacing = 8 // gap between cards
