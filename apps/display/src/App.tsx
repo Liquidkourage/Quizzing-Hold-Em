@@ -164,6 +164,17 @@ function DisplayApp() {
       // Get community cards from the actual game state
       const actualCommunityCards = displayGameState.round.communityCards || []
       console.log('🎰 Using actual community cards from game state:', actualCommunityCards)
+      console.log('🎰 actualCommunityCards length:', actualCommunityCards.length)
+      
+      // If no cards in game state, create some demo cards for animation
+      const cardsToAnimate = actualCommunityCards.length > 0 ? actualCommunityCards : [
+        { digit: 3 },
+        { digit: 7 },
+        { digit: 9 },
+        { digit: 2 },
+        { digit: 5 }
+      ]
+      console.log('🎰 Cards to animate:', cardsToAnimate)
       
       // Create community cards for animation using the actual cards from game state
       const communityCards: Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}> = []
@@ -186,7 +197,7 @@ function DisplayApp() {
       setDealingCommunityCards([])
       
       // Deal cards one by one with delays
-      actualCommunityCards.forEach((card, index) => {
+      cardsToAnimate.forEach((card, index) => {
         setTimeout(() => {
           console.log(`🎰 Dealing card ${index + 1}: ${card.digit}`)
           setDealingCommunityCards(prev => [
@@ -205,7 +216,7 @@ function DisplayApp() {
       setTimeout(() => {
         console.log('🎰 Phase 2: Revealing all cards')
         setDealingCommunityCards(prev => prev.map(card => ({ ...card, isRevealed: true })))
-      }, (actualCommunityCards.length * 400) + 500) // Wait for all cards to be dealt + 500ms
+      }, (cardsToAnimate.length * 400) + 500) // Wait for all cards to be dealt + 500ms
       
       // End dealing animation after reveal
       setTimeout(() => {
@@ -214,7 +225,7 @@ function DisplayApp() {
         setDealingCommunityCards([])
         setShowDeck(false) // Hide deck
         setHasDealtCommunityCards(true) // Mark that community cards have been dealt
-      }, (actualCommunityCards.length * 400) + 500 + 2000) // Wait for dealing + reveal + 2s extra
+      }, (cardsToAnimate.length * 400) + 500 + 2000) // Wait for dealing + reveal + 2s extra
       
       // Safety timeout to ensure animation completes even if something goes wrong
       setTimeout(() => {
