@@ -66,6 +66,7 @@ export interface ServerToClientEvents {
   state: (state: GameState) => void
   toast: (message: string) => void
   ack: (ack: ServerAck) => void
+  dealingCards: () => void
 }
 
 export interface ClientToServerEvents {

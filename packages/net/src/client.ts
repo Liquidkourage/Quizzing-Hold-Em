@@ -59,6 +59,18 @@ export function onToast(callback: (message: string) => void) {
   }
 }
 
+export function onDealingCards(callback: () => void) {
+  if (!socket) return () => {}
+
+  socket.on('dealingCards', callback)
+  
+  return () => {
+    if (socket) {
+      socket.off('dealingCards', callback)
+    }
+  }
+}
+
 export function useSocket() {
   return socket
 }

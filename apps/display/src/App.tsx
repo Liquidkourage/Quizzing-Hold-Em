@@ -1,12 +1,43 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard } from '@qhe/ui'
-import { connect, onState, onToast } from '@qhe/net'
+import { connect, onState, onToast, onDealingCards } from '@qhe/net'
 import type { GameState } from '@qhe/core'
 
 function DisplayApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [isDealing, setIsDealing] = useState(false)
+  const [dealingCards, setDealingCards] = useState<Array<{id: string, playerIndex: number, cardIndex: number, digit: number}>>([])
+  const [hasDealtCards, setHasDealtCards] = useState(false) // Track if cards have been dealt - start false to hide initial cards
+
+  // Calculate responsive scale factor based on viewport
+  const [scaleFactor, setScaleFactor] = useState(1)
+  
+  useEffect(() => {
+    const calculateScale = () => {
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      
+      // Base dimensions for 1920x1080 (our current design target)
+      const baseWidth = 1920
+      const baseHeight = 1080
+      
+      // Calculate scale based on the smaller dimension to ensure everything fits
+      const widthScale = viewportWidth / baseWidth
+      const heightScale = viewportHeight / baseHeight
+      const scale = Math.min(widthScale, heightScale, 1.5) // Cap at 1.5x to prevent giant elements
+      
+      setScaleFactor(scale)
+    }
+    
+    calculateScale()
+    window.addEventListener('resize', calculateScale)
+    return () => window.removeEventListener('resize', calculateScale)
+  }, [])
+
+  // Helper function to scale pixel values
+  const scale = (pixels: number) => pixels * scaleFactor
 
   useEffect(() => {
     const cleanup = connect('display', 'DISPLAY01')
@@ -26,8 +57,8 @@ function DisplayApp() {
     return unsubscribe
   }, [])
 
-  // TEMPORARY: Create mock game state with 8 players for demonstration
-  const mockGameState: GameState = {
+  // Create demo game state with 8 players for demonstration
+  const [demoGameState, setDemoGameState] = useState<GameState>({
     code: 'ABC123',
     hostId: 'demo',
     createdAt: Date.now(),
@@ -37,14 +68,14 @@ function DisplayApp() {
     minPlayers: 2,
     maxPlayers: 8,
     players: [
-      { id: '1', name: 'Alice', bankroll: 1200, hand: [{ digit: 7 }, { digit: 2 }], hasFolded: false, isAllIn: false },
-      { id: '2', name: 'Bob', bankroll: 850, hand: [{ digit: 9 }, { digit: 4 }], hasFolded: false, isAllIn: false },
-      { id: '3', name: 'Carol', bankroll: 1100, hand: [{ digit: 1 }, { digit: 8 }], hasFolded: false, isAllIn: false },
-      { id: '4', name: 'Dave', bankroll: 950, hand: [{ digit: 3 }, { digit: 6 }], hasFolded: false, isAllIn: false },
-      { id: '5', name: 'Eve', bankroll: 1350, hand: [{ digit: 5 }, { digit: 0 }], hasFolded: false, isAllIn: false },
-      { id: '6', name: 'Frank', bankroll: 700, hand: [{ digit: 2 }, { digit: 9 }], hasFolded: false, isAllIn: false },
-      { id: '7', name: 'Grace', bankroll: 1600, hand: [{ digit: 4 }, { digit: 7 }], hasFolded: false, isAllIn: false },
-      { id: '8', name: 'Henry', bankroll: 900, hand: [{ digit: 8 }, { digit: 1 }], hasFolded: false, isAllIn: false },
+      { id: '1', name: 'Alice', bankroll: 1200, hand: [], hasFolded: false, isAllIn: false },
+      { id: '2', name: 'Bob', bankroll: 850, hand: [], hasFolded: false, isAllIn: false },
+      { id: '3', name: 'Carol', bankroll: 1100, hand: [], hasFolded: false, isAllIn: false },
+      { id: '4', name: 'Dave', bankroll: 950, hand: [], hasFolded: false, isAllIn: false },
+      { id: '5', name: 'Eve', bankroll: 1350, hand: [], hasFolded: false, isAllIn: false },
+      { id: '6', name: 'Frank', bankroll: 700, hand: [], hasFolded: false, isAllIn: false },
+      { id: '7', name: 'Grace', bankroll: 1600, hand: [], hasFolded: false, isAllIn: false },
+      { id: '8', name: 'Henry', bankroll: 900, hand: [], hasFolded: false, isAllIn: false },
     ],
     round: {
       roundId: 'demo1',
@@ -63,10 +94,91 @@ function DisplayApp() {
       },
       dealerIndex: 0
     }
-  }
+  })
 
-  // Use mock state if no real game state
-  const displayGameState = gameState || mockGameState
+  // Use real game state or demo state
+  const displayGameState = gameState || demoGameState
+
+  // Function to trigger dealing animation
+  const triggerDealingAnimation = useCallback(() => {
+    console.log('🎰 Triggering dealing animation!')
+    setIsDealing(true)
+    setDealingCards([])
+    setHasDealtCards(false) // Hide static cards during animation
+    
+    // Create dealing cards in standard poker order: one card at a time around the table
+    const cards: Array<{id: string, playerIndex: number, cardIndex: number, digit: number}> = []
+    
+    // Deal cards one at a time: first card to all players, then second card to all players
+    for (let cardIndex = 0; cardIndex < 2; cardIndex++) {
+      displayGameState.players.forEach((player, playerIndex) => {
+        if (player.hand.length > cardIndex) {
+          // Use actual cards from player's hand
+          cards.push({
+            id: `dealing-${playerIndex}-${cardIndex}`,
+            playerIndex,
+            cardIndex,
+            digit: player.hand[cardIndex].digit
+          })
+        } else {
+          // Create demo cards for animation if no cards exist yet
+          cards.push({
+            id: `dealing-${playerIndex}-${cardIndex}`,
+            playerIndex,
+            cardIndex,
+            digit: Math.floor(Math.random() * 9) + 1 // Random digit 1-9
+          })
+        }
+      })
+    }
+    
+    console.log('🎰 Created', cards.length, 'dealing cards:', cards)
+    
+    // Animate cards one by one with delays
+    cards.forEach((card, index) => {
+      setTimeout(() => {
+        console.log('🎰 Adding card to animation:', card)
+        setDealingCards(prev => [...prev, card])
+      }, index * 200) // 200ms delay between each card
+    })
+    
+    // End dealing animation after all cards are dealt
+    setTimeout(() => {
+      console.log('🎰 Ending dealing animation')
+      setIsDealing(false)
+      setDealingCards([])
+      setHasDealtCards(true) // Mark that cards have been dealt
+      
+      // For demo mode, populate the player hands with the dealt cards
+      if (!gameState) {
+        // This is demo mode, so we need to update the demo state with the dealt cards
+        const updatedPlayers = displayGameState.players.map((player) => ({
+          ...player,
+          hand: [
+            { digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 },
+            { digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 }
+          ]
+        }))
+        
+        setDemoGameState(prev => ({
+          ...prev,
+          players: updatedPlayers
+        }))
+        
+        console.log('🎰 Demo mode - populated player hands with cards')
+      }
+    }, cards.length * 200 + 1000)
+  }, [displayGameState.players])
+
+  useEffect(() => {
+    const unsubscribe = onDealingCards(() => {
+      // Add a delay to wait for the server to update the game state with the new cards
+      setTimeout(() => {
+        triggerDealingAnimation()
+      }, 500) // Wait 500ms for server state update
+    })
+    return unsubscribe
+  }, [displayGameState, triggerDealingAnimation])
 
   if (!displayGameState) {
     return (
@@ -93,31 +205,70 @@ function DisplayApp() {
     )
   }
 
-  // Calculate player positions around the table (larger ring around table)
+  // Calculate player positions around the table (perfectly aligned with cupholders)
   const getPlayerPosition = (index: number, total: number) => {
     const angle = (index / total) * 2 * Math.PI - Math.PI / 2 // Start from top
     
-    // Center position (table is centered)
-    const centerX = 50
-    const centerY = 50
+    // Use the same angle logic as cupholders for perfect alignment
+    const normalizedAngle = ((angle + Math.PI/2) % (2 * Math.PI)) / (2 * Math.PI)
     
-    // Large radius to position players well outside the table
-    let radiusX = 35 // Large horizontal radius
-    let radiusY = 35 // Large vertical radius
+    // Identify top and bottom regions for straight line alignment (same as cupholders)
+    const isTopRegion = normalizedAngle > 0.9 || normalizedAngle < 0.1
+    const isBottomRegion = normalizedAngle > 0.4 && normalizedAngle < 0.6
     
-    // For players at 3 and 9 o'clock positions, adjust horizontal positioning
-    const normalizedAngle = angle + Math.PI / 2
-    const isRightSide = Math.abs(normalizedAngle - Math.PI / 2) < 0.4 // ~3 o'clock
-    const isLeftSide = Math.abs(normalizedAngle - 3 * Math.PI / 2) < 0.4 // ~9 o'clock
+    // Identify corner regions
+    const isCorner = (normalizedAngle > 0.125 && normalizedAngle < 0.375) || 
+                     (normalizedAngle > 0.625 && normalizedAngle < 0.875)
     
-    if (isRightSide || isLeftSide) {
-      radiusX = 32 // Slightly smaller for side positions
+    let cupholderX, cupholderY
+    
+    // Calculate cupholder position (scaled up by 1.62x for larger table)
+    const scaleTable = 1.62
+    if (isTopRegion) {
+      const bowAmount = Math.abs(Math.cos(angle)) * scale(15 * scaleTable)
+      cupholderX = Math.cos(angle) * scale(242 * scaleTable)
+      cupholderY = scale((-180 + bowAmount) * scaleTable)
+    } else if (isBottomRegion) {
+      const bowAmount = Math.abs(Math.cos(angle)) * scale(15 * scaleTable)
+      cupholderX = Math.cos(angle) * scale(242 * scaleTable)
+      cupholderY = scale((180 - bowAmount) * scaleTable)
+    } else if (isCorner) {
+      cupholderX = Math.cos(angle) * scale((242 + 0.5) * scaleTable)
+      cupholderY = Math.sin(angle) * scale((195 + 0.5) * scaleTable)
+    } else {
+      cupholderX = Math.cos(angle) * scale(242 * scaleTable)
+      cupholderY = Math.sin(angle) * scale(195 * scaleTable)
     }
     
-    const x = centerX + Math.cos(angle) * radiusX
-    const y = centerY + Math.sin(angle) * radiusY
+    // Calculate direction from table center (0,0) to cupholder
+    const cupholderDistance = Math.sqrt(cupholderX * cupholderX + cupholderY * cupholderY)
+    const directionX = cupholderX / cupholderDistance
+    const directionY = cupholderY / cupholderDistance
     
-    return { x: `${x}%`, y: `${y}%` }
+    // Position player just outside the table by extending the cupholder position outward
+    // Adjust extension distance based on position - corners out, edges in
+    let extensionDistance = scale(142) // Base extension (88px * 1.62 scale)
+    
+    // Determine if this is a corner or edge position for 8-player layout
+    // Corner positions: 2,4,6,8 (0-indexed: 1,3,5,7) - need to be pushed out 10%
+    // Edge positions: 1,3,5,7 (0-indexed: 0,2,4,6) - need to be pulled in 10%
+    const isCornerPosition = index % 2 === 1 // Odd indices are corners (1,3,5,7)
+    
+    if (isCornerPosition) {
+      // Corner positions - push out 10%
+      extensionDistance = extensionDistance * 1.1
+    } else {
+      // Edge positions - pull in 10%
+      extensionDistance = extensionDistance * 0.9
+    }
+    
+    const playerX = cupholderX + (directionX * extensionDistance)
+    const playerY = cupholderY + (directionY * extensionDistance)
+    
+    // Position relative to the table center in the viewport
+    // Table is centered at 50% of viewport with transform translate
+    // Adjust for offset to align with visual center
+    return { x: `calc(50% + ${playerX}px - ${scale(55)}px)`, y: `calc(50% + ${playerY}px - ${scale(60)}px)` }
   }
 
   return (
@@ -185,41 +336,252 @@ function DisplayApp() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="text-4xl font-black text-yellow-400 mb-2">
+          <h1 
+            className="font-black text-yellow-400 mb-2"
+            style={{ fontSize: scale(36) }}
+          >
             🎰 QUIZZING HOLD-EM
           </h1>
-          <div className="text-lg text-white">
+          <div 
+            className="text-white"
+            style={{ fontSize: scale(18) }}
+          >
             Room: <span className="text-yellow-400 font-bold">{displayGameState.code}</span> | 
             Phase: <span className="text-yellow-400 font-bold">{displayGameState.phase}</span>
             {!gameState && <span className="text-red-400 ml-2">(DEMO MODE - 8 Players)</span>}
           </div>
+          
+
         </motion.div>
 
         {/* Main Game Area - adjusted for bottom info panel */}
         <div className="relative w-full h-[calc(100vh-200px)] max-w-7xl mx-auto">
-          {/* Players positioned around the table */}
+          
+          {/* Dealing Animation */}
+          <AnimatePresence>
+            {isDealing && (
+              <div className="absolute inset-0 z-50 pointer-events-none">
+                {/* Debug info */}
+                <div className="absolute top-4 left-4 bg-black/80 text-white p-2 rounded text-xs">
+                  Dealing: {isDealing ? 'YES' : 'NO'}<br/>
+                  Cards: {dealingCards.length}<br/>
+                  {dealingCards.map(card => `${card.playerIndex}-${card.cardIndex}`).join(', ')}
+                </div>
+                
+                {/* Dealer deck of cards in center */}
+                <motion.div
+                  className="absolute"
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  initial={{ scale: 0, opacity: 0, rotateY: 0 }}
+                  animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {/* Stack of cards to simulate a deck */}
+                  {[...Array(5)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute"
+                      style={{
+                        left: `${i * scale(2)}px`,
+                        top: `${i * scale(-1)}px`,
+                        zIndex: 5 - i
+                      }}
+                      animate={{
+                        rotateY: [0, 5, -5, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: i * 0.1
+                      }}
+                    >
+                      <NumericPlayingCard 
+                        digit={0} 
+                        variant="cyan" 
+                        size="normal" 
+                        faceDown={true}
+                        backDesign="star"
+                        style="neon"
+                        neonVariant="matrix"
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+                {dealingCards.map((dealingCard) => {
+                  // Calculate exact endpoint to match static card positioning
+                  const calculateCardEndpoint = (playerIndex: number, cardIndex: number) => {
+                    const playerPosition = getPlayerPosition(playerIndex, displayGameState.players.length)
+                    
+                    // Parse the position values
+                    const targetX = parseFloat(playerPosition.x.replace('calc(50% + ', '').replace('px)', ''))
+                    const targetY = parseFloat(playerPosition.y.replace('calc(50% + ', '').replace('px)', ''))
+                    
+                    // Calculate viewport center
+                    const containerWidth = window.innerWidth
+                    const viewportHeight = window.innerHeight - 200
+                    const centerX = containerWidth / 2
+                    const centerY = viewportHeight / 2
+                    
+                    // Player container positioning: absolute with transform -translate-x-1/2 -translate-y-1/2
+                    const playerCenterX = centerX + targetX
+                    const playerCenterY = centerY + targetY
+                    
+                    // Static card positioning inside player container:
+                    // - Container: w-[120px] h-[130px] with scale-[1.40625]
+                    // - Cards: absolute bottom-0 left-1/2 transform -translate-x-1/2 flex
+                    // - Each card: scale-50 origin-bottom with marginLeft: i === 0 ? '0' : '-50px'
+                    
+                    const containerScale = 1.40625 * scaleFactor
+                    const cardScale = 0.5
+                    
+                    // Container dimensions after scaling
+                    const scaledHeight = scale(130) * containerScale
+                    
+                    // Cards are positioned at bottom-0 (bottom of container)
+                    const cardsBottomY = playerCenterY + (scaledHeight / 2)
+                    
+                    // Cards use flex with overlapping via negative margin
+                    // First card (index 0): no offset
+                    // Second card (index 1): -50px margin (before scale)
+                    const baseCardWidth = scale(96) // Normal NumericPlayingCard width
+                    const baseCardHeight = scale(144) // Normal NumericPlayingCard height
+                    const scaledCardWidth = baseCardWidth * cardScale * containerScale
+                    const cardOverlap = scale(-50) // px overlap before scaling
+                    
+                    // Calculate card X position
+                    // Cards are centered horizontally (left-1/2 transform -translate-x-1/2)
+                    // Add small offset to move cards slightly right and up
+                    const horizontalOffset = scale(16) // px adjustment to move right (fine-tuned from 18)
+                    const verticalOffset = scale(-8) // px adjustment to move up
+                    let cardX
+                    
+                    if (cardIndex === 0) {
+                      // First card is centered
+                      cardX = playerCenterX - (scaledCardWidth / 2) + horizontalOffset
+                    } else {
+                      // Second card overlaps by -50px (before container scaling)
+                      const overlapScaled = cardOverlap * containerScale
+                      cardX = playerCenterX - (scaledCardWidth / 2) + overlapScaled + horizontalOffset
+                    }
+                    
+                    // Card Y position accounts for card height and origin-bottom
+                    const scaledCardHeight = baseCardHeight * cardScale * containerScale
+                    const cardY = cardsBottomY - scaledCardHeight + verticalOffset
+                    
+                    return { x: cardX, y: cardY, scale: cardScale * containerScale }
+                  }
+                  
+                  const endpoint = calculateCardEndpoint(dealingCard.playerIndex, dealingCard.cardIndex)
+                  
+                  // Calculate exact center for animation start (same as deck position)
+                  const containerWidth = window.innerWidth
+                  const viewportHeight = window.innerHeight - 200
+                  const centerX = containerWidth / 2
+                  const centerY = viewportHeight / 2
+                  
+                  const finalX = endpoint.x
+                  const finalY = endpoint.y
+                  const finalScale = endpoint.scale
+                  
+                  return (
+                    <motion.div
+                      key={dealingCard.id}
+                      className="absolute"
+                      style={{ 
+                        left: 0, 
+                        top: 0 
+                      }}
+                      initial={{ 
+                        x: centerX,
+                        y: centerY,
+                        scale: 0.1,
+                        rotate: Math.random() * 360 - 180,
+                        opacity: 0
+                      }}
+                      animate={{ 
+                        x: finalX,
+                        y: finalY,
+                        scale: finalScale, // Match the exact card scale
+                        rotate: 0,
+                        opacity: 1
+                      }}
+                      transition={{ 
+                        duration: 1.2,
+                        ease: "easeOut",
+                        type: "spring",
+                        stiffness: 100,
+                        damping: 10
+                      }}
+                    >
+                      <NumericPlayingCard 
+                        digit={dealingCard.digit} 
+                        variant="cyan" 
+                        size="normal" 
+                        faceDown={true}
+                        backDesign="star"
+                        style="neon"
+                        neonVariant="pulse"
+                      />
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )}
+          </AnimatePresence>
+          {/* Players positioned around the table - positioned relative to viewport center */}
           {displayGameState.players.map((player, index) => {
             const position = getPlayerPosition(index, displayGameState.players.length)
             return (
-              <motion.div
-                key={player.id}
+              <motion.div 
+                key={player.id} 
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20"
-                style={{ left: position.x, top: position.y }}
+                style={{ 
+                  left: position.x, 
+                  top: position.y 
+                }}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
               >
-                <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center w-[120px] h-[130px] shadow-lg transform scale-75 origin-center relative">
-                  <div className="text-yellow-400 font-bold text-sm mb-1">{player.name}</div>
-                  <div className="text-white text-sm mb-1">
+                <div 
+                  className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center shadow-lg transform origin-center relative"
+                  style={{
+                    width: scale(120),
+                    height: scale(130),
+                    transform: `scale(${1.40625 * scaleFactor})`
+                  }}
+                >
+                  <div 
+                    className="text-yellow-400 font-bold mb-1"
+                    style={{ fontSize: scale(14) }}
+                  >
+                    {player.name}
+                  </div>
+                  <div 
+                    className="text-white mb-1"
+                    style={{ fontSize: scale(14) }}
+                  >
                     ${player.bankroll}
                   </div>
                   
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
-                  {player.hand.length > 0 && (
+                  {player.hand.length > 0 && !isDealing && hasDealtCards && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex">
-                      {player.hand.map((card, i) => (
-                        <div key={i} className="transform scale-50 origin-bottom" style={{ marginLeft: i === 0 ? '0' : '-50px' }}>
+                                        {player.hand.map((card, i) => (
+                        <div 
+                          key={i} 
+                          className="transform origin-bottom" 
+                          style={{ 
+                            transform: `scale(${0.5 * scaleFactor})`,
+                            marginLeft: i === 0 ? '0' : `${scale(-50)}px` 
+                          }}
+                        >
                           <NumericPlayingCard digit={card.digit} variant="cyan" size="normal" faceDown={true} backDesign="star" />
                         </div>
                       ))}
@@ -228,7 +590,15 @@ function DisplayApp() {
                   
                   {/* Player status */}
                   {player.hasFolded && (
-                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-red-400 font-bold text-xs">FOLDED</div>
+                    <div 
+                      className="absolute left-1/2 transform -translate-x-1/2 text-red-400 font-bold"
+                      style={{ 
+                        bottom: scale(24),
+                        fontSize: scale(12)
+                      }}
+                    >
+                      FOLDED
+                    </div>
                   )}
                 </div>
               </motion.div>
@@ -238,10 +608,22 @@ function DisplayApp() {
           {/* Realistic Poker Table - Centered vertically in available space */}
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
             {/* Table shadow */}
-            <div className="absolute inset-0 w-[520px] h-[395px] bg-black/40 rounded-full blur-lg transform translate-y-2"></div>
+            <div 
+              className="absolute inset-0 bg-black/40 rounded-full blur-lg transform translate-y-2"
+              style={{
+                width: scale(842),
+                height: scale(637)
+              }}
+            ></div>
             
             {/* Table base/rail */}
-            <div className="w-[500px] h-[375px] bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative">
+            <div 
+              className="bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative"
+              style={{
+                width: scale(810),
+                height: scale(605)
+              }}
+            >
                             {/* FELT SURFACE - Direct application to rail padding */}
               <div 
                 className="absolute inset-2 rounded-full border-4 border-amber-500"
@@ -273,13 +655,13 @@ function DisplayApp() {
                 
 
 
-              {/* Cup holders centered on the middle rail stripe - one per player */}
+                            {/* Cup holders centered on the middle rail stripe - one per player */}
               {displayGameState.players.map((_, index) => {
                 const angle = (index / displayGameState.players.length) * 2 * Math.PI - Math.PI / 2
                 
-                // Base ellipse dimensions - back to working pixel values
-                const baseRadiusX = 242  // Horizontal radius
-                const baseRadiusY = 195  // Vertical radius
+                // Base ellipse dimensions - scaled up for larger table
+                const baseRadiusX = scale(392)  // Horizontal radius (242 * 1.62)
+                const baseRadiusY = scale(316)  // Vertical radius (195 * 1.62)
                 
                 // Calculate base position
                 let x = Math.cos(angle) * baseRadiusX
@@ -298,16 +680,16 @@ function DisplayApp() {
                 
                 if (isTopRegion) {
                   // Create more pronounced inward bow for top line
-                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Bow inward
-                  y = -180 + bowAmount // Positioning
+                  const bowAmount = Math.abs(Math.cos(angle)) * scale(24.3) // Bow inward (15 * 1.62)
+                  y = scale(-291.6) + bowAmount // Positioning (-180 * 1.62)
                 } else if (isBottomRegion) {
                   // Create more pronounced inward bow for bottom line
-                  const bowAmount = Math.abs(Math.cos(angle)) * 15 // Bow inward
-                  y = 180 - bowAmount // Positioning
+                  const bowAmount = Math.abs(Math.cos(angle)) * scale(24.3) // Bow inward (15 * 1.62)
+                  y = scale(291.6) - bowAmount // Positioning (180 * 1.62)
                 } else if (isCorner) {
                   // Push corners out by increasing radius - minimal boost for nearly flat
-                  x = Math.cos(angle) * (baseRadiusX + 0.5)
-                  y = Math.sin(angle) * (baseRadiusY + 0.5)
+                  x = Math.cos(angle) * (baseRadiusX + scale(0.81))
+                  y = Math.sin(angle) * (baseRadiusY + scale(0.81))
                 }
                 
                 // Note: Individual adjustments removed since we now have 8 cupholders instead of 50
@@ -317,13 +699,13 @@ function DisplayApp() {
                     key={`cupholder-${index}`}
                     className="absolute bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
                     style={{ 
-                      left: `${243 + x}px`, 
-                      top: `${181 + y}px`,
-                      width: '20px',
-                      height: '20px'
+                      left: `${scale(394) + x}px`, 
+                      top: `${scale(293) + y}px`,
+                      width: scale(32),
+                      height: scale(32)
                     }}
-                                      >
-                    </div>
+                  >
+                  </div>
                 )
               })}
               
@@ -348,31 +730,80 @@ function DisplayApp() {
               })}
               
               {/* Pot display - positioned higher */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-24 text-center">
-                <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2">
-                  <div className="text-white text-sm">Pot: <span className="text-yellow-400 font-bold text-2xl">${displayGameState.round.pot}</span></div>
+              <div 
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 text-center"
+                style={{ transform: 'translate(-50%, -50%) translateY(-' + scale(96) + 'px)' }}
+              >
+                <div 
+                  className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg"
+                  style={{ padding: `${scale(8)}px ${scale(16)}px` }}
+                >
+                  <div 
+                    className="text-white"
+                    style={{ fontSize: scale(14) }}
+                  >
+                    Pot: <span 
+                      className="text-yellow-400 font-bold"
+                      style={{ fontSize: scale(24) }}
+                    >
+                      ${displayGameState.round.pot}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Community Cards - positioned higher */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-0">
-                <div className="flex gap-2">
+              <div 
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2"
+                style={{ transform: 'translate(-50%, -50%)' }}
+              >
+                <div 
+                  className="flex"
+                  style={{ gap: scale(8) }}
+                >
                   {displayGameState.round.communityCards && displayGameState.round.communityCards.length > 0 ? (
                     displayGameState.round.communityCards.map((card, i) => (
                       <NumericPlayingCard key={i} digit={card.digit} variant="cyan" style="neon" neonVariant="matrix" size="small" />
                     ))
                   ) : (
-                    <div className="text-white/60 text-sm bg-black/40 backdrop-blur-sm rounded px-2 py-1">No community cards</div>
+                    <div 
+                      className="text-white/60 bg-black/40 backdrop-blur-sm rounded"
+                      style={{ 
+                        fontSize: scale(14),
+                        padding: `${scale(4)}px ${scale(8)}px`
+                      }}
+                    >
+                      No community cards
+                    </div>
                   )}
                 </div>
               </div>
 
               {/* Current question - positioned above pot */}
               {displayGameState.round.question && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-24 w-72">
-                  <div className="bg-black/80 backdrop-blur-md border border-white/20 rounded-lg p-3 text-center">
-                    <div className="text-white text-sm mb-1">Current Question:</div>
-                    <div className="text-yellow-400 font-bold text-sm">{displayGameState.round.question.text}</div>
+                <div 
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2"
+                  style={{ 
+                    transform: 'translate(-50%, -50%) translateY(-' + scale(96) + 'px)',
+                    width: scale(288)
+                  }}
+                >
+                  <div 
+                    className="bg-black/80 backdrop-blur-md border border-white/20 rounded-lg text-center"
+                    style={{ padding: scale(12) }}
+                  >
+                    <div 
+                      className="text-white mb-1"
+                      style={{ fontSize: scale(14) }}
+                    >
+                      Current Question:
+                    </div>
+                    <div 
+                      className="text-yellow-400 font-bold"
+                      style={{ fontSize: scale(14) }}
+                    >
+                      {displayGameState.round.question.text}
+                    </div>
                   </div>
                 </div>
               )}
@@ -386,22 +817,65 @@ function DisplayApp() {
       <div className="fixed bottom-0 left-0 right-0 z-30 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-lg p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <div className="text-white text-sm">Players</div>
-                <div className="text-yellow-400 font-bold text-xl">{displayGameState.players.length}</div>
-              </div>
-              <div>
-                <div className="text-white text-sm">Total Pot</div>
-                <div className="text-yellow-400 font-bold text-xl">${displayGameState.round.pot}</div>
-              </div>
-              <div>
-                <div className="text-white text-sm">Phase</div>
-                <div className="text-yellow-400 font-bold text-xl">{displayGameState.phase}</div>
-              </div>
-              <div>
-                <div className="text-white text-sm">Room Code</div>
-                <div className="text-yellow-400 font-bold text-xl">{displayGameState.code}</div>
+            <div 
+              className="grid grid-cols-2 md:grid-cols-4 text-center"
+              style={{ gap: scale(16) }}
+            >
+            <div>
+                <div 
+                  className="text-white"
+                  style={{ fontSize: scale(14) }}
+                >
+                  Players
+                </div>
+                <div 
+                  className="text-yellow-400 font-bold"
+                  style={{ fontSize: scale(20) }}
+                >
+                  {displayGameState.players.length}
+                </div>
+            </div>
+            <div>
+                <div 
+                  className="text-white"
+                  style={{ fontSize: scale(14) }}
+                >
+                  Total Pot
+                </div>
+                <div 
+                  className="text-yellow-400 font-bold"
+                  style={{ fontSize: scale(20) }}
+                >
+                  ${displayGameState.round.pot}
+                </div>
+            </div>
+            <div>
+                <div 
+                  className="text-white"
+                  style={{ fontSize: scale(14) }}
+                >
+                  Phase
+                </div>
+                <div 
+                  className="text-yellow-400 font-bold"
+                  style={{ fontSize: scale(20) }}
+                >
+                  {displayGameState.phase}
+                </div>
+            </div>
+            <div>
+                <div 
+                  className="text-white"
+                  style={{ fontSize: scale(14) }}
+                >
+                  Room Code
+                </div>
+                <div 
+                  className="text-yellow-400 font-bold"
+                  style={{ fontSize: scale(20) }}
+                >
+                  {displayGameState.code}
+                </div>
               </div>
             </div>
           </div>

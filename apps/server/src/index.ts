@@ -793,6 +793,7 @@ io.on('connection', (socket) => {
           
         case 'dealInitialCards':
           gameState = dealInitialCards(gameState)
+          io.to(roomCode).emit('dealingCards') // Trigger dealing animation
           io.to(roomCode).emit('toast', 'Initial cards dealt!')
           break
           
