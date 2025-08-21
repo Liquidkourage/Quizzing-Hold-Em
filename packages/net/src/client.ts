@@ -71,6 +71,18 @@ export function onDealingCards(callback: () => void) {
   }
 }
 
+export function onDealingCommunityCards(callback: () => void) {
+  if (!socket) return () => {}
+
+  socket.on('dealingCommunityCards', callback)
+  
+  return () => {
+    if (socket) {
+      socket.off('dealingCommunityCards', callback)
+    }
+  }
+}
+
 export function useSocket() {
   return socket
 }

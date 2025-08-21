@@ -67,6 +67,7 @@ export interface ServerToClientEvents {
   toast: (message: string) => void
   ack: (ack: ServerAck) => void
   dealingCards: () => void
+  dealingCommunityCards: () => void
 }
 
 export interface ClientToServerEvents {

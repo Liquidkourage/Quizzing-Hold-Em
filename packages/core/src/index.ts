@@ -175,11 +175,9 @@ export function dealInitialCards(state: GameState): GameState {
 }
 
 export function dealCommunityCards(state: GameState): GameState {
-  const communityCards = [dealCard(), dealCard(), dealCard()];
-  return {
-    ...state,
-    round: { ...state.round, communityCards },
-  };
+  // Don't create community cards here - the animation will generate them
+  // Just trigger the animation event
+  return state;
 }
 
 export function placeBet(state: GameState, playerId: string, amount: number): GameState {

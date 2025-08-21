@@ -798,7 +798,12 @@ io.on('connection', (socket) => {
           break
           
         case 'dealCommunityCards':
+          console.log('🎰 Server: Received dealCommunityCards action')
           gameState = dealCommunityCards(gameState)
+          console.log('🎰 Server: Generated community cards:', gameState.round.communityCards)
+          console.log('🎰 Server: Community cards count:', gameState.round.communityCards.length)
+          console.log('🎰 Server: Emitting dealingCommunityCards event to room:', roomCode)
+          io.to(roomCode).emit('dealingCommunityCards') // Trigger community card dealing animation
           io.to(roomCode).emit('toast', 'Community cards dealt!')
           break
           
