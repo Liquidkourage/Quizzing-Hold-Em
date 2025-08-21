@@ -162,7 +162,39 @@ function PlayerApp() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Community Cards - Prominent Center Section */}
+        <Card variant="glass" className="mb-8 p-8">
+          <h2 className="text-3xl font-bold text-casino-emerald mb-8 text-center">Community Cards</h2>
+          <div className="flex gap-6 justify-center mb-8">
+            {gameState.round.communityCards.map((card, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ scale: 0, rotate: 180 }} 
+                animate={{ scale: 1, rotate: 0 }} 
+                transition={{ delay: i * 0.1 }}
+              >
+                <NumericPlayingCard digit={card.digit} variant="cyan" style="neon" neonVariant="matrix" size="large" />
+              </motion.div>
+            ))}
+          </div>
+          <div className="text-center mb-6">
+            <div className="text-lg text-white/80">Pot</div>
+            <div className="text-4xl font-bold text-casino-emerald">${gameState.round.pot}</div>
+          </div>
+          {gameState.round.question && (
+            <div className="p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg max-w-2xl mx-auto">
+              <div className="text-lg text-white/80 mb-3">Question</div>
+              <div className="text-lg text-casino-gold font-bold">{gameState.round.question.text}</div>
+              {gameState.phase === 'showdown' && (
+                <div className="text-lg font-bold text-casino-emerald mt-3">
+                  Answer: {gameState.round.question.answer}
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Your Hand */}
           <Card variant="glass" className="p-6">
             <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Your Hand</h2>
@@ -185,38 +217,6 @@ function PlayerApp() {
             {currentPlayer?.hasFolded && (
               <div className="mt-4 text-center">
                 <div className="text-red-400 font-bold text-xl">FOLDED</div>
-              </div>
-            )}
-          </Card>
-
-          {/* Community Cards */}
-          <Card variant="glass" className="p-6">
-            <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Community Cards</h2>
-            <div className="flex gap-3 justify-center mb-6">
-              {gameState.round.communityCards.map((card, i) => (
-                <motion.div 
-                  key={i} 
-                  initial={{ scale: 0, rotate: 180 }} 
-                  animate={{ scale: 1, rotate: 0 }} 
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <NumericPlayingCard digit={card.digit} variant="cyan" style="neon" neonVariant="matrix" size="large" />
-                </motion.div>
-              ))}
-            </div>
-            <div className="text-center mb-4">
-              <div className="text-sm text-white/80">Pot</div>
-              <div className="text-3xl font-bold text-casino-emerald">${gameState.round.pot}</div>
-            </div>
-            {gameState.round.question && (
-              <div className="p-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
-                <div className="text-sm text-white/80 mb-2">Question</div>
-                <div className="text-sm text-casino-gold font-bold">{gameState.round.question.text}</div>
-                {gameState.phase === 'showdown' && (
-                  <div className="text-sm font-bold text-casino-emerald mt-2">
-                    Answer: {gameState.round.question.answer}
-                  </div>
-                )}
               </div>
             )}
           </Card>
