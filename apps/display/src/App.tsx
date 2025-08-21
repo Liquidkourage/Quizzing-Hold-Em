@@ -15,6 +15,7 @@ function DisplayApp() {
   const [isDealingCommunity, setIsDealingCommunity] = useState(false)
   const [dealingCommunityCards, setDealingCommunityCards] = useState<Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}>>([])
   const [hasDealtCommunityCards, setHasDealtCommunityCards] = useState(false) // Start false - cards only show after dealing animation
+  const [showDeck, setShowDeck] = useState(false) // Control deck visibility during animation
 
   useEffect(() => {
     const cleanup = connect('display', 'DISPLAY01')
@@ -157,6 +158,7 @@ function DisplayApp() {
     setTimeout(() => {
       console.log('🎰 Starting animation after reset')
       setIsDealingCommunity(true)
+      setShowDeck(true) // Show deck first
       setHasDealtCommunityCards(false) // Hide static community cards during animation
     
       // Get community cards from the actual game state
@@ -177,38 +179,33 @@ function DisplayApp() {
       
       console.log('🎰 Created animation cards from game state:', communityCards)
       
-      // Phase 1: Deal cards one by one to their positions
-      console.log('🎰 Starting to deal cards one by one')
+      // Phase 1: Deal all cards face down simultaneously (deck to table)
+      console.log('🎰 Phase 1: Dealing all cards face down from deck')
       
-      // Deal cards sequentially with delays
-      actualCommunityCards.forEach((card, index) => {
-        setTimeout(() => {
-          console.log(`🎰 Dealing card ${index + 1}: ${card.digit}`)
-          setDealingCommunityCards(prev => [
-            ...prev,
-            {
-              id: `community-dealing-${index}`,
-              cardIndex: index,
-              digit: card.digit,
-              isRevealed: false // Start face down
-            }
-          ])
-        }, index * 300) // 300ms delay between each card
-      })
+      // Deal all cards at once, face down
+      const initialCards = actualCommunityCards.map((card, index) => ({
+        id: `community-dealing-${index}`,
+        cardIndex: index,
+        digit: card.digit,
+        isRevealed: false // Start face down
+      }))
       
-      // Phase 2: Reveal all cards after all are dealt
+      setDealingCommunityCards(initialCards)
+      
+      // Phase 2: After cards are dealt, reveal them all
       setTimeout(() => {
-        console.log('🎰 Revealing all dealt cards')
+        console.log('🎰 Phase 2: Revealing all cards')
         setDealingCommunityCards(prev => prev.map(card => ({ ...card, isRevealed: true })))
-      }, (actualCommunityCards.length * 300) + 500) // Wait for all cards to be dealt + 500ms
+      }, 2000) // Wait 2 seconds for dealing animation
       
       // End dealing animation after reveal
       setTimeout(() => {
-        console.log('🎰 Ending community card dealing animation')
+        console.log('🎰 Phase 3: Ending animation')
         setIsDealingCommunity(false)
         setDealingCommunityCards([])
+        setShowDeck(false) // Hide deck
         setHasDealtCommunityCards(true) // Mark that community cards have been dealt
-      }, (actualCommunityCards.length * 300) + 500 + 2000) // Wait for dealing + reveal + 2s extra time
+      }, 4000) // Wait 4 seconds total (2s dealing + 2s reveal)
       
       // Safety timeout to ensure animation completes even if something goes wrong
       setTimeout(() => {
@@ -216,9 +213,10 @@ function DisplayApp() {
           console.log('🎰 Safety timeout - forcing animation completion')
           setIsDealingCommunity(false)
           setDealingCommunityCards([])
+          setShowDeck(false)
           setHasDealtCommunityCards(true)
         }
-      }, 5000) // 5 second safety timeout
+      }, 6000) // 6 second safety timeout
     }, 100) // Brief delay to ensure state reset
   }, []) // Remove dependency to prevent recreation issues
 
@@ -644,18 +642,19 @@ function DisplayApp() {
                 </div>
                 
                 {/* Dealer deck of cards - positioned to the left of community cards */}
-                <motion.div
-                  className="absolute"
-                  style={{
-                    left: 'calc(50% - 200px)', // Move deck to the left
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)'
-                  }}
-                  initial={{ scale: 0, opacity: 0, rotateY: 0 }}
-                  animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
+                {showDeck && (
+                  <motion.div
+                    className="absolute"
+                    style={{
+                      left: 'calc(50% - 200px)', // Move deck to the left
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    initial={{ scale: 0, opacity: 0, rotateY: 0 }}
+                    animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
                   {/* Stack of cards to simulate a deck */}
                   {[...Array(5)].map((_, i) => (
                     <motion.div
@@ -688,6 +687,7 @@ function DisplayApp() {
                     </motion.div>
                   ))}
                 </motion.div>
+                )}
                 {dealingCommunityCards.map((dealingCard) => {
                   // Calculate exact endpoint for community card positioning (relative to table center)
                   const calculateCommunityCardEndpoint = (cardIndex: number) => {
