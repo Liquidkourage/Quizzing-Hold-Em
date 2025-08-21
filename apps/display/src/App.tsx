@@ -165,6 +165,8 @@ function DisplayApp() {
       const actualCommunityCards = displayGameState.round.communityCards || []
       console.log('🎰 Using actual community cards from game state:', actualCommunityCards)
       console.log('🎰 actualCommunityCards length:', actualCommunityCards.length)
+      console.log('🎰 Full displayGameState:', displayGameState)
+      console.log('🎰 displayGameState.round:', displayGameState.round)
       
       // Use actual server cards - if none available, use demo cards for animation
       // ONLY use actual server cards - no fallbacks!
@@ -238,7 +240,7 @@ function DisplayApp() {
         }
       }, 6000) // 6 second safety timeout
     }, 100) // Brief delay to ensure state reset
-  }, []) // Remove dependency to prevent recreation issues
+  }, [displayGameState]) // Add dependency to ensure fresh state
 
   useEffect(() => {
     const unsubscribe = onDealingCards(() => {
@@ -261,8 +263,9 @@ function DisplayApp() {
         console.log('🎰 About to trigger community dealing animation')
         console.log('🎰 Updated gameState:', gameState)
         console.log('🎰 Updated displayGameState:', displayGameState)
+        console.log('🎰 displayGameState.round.communityCards:', displayGameState.round?.communityCards)
         triggerCommunityDealingAnimation()
-      }, 3000) // Wait 3 seconds for server state update
+      }, 4000) // Wait 4 seconds for server state update
     })
     return unsubscribe
   }, [triggerCommunityDealingAnimation]) // Removed displayGameState dependency
