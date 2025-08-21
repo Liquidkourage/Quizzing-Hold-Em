@@ -937,45 +937,45 @@ function DisplayApp() {
               </div>
 
               {/* Community Cards - positioned inside table at center */}
-              {displayGameState.round.communityCards && displayGameState.round.communityCards.length > 0 && (!isDealingCommunity && hasDealtCommunityCards) ? (
-                displayGameState.round.communityCards.map((card, i) => {
-                  // Use the exact same positioning logic as animated cards
-                  const cardWidth = 64 // small card width (64px)
-                  const cardSpacing = 8 // gap between cards
-                  const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
-                  const tableCenterX = window.innerWidth / 2
-                  const tableCenterY = window.innerHeight / 2
-                  const startX = tableCenterX - (totalWidth / 2)
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                {displayGameState.round.communityCards && displayGameState.round.communityCards.length > 0 && (!isDealingCommunity && hasDealtCommunityCards) ? (
+                  displayGameState.round.communityCards.map((card, i) => {
+                    // Use relative positioning within the table
+                    const cardWidth = 64 // small card width (64px)
+                    const cardSpacing = 8 // gap between cards
+                    const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
+                    const startX = -(totalWidth / 2) // Start from center and go left by half total width
+                    
+                    const cardX = startX + (i * (cardWidth + cardSpacing)) + (cardWidth / 2)
+                    const cardY = 0 // Center vertically
                   
-                  const cardX = startX + (i * (cardWidth + cardSpacing)) + (cardWidth / 2)
-                  const cardY = tableCenterY
-                
-                  return (
-                    <div
-                      key={i}
-                      className="absolute"
-                      style={{
-                        left: cardX - (64 * 1.5 / 2), // Offset by half the scaled card width
-                        top: cardY - (96 * 1.5 / 2), // Offset by half the scaled card height
-                        transform: 'scale(1.5)', // Scale to match animation
-                        transformOrigin: '0 0' // Scale from top-left corner
-                      }}
-                    >
-                      <NumericPlayingCard 
-                        digit={card.digit} 
-                        variant="cyan" 
-                        style="neon" 
-                        neonVariant="matrix" 
-                        size="small" 
-                      />
-                    </div>
-                  )
-                })
-              ) : (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/60 text-sm bg-black/40 backdrop-blur-sm rounded px-2 py-1">
-                  No community cards
-                </div>
-              )}
+                    return (
+                      <div
+                        key={i}
+                        className="absolute"
+                        style={{
+                          left: cardX - (64 * 1.5 / 2), // Offset by half the scaled card width
+                          top: cardY - (96 * 1.5 / 2), // Offset by half the scaled card height
+                          transform: 'scale(1.5)', // Scale to match animation
+                          transformOrigin: '0 0' // Scale from top-left corner
+                        }}
+                      >
+                        <NumericPlayingCard 
+                          digit={card.digit} 
+                          variant="cyan" 
+                          style="neon" 
+                          neonVariant="matrix" 
+                          size="small" 
+                        />
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="text-white/60 text-sm bg-black/40 backdrop-blur-sm rounded px-2 py-1">
+                    No community cards
+                  </div>
+                )}
+              </div>
 
               {/* Current question - positioned above pot */}
               {displayGameState.round.question && (
