@@ -931,14 +931,14 @@ function DisplayApp() {
               })}
               
               {/* Pot display - positioned higher */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-24 text-center">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-32 text-center">
                 <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2">
                   <div className="text-white text-sm">Pot: <span className="text-yellow-400 font-bold text-2xl">${displayGameState.round.pot}</span></div>
                 </div>
               </div>
 
               {/* Community Cards - positioned inside table at center */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-8">
                 {displayGameState.round.communityCards && displayGameState.round.communityCards.length > 0 && (!isDealingCommunity && hasDealtCommunityCards) ? (
                   displayGameState.round.communityCards.map((card, i) => {
                     // Use relative positioning within the table
@@ -981,7 +981,7 @@ function DisplayApp() {
 
               {/* Current question - positioned above pot */}
               {displayGameState.round.question && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-24 w-72">
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-32 w-72">
                   <div className="bg-black/80 backdrop-blur-md border border-white/20 rounded-lg p-3 text-center">
                     <div className="text-white text-sm mb-1">Current Question:</div>
                     <div className="text-yellow-400 font-bold text-sm">{displayGameState.round.question.text}</div>
