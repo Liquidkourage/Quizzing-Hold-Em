@@ -194,53 +194,30 @@ function DisplayApp() {
       
       console.log('🎰 Created animation cards from game state:', communityCards)
       
-      // Phase 1: Deal cards one by one from deck to table positions
-      console.log('🎰 Phase 1: Dealing cards one by one from deck')
-      
-      // Start with empty array and add cards sequentially
-      setDealingCommunityCards([])
-      
-      // Deal cards one by one with delays
+      // Deal cards one by one with delays (like initial deal animation)
       cardsToAnimate.forEach((card, index) => {
         setTimeout(() => {
-          console.log(`🎰 Dealing card ${index + 1}: ${card.digit}`)
-          setDealingCommunityCards(prev => [
-            ...prev,
-            {
-              id: `community-dealing-${index}`,
-              cardIndex: index,
-              digit: card.digit,
-              isRevealed: false // Start face down
-            }
-          ])
-        }, 1000 + (index * 400)) // 1 second delay before first card, then 400ms between each card
+          console.log(`🎰 Dealing community card ${index + 1}: ${card.digit}`)
+                      setDealingCommunityCards(prev => [
+              ...prev,
+              {
+                id: `community-dealing-${index}`,
+                cardIndex: index,
+                digit: card.digit,
+                isRevealed: true // Start face up (like initial deal)
+              }
+            ])
+        }, index * 200) // 200ms delay between each card (same as initial deal)
       })
       
-      // Phase 2: After all cards are dealt, reveal them all
+      // End dealing animation after all cards are dealt
       setTimeout(() => {
-        console.log('🎰 Phase 2: Revealing all cards')
-        setDealingCommunityCards(prev => prev.map(card => ({ ...card, isRevealed: true })))
-      }, 1000 + (cardsToAnimate.length * 400) + 500) // Wait for initial delay + all cards to be dealt + 500ms
-      
-      // End dealing animation after reveal
-      setTimeout(() => {
-        console.log('🎰 Phase 3: Ending animation')
+        console.log('🎰 Ending community cards dealing animation')
         setIsDealingCommunity(false)
         setDealingCommunityCards([])
         setShowDeck(false) // Hide deck
         setHasDealtCommunityCards(true) // Mark that community cards have been dealt
-      }, 1000 + (cardsToAnimate.length * 400) + 500 + 2000) // Wait for initial delay + dealing + reveal + 2s extra
-      
-      // Safety timeout to ensure animation completes even if something goes wrong
-      setTimeout(() => {
-        if (isDealingCommunity) {
-          console.log('🎰 Safety timeout - forcing animation completion')
-          setIsDealingCommunity(false)
-          setDealingCommunityCards([])
-          setShowDeck(false)
-          setHasDealtCommunityCards(true)
-        }
-      }, 6000) // 6 second safety timeout
+      }, cardsToAnimate.length * 200 + 1000) // Same timing as initial deal
     }, 100) // Brief delay to ensure state reset
   }, [displayGameState]) // Add dependency to ensure fresh state
 
