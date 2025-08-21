@@ -167,30 +167,14 @@ function DisplayApp() {
       console.log('🎰 actualCommunityCards length:', actualCommunityCards.length)
       
       // Use actual server cards - if none available, use demo cards for animation
+      // ONLY use actual server cards - no fallbacks!
       if (actualCommunityCards.length === 0) {
-        console.log('🎰 No community cards in game state yet, using demo cards for animation')
-        const demoCards = [
-          { digit: 3 },
-          { digit: 7 },
-          { digit: 9 },
-          { digit: 2 },
-          { digit: 5 }
-        ]
-        const cardsToAnimate = demoCards
-        console.log('🎰 Using demo cards for animation:', cardsToAnimate)
-      } else {
-        const cardsToAnimate = actualCommunityCards
-        console.log('🎰 Using server cards for animation:', cardsToAnimate)
+        console.log('🎰 No community cards in game state yet, skipping animation')
+        return
       }
       
-      const cardsToAnimate = actualCommunityCards.length > 0 ? actualCommunityCards : [
-        { digit: 3 },
-        { digit: 7 },
-        { digit: 9 },
-        { digit: 2 },
-        { digit: 5 }
-      ]
-      console.log('🎰 Cards to animate:', cardsToAnimate)
+      const cardsToAnimate = actualCommunityCards
+      console.log('🎰 Using server cards for animation:', cardsToAnimate)
       
       // Create community cards for animation using the actual cards from game state
       const communityCards: Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}> = []
@@ -278,7 +262,7 @@ function DisplayApp() {
         console.log('🎰 Updated gameState:', gameState)
         console.log('🎰 Updated displayGameState:', displayGameState)
         triggerCommunityDealingAnimation()
-      }, 2000) // Wait 2 seconds for server state update
+      }, 3000) // Wait 3 seconds for server state update
     })
     return unsubscribe
   }, [triggerCommunityDealingAnimation]) // Removed displayGameState dependency
