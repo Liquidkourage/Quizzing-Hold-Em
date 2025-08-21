@@ -166,14 +166,13 @@ function DisplayApp() {
       console.log('🎰 Using actual community cards from game state:', actualCommunityCards)
       console.log('🎰 actualCommunityCards length:', actualCommunityCards.length)
       
-      // If no cards in game state, create some demo cards for animation
-      const cardsToAnimate = actualCommunityCards.length > 0 ? actualCommunityCards : [
-        { digit: 3 },
-        { digit: 7 },
-        { digit: 9 },
-        { digit: 2 },
-        { digit: 5 }
-      ]
+      // Use actual server cards - if none available, wait for them
+      if (actualCommunityCards.length === 0) {
+        console.log('🎰 No community cards in game state yet, skipping animation')
+        return
+      }
+      
+      const cardsToAnimate = actualCommunityCards
       console.log('🎰 Cards to animate:', cardsToAnimate)
       
       // Create community cards for animation using the actual cards from game state
@@ -262,7 +261,7 @@ function DisplayApp() {
         console.log('🎰 Updated gameState:', gameState)
         console.log('🎰 Updated displayGameState:', displayGameState)
         triggerCommunityDealingAnimation()
-      }, 1000) // Wait 1 second for server state update
+      }, 2000) // Wait 2 seconds for server state update
     })
     return unsubscribe
   }, [triggerCommunityDealingAnimation]) // Removed displayGameState dependency
@@ -937,7 +936,7 @@ function DisplayApp() {
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 {displayGameState.round.communityCards && displayGameState.round.communityCards.length > 0 && (!isDealingCommunity && hasDealtCommunityCards) ? (
                   displayGameState.round.communityCards.map((card, i) => {
-                    // Position cards in a horizontal row at the center of the table
+                    // Use the same positioning logic as animated cards
                     const cardWidth = 64 // small card width (64px)
                     const cardSpacing = 8 // gap between cards
                     const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
@@ -950,9 +949,9 @@ function DisplayApp() {
                         key={i}
                         className="absolute"
                         style={{
-                          left: cardX - (64 * 1.5 / 2), // Offset by half the scaled card width (64px small size)
-                          top: cardY - (96 * 1.5 / 2), // Offset by half the scaled card height (96px small size)
-                          transform: 'scale(1.5)', // Scale without translate to match animation
+                          left: cardX - (64 * 1.5 / 2), // Offset by half the scaled card width
+                          top: cardY - (96 * 1.5 / 2), // Offset by half the scaled card height
+                          transform: 'scale(1.5)', // Scale to match animation
                           transformOrigin: '0 0' // Scale from top-left corner
                         }}
                       >
