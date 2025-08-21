@@ -433,11 +433,10 @@ function DisplayApp() {
                     const playerCenterY = centerY + targetY
                     
                     // Static card positioning inside player container:
-                    // - Container: w-[120px] h-[130px] with scale-[1.40625]
+                    // - Container: now scaled directly with scale(120 * 1.40625) and scale(130 * 1.40625)
                     // - Cards: absolute bottom-0 left-1/2 transform -translate-x-1/2 flex
                     // - Each card: scale-50 origin-bottom with marginLeft: i === 0 ? '0' : '-50px'
                     
-                    const containerScale = 1.40625 * scaleFactor
                     const cardScale = 0.5
                     
                     // Container dimensions after scaling (now just the base scale factor)
@@ -465,13 +464,13 @@ function DisplayApp() {
                       // First card is centered
                       cardX = playerCenterX - (scaledCardWidth / 2) + horizontalOffset
                     } else {
-                      // Second card overlaps by -50px (before container scaling)
-                      const overlapScaled = cardOverlap * containerScale
+                      // Second card overlaps by -50px (scaled)
+                      const overlapScaled = cardOverlap
                       cardX = playerCenterX - (scaledCardWidth / 2) + overlapScaled + horizontalOffset
                     }
                     
                     // Card Y position accounts for card height and origin-bottom
-                    const scaledCardHeight = baseCardHeight * cardScale * containerScale
+                    const scaledCardHeight = baseCardHeight * cardScale
                     const cardY = cardsBottomY - scaledCardHeight + verticalOffset
                     
                     return { x: cardX, y: cardY, scale: cardScale }
