@@ -18,7 +18,7 @@ function DisplayApp() {
   const [showDeck, setShowDeck] = useState(false) // Control deck visibility during animation
   
   // Shared community cards state - used by both animation and static display
-  const [sharedCommunityCards, setSharedCommunityCards] = useState<Array<{digit: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}>>([])
+  const [sharedCommunityCards, setSharedCommunityCards] = useState<Array<{digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}>>([])
 
   useEffect(() => {
     const cleanup = connect('display', 'DISPLAY01')
@@ -151,29 +151,36 @@ function DisplayApp() {
   const triggerCommunityDealingAnimation = useCallback(() => {
     console.log('🎰 Triggering community card dealing animation!')
     
-    // Generate 5 random community cards
-    const randomCards: Array<{digit: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}> = []
-    for (let i = 0; i < 5; i++) {
-      randomCards.push({
-        digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 // Random digit 1-9
-      })
+    // Use server community cards if available, otherwise generate random ones
+    let cardsToUse: Array<{digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}> = []
+    
+    if (displayGameState.round.communityCards.length > 0) {
+      // Use server community cards
+      cardsToUse = displayGameState.round.communityCards.map(card => ({ digit: card.digit }))
+      console.log('🎰 Using server community cards:', cardsToUse)
+    } else {
+      // Generate 5 random community cards as fallback
+      for (let i = 0; i < 5; i++) {
+        cardsToUse.push({
+          digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+        })
+      }
+      console.log('🎰 Generated random community cards as fallback:', cardsToUse)
     }
     
-    console.log('🎰 Generated random community cards:', randomCards)
-    
     // IMMEDIATELY set the shared community cards so static display uses the same values
-    setSharedCommunityCards(randomCards)
+    setSharedCommunityCards(cardsToUse)
     
-    // Start animation immediately with these random cards
+    // Start animation immediately with these cards
     setIsDealingCommunity(true)
     setDealingCommunityCards([])
     setHasDealtCommunityCards(false) // Hide static cards during animation
     setShowDeck(true) // Show deck for community cards animation
     
-    // Create dealing cards using the random cards
+    // Create dealing cards using the cards to use
     const cards: Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}> = []
     
-    randomCards.forEach((card, index) => {
+    cardsToUse.forEach((card, index) => {
       cards.push({
         id: `community-dealing-${index}`,
         cardIndex: index,
@@ -867,8 +874,9 @@ function DisplayApp() {
 
               {/* Community Cards - positioned inside table at center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12">
-                {sharedCommunityCards && sharedCommunityCards.length > 0 && (!isDealingCommunity && hasDealtCommunityCards) ? (
-                  sharedCommunityCards.map((card, i) => {
+                {/* Use server community cards if available, otherwise use shared cards from animation */}
+                {(displayGameState.round.communityCards.length > 0 || (sharedCommunityCards && sharedCommunityCards.length > 0)) && (!isDealingCommunity && hasDealtCommunityCards) ? (
+                  (displayGameState.round.communityCards.length > 0 ? displayGameState.round.communityCards : sharedCommunityCards).map((card, i) => {
                     // Use relative positioning within the table
                     const cardWidth = 64 // small card width (64px)
                     const cardSpacing = 8 // gap between cards
