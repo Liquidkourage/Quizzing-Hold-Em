@@ -77,6 +77,7 @@ function DisplayApp() {
     setIsDealing(true)
     setDealingCards([])
     setHasDealtCards(false) // Hide static cards during animation
+    setShowDeck(true) // Show deck for initial deal animation
     
     // Create dealing cards in standard poker order: one card at a time around the table
     const cards: Array<{id: string, playerIndex: number, cardIndex: number, digit: number}> = []
@@ -119,6 +120,7 @@ function DisplayApp() {
       console.log('🎰 Ending dealing animation')
       setIsDealing(false)
       setDealingCards([])
+      setShowDeck(false) // Hide deck after initial deal
       setHasDealtCards(true) // Mark that cards have been dealt
       
       // For demo mode, populate the player hands with the dealt cards
