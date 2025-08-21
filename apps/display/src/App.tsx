@@ -669,7 +669,7 @@ function DisplayApp() {
                   <motion.div
                     className="absolute"
                     style={{
-                      left: 'calc(50% - 100px)', // Move deck more to the right
+                      left: 'calc(50% - 50px)', // Move deck more to the right
                       top: 'calc(50% + 100px)', // Move deck down below the tableau
                       transform: 'translate(-50%, -50%)'
                     }}
@@ -734,7 +734,7 @@ function DisplayApp() {
                   const { x: finalX, y: finalY, scale: finalScale } = calculateCommunityCardEndpoint(dealingCard.cardIndex)
                   
                   // Calculate center for animation start (same as deck position)
-                  const centerX = (window.innerWidth / 2) - 100 // Match deck position
+                  const centerX = (window.innerWidth / 2) - 50 // Match deck position
                   const centerY = window.innerHeight / 2 + 100 // Match deck position
                   
                   return (
