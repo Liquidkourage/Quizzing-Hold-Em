@@ -409,44 +409,12 @@ function DisplayApp() {
         {/* Main Game Area */}
         <div className="relative w-full h-screen max-w-7xl mx-auto">
           
-          {/* Always Visible Debug Panel */}
-          <div className="absolute top-4 left-4 bg-black/80 text-white p-2 rounded text-xs z-50">
-            Community Dealing: {isDealingCommunity ? 'YES' : 'NO'}<br/>
-            Cards: {dealingCommunityCards.length}<br/>
-            <button 
-              onClick={() => {
-                console.log('🎰 DIRECT TEST: Setting isDealingCommunity to true');
-                setIsDealingCommunity(true);
-                setDealingCommunityCards([
-                  {id: 'test-0', cardIndex: 0, digit: 3, isRevealed: false},
-                  {id: 'test-1', cardIndex: 1, digit: 7, isRevealed: false},
-                  {id: 'test-2', cardIndex: 2, digit: 9, isRevealed: false},
-                  {id: 'test-3', cardIndex: 3, digit: 2, isRevealed: false},
-                  {id: 'test-4', cardIndex: 4, digit: 5, isRevealed: false}
-                ]);
-              }}
-              className="mt-1 px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-            >
-              DIRECT TEST (5 cards)
-            </button>
-            <button 
-              onClick={triggerCommunityDealingAnimation}
-              className="mt-1 ml-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-            >
-              FULL TEST
-            </button>
-          </div>
+
           
           {/* Dealing Animation */}
           <AnimatePresence>
             {isDealing && (
               <div className="absolute inset-0 z-50 pointer-events-none">
-                {/* Debug info */}
-                <div className="absolute top-4 left-4 bg-black/80 text-white p-2 rounded text-xs">
-                  Dealing: {isDealing ? 'YES' : 'NO'}<br/>
-                  Cards: {dealingCards.length}<br/>
-                  {dealingCards.map(card => `${card.playerIndex}-${card.cardIndex}`).join(', ')}
-                </div>
                 
                 {/* Dealer deck of cards - positioned below the tableau */}
                 <motion.div
@@ -617,12 +585,6 @@ function DisplayApp() {
           <AnimatePresence>
             {isDealingCommunity && (
               <div className="absolute inset-0 z-50 pointer-events-none">
-                {/* Debug info */}
-                <div className="absolute top-4 right-4 bg-black/80 text-white p-2 rounded text-xs">
-                  Animation Active: {isDealingCommunity ? 'YES' : 'NO'}<br/>
-                  Cards: {dealingCommunityCards.length}<br/>
-                  {dealingCommunityCards.map(card => `${card.cardIndex}`).join(', ')}
-                </div>
                 
                 {/* Dealer deck of cards - positioned below the tableau */}
                 {showDeck && (
