@@ -147,43 +147,62 @@ function DisplayApp() {
   // Function to trigger community card dealing animation
   const triggerCommunityDealingAnimation = useCallback(() => {
     console.log('🎰 Triggering community card dealing animation!')
-    setIsDealingCommunity(true)
-    setDealingCommunityCards([])
-    setHasDealtCommunityCards(false) // Hide static cards during animation
-    setShowDeck(true) // Show deck for community cards animation
     
-    // Create dealing cards for community cards (5 cards total)
-    const cards: Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}> = []
-    
-    // Create 5 community cards with random digits (like Full Test)
-    for (let cardIndex = 0; cardIndex < 5; cardIndex++) {
-      cards.push({
-        id: `community-dealing-${cardIndex}`,
-        cardIndex,
-        digit: Math.floor(Math.random() * 9) + 1, // Random digit 1-9 (like Full Test)
-        isRevealed: true // Start face up (like Full Test)
-      })
-    }
-    
-    console.log('🎰 Created', cards.length, 'community dealing cards:', cards)
-    
-    // Animate cards one by one with delays (exactly like Full Test)
-    cards.forEach((card, index) => {
-      setTimeout(() => {
-        console.log('🎰 Adding community card to animation:', card)
-        setDealingCommunityCards(prev => [...prev, card])
-      }, index * 200) // 200ms delay between each card (same as Full Test)
-    })
-    
-    // End dealing animation after all cards are dealt (exactly like Full Test)
+    // Add delay to wait for server state update
     setTimeout(() => {
-      console.log('🎰 Ending community cards dealing animation')
-      setIsDealingCommunity(false)
+      console.log('🎰 Starting community cards animation after server delay')
+      setIsDealingCommunity(true)
       setDealingCommunityCards([])
-      setShowDeck(false) // Hide deck after community cards deal
-      setHasDealtCommunityCards(true) // Mark that community cards have been dealt
-    }, cards.length * 200 + 1000) // Same timing as Full Test
-  }, []) // No dependencies needed (like Full Test)
+      setHasDealtCommunityCards(false) // Hide static cards during animation
+      setShowDeck(true) // Show deck for community cards animation
+      
+      // Get actual community cards from server state
+      const actualCommunityCards = displayGameState.round.communityCards || []
+      console.log('🎰 Using actual community cards from server:', actualCommunityCards)
+      
+      if (actualCommunityCards.length === 0) {
+        console.log('🎰 No community cards available, skipping animation')
+        return
+      }
+      
+      // Create dealing cards using actual server cards
+      const cards: Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}> = []
+      
+      actualCommunityCards.forEach((card, index) => {
+        cards.push({
+          id: `community-dealing-${index}`,
+          cardIndex: index,
+          digit: card.digit,
+          isRevealed: false // Start face down
+        })
+      })
+      
+      console.log('🎰 Created', cards.length, 'community dealing cards:', cards)
+      
+      // Phase 1: Deal cards face down
+      cards.forEach((card, index) => {
+        setTimeout(() => {
+          console.log('🎰 Adding community card to animation:', card)
+          setDealingCommunityCards(prev => [...prev, card])
+        }, index * 200) // 200ms delay between each card
+      })
+      
+      // Phase 2: Reveal all cards after dealing
+      setTimeout(() => {
+        console.log('🎰 Revealing all community cards')
+        setDealingCommunityCards(prev => prev.map(card => ({ ...card, isRevealed: true })))
+      }, cards.length * 200 + 500) // Wait for all cards to be dealt + 500ms
+      
+      // Phase 3: End animation
+      setTimeout(() => {
+        console.log('🎰 Ending community cards dealing animation')
+        setIsDealingCommunity(false)
+        setDealingCommunityCards([])
+        setShowDeck(false) // Hide deck after community cards deal
+        setHasDealtCommunityCards(true) // Mark that community cards have been dealt
+      }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
+    }, 1000) // Wait 1 second for server state update
+  }, [displayGameState]) // Add dependency to get fresh server state
 
   useEffect(() => {
     const unsubscribe = onDealingCards(() => {
