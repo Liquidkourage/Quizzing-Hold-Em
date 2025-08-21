@@ -199,19 +199,11 @@ function DisplayApp() {
     console.log('🎰 Setting up onDealingCommunityCards listener')
     const unsubscribe = onDealingCommunityCards(() => {
       console.log('🎰 Received dealingCommunityCards event!')
-      console.log('🎰 Current gameState:', gameState)
-      console.log('🎰 Current displayGameState:', displayGameState)
-      // Add a longer delay to wait for the server to update the game state with the new cards
-      setTimeout(() => {
-        console.log('🎰 About to trigger community dealing animation')
-        console.log('🎰 Updated gameState:', gameState)
-        console.log('🎰 Updated displayGameState:', displayGameState)
-        console.log('🎰 displayGameState.round.communityCards:', displayGameState.round?.communityCards)
-        triggerCommunityDealingAnimation()
-      }, 4000) // Wait 4 seconds for server state update
+      // No delay needed since we use demo cards (like Full Test)
+      triggerCommunityDealingAnimation()
     })
     return unsubscribe
-  }, [triggerCommunityDealingAnimation]) // Removed displayGameState dependency
+  }, [triggerCommunityDealingAnimation])
 
   // Reset hasDealtCards when the round changes to prevent flickering
   useEffect(() => {
