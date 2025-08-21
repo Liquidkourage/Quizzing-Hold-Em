@@ -166,13 +166,30 @@ function DisplayApp() {
       console.log('🎰 Using actual community cards from game state:', actualCommunityCards)
       console.log('🎰 actualCommunityCards length:', actualCommunityCards.length)
       
-      // Use actual server cards - if none available, wait for them
+      // Use actual server cards - if none available, use demo cards for animation
       if (actualCommunityCards.length === 0) {
-        console.log('🎰 No community cards in game state yet, skipping animation')
-        return
+        console.log('🎰 No community cards in game state yet, using demo cards for animation')
+        const demoCards = [
+          { digit: 3 },
+          { digit: 7 },
+          { digit: 9 },
+          { digit: 2 },
+          { digit: 5 }
+        ]
+        const cardsToAnimate = demoCards
+        console.log('🎰 Using demo cards for animation:', cardsToAnimate)
+      } else {
+        const cardsToAnimate = actualCommunityCards
+        console.log('🎰 Using server cards for animation:', cardsToAnimate)
       }
       
-      const cardsToAnimate = actualCommunityCards
+      const cardsToAnimate = actualCommunityCards.length > 0 ? actualCommunityCards : [
+        { digit: 3 },
+        { digit: 7 },
+        { digit: 9 },
+        { digit: 2 },
+        { digit: 5 }
+      ]
       console.log('🎰 Cards to animate:', cardsToAnimate)
       
       // Create community cards for animation using the actual cards from game state
