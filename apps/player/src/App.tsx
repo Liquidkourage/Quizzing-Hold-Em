@@ -369,29 +369,36 @@ function PlayerApp() {
                         height: '144px',
                         background: 'rgba(0,0,0,0.9)',
                         border: '2px solid rgba(139,92,246,0.8)',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 0 15px rgba(139,92,246,0.3)',
-                        animation: 'matrix-glow 2s ease-in-out infinite alternate'
+                        overflow: 'hidden',
+                        margin: '10px',
+                        boxShadow: '0 0 20px rgba(139,92,246,0.8), 0 0 40px rgba(139,92,246,0.4), inset 0 0 20px rgba(139,92,246,0.2)',
+                        animation: 'neon-matrix 4s ease-in-out infinite'
                       }}
                     >
                       <div 
                         style={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'grid',
+                          placeItems: 'center',
+                          fontSize: '48px',
+                          fontWeight: 'bold',
+                          color: 'rgba(139,92,246,0.8)',
+                          zIndex: 10,
+                          textShadow: '0 0 12px rgba(139,92,246,0.8)'
+                        }}
+                      >
+                        <span style={{
                           background: 'rgba(0,0,0,0.8)',
                           padding: '8px 12px',
                           borderRadius: '8px',
                           boxShadow: '0 0 8px rgba(139,92,246,0.8)',
                           border: '1px solid rgba(139,92,246,0.8)',
-                          fontSize: '48px',
-                          fontWeight: 'bold',
-                          color: 'rgba(139,92,246,0.8)',
-                          textShadow: '0 0 12px rgba(139,92,246,0.8)'
-                        }}
-                      >
-                        .
+                        }}>
+                          .
+                        </span>
                       </div>
                     </div>
                   </motion.div>
