@@ -291,7 +291,7 @@ function PlayerApp() {
                     <div className="absolute left-0 top-0 w-0.5 h-2 bg-casino-gold"></div>
                     <div className="absolute right-0 top-0 w-0.5 h-2 bg-casino-gold"></div>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 items-end">
                     {currentPlayer.hand.map((card, i) => {
                       const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
                       return (
@@ -324,7 +324,7 @@ function PlayerApp() {
                     <div className="absolute left-0 top-0 w-0.5 h-2 bg-casino-emerald"></div>
                     <div className="absolute right-0 top-0 w-0.5 h-2 bg-casino-emerald"></div>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 items-end">
                     {gameState.round.communityCards.map((card, i) => {
                       const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
                       return (
@@ -363,7 +363,7 @@ function PlayerApp() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg">
+                    <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg transform translate-y-0">
                       <div className="text-4xl font-bold text-white">.</div>
                     </div>
                   </motion.div>
