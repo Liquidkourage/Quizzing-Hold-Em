@@ -419,9 +419,22 @@ function DisplayApp() {
             Phase: <span className="text-yellow-400 font-bold">{displayGameState.phase}</span>
             {!gameState && <span className="text-red-400 ml-2">(DEMO MODE - 8 Players)</span>}
           </div>
-          
-
         </motion.div>
+
+        {/* Current Question - Large and prominent above the table */}
+        {displayGameState.round.question && (
+          <motion.div 
+            className="text-center mb-8"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-500/50 rounded-2xl p-6 shadow-2xl max-w-4xl mx-auto">
+              <div className="text-white text-2xl mb-3 font-semibold">🎯 CURRENT QUESTION</div>
+              <div className="text-yellow-400 font-bold text-4xl leading-relaxed">{displayGameState.round.question.text}</div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Main Game Area */}
         <div className="relative w-full h-screen max-w-7xl mx-auto">
@@ -931,15 +944,7 @@ function DisplayApp() {
                 })()}
               </div>
 
-              {/* Current question - positioned above pot */}
-              {displayGameState.round.question && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-36 w-72">
-                  <div className="bg-black/80 backdrop-blur-md border border-white/20 rounded-lg p-3 text-center">
-                    <div className="text-white text-sm mb-1">Current Question:</div>
-                    <div className="text-yellow-400 font-bold text-sm">{displayGameState.round.question.text}</div>
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
         </div>
