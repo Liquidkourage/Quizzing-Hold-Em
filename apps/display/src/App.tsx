@@ -535,8 +535,8 @@ function DisplayApp() {
                     // Calculate card X position
                     // Cards are centered horizontally (left-1/2 transform -translate-x-1/2)
                     // Add small offset to move cards slightly right and up
-                                          const horizontalOffset = 18 // px adjustment to move right (increased by 5px)
-                    const verticalOffset = 7 - (window.innerHeight * 0.08) // px adjustment to move down by 5px (from +2 to +7)
+                                          const horizontalOffset = 16 // px adjustment to move right (decreased by 2px)
+                    const verticalOffset = 9 - (window.innerHeight * 0.08) // px adjustment to move down by 2px (from +7 to +9)
                     let cardX
                     
                     if (cardIndex === 0) {
