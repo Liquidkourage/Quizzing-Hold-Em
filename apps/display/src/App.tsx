@@ -38,6 +38,15 @@ function DisplayApp() {
         roundId: newGameState?.round?.roundId
       })
       
+      // Clear client-side community card state when server has no cards (new round, etc.)
+      if (!newGameState?.round?.communityCards || newGameState.round.communityCards.length === 0) {
+        console.log('🎰 STATE UPDATE - Clearing client-side community card state')
+        setSharedCommunityCards([])
+        setHasDealtCommunityCards(false)
+        setDealingCommunityCards([])
+        setIsDealingCommunity(false)
+      }
+      
       // Show toast with community card digits whenever state changes
       if (newGameState?.round?.communityCards && newGameState.round.communityCards.length > 0) {
         const digits = newGameState.round.communityCards.map(card => card.digit).join(', ')
@@ -299,6 +308,9 @@ function DisplayApp() {
     if (gameState && gameState.round) {
       setHasDealtCards(false)
       setHasDealtCommunityCards(false) // Also reset community cards for new rounds
+      setSharedCommunityCards([]) // Clear shared community cards for new rounds
+      setDealingCommunityCards([]) // Clear any ongoing community card animations
+      setIsDealingCommunity(false) // Stop any ongoing community card dealing
     }
   }, [gameState?.round?.roundId])
 
