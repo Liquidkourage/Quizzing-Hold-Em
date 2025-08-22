@@ -215,7 +215,7 @@ function DisplayApp() {
       
       // No need to update demo state - we're using shared community cards state
     }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
-  }, []) // No dependencies needed
+  }, [displayGameState]) // Need displayGameState to get latest server community cards
 
   useEffect(() => {
     const unsubscribe = onDealingCards(() => {
