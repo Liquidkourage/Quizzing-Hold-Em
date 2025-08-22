@@ -451,7 +451,7 @@ function DisplayApp() {
                   className="absolute"
                   style={{
                     left: 'calc(50% - 50px)', // Move deck more to the right
-                    top: 'calc(50% + 100px - 10vh)', // Move deck down below the tableau, then up 10%
+                    top: 'calc(50% + 100px)', // Move deck down below the tableau (match community animation)
                     transform: 'translate(-50%, -50%)'
                   }}
                   initial={{ scale: 0, opacity: 0, rotateY: 0 }}
@@ -535,8 +535,8 @@ function DisplayApp() {
                     // Calculate card X position
                     // Cards are centered horizontally (left-1/2 transform -translate-x-1/2)
                     // Add small offset to move cards slightly right and up
-                                          const horizontalOffset = 15 // px adjustment to move right (increased from 9)
-                    const verticalOffset = -8 - (window.innerHeight * 0.06) // px adjustment to move up, reduced from 10% to 6%
+                                          const horizontalOffset = 18 // px adjustment to move right (increased by 3px)
+                    const verticalOffset = -8 - (window.innerHeight * 0.08) // px adjustment to move up, increased from 6% to 8%
                     let cardX
                     
                     if (cardIndex === 0) {
