@@ -333,18 +333,27 @@ function PlayerApp() {
                   })}
                 </div>
               </div>
+
+              {/* Decimal Point Card */}
+              <div>
+                <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Decimal Point</h3>
+                <div className="flex gap-3 justify-center">
+                  <motion.div 
+                    className={`cursor-pointer ${composedAnswer.display.includes('.') ? 'ring-4 ring-casino-gold' : ''}`}
+                    onClick={handleAddDecimal}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg">
+                      <div className="text-4xl font-bold text-white">.</div>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex gap-4 justify-center">
-              <NeonButton 
-                variant="purple"
-                size="large"
-                onClick={handleAddDecimal}
-                disabled={composedAnswer.display.includes('.')}
-              >
-                Add Decimal Point
-              </NeonButton>
               <NeonButton 
                 variant="red"
                 size="large"
