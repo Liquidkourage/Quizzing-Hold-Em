@@ -802,6 +802,12 @@ io.on('connection', (socket) => {
           gameState = dealCommunityCards(gameState)
           console.log('🎰 Server: Generated community cards:', gameState.round.communityCards)
           console.log('🎰 Server: Community cards count:', gameState.round.communityCards.length)
+          
+          // Update the room state FIRST
+          rooms.set(roomCode, gameState)
+          io.to(roomCode).emit('state', gameState)
+          
+          // THEN emit the animation event
           console.log('🎰 Server: Emitting dealingCommunityCards event to room:', roomCode)
           io.to(roomCode).emit('dealingCommunityCards') // Trigger community card dealing animation
           io.to(roomCode).emit('toast', 'Community cards dealt!')
@@ -840,8 +846,11 @@ io.on('connection', (socket) => {
           return
       }
       
-      rooms.set(roomCode, gameState)
-      io.to(roomCode).emit('state', gameState)
+      // Only update state here for non-community card actions
+      if (type !== 'dealCommunityCards') {
+        rooms.set(roomCode, gameState)
+        io.to(roomCode).emit('state', gameState)
+      }
       
     } catch (error) {
       console.error('Action error:', error)
