@@ -874,8 +874,8 @@ function DisplayApp() {
 
               {/* Community Cards - positioned inside table at center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12">
-                {/* Use server community cards if available, otherwise use shared cards from animation */}
-                {(displayGameState.round.communityCards.length > 0 || (sharedCommunityCards && sharedCommunityCards.length > 0)) && (!isDealingCommunity && hasDealtCommunityCards) ? (
+                {/* Show community cards if they exist in server state OR if animation has completed */}
+                {((displayGameState.round.communityCards.length > 0 && !isDealingCommunity) || (sharedCommunityCards && sharedCommunityCards.length > 0 && hasDealtCommunityCards)) ? (
                   (displayGameState.round.communityCards.length > 0 ? displayGameState.round.communityCards : sharedCommunityCards).map((card, i) => {
                     // Use relative positioning within the table
                     const cardWidth = 64 // small card width (64px)
