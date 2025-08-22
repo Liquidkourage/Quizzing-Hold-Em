@@ -559,7 +559,7 @@ function DisplayApp() {
                   
                   // Calculate exact center for animation start (same as deck position)
                   const centerX = (window.innerWidth / 2) - 50 // Match deck position
-                  const centerY = window.innerHeight / 2 + 100 // Match deck position
+                  const centerY = (window.innerHeight / 2 + 100) - (window.innerHeight * 0.10) // Match deck position, move up 10%
                   
                   const finalX = endpoint.x
                   const finalY = endpoint.y
