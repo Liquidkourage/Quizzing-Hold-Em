@@ -26,6 +26,15 @@ function HostApp() {
     return unsubscribe
   }, [])
 
+  // Debug current game state
+  useEffect(() => {
+    console.log('🎰 Host: Current game state:', {
+      phase: gameState?.phase,
+      hasQuestion: !!gameState?.round?.question,
+      playersCount: gameState?.players?.length
+    })
+  }, [gameState])
+
   useEffect(() => {
     const unsubscribe = onToast((message) => {
       setToastMessage(message)
