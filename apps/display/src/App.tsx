@@ -170,19 +170,15 @@ function DisplayApp() {
       roundId: displayGameState.round.roundId
     })
     
-    if (displayGameState.round.communityCards.length > 0) {
-      // Use server community cards
-      cardsToUse = displayGameState.round.communityCards.map(card => ({ digit: card.digit }))
-      console.log('🎰 ANIMATION FUNCTION - Using server community cards for animation:', cardsToUse)
-    } else {
-      // Generate 5 random community cards as fallback
-      for (let i = 0; i < 5; i++) {
-        cardsToUse.push({
-          digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-        })
-      }
-      console.log('🎰 ANIMATION FUNCTION - Generated random community cards as fallback:', cardsToUse)
+    // ONLY use server community cards - NO RANDOM FALLBACK
+    if (displayGameState.round.communityCards.length === 0) {
+      console.log('🎰 ANIMATION FUNCTION - NO SERVER COMMUNITY CARDS AVAILABLE - SKIPPING ANIMATION')
+      return // Don't run animation if no server cards
     }
+    
+    // Use server community cards
+    cardsToUse = displayGameState.round.communityCards.map(card => ({ digit: card.digit }))
+    console.log('🎰 ANIMATION FUNCTION - Using server community cards for animation:', cardsToUse)
     
     // IMMEDIATELY set the shared community cards so static display uses the same values
     setSharedCommunityCards(cardsToUse)
