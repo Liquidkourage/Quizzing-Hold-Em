@@ -209,10 +209,8 @@ function DisplayApp() {
     // IMMEDIATELY set the shared community cards so static display uses the same values
     setSharedCommunityCards(cardsToUse)
     
-    // Start animation immediately with these cards
-    setIsDealingCommunity(true)
+    // Start animation immediately with these cards (dealing state already set by event listener)
     setDealingCommunityCards([])
-    setHasDealtCommunityCards(false) // Hide static cards during animation
     setShowDeck(true) // Show deck for community cards animation
     
     // Create dealing cards using the cards to use
@@ -279,6 +277,11 @@ function DisplayApp() {
     console.log('🎰 Setting up onDealingCommunityCards listener')
     const unsubscribe = onDealingCommunityCards(() => {
       console.log('🎰 EVENT RECEIVED - dealingCommunityCards event!')
+      
+      // IMMEDIATELY set dealing state to prevent static cards from showing
+      setIsDealingCommunity(true)
+      setHasDealtCommunityCards(false) // Hide static cards during animation
+      
       console.log('🎰 EVENT TIMING - Current displayGameState community cards:', {
         communityCards: displayGameState.round.communityCards,
         communityCardsCount: displayGameState.round.communityCards.length,
