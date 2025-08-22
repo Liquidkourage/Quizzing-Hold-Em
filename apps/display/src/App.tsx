@@ -171,8 +171,8 @@ function DisplayApp() {
   const triggerCommunityDealingAnimation = useCallback(() => {
     console.log('🎰 Triggering community card dealing animation!')
     
-    // Get the current fresh state - this avoids stale closure issues
-    const currentGameState = gameState || demoGameState
+    // Get the current fresh state - use displayGameState to avoid stale closure issues
+    const currentGameState = displayGameState || demoGameState
     
     console.log('🎰 ANIMATION FUNCTION - Starting community card dealing animation')
     console.log('🎰 ANIMATION FUNCTION - Current gameState:', {
@@ -185,6 +185,8 @@ function DisplayApp() {
     // ONLY use server community cards - NO RANDOM FALLBACK
     if (currentGameState.round.communityCards.length === 0) {
       console.log('🎰 ANIMATION FUNCTION - NO SERVER COMMUNITY CARDS AVAILABLE - SKIPPING ANIMATION')
+      console.log('🎰 ANIMATION FUNCTION - displayGameState community cards:', displayGameState?.round?.communityCards)
+      console.log('🎰 ANIMATION FUNCTION - demoGameState community cards:', demoGameState?.round?.communityCards)
       return // Don't run animation if no server cards
     }
     
@@ -244,7 +246,7 @@ function DisplayApp() {
       
       // No need to update demo state - we're using shared community cards state
     }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
-  }, []) // Remove dependency to avoid stale closure - we'll get fresh state inside the function
+  }, [displayGameState]) // Include displayGameState to get fresh state
 
   useEffect(() => {
     const unsubscribe = onDealingCards(() => {
