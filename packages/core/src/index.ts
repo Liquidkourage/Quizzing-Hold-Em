@@ -159,7 +159,7 @@ export function setQuestion(state: GameState): GameState {
   
   return {
     ...state,
-    phase: 'betting',
+    phase: 'question', // Stay in question phase so players can see the question
     round: {
       ...state.round,
       question: randomQuestion,
