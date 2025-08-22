@@ -172,7 +172,7 @@ function HostApp() {
                 variant="purple"
                 size="large"
                 onClick={handleSetQuestion}
-                disabled={gameState.phase !== 'lobby'}
+                disabled={gameState.phase !== 'lobby' && gameState.phase !== 'question'}
                 className="w-full"
               >
                 Set Question
