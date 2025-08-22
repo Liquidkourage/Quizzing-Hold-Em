@@ -451,7 +451,7 @@ function DisplayApp() {
                   className="absolute"
                   style={{
                     left: 'calc(50% - 50px)', // Move deck more to the right
-                    top: 'calc(50% + 100px)', // Move deck down below the tableau
+                    top: 'calc(50% + 100px - 10vh)', // Move deck down below the tableau, then up 10%
                     transform: 'translate(-50%, -50%)'
                   }}
                   initial={{ scale: 0, opacity: 0, rotateY: 0 }}
@@ -622,7 +622,7 @@ function DisplayApp() {
                     className="absolute"
                     style={{
                       left: 'calc(50% - 50px)', // Move deck more to the right
-                      top: 'calc(50% + 100px - 10vh)', // Move deck down below the tableau, then up 10%
+                      top: 'calc(50% + 100px)', // Move deck down below the tableau
                       transform: 'translate(-50%, -50%)'
                     }}
                     initial={{ scale: 0, opacity: 0, rotateY: 0 }}
@@ -687,7 +687,7 @@ function DisplayApp() {
                   
                   // Calculate center for animation start (same as deck position)
                   const centerX = (window.innerWidth / 2) - 50 // Match deck position
-                  const centerY = (window.innerHeight / 2 + 100) - (window.innerHeight * 0.10) // Match deck position, move up 10%
+                  const centerY = window.innerHeight / 2 + 100 // Match deck position (no margin added)
                   
                   return (
                     <motion.div
