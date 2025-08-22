@@ -56,10 +56,37 @@ function PlayerApp() {
   const handleCardSelect = (type: 'hand' | 'community', index: number) => {
     // Check if this card is already selected
     const isAlreadySelected = selectedCards.some(sc => sc.type === type && sc.index === index)
+    
     if (isAlreadySelected) {
-      return // Card already used, ignore click
+      // Remove the card from the answer
+      const cardToRemove = selectedCards.find(sc => sc.type === type && sc.index === index)
+      if (cardToRemove) {
+        const cardIndex = selectedCards.findIndex(sc => sc.type === type && sc.index === index)
+        
+        // Remove from selected cards
+        setSelectedCards(prev => prev.filter((_, i) => i !== cardIndex))
+        
+        // Rebuild the answer without this card
+        const newDigits = selectedCards.filter((_, i) => i !== cardIndex).map(sc => {
+          if (sc.type === 'hand' && currentPlayer?.hand[sc.index]) {
+            return currentPlayer.hand[sc.index].digit
+          } else if (sc.type === 'community' && gameState?.round.communityCards[sc.index]) {
+            return gameState.round.communityCards[sc.index].digit
+          }
+          return 0
+        })
+        
+        const newDisplay = newDigits.map(d => d.toString()).join('')
+        setComposedAnswer({
+          digits: newDigits,
+          display: newDisplay,
+          value: parseFloat(newDisplay) || 0
+        })
+      }
+      return
     }
 
+    // Add the card to the answer
     if (type === 'hand' && currentPlayer?.hand[index]) {
       const digit = currentPlayer.hand[index].digit
       setComposedAnswer(prev => ({
@@ -262,10 +289,10 @@ function PlayerApp() {
                     return (
                       <motion.div 
                         key={i} 
-                        className={`${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
+                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
                         onClick={() => handleCardSelect('hand', i)}
-                        whileHover={!isSelected ? { scale: 1.05 } : {}}
-                        whileTap={!isSelected ? { scale: 0.95 } : {}}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
                         <NumericPlayingCard 
                           digit={card.digit} 
@@ -289,10 +316,10 @@ function PlayerApp() {
                     return (
                       <motion.div 
                         key={i} 
-                        className={`${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
+                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
                         onClick={() => handleCardSelect('community', i)}
-                        whileHover={!isSelected ? { scale: 1.05 } : {}}
-                        whileTap={!isSelected ? { scale: 0.95 } : {}}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
                         <NumericPlayingCard 
                           digit={card.digit} 
