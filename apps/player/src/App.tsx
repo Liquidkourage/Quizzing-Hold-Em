@@ -279,76 +279,64 @@ function PlayerApp() {
             </div>
 
             {/* Available Cards */}
-            <div className="space-y-8 mb-8">
-              {/* Player's Hand */}
-              <div>
-                <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Your Hand</h3>
-                <div className="flex gap-3 justify-center">
-                  {currentPlayer.hand.map((card, i) => {
-                    const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
-                    return (
-                      <motion.div 
-                        key={i} 
-                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
-                        onClick={() => handleCardSelect('hand', i)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <NumericPlayingCard 
-                          digit={card.digit} 
-                          variant="cyan" 
-                          style="neon" 
-                          neonVariant={isSelected ? "pulse" : "matrix"} 
-                          size="large" 
-                        />
-                      </motion.div>
-                    )
-                  })}
-                </div>
-              </div>
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Available Cards</h3>
+              <div className="flex gap-3 justify-center flex-wrap">
+                {/* Player's Hand */}
+                {currentPlayer.hand.map((card, i) => {
+                  const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
+                  return (
+                    <motion.div 
+                      key={`hand-${i}`} 
+                      className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                      onClick={() => handleCardSelect('hand', i)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <NumericPlayingCard 
+                        digit={card.digit} 
+                        variant="cyan" 
+                        style="neon" 
+                        neonVariant={isSelected ? "pulse" : "matrix"} 
+                        size="large" 
+                      />
+                    </motion.div>
+                  )
+                })}
 
-              {/* Community Cards */}
-              <div>
-                <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Community Cards</h3>
-                <div className="flex gap-3 justify-center">
-                  {gameState.round.communityCards.map((card, i) => {
-                    const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
-                    return (
-                      <motion.div 
-                        key={i} 
-                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
-                        onClick={() => handleCardSelect('community', i)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <NumericPlayingCard 
-                          digit={card.digit} 
-                          variant="cyan" 
-                          style="neon" 
-                          neonVariant={isSelected ? "pulse" : "matrix"} 
-                          size="large" 
-                        />
-                      </motion.div>
-                    )
-                  })}
-                </div>
-              </div>
+                {/* Community Cards */}
+                {gameState.round.communityCards.map((card, i) => {
+                  const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
+                  return (
+                    <motion.div 
+                      key={`community-${i}`} 
+                      className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                      onClick={() => handleCardSelect('community', i)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <NumericPlayingCard 
+                        digit={card.digit} 
+                        variant="cyan" 
+                        style="neon" 
+                        neonVariant={isSelected ? "pulse" : "matrix"} 
+                        size="large" 
+                      />
+                    </motion.div>
+                  )
+                })}
 
-              {/* Decimal Point Card */}
-              <div>
-                <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Decimal Point</h3>
-                <div className="flex gap-3 justify-center">
-                  <motion.div 
-                    className={`cursor-pointer ${composedAnswer.display.includes('.') ? 'ring-4 ring-casino-gold' : ''}`}
-                    onClick={handleAddDecimal}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg">
-                      <div className="text-4xl font-bold text-white">.</div>
-                    </div>
-                  </motion.div>
-                </div>
+                {/* Decimal Point Card */}
+                <motion.div 
+                  className={`cursor-pointer ${composedAnswer.display.includes('.') ? 'ring-4 ring-casino-gold' : ''}`}
+                  onClick={handleAddDecimal}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg">
+                    <div className="text-4xl font-bold text-white">.</div>
+                  </div>
+                </motion.div>
               </div>
             </div>
 
