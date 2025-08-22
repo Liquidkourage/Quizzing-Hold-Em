@@ -285,6 +285,12 @@ function PlayerApp() {
                 {/* Hole Cards Section */}
                 <div className="flex flex-col items-center">
                   <div className="text-sm font-bold text-casino-gold mb-2">HOLE CARDS</div>
+                  {/* Bracket line */}
+                  <div className="relative w-full mb-2">
+                    <div className="absolute left-0 right-0 h-0.5 bg-casino-gold"></div>
+                    <div className="absolute left-0 top-0 w-0.5 h-2 bg-casino-gold"></div>
+                    <div className="absolute right-0 top-0 w-0.5 h-2 bg-casino-gold"></div>
+                  </div>
                   <div className="flex gap-3">
                     {currentPlayer.hand.map((card, i) => {
                       const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
@@ -312,6 +318,12 @@ function PlayerApp() {
                 {/* Community Cards Section */}
                 <div className="flex flex-col items-center">
                   <div className="text-sm font-bold text-casino-emerald mb-2">COMMUNITY CARDS</div>
+                  {/* Bracket line */}
+                  <div className="relative w-full mb-2">
+                    <div className="absolute left-0 right-0 h-0.5 bg-casino-emerald"></div>
+                    <div className="absolute left-0 top-0 w-0.5 h-2 bg-casino-emerald"></div>
+                    <div className="absolute right-0 top-0 w-0.5 h-2 bg-casino-emerald"></div>
+                  </div>
                   <div className="flex gap-3">
                     {gameState.round.communityCards.map((card, i) => {
                       const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
@@ -339,6 +351,12 @@ function PlayerApp() {
                 {/* Decimal Point Card */}
                 <div className="flex flex-col items-center">
                   <div className="text-sm font-bold text-purple-400 mb-2">DECIMAL</div>
+                  {/* Bracket line */}
+                  <div className="relative w-full mb-2">
+                    <div className="absolute left-0 right-0 h-0.5 bg-purple-400"></div>
+                    <div className="absolute left-0 top-0 w-0.5 h-2 bg-purple-400"></div>
+                    <div className="absolute right-0 top-0 w-0.5 h-2 bg-purple-400"></div>
+                  </div>
                   <motion.div 
                     className={`cursor-pointer ${composedAnswer.display.includes('.') ? 'ring-4 ring-casino-gold' : ''}`}
                     onClick={handleAddDecimal}
