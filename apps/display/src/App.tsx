@@ -26,7 +26,15 @@ function DisplayApp() {
   }, [])
 
   useEffect(() => {
-    const unsubscribe = onState(setGameState)
+    const unsubscribe = onState((newGameState) => {
+      console.log('🎰 STATE UPDATE - New game state received:', {
+        phase: newGameState?.phase,
+        communityCards: newGameState?.round?.communityCards,
+        communityCardsCount: newGameState?.round?.communityCards?.length || 0,
+        roundId: newGameState?.round?.roundId
+      })
+      setGameState(newGameState)
+    })
     return unsubscribe
   }, [])
 
@@ -154,12 +162,18 @@ function DisplayApp() {
     // Use server community cards if available, otherwise generate random ones
     let cardsToUse: Array<{digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}> = []
     
-    console.log('🎰 Animation triggered - current server community cards:', displayGameState.round.communityCards)
+    console.log('🎰 ANIMATION FUNCTION - Starting community card dealing animation')
+    console.log('🎰 ANIMATION FUNCTION - Current displayGameState:', {
+      phase: displayGameState.phase,
+      communityCards: displayGameState.round.communityCards,
+      communityCardsCount: displayGameState.round.communityCards.length,
+      roundId: displayGameState.round.roundId
+    })
     
     if (displayGameState.round.communityCards.length > 0) {
       // Use server community cards
       cardsToUse = displayGameState.round.communityCards.map(card => ({ digit: card.digit }))
-      console.log('🎰 Using server community cards for animation:', cardsToUse)
+      console.log('🎰 ANIMATION FUNCTION - Using server community cards for animation:', cardsToUse)
     } else {
       // Generate 5 random community cards as fallback
       for (let i = 0; i < 5; i++) {
@@ -167,7 +181,7 @@ function DisplayApp() {
           digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
         })
       }
-      console.log('🎰 Generated random community cards as fallback:', cardsToUse)
+      console.log('🎰 ANIMATION FUNCTION - Generated random community cards as fallback:', cardsToUse)
     }
     
     // IMMEDIATELY set the shared community cards so static display uses the same values
@@ -191,12 +205,17 @@ function DisplayApp() {
       })
     })
     
-    console.log('🎰 Created', cards.length, 'community dealing cards:', cards)
+    console.log('🎰 ANIMATION FUNCTION - Created', cards.length, 'community dealing cards for animation:', cards.map(c => ({ id: c.id, digit: c.digit, cardIndex: c.cardIndex })))
     
     // Phase 1: Deal cards face down
     cards.forEach((card, index) => {
       setTimeout(() => {
-        console.log('🎰 Adding community card to animation:', card)
+        console.log('🎰 ANIMATION PHASE 1 - Adding community card to animation:', {
+          id: card.id,
+          digit: card.digit,
+          cardIndex: card.cardIndex,
+          isRevealed: card.isRevealed
+        })
         setDealingCommunityCards(prev => [...prev, card])
       }, index * 200) // 200ms delay between each card
     })
@@ -232,9 +251,21 @@ function DisplayApp() {
   useEffect(() => {
     console.log('🎰 Setting up onDealingCommunityCards listener')
     const unsubscribe = onDealingCommunityCards(() => {
-      console.log('🎰 Received dealingCommunityCards event!')
+      console.log('🎰 EVENT RECEIVED - dealingCommunityCards event!')
+      console.log('🎰 EVENT TIMING - Current displayGameState community cards:', {
+        communityCards: displayGameState.round.communityCards,
+        communityCardsCount: displayGameState.round.communityCards.length,
+        phase: displayGameState.phase
+      })
+      
       // Add a delay to wait for the server to update the game state with the community cards
       setTimeout(() => {
+        console.log('🎰 ANIMATION TRIGGER - About to start animation after delay')
+        console.log('🎰 ANIMATION TIMING - Current displayGameState community cards:', {
+          communityCards: displayGameState.round.communityCards,
+          communityCardsCount: displayGameState.round.communityCards.length,
+          phase: displayGameState.phase
+        })
         triggerCommunityDealingAnimation()
       }, 1000) // Wait 1 second for server state update
     })
@@ -879,44 +910,61 @@ function DisplayApp() {
               {/* Community Cards - positioned inside table at center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12">
                 {/* Show community cards if they exist in server state OR if animation has completed */}
-                {((displayGameState.round.communityCards.length > 0 && !isDealingCommunity) || (sharedCommunityCards && sharedCommunityCards.length > 0 && hasDealtCommunityCards)) ? (
-                  (displayGameState.round.communityCards.length > 0 ? displayGameState.round.communityCards : sharedCommunityCards).map((card, i) => {
-                    // Use relative positioning within the table
-                    const cardWidth = 64 // small card width (64px)
-                    const cardSpacing = 8 // gap between cards
-                    const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
-                    // Move left so that the 3rd card (index 2) is centered - smaller offset
-                    const startX = -(totalWidth / 2) - ((cardWidth + cardSpacing) * 0.75) // Start from center and go left by half total width plus smaller offset for 3rd card
-                    
-                    const cardX = startX + (i * (cardWidth + cardSpacing)) + (cardWidth / 2)
-                    const cardY = 0 // Center vertically
+                {(() => {
+                  const shouldShowServerCards = displayGameState.round.communityCards.length > 0 && !isDealingCommunity
+                  const shouldShowAnimationCards = sharedCommunityCards && sharedCommunityCards.length > 0 && hasDealtCommunityCards
+                  const cardsToShow = displayGameState.round.communityCards.length > 0 ? displayGameState.round.communityCards : sharedCommunityCards
                   
-                    return (
-                      <div
-                        key={i}
-                        className="absolute"
-                        style={{
-                          left: cardX - (64 * 1.5 / 2) + 42, // Offset by half the scaled card width + even larger right offset (1 pixel more)
-                          top: cardY - (96 * 1.5 / 2) + 43, // Offset by half the scaled card height + smaller down offset (1 pixel more)
-                          transform: 'scale(1.5)', // Scale to match animation
-                          transformOrigin: '0 0' // Scale from top-left corner
-                        }}
-                      >
-                        <NumericPlayingCard 
-                          digit={card.digit} 
-                          variant="cyan" 
-                          style="neon" 
-                          neonVariant="matrix" 
-                          size="small" 
-                        />
-                      </div>
-                    )
+                  console.log('🎰 STATIC DISPLAY - Community cards rendering:', {
+                    shouldShowServerCards,
+                    shouldShowAnimationCards,
+                    serverCardsCount: displayGameState.round.communityCards.length,
+                    sharedCardsCount: sharedCommunityCards?.length || 0,
+                    isDealingCommunity,
+                    hasDealtCommunityCards,
+                    cardsToShow: cardsToShow?.map(c => c.digit),
+                    source: displayGameState.round.communityCards.length > 0 ? 'server' : 'shared'
                   })
-                ) : (
-                  <div className="text-white/60 text-sm bg-black/40 backdrop-blur-sm rounded px-2 py-1">
-                    No community cards
-                  </div>
-                )}
+                  
+                  return (shouldShowServerCards || shouldShowAnimationCards) ? (
+                    cardsToShow.map((card, i) => {
+                      // Use relative positioning within the table
+                      const cardWidth = 64 // small card width (64px)
+                      const cardSpacing = 8 // gap between cards
+                      const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
+                      // Move left so that the 3rd card (index 2) is centered - smaller offset
+                      const startX = -(totalWidth / 2) - ((cardWidth + cardSpacing) * 0.75) // Start from center and go left by half total width plus smaller offset for 3rd card
+                      
+                      const cardX = startX + (i * (cardWidth + cardSpacing)) + (cardWidth / 2)
+                      const cardY = 0 // Center vertically
+                    
+                      return (
+                        <div
+                          key={i}
+                          className="absolute"
+                          style={{
+                            left: cardX - (64 * 1.5 / 2) + 42, // Offset by half the scaled card width + even larger right offset (1 pixel more)
+                            top: cardY - (96 * 1.5 / 2) + 43, // Offset by half the scaled card height + smaller down offset (1 pixel more)
+                            transform: 'scale(1.5)', // Scale to match animation
+                            transformOrigin: '0 0' // Scale from top-left corner
+                          }}
+                        >
+                          <NumericPlayingCard 
+                            digit={card.digit} 
+                            variant="cyan" 
+                            style="neon" 
+                            neonVariant="matrix" 
+                            size="small" 
+                          />
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="text-white/60 text-sm bg-black/40 backdrop-blur-sm rounded px-2 py-1">
+                      No community cards
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Current question - positioned above pot */}
