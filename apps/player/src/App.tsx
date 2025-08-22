@@ -281,7 +281,12 @@ function PlayerApp() {
             {/* Available Cards */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Available Cards</h3>
-              <div className="flex gap-3 justify-center flex-wrap">
+              <div className="flex gap-3 justify-center flex-wrap items-center">
+                {/* Hole Cards Label */}
+                <div className="text-sm font-bold text-casino-gold bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1">
+                  HOLE CARDS
+                </div>
+                
                 {/* Player's Hand */}
                 {currentPlayer.hand.map((card, i) => {
                   const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
@@ -303,6 +308,11 @@ function PlayerApp() {
                     </motion.div>
                   )
                 })}
+
+                {/* Community Cards Label */}
+                <div className="text-sm font-bold text-casino-emerald bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1">
+                  COMMUNITY CARDS
+                </div>
 
                 {/* Community Cards */}
                 {gameState.round.communityCards.map((card, i) => {
