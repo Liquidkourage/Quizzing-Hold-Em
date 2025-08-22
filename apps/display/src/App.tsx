@@ -451,7 +451,7 @@ function DisplayApp() {
                   className="absolute"
                   style={{
                     left: 'calc(50% - 50px)', // Move deck more to the right
-                    top: 'calc(50% + 100px)', // Move deck down below the tableau
+                    top: 'calc(50% + 100px + 5vh)', // Move deck down below the tableau + 5vh margin
                     transform: 'translate(-50%, -50%)'
                   }}
                   initial={{ scale: 0, opacity: 0, rotateY: 0 }}
@@ -622,7 +622,7 @@ function DisplayApp() {
                     className="absolute"
                     style={{
                       left: 'calc(50% - 50px)', // Move deck more to the right
-                      top: 'calc(50% + 100px + 5vh)', // Move deck down below the tableau + 5% margin
+                      top: 'calc(50% + 100px)', // Move deck down below the tableau
                       transform: 'translate(-50%, -50%)'
                     }}
                     initial={{ scale: 0, opacity: 0, rotateY: 0 }}
@@ -666,9 +666,9 @@ function DisplayApp() {
                 {dealingCommunityCards.map((dealingCard) => {
                   // Calculate exact endpoint for community card positioning (relative to table center)
                   const calculateCommunityCardEndpoint = (cardIndex: number) => {
-                    // Community cards are positioned at the center of the table (accounting for 5% margin)
+                    // Community cards are positioned at the center of the table (accounting for 5vh margin)
                     const tableCenterX = window.innerWidth / 2
-                    const tableCenterY = (window.innerHeight / 2) + (window.innerHeight * 0.05) // Account for 5% margin
+                    const tableCenterY = (window.innerHeight / 2) + (window.innerHeight * 0.05) // Account for 5vh margin
                     
                                       // Calculate position for each community card in a horizontal row
                   const cardWidth = 64 // small card width (64px)
