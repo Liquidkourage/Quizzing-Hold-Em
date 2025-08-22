@@ -54,6 +54,12 @@ function PlayerApp() {
 
   // Answer composition functions
   const handleCardSelect = (type: 'hand' | 'community', index: number) => {
+    // Check if this card is already selected
+    const isAlreadySelected = selectedCards.some(sc => sc.type === type && sc.index === index)
+    if (isAlreadySelected) {
+      return // Card already used, ignore click
+    }
+
     if (type === 'hand' && currentPlayer?.hand[index]) {
       const digit = currentPlayer.hand[index].digit
       setComposedAnswer(prev => ({
@@ -269,10 +275,10 @@ function PlayerApp() {
                     return (
                       <motion.div 
                         key={i} 
-                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                        className={`${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
                         onClick={() => handleCardSelect('hand', i)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={!isSelected ? { scale: 1.05 } : {}}
+                        whileTap={!isSelected ? { scale: 0.95 } : {}}
                       >
                         <NumericPlayingCard 
                           digit={card.digit} 
@@ -296,10 +302,10 @@ function PlayerApp() {
                     return (
                       <motion.div 
                         key={i} 
-                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                        className={`${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
                         onClick={() => handleCardSelect('community', i)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={!isSelected ? { scale: 1.05 } : {}}
+                        whileTap={!isSelected ? { scale: 0.95 } : {}}
                       >
                         <NumericPlayingCard 
                           digit={card.digit} 
