@@ -7,6 +7,7 @@ import type { GameState } from '@qhe/core'
 function DisplayApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [communityCardsToast, setCommunityCardsToast] = useState<string | null>(null)
   const [isDealing, setIsDealing] = useState(false)
   const [dealingCards, setDealingCards] = useState<Array<{id: string, playerIndex: number, cardIndex: number, digit: number}>>([])
   const [hasDealtCards, setHasDealtCards] = useState(false) // Track if cards have been dealt - start false to hide initial cards
@@ -33,6 +34,17 @@ function DisplayApp() {
         communityCardsCount: newGameState?.round?.communityCards?.length || 0,
         roundId: newGameState?.round?.roundId
       })
+      
+      // Show toast with community card digits whenever state changes
+      if (newGameState?.round?.communityCards && newGameState.round.communityCards.length > 0) {
+        const digits = newGameState.round.communityCards.map(card => card.digit).join(', ')
+        setCommunityCardsToast(`Community Cards: ${digits}`)
+        setTimeout(() => setCommunityCardsToast(null), 5000) // Show for 5 seconds
+      } else {
+        setCommunityCardsToast('Community Cards: None')
+        setTimeout(() => setCommunityCardsToast(null), 3000) // Show for 3 seconds
+      }
+      
       setGameState(newGameState)
     })
     return unsubscribe
@@ -420,6 +432,21 @@ function DisplayApp() {
             transition={{ duration: 0.3 }}
           >
             {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Community Cards Toast */}
+      <AnimatePresence>
+        {communityCardsToast && (
+          <motion.div
+            className="fixed top-20 right-4 z-50 bg-green-800/90 backdrop-blur-md border border-green-400/30 rounded-xl shadow-lg p-4 text-white"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ duration: 0.3 }}
+          >
+            {communityCardsToast}
           </motion.div>
         )}
       </AnimatePresence>
