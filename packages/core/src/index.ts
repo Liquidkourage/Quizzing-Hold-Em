@@ -156,12 +156,23 @@ export function startGame(state: GameState): GameState {
 
 export function setQuestion(state: GameState): GameState {
   const randomQuestion = SAMPLE_QUESTIONS[Math.floor(Math.random() * SAMPLE_QUESTIONS.length)];
+  
+  // Generate community cards when the question is set - they are decided but not revealed yet
+  const communityCards: NumericCard[] = [
+    dealCard(),
+    dealCard(),
+    dealCard(),
+    dealCard(),
+    dealCard()
+  ];
+  
   return {
     ...state,
     phase: 'betting',
     round: {
       ...state.round,
       question: randomQuestion,
+      communityCards, // Cards are decided but hidden until dealt
     },
   };
 }
@@ -175,22 +186,10 @@ export function dealInitialCards(state: GameState): GameState {
 }
 
 export function dealCommunityCards(state: GameState): GameState {
-  // Generate 5 community cards for the round
-  const communityCards: NumericCard[] = [
-    dealCard(),
-    dealCard(),
-    dealCard(),
-    dealCard(),
-    dealCard()
-  ];
-  
-  return {
-    ...state,
-    round: {
-      ...state.round,
-      communityCards
-    }
-  };
+  // Community cards were already generated when the question was set
+  // This function just triggers the reveal/animation of the pre-existing cards
+  // No changes to state needed - cards are already there
+  return state;
 }
 
 export function placeBet(state: GameState, playerId: string, amount: number): GameState {
