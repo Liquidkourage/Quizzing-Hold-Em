@@ -536,7 +536,7 @@ function DisplayApp() {
                     // Cards are centered horizontally (left-1/2 transform -translate-x-1/2)
                     // Add small offset to move cards slightly right and up
                                           const horizontalOffset = 9 // px adjustment to move right (fine-tuned from 12)
-                    const verticalOffset = -8 // px adjustment to move up
+                    const verticalOffset = -8 - (window.innerHeight * 0.10) // px adjustment to move up, plus 10% of viewport height
                     let cardX
                     
                     if (cardIndex === 0) {
