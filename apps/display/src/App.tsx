@@ -437,7 +437,7 @@ function DisplayApp() {
         )}
 
         {/* Main Game Area */}
-        <div className="relative w-full h-[calc(100vh-200px)] max-w-7xl mx-auto mt-[10vh]">
+        <div className="relative w-full h-[calc(100vh-200px)] max-w-7xl mx-auto mt-[5vh]">
           
 
           
