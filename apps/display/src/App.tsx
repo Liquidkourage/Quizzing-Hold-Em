@@ -952,9 +952,9 @@ function DisplayApp() {
       </div>
 
       {/* Game Info Panel - Docked to bottom of screen */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-lg p-4">
+      <div className="fixed bottom-0 left-0 right-0 z-30">
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-t-lg p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
                 <div className="text-white text-sm">Players</div>
