@@ -7,7 +7,6 @@ import type { GameState } from '@qhe/core'
 function DisplayApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [communityCardsToast, setCommunityCardsToast] = useState<string | null>(null)
   const [isDealing, setIsDealing] = useState(false)
   
   // Use ref to store the latest animation function to avoid dependency cycles
@@ -31,30 +30,12 @@ function DisplayApp() {
 
   useEffect(() => {
     const unsubscribe = onState((newGameState) => {
-      console.log('🎰 STATE UPDATE - New game state received:', {
-        phase: newGameState?.phase,
-        communityCards: newGameState?.round?.communityCards,
-        communityCardsCount: newGameState?.round?.communityCards?.length || 0,
-        roundId: newGameState?.round?.roundId
-      })
-      
       // Clear client-side community card state when server has no cards (new round, etc.)
       if (!newGameState?.round?.communityCards || newGameState.round.communityCards.length === 0) {
-        console.log('🎰 STATE UPDATE - Clearing client-side community card state')
         setSharedCommunityCards([])
         setHasDealtCommunityCards(false)
         setDealingCommunityCards([])
         setIsDealingCommunity(false)
-      }
-      
-      // Show toast with community card digits whenever state changes
-      if (newGameState?.round?.communityCards && newGameState.round.communityCards.length > 0) {
-        const digits = newGameState.round.communityCards.map(card => card.digit).join(', ')
-        setCommunityCardsToast(`Community Cards: ${digits}`)
-        setTimeout(() => setCommunityCardsToast(null), 5000) // Show for 5 seconds
-      } else {
-        setCommunityCardsToast('Community Cards: None')
-        setTimeout(() => setCommunityCardsToast(null), 3000) // Show for 3 seconds
       }
       
       setGameState(newGameState)
@@ -108,7 +89,6 @@ function DisplayApp() {
 
   // Function to trigger dealing animation
   const triggerDealingAnimation = useCallback(() => {
-    console.log('🎰 Triggering dealing animation!')
     setIsDealing(true)
     setDealingCards([])
     setHasDealtCards(false) // Hide static cards during animation
@@ -140,19 +120,15 @@ function DisplayApp() {
       })
     }
     
-    console.log('🎰 Created', cards.length, 'dealing cards:', cards)
-    
     // Animate cards one by one with delays
     cards.forEach((card, index) => {
       setTimeout(() => {
-        console.log('🎰 Adding card to animation:', card)
         setDealingCards(prev => [...prev, card])
       }, index * 200) // 200ms delay between each card
     })
     
     // End dealing animation after all cards are dealt
     setTimeout(() => {
-      console.log('🎰 Ending dealing animation')
       setIsDealing(false)
       setDealingCards([])
       setShowDeck(false) // Hide deck after initial deal
@@ -174,37 +150,23 @@ function DisplayApp() {
           players: updatedPlayers
         }))
         
-        console.log('🎰 Demo mode - populated player hands with cards')
+
       }
     }, cards.length * 200 + 1000)
   }, [displayGameState.players])
 
   // Function to trigger community card dealing animation
   const triggerCommunityDealingAnimation = useCallback(() => {
-    console.log('🎰 Triggering community card dealing animation!')
-    
     // Get the current fresh state - use displayGameState to avoid stale closure issues
     const currentGameState = displayGameState || demoGameState
     
-    console.log('🎰 ANIMATION FUNCTION - Starting community card dealing animation')
-    console.log('🎰 ANIMATION FUNCTION - Current gameState:', {
-      phase: currentGameState.phase,
-      communityCards: currentGameState.round.communityCards,
-      communityCardsCount: currentGameState.round.communityCards.length,
-      roundId: currentGameState.round.roundId
-    })
-    
     // ONLY use server community cards - NO RANDOM FALLBACK
     if (currentGameState.round.communityCards.length === 0) {
-      console.log('🎰 ANIMATION FUNCTION - NO SERVER COMMUNITY CARDS AVAILABLE - SKIPPING ANIMATION')
-      console.log('🎰 ANIMATION FUNCTION - displayGameState community cards:', displayGameState?.round?.communityCards)
-      console.log('🎰 ANIMATION FUNCTION - demoGameState community cards:', demoGameState?.round?.communityCards)
       return // Don't run animation if no server cards
     }
     
     // Use server community cards
     const cardsToUse = currentGameState.round.communityCards.map(card => ({ digit: card.digit }))
-    console.log('🎰 ANIMATION FUNCTION - Using server community cards for animation:', cardsToUse)
     
     // IMMEDIATELY set the shared community cards so static display uses the same values
     setSharedCommunityCards(cardsToUse)
@@ -225,30 +187,20 @@ function DisplayApp() {
       })
     })
     
-    console.log('🎰 ANIMATION FUNCTION - Created', cards.length, 'community dealing cards for animation:', cards.map(c => ({ id: c.id, digit: c.digit, cardIndex: c.cardIndex })))
-    
     // Phase 1: Deal cards face down
     cards.forEach((card, index) => {
       setTimeout(() => {
-        console.log('🎰 ANIMATION PHASE 1 - Adding community card to animation:', {
-          id: card.id,
-          digit: card.digit,
-          cardIndex: card.cardIndex,
-          isRevealed: card.isRevealed
-        })
         setDealingCommunityCards(prev => [...prev, card])
       }, index * 200) // 200ms delay between each card
     })
     
     // Phase 2: Reveal all cards after dealing
     setTimeout(() => {
-      console.log('🎰 Revealing all community cards')
       setDealingCommunityCards(prev => prev.map(card => ({ ...card, isRevealed: true })))
     }, cards.length * 200 + 500) // Wait for all cards to be dealt + 500ms
     
     // Phase 3: End animation and update server state with these cards
     setTimeout(() => {
-      console.log('🎰 Ending community cards dealing animation')
       setIsDealingCommunity(false)
       setDealingCommunityCards([])
       setShowDeck(false) // Hide deck after community cards deal
@@ -274,29 +226,13 @@ function DisplayApp() {
   }, [displayGameState, triggerDealingAnimation])
 
   useEffect(() => {
-    console.log('🎰 Setting up onDealingCommunityCards listener')
     const unsubscribe = onDealingCommunityCards(() => {
-      console.log('🎰 EVENT RECEIVED - dealingCommunityCards event!')
-      
       // IMMEDIATELY set dealing state to prevent static cards from showing
       setIsDealingCommunity(true)
       setHasDealtCommunityCards(false) // Hide static cards during animation
       
-      console.log('🎰 EVENT TIMING - Current displayGameState community cards:', {
-        communityCards: displayGameState.round.communityCards,
-        communityCardsCount: displayGameState.round.communityCards.length,
-        phase: displayGameState.phase
-      })
-      
       // Wait for the state update to arrive, then trigger animation
       setTimeout(() => {
-        console.log('🎰 ANIMATION TRIGGER - About to start animation after delay')
-        console.log('🎰 ANIMATION TIMING - Current displayGameState community cards:', {
-          communityCards: displayGameState.round.communityCards,
-          communityCardsCount: displayGameState.round.communityCards.length,
-          phase: displayGameState.phase
-        })
-        
         // Use the ref to get the latest function
         if (triggerCommunityDealingAnimationRef.current) {
           triggerCommunityDealingAnimationRef.current()
@@ -465,20 +401,7 @@ function DisplayApp() {
         )}
       </AnimatePresence>
 
-      {/* Community Cards Toast */}
-      <AnimatePresence>
-        {communityCardsToast && (
-          <motion.div
-            className="fixed top-20 right-4 z-50 bg-green-800/90 backdrop-blur-md border border-green-400/30 rounded-xl shadow-lg p-4 text-white"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            transition={{ duration: 0.3 }}
-          >
-            {communityCardsToast}
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       <div className="relative z-10 p-2">
         {/* Header */}
@@ -966,17 +889,6 @@ function DisplayApp() {
                   const shouldShowServerCards = displayGameState.round.communityCards.length > 0 && !isDealingCommunity
                   const shouldShowAnimationCards = sharedCommunityCards && sharedCommunityCards.length > 0 && hasDealtCommunityCards
                   const cardsToShow = displayGameState.round.communityCards.length > 0 ? displayGameState.round.communityCards : sharedCommunityCards
-                  
-                  console.log('🎰 STATIC DISPLAY - Community cards rendering:', {
-                    shouldShowServerCards,
-                    shouldShowAnimationCards,
-                    serverCardsCount: displayGameState.round.communityCards.length,
-                    sharedCardsCount: sharedCommunityCards?.length || 0,
-                    isDealingCommunity,
-                    hasDealtCommunityCards,
-                    cardsToShow: cardsToShow?.map(c => c.digit),
-                    source: displayGameState.round.communityCards.length > 0 ? 'server' : 'shared'
-                  })
                   
                   return (shouldShowServerCards || shouldShowAnimationCards) ? (
                     cardsToShow.map((card, i) => {
