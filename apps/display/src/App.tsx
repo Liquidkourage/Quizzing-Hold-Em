@@ -254,14 +254,16 @@ function DisplayApp() {
         phase: displayGameState.phase
       })
       
-      // Start animation immediately since server state should be updated first
-      console.log('🎰 ANIMATION TRIGGER - About to start animation immediately')
-      console.log('🎰 ANIMATION TIMING - Current displayGameState community cards:', {
-        communityCards: displayGameState.round.communityCards,
-        communityCardsCount: displayGameState.round.communityCards.length,
-        phase: displayGameState.phase
-      })
-      triggerCommunityDealingAnimation()
+      // Add a tiny delay to ensure state update arrives first
+      setTimeout(() => {
+        console.log('🎰 ANIMATION TRIGGER - About to start animation after micro-delay')
+        console.log('🎰 ANIMATION TIMING - Current displayGameState community cards:', {
+          communityCards: displayGameState.round.communityCards,
+          communityCardsCount: displayGameState.round.communityCards.length,
+          phase: displayGameState.phase
+        })
+        triggerCommunityDealingAnimation()
+      }, 50) // Just 50ms to ensure state arrives first
     })
     return unsubscribe
   }, [triggerCommunityDealingAnimation])
