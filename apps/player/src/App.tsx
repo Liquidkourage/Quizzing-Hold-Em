@@ -107,11 +107,25 @@ function PlayerApp() {
   }
 
   const handleAddDecimal = () => {
-    setComposedAnswer(prev => ({
-      digits: [...prev.digits, 'decimal'],
-      display: prev.display + '.',
-      value: parseFloat(prev.display + '.') || 0
-    }))
+    const isDecimalSelected = composedAnswer.display.includes('.')
+    
+    if (isDecimalSelected) {
+      // Remove the decimal from the answer
+      const newDisplay = composedAnswer.display.replace('.', '')
+      const newDigits = composedAnswer.digits.filter(d => d !== 'decimal')
+      setComposedAnswer({
+        digits: newDigits,
+        display: newDisplay,
+        value: parseFloat(newDisplay) || 0
+      })
+    } else {
+      // Add the decimal to the answer
+      setComposedAnswer(prev => ({
+        digits: [...prev.digits, 'decimal'],
+        display: prev.display + '.',
+        value: parseFloat(prev.display + '.') || 0
+      }))
+    }
   }
 
   const handleClearAnswer = () => {
@@ -374,7 +388,7 @@ function PlayerApp() {
                         overflow: 'hidden',
                         margin: '10px',
                         boxShadow: '0 0 20px rgba(139,92,246,0.8), 0 0 40px rgba(139,92,246,0.4), inset 0 0 20px rgba(139,92,246,0.2)',
-                        animation: 'neon-matrix 4s ease-in-out infinite'
+                        animation: composedAnswer.display.includes('.') ? 'neon-pulse 2s ease-in-out infinite' : 'neon-matrix 4s ease-in-out infinite'
                       }}
                     >
                       <div 
