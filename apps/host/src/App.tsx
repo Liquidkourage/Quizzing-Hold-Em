@@ -193,7 +193,7 @@ function HostApp() {
                 variant="blue"
                 size="large"
                 onClick={handleDealInitialCards}
-                disabled={gameState.phase !== 'question'}
+                disabled={gameState.phase !== 'betting' || !gameState.round.question}
                 className="w-full"
               >
                 Deal Initial Cards
