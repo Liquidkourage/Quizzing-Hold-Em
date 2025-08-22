@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { connect, onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
@@ -9,6 +9,9 @@ function DisplayApp() {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [communityCardsToast, setCommunityCardsToast] = useState<string | null>(null)
   const [isDealing, setIsDealing] = useState(false)
+  
+  // Use ref to store the latest animation function to avoid dependency cycles
+  const triggerCommunityDealingAnimationRef = useRef<(() => void) | null>(null)
   const [dealingCards, setDealingCards] = useState<Array<{id: string, playerIndex: number, cardIndex: number, digit: number}>>([])
   const [hasDealtCards, setHasDealtCards] = useState(false) // Track if cards have been dealt - start false to hide initial cards
   
@@ -247,6 +250,11 @@ function DisplayApp() {
       // No need to update demo state - we're using shared community cards state
     }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
   }, [displayGameState]) // Include displayGameState to get fresh state
+  
+  // Store the latest function in the ref
+  useEffect(() => {
+    triggerCommunityDealingAnimationRef.current = triggerCommunityDealingAnimation
+  }, [triggerCommunityDealingAnimation])
 
   useEffect(() => {
     const unsubscribe = onDealingCards(() => {
@@ -268,19 +276,23 @@ function DisplayApp() {
         phase: displayGameState.phase
       })
       
-      // Add a tiny delay to ensure state update arrives first
+      // Wait for the state update to arrive, then trigger animation
       setTimeout(() => {
-        console.log('🎰 ANIMATION TRIGGER - About to start animation after micro-delay')
+        console.log('🎰 ANIMATION TRIGGER - About to start animation after delay')
         console.log('🎰 ANIMATION TIMING - Current displayGameState community cards:', {
           communityCards: displayGameState.round.communityCards,
           communityCardsCount: displayGameState.round.communityCards.length,
           phase: displayGameState.phase
         })
-        triggerCommunityDealingAnimation()
-      }, 50) // Just 50ms to ensure state arrives first
+        
+        // Use the ref to get the latest function
+        if (triggerCommunityDealingAnimationRef.current) {
+          triggerCommunityDealingAnimationRef.current()
+        }
+      }, 200) // Wait 200ms for state update to arrive
     })
     return unsubscribe
-  }, [triggerCommunityDealingAnimation])
+  }, []) // No dependencies - use ref to avoid cycles
 
   // Reset hasDealtCards when the round changes to prevent flickering
   useEffect(() => {
