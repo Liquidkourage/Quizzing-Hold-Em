@@ -363,7 +363,7 @@ function PlayerApp() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg transform translate-y-0">
+                    <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg" style={{ marginTop: '2px' }}>
                       <div className="text-4xl font-bold text-white">.</div>
                     </div>
                   </motion.div>
