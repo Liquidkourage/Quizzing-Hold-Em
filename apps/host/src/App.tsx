@@ -42,6 +42,10 @@ function HostApp() {
 
   const handleSetQuestion = () => {
     console.log('🎰 Host: Set Question button clicked')
+    // Immediate toast test
+    setToastMessage('Set Question button clicked!')
+    setTimeout(() => setToastMessage(null), 3000)
+    
     if (socket) {
       console.log('🎰 Host: Emitting setQuestion action')
       socket.emit('action', { type: 'setQuestion' })
