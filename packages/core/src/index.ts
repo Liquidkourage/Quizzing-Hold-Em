@@ -157,7 +157,19 @@ export function startGame(state: GameState): GameState {
 export function setQuestion(state: GameState): GameState {
   const randomQuestion = SAMPLE_QUESTIONS[Math.floor(Math.random() * SAMPLE_QUESTIONS.length)];
   
-  // Generate community cards when the question is set - they are decided but not revealed yet
+  return {
+    ...state,
+    phase: 'betting',
+    round: {
+      ...state.round,
+      question: randomQuestion,
+      // Community cards will be generated during initial deal
+    },
+  };
+}
+
+export function dealInitialCards(state: GameState): GameState {
+  // Generate community cards during initial deal - this is the ONLY time they are established
   const communityCards: NumericCard[] = [
     dealCard(),
     dealCard(),
@@ -166,23 +178,20 @@ export function setQuestion(state: GameState): GameState {
     dealCard()
   ];
   
-  return {
-    ...state,
-    phase: 'betting',
-    round: {
-      ...state.round,
-      question: randomQuestion,
-      communityCards, // Cards are decided but hidden until dealt
-    },
-  };
-}
-
-export function dealInitialCards(state: GameState): GameState {
   const updatedPlayers = state.players.map(player => ({
     ...player,
     hand: [dealCard(), dealCard()],
   }));
-  return { ...state, phase: 'betting', players: updatedPlayers };
+  
+  return { 
+    ...state, 
+    phase: 'betting', 
+    players: updatedPlayers,
+    round: {
+      ...state.round,
+      communityCards, // Community cards are now established for the entire round
+    }
+  };
 }
 
 export function dealCommunityCards(state: GameState): GameState {
