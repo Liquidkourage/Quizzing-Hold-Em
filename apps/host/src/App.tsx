@@ -16,11 +16,9 @@ function HostApp() {
 
   useEffect(() => {
     const unsubscribe = onState((newGameState) => {
-      console.log('🎰 Host: State update received:', {
-        phase: newGameState?.phase,
-        question: newGameState?.round?.question?.text,
-        questionId: newGameState?.round?.question?.id
-      })
+      console.log('🎰 Host: State update received - Phase:', newGameState?.phase)
+      console.log('🎰 Host: State update received - Question:', newGameState?.round?.question?.text)
+      console.log('🎰 Host: State update received - Question ID:', newGameState?.round?.question?.id)
       setGameState(newGameState)
     })
     return unsubscribe
@@ -28,11 +26,10 @@ function HostApp() {
 
   // Debug current game state
   useEffect(() => {
-    console.log('🎰 Host: Current game state:', {
-      phase: gameState?.phase,
-      hasQuestion: !!gameState?.round?.question,
-      playersCount: gameState?.players?.length
-    })
+    console.log('🎰 Host: Current game state - Phase:', gameState?.phase)
+    console.log('🎰 Host: Current game state - Has Question:', !!gameState?.round?.question)
+    console.log('🎰 Host: Current game state - Players Count:', gameState?.players?.length)
+    console.log('🎰 Host: Current game state - Question Text:', gameState?.round?.question?.text)
   }, [gameState])
 
   useEffect(() => {
