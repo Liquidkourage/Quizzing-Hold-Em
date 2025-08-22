@@ -4,6 +4,13 @@ import { connect, onState, onToast, bet, fold } from '@qhe/net'
 import { Card, NeonButton, JackpotDisplay, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
 
+// Types for answer composition
+interface ComposedAnswer {
+  digits: (number | 'decimal')[]
+  display: string
+  value: number
+}
+
 function PlayerApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [playerName, setPlayerName] = useState('')
@@ -11,6 +18,8 @@ function PlayerApp() {
   const [isJoined, setIsJoined] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [betAmount, setBetAmount] = useState(20)
+  const [composedAnswer, setComposedAnswer] = useState<ComposedAnswer>({ digits: [], display: '', value: 0 })
+  const [selectedCards, setSelectedCards] = useState<Array<{type: 'hand' | 'community', index: number}>>([])
 
   const handleJoin = () => {
     if (!playerName || !roomCode) return
@@ -41,6 +50,48 @@ function PlayerApp() {
 
   const handleFold = () => {
     fold()
+  }
+
+  // Answer composition functions
+  const handleCardSelect = (type: 'hand' | 'community', index: number) => {
+    if (type === 'hand' && currentPlayer?.hand[index]) {
+      const digit = currentPlayer.hand[index].digit
+      setComposedAnswer(prev => ({
+        digits: [...prev.digits, digit],
+        display: prev.display + digit.toString(),
+        value: parseFloat(prev.display + digit.toString()) || 0
+      }))
+      setSelectedCards(prev => [...prev, { type, index }])
+    } else if (type === 'community' && gameState?.round.communityCards[index]) {
+      const digit = gameState.round.communityCards[index].digit
+      setComposedAnswer(prev => ({
+        digits: [...prev.digits, digit],
+        display: prev.display + digit.toString(),
+        value: parseFloat(prev.display + digit.toString()) || 0
+      }))
+      setSelectedCards(prev => [...prev, { type, index }])
+    }
+  }
+
+  const handleAddDecimal = () => {
+    setComposedAnswer(prev => ({
+      digits: [...prev.digits, 'decimal'],
+      display: prev.display + '.',
+      value: parseFloat(prev.display + '.') || 0
+    }))
+  }
+
+  const handleClearAnswer = () => {
+    setComposedAnswer({ digits: [], display: '', value: 0 })
+    setSelectedCards([])
+  }
+
+  const handleSubmitAnswer = () => {
+    if (composedAnswer.value > 0) {
+      // TODO: Submit answer to server
+      console.log('Submitting answer:', composedAnswer.value)
+      setToastMessage(`Answer submitted: ${composedAnswer.display}`)
+    }
   }
 
   if (!isJoined) {
@@ -193,6 +244,105 @@ function PlayerApp() {
             </div>
           )}
         </Card>
+
+        {/* Answer Composition Interface */}
+        {gameState.phase === 'betting' && currentPlayer && !currentPlayer.hasFolded && (
+          <Card variant="glass" className="mb-8 p-8">
+            <h2 className="text-3xl font-bold text-casino-emerald mb-8 text-center">Compose Your Answer</h2>
+            
+            {/* Composed Answer Display */}
+            <div className="text-center mb-8">
+              <div className="text-lg text-white/80 mb-2">Your Answer</div>
+              <div className="text-6xl font-bold text-casino-gold bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-6 min-h-[120px] flex items-center justify-center">
+                {composedAnswer.display || '0'}
+              </div>
+            </div>
+
+            {/* Available Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              {/* Player's Hand */}
+              <div>
+                <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Your Hand</h3>
+                <div className="flex gap-3 justify-center">
+                  {currentPlayer.hand.map((card, i) => {
+                    const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
+                    return (
+                      <motion.div 
+                        key={i} 
+                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                        onClick={() => handleCardSelect('hand', i)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <NumericPlayingCard 
+                          digit={card.digit} 
+                          variant="cyan" 
+                          style="neon" 
+                          neonVariant={isSelected ? "pulse" : "matrix"} 
+                          size="large" 
+                        />
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Community Cards */}
+              <div>
+                <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Community Cards</h3>
+                <div className="flex gap-3 justify-center">
+                  {gameState.round.communityCards.map((card, i) => {
+                    const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
+                    return (
+                      <motion.div 
+                        key={i} 
+                        className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                        onClick={() => handleCardSelect('community', i)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <NumericPlayingCard 
+                          digit={card.digit} 
+                          variant="cyan" 
+                          style="neon" 
+                          neonVariant={isSelected ? "pulse" : "matrix"} 
+                          size="large" 
+                        />
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-center">
+              <NeonButton 
+                variant="purple"
+                size="large"
+                onClick={handleAddDecimal}
+                disabled={composedAnswer.display.includes('.')}
+              >
+                Add Decimal Point
+              </NeonButton>
+              <NeonButton 
+                variant="red"
+                size="large"
+                onClick={handleClearAnswer}
+              >
+                Clear Answer
+              </NeonButton>
+              <NeonButton 
+                variant="emerald"
+                size="large"
+                onClick={handleSubmitAnswer}
+                disabled={composedAnswer.value === 0}
+              >
+                Submit Answer
+              </NeonButton>
+            </div>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Your Hand */}
