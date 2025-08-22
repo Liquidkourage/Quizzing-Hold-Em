@@ -159,25 +159,25 @@ function DisplayApp() {
   const triggerCommunityDealingAnimation = useCallback(() => {
     console.log('🎰 Triggering community card dealing animation!')
     
-    // Use server community cards if available, otherwise generate random ones
-    let cardsToUse: Array<{digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}> = []
+    // Get the current fresh state - this avoids stale closure issues
+    const currentGameState = gameState || demoGameState
     
     console.log('🎰 ANIMATION FUNCTION - Starting community card dealing animation')
-    console.log('🎰 ANIMATION FUNCTION - Current displayGameState:', {
-      phase: displayGameState.phase,
-      communityCards: displayGameState.round.communityCards,
-      communityCardsCount: displayGameState.round.communityCards.length,
-      roundId: displayGameState.round.roundId
+    console.log('🎰 ANIMATION FUNCTION - Current gameState:', {
+      phase: currentGameState.phase,
+      communityCards: currentGameState.round.communityCards,
+      communityCardsCount: currentGameState.round.communityCards.length,
+      roundId: currentGameState.round.roundId
     })
     
     // ONLY use server community cards - NO RANDOM FALLBACK
-    if (displayGameState.round.communityCards.length === 0) {
+    if (currentGameState.round.communityCards.length === 0) {
       console.log('🎰 ANIMATION FUNCTION - NO SERVER COMMUNITY CARDS AVAILABLE - SKIPPING ANIMATION')
       return // Don't run animation if no server cards
     }
     
     // Use server community cards
-    cardsToUse = displayGameState.round.communityCards.map(card => ({ digit: card.digit }))
+    const cardsToUse = currentGameState.round.communityCards.map(card => ({ digit: card.digit }))
     console.log('🎰 ANIMATION FUNCTION - Using server community cards for animation:', cardsToUse)
     
     // IMMEDIATELY set the shared community cards so static display uses the same values
@@ -232,7 +232,7 @@ function DisplayApp() {
       
       // No need to update demo state - we're using shared community cards state
     }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
-  }, [displayGameState]) // Need displayGameState to get latest server community cards
+  }, []) // Remove dependency to avoid stale closure - we'll get fresh state inside the function
 
   useEffect(() => {
     const unsubscribe = onDealingCards(() => {
