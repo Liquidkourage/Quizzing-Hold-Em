@@ -281,72 +281,75 @@ function PlayerApp() {
             {/* Available Cards */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Available Cards</h3>
-              <div className="flex gap-3 justify-center flex-wrap items-center">
-                {/* Hole Cards Label */}
-                <div className="text-sm font-bold text-casino-gold bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1">
-                  HOLE CARDS
-                </div>
-                
-                {/* Player's Hand */}
-                {currentPlayer.hand.map((card, i) => {
-                  const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
-                  return (
-                    <motion.div 
-                      key={`hand-${i}`} 
-                      className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
-                      onClick={() => handleCardSelect('hand', i)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <NumericPlayingCard 
-                        digit={card.digit} 
-                        variant="cyan" 
-                        style="neon" 
-                        neonVariant={isSelected ? "pulse" : "matrix"} 
-                        size="large" 
-                      />
-                    </motion.div>
-                  )
-                })}
-
-                {/* Community Cards Label */}
-                <div className="text-sm font-bold text-casino-emerald bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1">
-                  COMMUNITY CARDS
+              <div className="flex gap-3 justify-center flex-wrap">
+                {/* Hole Cards Section */}
+                <div className="flex flex-col items-center">
+                  <div className="text-sm font-bold text-casino-gold mb-2">HOLE CARDS</div>
+                  <div className="flex gap-3">
+                    {currentPlayer.hand.map((card, i) => {
+                      const isSelected = selectedCards.some(sc => sc.type === 'hand' && sc.index === i)
+                      return (
+                        <motion.div 
+                          key={`hand-${i}`} 
+                          className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                          onClick={() => handleCardSelect('hand', i)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <NumericPlayingCard 
+                            digit={card.digit} 
+                            variant="cyan" 
+                            style="neon" 
+                            neonVariant={isSelected ? "pulse" : "matrix"} 
+                            size="large" 
+                          />
+                        </motion.div>
+                      )
+                    })}
+                  </div>
                 </div>
 
-                {/* Community Cards */}
-                {gameState.round.communityCards.map((card, i) => {
-                  const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
-                  return (
-                    <motion.div 
-                      key={`community-${i}`} 
-                      className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
-                      onClick={() => handleCardSelect('community', i)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <NumericPlayingCard 
-                        digit={card.digit} 
-                        variant="cyan" 
-                        style="neon" 
-                        neonVariant={isSelected ? "pulse" : "matrix"} 
-                        size="large" 
-                      />
-                    </motion.div>
-                  )
-                })}
+                {/* Community Cards Section */}
+                <div className="flex flex-col items-center">
+                  <div className="text-sm font-bold text-casino-emerald mb-2">COMMUNITY CARDS</div>
+                  <div className="flex gap-3">
+                    {gameState.round.communityCards.map((card, i) => {
+                      const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
+                      return (
+                        <motion.div 
+                          key={`community-${i}`} 
+                          className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                          onClick={() => handleCardSelect('community', i)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <NumericPlayingCard 
+                            digit={card.digit} 
+                            variant="cyan" 
+                            style="neon" 
+                            neonVariant={isSelected ? "pulse" : "matrix"} 
+                            size="large" 
+                          />
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                </div>
 
                 {/* Decimal Point Card */}
-                <motion.div 
-                  className={`cursor-pointer ${composedAnswer.display.includes('.') ? 'ring-4 ring-casino-gold' : ''}`}
-                  onClick={handleAddDecimal}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg">
-                    <div className="text-4xl font-bold text-white">.</div>
-                  </div>
-                </motion.div>
+                <div className="flex flex-col items-center">
+                  <div className="text-sm font-bold text-purple-400 mb-2">DECIMAL</div>
+                  <motion.div 
+                    className={`cursor-pointer ${composedAnswer.display.includes('.') ? 'ring-4 ring-casino-gold' : ''}`}
+                    onClick={handleAddDecimal}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="w-24 h-36 bg-gradient-to-br from-purple-600 to-purple-800 border-2 border-purple-400 rounded-lg flex items-center justify-center shadow-lg">
+                      <div className="text-4xl font-bold text-white">.</div>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </div>
 
