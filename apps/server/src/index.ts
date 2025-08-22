@@ -799,7 +799,10 @@ io.on('connection', (socket) => {
           break
           
         case 'dealInitialCards':
+          console.log('🎰 Server: Received dealInitialCards action')
           gameState = dealInitialCards(gameState)
+          console.log('🎰 Server: Initial cards dealt, new phase:', gameState.phase)
+          console.log('🎰 Server: Players with cards:', gameState.players.map(p => ({ name: p.name, cards: p.hand.length })))
           io.to(roomCode).emit('dealingCards') // Trigger dealing animation
           io.to(roomCode).emit('toast', 'Initial cards dealt!')
           break

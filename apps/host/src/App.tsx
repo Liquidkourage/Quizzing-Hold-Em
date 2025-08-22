@@ -55,8 +55,13 @@ function HostApp() {
   }
 
   const handleDealInitialCards = () => {
+    console.log('🎰 Host: Deal Initial Cards button clicked')
+    console.log('🎰 Host: Current phase:', gameState?.phase)
     if (socket) {
+      console.log('🎰 Host: Emitting dealInitialCards action')
       socket.emit('action', { type: 'dealInitialCards' })
+    } else {
+      console.log('🎰 Host: No socket available')
     }
   }
 
