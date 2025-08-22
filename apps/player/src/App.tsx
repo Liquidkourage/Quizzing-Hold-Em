@@ -275,7 +275,7 @@ function PlayerApp() {
                     return (
                       <motion.div 
                         key={i} 
-                        className={`${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
+                        className={`relative ${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
                         onClick={() => handleCardSelect('hand', i)}
                         whileHover={!isSelected ? { scale: 1.05 } : {}}
                         whileTap={!isSelected ? { scale: 0.95 } : {}}
@@ -287,6 +287,11 @@ function PlayerApp() {
                           neonVariant={isSelected ? "pulse" : "matrix"} 
                           size="large" 
                         />
+                        {isSelected && (
+                          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            USED
+                          </div>
+                        )}
                       </motion.div>
                     )
                   })}
@@ -302,7 +307,7 @@ function PlayerApp() {
                     return (
                       <motion.div 
                         key={i} 
-                        className={`${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
+                        className={`relative ${isSelected ? 'ring-4 ring-casino-gold opacity-50' : 'cursor-pointer'}`}
                         onClick={() => handleCardSelect('community', i)}
                         whileHover={!isSelected ? { scale: 1.05 } : {}}
                         whileTap={!isSelected ? { scale: 0.95 } : {}}
@@ -314,6 +319,11 @@ function PlayerApp() {
                           neonVariant={isSelected ? "pulse" : "matrix"} 
                           size="large" 
                         />
+                        {isSelected && (
+                          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            USED
+                          </div>
+                        )}
                       </motion.div>
                     )
                   })}
