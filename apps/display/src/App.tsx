@@ -666,9 +666,9 @@ function DisplayApp() {
                 {dealingCommunityCards.map((dealingCard) => {
                   // Calculate exact endpoint for community card positioning (relative to table center)
                   const calculateCommunityCardEndpoint = (cardIndex: number) => {
-                    // Community cards are positioned at the center of the table (accounting for 5vh margin, then moved up 15% and right 5%)
-                    const tableCenterX = (window.innerWidth / 2) + (window.innerWidth * 0.05) // Move right 5%
-                    const tableCenterY = (window.innerHeight / 2) + (window.innerHeight * 0.05) - (window.innerHeight * 0.15) // Account for 5vh margin, then move up 15%
+                    // Community cards are positioned at the center of the table (accounting for 5vh margin, then moved up 12% and right 2%)
+                    const tableCenterX = (window.innerWidth / 2) + (window.innerWidth * 0.02) // Move right 2%
+                    const tableCenterY = (window.innerHeight / 2) + (window.innerHeight * 0.05) - (window.innerHeight * 0.12) // Account for 5vh margin, then move up 12%
                     
                                       // Calculate position for each community card in a horizontal row
                   const cardWidth = 64 // small card width (64px)
