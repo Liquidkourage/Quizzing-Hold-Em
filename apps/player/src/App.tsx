@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connect, onState, onToast, bet, fold } from '@qhe/net'
-import { Card, NeonButton, JackpotDisplay, NumericPlayingCard, PokerChip } from '@qhe/ui'
+import { Card, NeonButton, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
 
 // Types for answer composition
@@ -219,21 +219,8 @@ function PlayerApp() {
           </div>
         </motion.div>
 
-        {/* Community Cards - Prominent Center Section */}
+        {/* Game Info Section */}
         <Card variant="glass" className="mb-8 p-8">
-          <h2 className="text-3xl font-bold text-casino-emerald mb-8 text-center">Community Cards</h2>
-          <div className="flex gap-6 justify-center mb-8">
-            {gameState.round.communityCards.map((card, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ scale: 0, rotate: 180 }} 
-                animate={{ scale: 1, rotate: 0 }} 
-                transition={{ delay: i * 0.1 }}
-              >
-                <NumericPlayingCard digit={card.digit} variant="cyan" style="neon" neonVariant="matrix" size="large" />
-              </motion.div>
-            ))}
-          </div>
           <div className="text-center mb-6">
             <div className="text-lg text-white/80">Pot</div>
             <div className="text-4xl font-bold text-casino-emerald">${gameState.round.pot}</div>
@@ -351,27 +338,15 @@ function PlayerApp() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Your Hand */}
+          {/* Player Info */}
           <Card variant="glass" className="p-6">
-            <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Your Hand</h2>
-            <div className="flex gap-3 justify-center mb-6">
-              {currentPlayer?.hand.map((card, i) => (
-                <motion.div 
-                  key={i} 
-                  initial={{ scale: 0, rotate: 180 }} 
-                  animate={{ scale: 1, rotate: 0 }} 
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <NumericPlayingCard digit={card.digit} variant="cyan" style="neon" neonVariant="matrix" size="large" />
-                </motion.div>
-              ))}
-            </div>
-            <div className="text-center">
+            <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Player Info</h2>
+            <div className="text-center mb-6">
               <div className="text-sm text-white/80">Bankroll</div>
               <div className="text-3xl font-bold text-casino-gold">${currentPlayer?.bankroll || 0}</div>
             </div>
             {currentPlayer?.hasFolded && (
-              <div className="mt-4 text-center">
+              <div className="text-center">
                 <div className="text-red-400 font-bold text-xl">FOLDED</div>
               </div>
             )}
@@ -412,11 +387,6 @@ function PlayerApp() {
               </NeonButton>
             </div>
           </Card>
-        </div>
-
-        {/* Jackpot Display */}
-        <div className="mt-8">
-          <JackpotDisplay amount={gameState.round.pot} />
         </div>
 
         {/* Other Players */}
