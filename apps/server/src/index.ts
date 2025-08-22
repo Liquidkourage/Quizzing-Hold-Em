@@ -787,7 +787,14 @@ io.on('connection', (socket) => {
           break
           
         case 'setQuestion':
+          console.log('🎰 Server: Received setQuestion action')
           gameState = setQuestion(gameState)
+          console.log('🎰 Server: Question set:', gameState.round.question)
+          console.log('🎰 Server: New phase:', gameState.phase)
+          
+          // Update the room state and emit to all clients
+          rooms.set(roomCode, gameState)
+          io.to(roomCode).emit('state', gameState)
           io.to(roomCode).emit('toast', 'Question set!')
           break
           

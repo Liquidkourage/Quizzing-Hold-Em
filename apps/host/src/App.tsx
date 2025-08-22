@@ -15,7 +15,14 @@ function HostApp() {
   }, [])
 
   useEffect(() => {
-    const unsubscribe = onState(setGameState)
+    const unsubscribe = onState((newGameState) => {
+      console.log('🎰 Host: State update received:', {
+        phase: newGameState?.phase,
+        question: newGameState?.round?.question?.text,
+        questionId: newGameState?.round?.question?.id
+      })
+      setGameState(newGameState)
+    })
     return unsubscribe
   }, [])
 
@@ -34,8 +41,12 @@ function HostApp() {
   }
 
   const handleSetQuestion = () => {
+    console.log('🎰 Host: Set Question button clicked')
     if (socket) {
+      console.log('🎰 Host: Emitting setQuestion action')
       socket.emit('action', { type: 'setQuestion' })
+    } else {
+      console.log('🎰 Host: No socket available')
     }
   }
 
