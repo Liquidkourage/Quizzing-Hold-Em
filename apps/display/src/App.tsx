@@ -406,15 +406,15 @@ function DisplayApp() {
       <div className="relative z-10 p-2">
         {/* Header */}
         <motion.div 
-          className="text-center mb-2"
+          className="text-center mb-1"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="text-4xl font-black text-yellow-400 mb-2 flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-black text-yellow-400 mb-1 flex items-center justify-center gap-2">
             🎰 ALL <PokerChip size="lg" className="mx-1" /> INQUIZITION
           </h1>
-          <div className="text-lg text-white">
+          <div className="text-base text-white">
             Room: <span className="text-yellow-400 font-bold">{displayGameState.code}</span> | 
             Phase: <span className="text-yellow-400 font-bold">{displayGameState.phase}</span>
             {!gameState && <span className="text-red-400 ml-2">(DEMO MODE - 8 Players)</span>}
@@ -437,7 +437,7 @@ function DisplayApp() {
         )}
 
         {/* Main Game Area */}
-        <div className="relative w-full h-screen max-w-7xl mx-auto">
+        <div className="relative w-full h-[calc(100vh-200px)] max-w-7xl mx-auto">
           
 
           
