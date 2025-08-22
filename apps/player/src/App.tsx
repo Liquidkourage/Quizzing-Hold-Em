@@ -252,7 +252,7 @@ function PlayerApp() {
             </div>
 
             {/* Available Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="space-y-8 mb-8">
               {/* Player's Hand */}
               <div>
                 <h3 className="text-xl font-bold text-casino-emerald mb-4 text-center">Your Hand</h3>
