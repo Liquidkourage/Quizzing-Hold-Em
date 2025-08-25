@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, NeonButton, JackpotDisplay, PokerChip } from '@qhe/ui'
-import { connect, onState, onToast, useSocket } from '@qhe/net'
+import { connect, onState, onToast, useSocket, startAnswering } from '@qhe/net'
 import type { GameState } from '@qhe/core'
 
 function HostApp() {
@@ -75,6 +75,10 @@ function HostApp() {
     if (socket) {
       socket.emit('action', { type: 'dealCommunityCards' })
     }
+  }
+
+  const handleStartAnswering = () => {
+    startAnswering()
   }
 
   const handleRevealAnswer = () => {
@@ -207,6 +211,16 @@ function HostApp() {
                 className="w-full"
               >
                 Deal Community Cards
+              </NeonButton>
+
+              <NeonButton
+                variant="emerald"
+                size="large"
+                onClick={handleStartAnswering}
+                disabled={gameState.phase !== 'betting'}
+                className="w-full"
+              >
+                Start Answering (30s)
               </NeonButton>
 
               <NeonButton

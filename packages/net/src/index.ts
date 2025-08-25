@@ -35,6 +35,11 @@ export const DealCardsAction = z.object({
 })
 export type DealCardsAction = z.infer<typeof DealCardsAction>
 
+export const StartAnsweringAction = z.object({
+  type: z.literal('startAnswering')
+})
+export type StartAnsweringAction = z.infer<typeof StartAnsweringAction>
+
 export const BetAction = z.object({
   playerId: z.string(),
   amount: z.number()

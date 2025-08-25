@@ -816,20 +816,21 @@ io.on('connection', (socket) => {
           console.log('🎰 Server: Generated community cards:', gameState.round.communityCards)
           console.log('🎰 Server: Community cards count:', gameState.round.communityCards.length)
           
-          // Move to answering phase with a deadline
+          // Update the room state FIRST
+          rooms.set(roomCode, gameState)
+          io.to(roomCode).emit('state', gameState)
+        case 'startAnswering':
+          // Enter answering phase with timer
+          if (gameState.phase !== 'betting') break
           const deadlineMs = Date.now() + 30_000
           gameState = {
             ...gameState,
             phase: 'answering',
             round: { ...gameState.round, answerDeadline: deadlineMs }
           }
-
-          // Cancel any existing timer for this room
-          const existingTimer = answerTimers.get(roomCode)
-          if (existingTimer) clearTimeout(existingTimer)
-
-          // Start auto-reveal timer
-          const timer = setTimeout(() => {
+          const existingTimer2 = answerTimers.get(roomCode)
+          if (existingTimer2) clearTimeout(existingTimer2)
+          const timer2 = setTimeout(() => {
             const current = rooms.get(roomCode)
             if (!current) return
             if (current.phase === 'answering') {
@@ -839,11 +840,10 @@ io.on('connection', (socket) => {
               io.to(roomCode).emit('toast', '⏱️ Time up! Revealing answers...')
             }
           }, 30_000)
-          answerTimers.set(roomCode, timer)
-
-          // Update the room state FIRST
+          answerTimers.set(roomCode, timer2)
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
+          break
           
           // THEN emit the animation event
           console.log('🎰 Server: Emitting dealingCommunityCards event to room:', roomCode)
