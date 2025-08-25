@@ -11,6 +11,7 @@ export interface PlayerState {
   hand: NumericCard[];
   hasFolded: boolean;
   isAllIn: boolean;
+  submittedAnswer?: number;
 }
 
 export interface Question {
@@ -222,6 +223,13 @@ export function foldPlayer(state: GameState, playerId: string): GameState {
   return { ...state, players: updatedPlayers };
 }
 
+export function submitAnswer(state: GameState, playerId: string, answer: number): GameState {
+  const updatedPlayers = state.players.map(player => 
+    player.id === playerId ? { ...player, submittedAnswer: answer } : player
+  );
+  return { ...state, players: updatedPlayers };
+}
+
 export function revealAnswer(state: GameState): GameState {
   return { ...state, phase: 'showdown' };
 }
@@ -230,14 +238,17 @@ export function determineWinner(state: GameState): { winnerId: string; distance:
   if (!state.round.question) return null;
   let bestPlayer: PlayerState | null = null;
   let bestDistance = Infinity;
+  
   for (const player of state.players) {
-    if (player.hasFolded) continue;
-    const distance = bestHandDistanceToAnswer(player.hand, state.round.communityCards, state.round.question.answer);
+    if (player.hasFolded || player.submittedAnswer === undefined) continue;
+    
+    const distance = Math.abs(player.submittedAnswer - state.round.question.answer);
     if (distance < bestDistance) {
       bestDistance = distance;
       bestPlayer = player;
     }
   }
+  
   return bestPlayer ? { winnerId: bestPlayer.id, distance: bestDistance } : null;
 }
 
@@ -259,6 +270,6 @@ export function endRound(state: GameState): GameState {
       pot: 0,
       dealerIndex: (state.round.dealerIndex + 1) % Math.max(1, state.players.length),
     },
-    players: afterPayout.players.map(p => ({ ...p, hand: [], hasFolded: false, isAllIn: false })),
+    players: afterPayout.players.map(p => ({ ...p, hand: [], hasFolded: false, isAllIn: false, submittedAnswer: undefined })),
   };
 }

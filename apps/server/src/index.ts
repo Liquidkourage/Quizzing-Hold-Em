@@ -14,6 +14,7 @@ import {
   dealCommunityCards,
   placeBet,
   foldPlayer,
+  submitAnswer,
   revealAnswer,
   determineWinner,
   payoutWinner,
@@ -27,6 +28,7 @@ import type {
   DealCardsAction,
   BetAction,
   FoldAction,
+  SubmitAnswerAction,
   RevealAnswerAction,
   EndRoundAction,
   NewGameAction
@@ -833,6 +835,12 @@ io.on('connection', (socket) => {
           const foldAction = payload as FoldAction
           gameState = foldPlayer(gameState, foldAction.playerId)
           io.to(roomCode).emit('toast', `${foldAction.playerId} folded`)
+          break
+          
+        case 'submitAnswer':
+          const submitAnswerAction = payload as SubmitAnswerAction
+          gameState = submitAnswer(gameState, submitAnswerAction.playerId, submitAnswerAction.answer)
+          io.to(roomCode).emit('toast', `Answer submitted: ${submitAnswerAction.answer}`)
           break
           
         case 'revealAnswer':

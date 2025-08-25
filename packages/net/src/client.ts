@@ -151,6 +151,17 @@ export function fold(callback?: (ack: ServerAck) => void) {
   }
 }
 
+export function submitAnswer(answer: number, callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', { 
+    type: 'submitAnswer', 
+    payload: { playerId: socket.id, answer } 
+  })
+  if (callback) {
+    socket.once('ack', callback)
+  }
+}
+
 export function disconnect() {
   if (socket) {
     socket.disconnect()

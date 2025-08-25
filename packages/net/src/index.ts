@@ -46,6 +46,12 @@ export const FoldAction = z.object({
 })
 export type FoldAction = z.infer<typeof FoldAction>
 
+export const SubmitAnswerAction = z.object({
+  playerId: z.string(),
+  answer: z.number()
+})
+export type SubmitAnswerAction = z.infer<typeof SubmitAnswerAction>
+
 export const RevealAnswerAction = z.object({
   type: z.literal('revealAnswer')
 })

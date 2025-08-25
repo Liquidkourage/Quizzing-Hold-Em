@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { connect, onState, onToast, bet, fold } from '@qhe/net'
+import { connect, onState, onToast, bet, fold, submitAnswer } from '@qhe/net'
 import { Card, NeonButton, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
 
@@ -135,9 +135,15 @@ function PlayerApp() {
 
   const handleSubmitAnswer = () => {
     if (composedAnswer.value > 0) {
-      // TODO: Submit answer to server
-      console.log('Submitting answer:', composedAnswer.value)
-      setToastMessage(`Answer submitted: ${composedAnswer.display}`)
+      submitAnswer(composedAnswer.value, (ack: { ok: boolean; message: string }) => {
+        if (ack.ok) {
+          setToastMessage(`Answer submitted: ${composedAnswer.display}`)
+        } else {
+          setToastMessage(`Error submitting answer: ${ack.message}`)
+        }
+      })
+    } else {
+      setToastMessage('Please compose an answer before submitting')
     }
   }
 
