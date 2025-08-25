@@ -269,6 +269,71 @@ function HostApp() {
           </Card>
         </div>
 
+        {/* Showdown Results */}
+        {gameState.phase === 'showdown' && (
+          <Card variant="glass" className="mt-8 p-6">
+            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Showdown</h2>
+            <div className="text-center text-white mb-6">
+              <div className="text-white/80">Correct Answer</div>
+              <div className="text-4xl font-extrabold text-casino-gold">
+                {gameState.round.question?.answer ?? '—'}
+              </div>
+            </div>
+
+            {(() => {
+              const correct = gameState.round.question?.answer
+              const rows = gameState.players
+                .map(p => {
+                  const hasAnswer = typeof p.submittedAnswer === 'number'
+                  const distance = hasAnswer && typeof correct === 'number'
+                    ? Math.abs((p.submittedAnswer as number) - correct)
+                    : Infinity
+                  return { player: p, hasAnswer, distance }
+                })
+                .sort((a, b) => a.distance - b.distance)
+
+              const winnerId = rows.length && rows[0].distance !== Infinity ? rows[0].player.id : undefined
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-white/90">
+                    <thead>
+                      <tr className="text-white/70">
+                        <th className="py-2 px-3">Player</th>
+                        <th className="py-2 px-3">Submitted</th>
+                        <th className="py-2 px-3">Distance</th>
+                        <th className="py-2 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map(({ player, hasAnswer, distance }) => (
+                        <tr key={player.id} className={`${player.id === winnerId ? 'bg-white/10' : ''}`}>
+                          <td className="py-2 px-3 font-bold text-casino-emerald">{player.name}</td>
+                          <td className="py-2 px-3">{hasAnswer ? player.submittedAnswer : '—'}</td>
+                          <td className="py-2 px-3">{hasAnswer && typeof correct === 'number' ? distance : '—'}</td>
+                          <td className="py-2 px-3">
+                            {player.hasFolded ? (
+                              <span className="text-red-400 font-semibold">FOLDED</span>
+                            ) : hasAnswer ? (
+                              player.id === winnerId ? <span className="text-casino-gold font-extrabold">WINNER</span> : <span className="text-white/70">Submitted</span>
+                            ) : (
+                              <span className="text-white/50">No Answer</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
+
+            <div className="mt-6 flex justify-center">
+              <NeonButton variant="gold" onClick={handleEndRound}>End Round</NeonButton>
+            </div>
+          </Card>
+        )}
+
         {/* Player List */}
         <Card variant="glass" className="mt-8 p-6">
           <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Players</h2>
