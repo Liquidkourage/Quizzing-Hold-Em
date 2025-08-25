@@ -1,4 +1,4 @@
-﻿export type GamePhase = 'lobby' | 'question' | 'betting' | 'reveal' | 'showdown' | 'payout' | 'intermission';
+﻿export type GamePhase = 'lobby' | 'question' | 'betting' | 'answering' | 'reveal' | 'showdown' | 'payout' | 'intermission';
 
 export type PlayerId = string;
 
@@ -28,6 +28,7 @@ export interface RoundState {
   communityCards: NumericCard[];
   pot: number;
   dealerIndex: number;
+  answerDeadline?: number;
 }
 
 export interface GameState {

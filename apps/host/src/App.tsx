@@ -213,7 +213,7 @@ function HostApp() {
                 variant="gold"
                 size="large"
                 onClick={handleRevealAnswer}
-                disabled={gameState.phase !== 'betting'}
+                disabled={!(gameState.phase === 'answering' || gameState.phase === 'betting')}
                 className="w-full"
               >
                 Reveal Answer
@@ -261,6 +261,14 @@ function HostApp() {
                 <div className="text-lg text-white">Players:</div>
                 <span className="text-casino-emerald font-bold">{gameState.players.length}</span>
               </div>
+              {gameState.phase === 'answering' && (
+                <div className="text-center">
+                  <div className="text-lg text-white">Answering Time Left:</div>
+                  <span className="text-casino-gold font-extrabold text-2xl">
+                    {Math.max(0, Math.ceil(((gameState.round.answerDeadline ?? 0) - Date.now()) / 1000))}s
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="mt-8">

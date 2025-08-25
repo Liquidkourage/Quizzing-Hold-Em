@@ -224,6 +224,9 @@ function PlayerApp() {
 
   const currentPlayer = gameState.players.find(p => p.name === playerName)
   const canBet = gameState.phase === 'betting' && currentPlayer && !currentPlayer.hasFolded
+  const answerDeadline = gameState.round.answerDeadline ?? 0
+  const remainingMs = Math.max(0, answerDeadline - Date.now())
+  const remainingSec = Math.ceil(remainingMs / 1000)
 
   return (
     <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
@@ -286,9 +289,17 @@ function PlayerApp() {
         </Card>
 
         {/* Answer Composition Interface */}
-        {gameState.phase === 'betting' && currentPlayer && !currentPlayer.hasFolded && (
+        {(gameState.phase === 'betting' || gameState.phase === 'answering') && currentPlayer && !currentPlayer.hasFolded && (
           <Card variant="glass" className="mb-8 p-8">
             <h2 className="text-3xl font-bold text-casino-emerald mb-8 text-center">Compose Your Answer</h2>
+            {gameState.phase === 'answering' && (
+              <div className="text-center mb-4">
+                <span className="text-white/80 mr-2">Time Remaining:</span>
+                <span className="text-casino-gold font-extrabold text-2xl">
+                  {remainingSec}s
+                </span>
+              </div>
+            )}
             
             {/* Composed Answer Display */}
             <div className="text-center mb-8">
@@ -439,7 +450,7 @@ function PlayerApp() {
                 variant="emerald"
                 size="large"
                 onClick={handleSubmitAnswer}
-                disabled={composedAnswer.value === 0}
+                disabled={composedAnswer.value === 0 || gameState.phase !== 'answering'}
               >
                 Submit Answer
               </NeonButton>

@@ -735,6 +735,7 @@ const io = new Server(httpServer, {
 })
 
 const rooms = new Map<string, any>()
+const answerTimers = new Map<string, NodeJS.Timeout>()
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
@@ -815,6 +816,31 @@ io.on('connection', (socket) => {
           console.log('🎰 Server: Generated community cards:', gameState.round.communityCards)
           console.log('🎰 Server: Community cards count:', gameState.round.communityCards.length)
           
+          // Move to answering phase with a deadline
+          const deadlineMs = Date.now() + 30_000
+          gameState = {
+            ...gameState,
+            phase: 'answering',
+            round: { ...gameState.round, answerDeadline: deadlineMs }
+          }
+
+          // Cancel any existing timer for this room
+          const existingTimer = answerTimers.get(roomCode)
+          if (existingTimer) clearTimeout(existingTimer)
+
+          // Start auto-reveal timer
+          const timer = setTimeout(() => {
+            const current = rooms.get(roomCode)
+            if (!current) return
+            if (current.phase === 'answering') {
+              const revealed = revealAnswer(current)
+              rooms.set(roomCode, revealed)
+              io.to(roomCode).emit('state', revealed)
+              io.to(roomCode).emit('toast', '⏱️ Time up! Revealing answers...')
+            }
+          }, 30_000)
+          answerTimers.set(roomCode, timer)
+
           // Update the room state FIRST
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
@@ -839,6 +865,16 @@ io.on('connection', (socket) => {
           
         case 'submitAnswer':
           const submitAnswerAction = payload as SubmitAnswerAction
+          // Validate phase and deadline
+          if (gameState.phase !== 'answering') {
+            socket.emit('toast', 'Not accepting answers right now.')
+            break
+          }
+          const deadline = gameState.round.answerDeadline ?? 0
+          if (Date.now() > deadline) {
+            socket.emit('toast', '⏱️ Too late! Answer window has closed.')
+            break
+          }
           gameState = submitAnswer(gameState, submitAnswerAction.playerId, submitAnswerAction.answer)
           io.to(roomCode).emit('toast', `Answer submitted: ${submitAnswerAction.answer}`)
           break
