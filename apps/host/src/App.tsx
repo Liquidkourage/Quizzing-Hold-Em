@@ -220,7 +220,7 @@ function HostApp() {
                 disabled={gameState.phase !== 'betting'}
                 className="w-full"
               >
-                Start Answering (30s)
+                Start Answering (45s)
               </NeonButton>
 
               <NeonButton

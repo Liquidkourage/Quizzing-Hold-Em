@@ -829,7 +829,7 @@ io.on('connection', (socket) => {
             socket.emit('toast', 'Can only start answering from betting phase.')
             break
           }
-          const deadlineMs2 = Date.now() + 30_000
+          const deadlineMs2 = Date.now() + 45_000
           gameState = {
             ...gameState,
             phase: 'answering',
@@ -846,7 +846,7 @@ io.on('connection', (socket) => {
               io.to(roomCode).emit('state', revealed)
               io.to(roomCode).emit('toast', '⏱️ Time up! Revealing answers...')
             }
-          }, 30_000)
+          }, 45_000)
           answerTimers.set(roomCode, timer2)
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
