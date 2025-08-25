@@ -112,14 +112,6 @@ export function dealCards(type: 'initial' | 'community', callback?: (ack: Server
   }
 }
 
-export function startAnswering(callback?: (ack: ServerAck) => void) {
-  if (!socket) return
-  socket.emit('action', { type: 'startAnswering' })
-  if (callback) {
-    socket.once('ack', callback)
-  }
-}
-
 export function revealAnswer(callback?: (ack: ServerAck) => void) {
   if (!socket) return
   socket.emit('action', { type: 'revealAnswer' })
@@ -131,6 +123,14 @@ export function revealAnswer(callback?: (ack: ServerAck) => void) {
 export function endRound(callback?: (ack: ServerAck) => void) {
   if (!socket) return
   socket.emit('action', { type: 'endRound' })
+  if (callback) {
+    socket.once('ack', callback)
+  }
+}
+
+export function startAnswering(callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', { type: 'startAnswering' })
   if (callback) {
     socket.once('ack', callback)
   }

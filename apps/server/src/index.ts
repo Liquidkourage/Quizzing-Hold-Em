@@ -29,6 +29,7 @@ import type {
   BetAction,
   FoldAction,
   SubmitAnswerAction,
+  StartAnsweringAction,
   RevealAnswerAction,
   EndRoundAction,
   NewGameAction
@@ -816,17 +817,23 @@ io.on('connection', (socket) => {
           console.log('🎰 Server: Generated community cards:', gameState.round.communityCards)
           console.log('🎰 Server: Community cards count:', gameState.round.communityCards.length)
           
+          // Move to second betting phase (post-community)
+          gameState = { ...gameState, phase: 'betting' }
+
           // Update the room state FIRST
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
         case 'startAnswering':
-          // Enter answering phase with timer
-          if (gameState.phase !== 'betting') break
-          const deadlineMs = Date.now() + 30_000
+          // Start answering phase with deadline and timer
+          if (gameState.phase !== 'betting') {
+            socket.emit('toast', 'Can only start answering from betting phase.')
+            break
+          }
+          const deadlineMs2 = Date.now() + 30_000
           gameState = {
             ...gameState,
             phase: 'answering',
-            round: { ...gameState.round, answerDeadline: deadlineMs }
+            round: { ...gameState.round, answerDeadline: deadlineMs2 }
           }
           const existingTimer2 = answerTimers.get(roomCode)
           if (existingTimer2) clearTimeout(existingTimer2)
@@ -843,6 +850,7 @@ io.on('connection', (socket) => {
           answerTimers.set(roomCode, timer2)
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
+          io.to(roomCode).emit('toast', 'Answering started!')
           break
           
           // THEN emit the animation event

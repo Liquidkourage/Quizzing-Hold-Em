@@ -35,11 +35,6 @@ export const DealCardsAction = z.object({
 })
 export type DealCardsAction = z.infer<typeof DealCardsAction>
 
-export const StartAnsweringAction = z.object({
-  type: z.literal('startAnswering')
-})
-export type StartAnsweringAction = z.infer<typeof StartAnsweringAction>
-
 export const BetAction = z.object({
   playerId: z.string(),
   amount: z.number()
@@ -71,6 +66,11 @@ export const NewGameAction = z.object({
   type: z.literal('newGame')
 })
 export type NewGameAction = z.infer<typeof NewGameAction>
+
+export const StartAnsweringAction = z.object({
+  type: z.literal('startAnswering')
+})
+export type StartAnsweringAction = z.infer<typeof StartAnsweringAction>
 
 // Socket Events
 export interface ServerToClientEvents {

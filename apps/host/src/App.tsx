@@ -77,14 +77,14 @@ function HostApp() {
     }
   }
 
-  const handleStartAnswering = () => {
-    startAnswering()
-  }
-
   const handleRevealAnswer = () => {
     if (socket) {
       socket.emit('action', { type: 'revealAnswer' })
     }
+  }
+
+  const handleStartAnswering = () => {
+    startAnswering()
   }
 
   const handleEndRound = () => {
@@ -214,7 +214,7 @@ function HostApp() {
               </NeonButton>
 
               <NeonButton
-                variant="emerald"
+                variant="purple"
                 size="large"
                 onClick={handleStartAnswering}
                 disabled={gameState.phase !== 'betting'}
@@ -227,7 +227,7 @@ function HostApp() {
                 variant="gold"
                 size="large"
                 onClick={handleRevealAnswer}
-                disabled={!(gameState.phase === 'answering' || gameState.phase === 'betting')}
+                disabled={gameState.phase !== 'answering'}
                 className="w-full"
               >
                 Reveal Answer
