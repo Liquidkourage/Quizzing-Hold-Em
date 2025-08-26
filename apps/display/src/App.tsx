@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { connect, onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
 import type { GameState } from '@qhe/core'
+import confetti from 'canvas-confetti'
 
 function DisplayApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
@@ -42,6 +43,33 @@ function DisplayApp() {
     })
     return unsubscribe
   }, [])
+
+  // Celebration confetti on showdown
+  useEffect(() => {
+    if (gameState?.phase !== 'showdown') return
+
+    const end = Date.now() + 5000
+    const interval = setInterval(() => {
+      confetti({
+        particleCount: 90,
+        spread: 70,
+        startVelocity: 45,
+        gravity: 0.9,
+        ticks: 200,
+        origin: { x: Math.random() * 0.6 + 0.2, y: 0.2 + Math.random() * 0.2 }
+      })
+    }, 450)
+    const finaleTimeout = setTimeout(() => {
+      confetti({ particleCount: 220, spread: 100, startVelocity: 55, origin: { y: 0.6 } })
+    }, 2600)
+    const stopTimeout = setTimeout(() => clearInterval(interval), Math.max(0, end - Date.now()))
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(finaleTimeout)
+      clearTimeout(stopTimeout)
+    }
+  }, [gameState?.phase])
 
   useEffect(() => {
     const unsubscribe = onToast((message) => {
@@ -986,21 +1014,49 @@ function DisplayApp() {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map(({ player, has, distance }) => (
-                        <tr key={player.id} className={player.id === winnerId ? 'bg-white/10' : ''}>
+                      {rows.map(({ player, has, distance }, idx) => (
+                        <motion.tr
+                          key={player.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.08 }}
+                          className={player.id === winnerId ? 'bg-white/10' : ''}
+                        >
                           <td className="py-2 px-3 font-bold text-yellow-300">{player.name}</td>
-                          <td className="py-2 px-3">{has ? (player as any).submittedAnswer : '—'}</td>
+                          <td className="py-2 px-3">
+                            {has ? (
+                              <motion.span
+                                initial={{ scale: 0.8, rotate: -5, opacity: 0 }}
+                                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                                className="inline-block"
+                              >
+                                {(player as any).submittedAnswer}
+                              </motion.span>
+                            ) : '—'}
+                          </td>
                           <td className="py-2 px-3">{has && typeof correct === 'number' ? distance : '—'}</td>
                           <td className="py-2 px-3">
                             {player.hasFolded ? (
                               <span className="text-red-400 font-semibold">FOLDED</span>
                             ) : has ? (
-                              player.id === winnerId ? <span className="text-yellow-400 font-extrabold">WINNER</span> : <span className="text-white/70">Submitted</span>
+                              player.id === winnerId ? (
+                                <motion.span
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: [0, 1.2, 1] }}
+                                  transition={{ type: 'spring', stiffness: 260, damping: 12 }}
+                                  className="text-yellow-400 font-extrabold"
+                                >
+                                  WINNER
+                                </motion.span>
+                              ) : (
+                                <span className="text-white/70">Submitted</span>
+                              )
                             ) : (
                               <span className="text-white/50">No Answer</span>
                             )}
                           </td>
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
                   </table>
