@@ -134,6 +134,9 @@ function DisplayApp() {
       return undefined
     }
   })()
+  const showdownWinnerName = showdownWinnerId
+    ? (displayGameState.players.find(p => p.id === showdownWinnerId)?.name || '')
+    : ''
 
   // Chips flight animation + payout tick
   const [chipFlights, setChipFlights] = useState<Array<{ id: number; delay: number; ox: number; oy: number; rot: number }>>([])
@@ -1074,6 +1077,25 @@ function DisplayApp() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
+            {/* Winner marquee banner */}
+            {showdownWinnerName && (
+              <div className="relative overflow-hidden rounded-xl bg-yellow-500/10 border border-yellow-400/30 mb-5">
+                <motion.div
+                  initial={{ x: '100%' }}
+                  animate={{ x: '-100%' }}
+                  transition={{ duration: 6, ease: 'easeInOut' }}
+                  className="py-2 whitespace-nowrap"
+                >
+                  <span className="mx-6 text-yellow-300 font-extrabold tracking-wide">
+                    🏆 WINNER: {showdownWinnerName}
+                  </span>
+                  <span className="mx-6 text-yellow-300 font-extrabold tracking-wide">
+                    🏆 WINNER: {showdownWinnerName}
+                  </span>
+                </motion.div>
+              </div>
+            )}
+
             <div className="text-center mb-6">
               <div className="text-white/80">Correct Answer</div>
               <motion.div
@@ -1191,6 +1213,20 @@ function DisplayApp() {
             ))
           })()}
         </div>
+      )}
+
+      {/* Spotlight sweep across table during showdown */}
+      {displayGameState.phase === 'showdown' && (
+        <motion.div
+          className="fixed inset-y-0 left-0 right-0 z-[52] pointer-events-none"
+          initial={{ x: '-60vw', opacity: 0.0 }}
+          animate={{ x: '60vw', opacity: [0.0, 0.65, 0.0] }}
+          transition={{ duration: 2.8, ease: 'easeInOut' }}
+          style={{
+            background: 'radial-gradient(40% 60% at 50% 50%, rgba(255,255,200,0.25), rgba(255,255,200,0.15) 45%, rgba(255,255,200,0.0) 70%)',
+            mixBlendMode: 'screen'
+          }}
+        />
       )}
 
       {/* Game Info Panel - Docked to bottom of screen */}
