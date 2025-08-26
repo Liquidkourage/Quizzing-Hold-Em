@@ -115,6 +115,69 @@ function DisplayApp() {
   // Use real game state or demo state
   const displayGameState = gameState || demoGameState
 
+  // Compute showdown winner id (used for seat glow)
+  const showdownWinnerId = (() => {
+    try {
+      if (displayGameState.phase !== 'showdown') return undefined
+      const correct = displayGameState.round.question?.answer
+      if (typeof correct !== 'number') return undefined
+      let bestId: string | undefined
+      let bestDist = Infinity
+      for (const p of displayGameState.players) {
+        const sa = (p as any).submittedAnswer as number | undefined
+        if (p.hasFolded || typeof sa !== 'number') continue
+        const d = Math.abs(sa - correct)
+        if (d < bestDist) { bestDist = d; bestId = p.id }
+      }
+      return bestId
+    } catch {
+      return undefined
+    }
+  })()
+
+  // Chips flight animation + payout tick
+  const [chipFlights, setChipFlights] = useState<Array<{ id: number; delay: number; ox: number; oy: number; rot: number }>>([])
+  const [payoutTick, setPayoutTick] = useState<number>(0)
+
+  useEffect(() => {
+    if (displayGameState.phase !== 'showdown') {
+      setChipFlights([])
+      setPayoutTick(0)
+      return
+    }
+    if (!showdownWinnerId) return
+    const pot = displayGameState.round.pot || 0
+    if (pot <= 0) return
+
+    // Compute positions
+    const winnerIndex = displayGameState.players.findIndex(p => p.id === showdownWinnerId)
+    if (winnerIndex < 0) return
+    // Prime seat computation (used later in chip-flight layer)
+    getPlayerPosition(winnerIndex, displayGameState.players.length)
+
+    // Generate chips
+    const chips: Array<{ id: number; delay: number; ox: number; oy: number; rot: number }> = []
+    const N = 18
+    for (let i = 0; i < N; i++) {
+      chips.push({ id: i, delay: Math.random() * 0.6, ox: (Math.random() - 0.5) * 60, oy: (Math.random() - 0.5) * 40, rot: (Math.random() - 0.5) * 90 })
+    }
+    setChipFlights(chips)
+
+    // Animate payout tick up
+    const duration = 1800
+    const start = performance.now()
+    const step = (t: number) => {
+      const p = Math.min(1, (t - start) / duration)
+      setPayoutTick(Math.round(pot * p))
+      if (p < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+
+    // Cleanup after a while
+    const cleanup = setTimeout(() => setChipFlights([]), 2600)
+    return () => clearTimeout(cleanup)
+  }, [displayGameState.phase, showdownWinnerId, displayGameState.players.length])
+
   // Function to trigger dealing animation
   const triggerDealingAnimation = useCallback(() => {
     setIsDealing(true)
@@ -772,6 +835,18 @@ function DisplayApp() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
               >
+                {/* Winner glow ring */}
+                {showdownWinnerId === player.id && (
+                  <motion.div
+                    className="absolute -inset-3 rounded-xl"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1.6 }}
+                    style={{
+                      boxShadow: '0 0 24px 6px rgba(255,215,0,0.55), 0 0 60px 12px rgba(255,215,0,0.25)'
+                    }}
+                  />
+                )}
                 <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center w-[120px] h-[130px] shadow-lg transform scale-[1.40625] origin-center relative">
                   <div className="text-yellow-400 font-bold text-sm mb-1">{player.name}</div>
                   <div className="text-white text-sm mb-1">
@@ -918,8 +993,23 @@ function DisplayApp() {
               
               {/* Pot display - positioned higher */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-36 text-center">
-                <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2">
-                  <div className="text-white text-sm">Pot: <span className="text-yellow-400 font-bold text-2xl">${displayGameState.round.pot}</span></div>
+                <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2 relative overflow-visible">
+                  <div className="text-white text-sm">Pot: <span className="text-yellow-400 font-bold text-2xl">${payoutTick > 0 ? payoutTick : displayGameState.round.pot}</span></div>
+                  {/* Chip flights from pot to winner */}
+                  {showdownWinnerId && chipFlights.map(chip => (
+                    <motion.div
+                      key={chip.id}
+                      className="absolute"
+                      initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
+                      animate={{ 
+                        x: (window.innerWidth / 2) - (window.innerWidth / 2),
+                        y: (window.innerHeight / 2 - 144) - (window.innerHeight / 2 - 144),
+                        opacity: 1
+                      }}
+                    >
+                      {/* We animate via a separate layer positioned globally below */}
+                    </motion.div>
+                  ))}
                 </div>
               </div>
 
@@ -986,9 +1076,17 @@ function DisplayApp() {
           >
             <div className="text-center mb-6">
               <div className="text-white/80">Correct Answer</div>
-              <div className="text-5xl font-extrabold text-yellow-400">
-                {displayGameState.round.question?.answer ?? '—'}
-              </div>
+              <motion.div
+                key={String(displayGameState.round.question?.answer ?? '—')}
+                initial={{ rotateX: -90, opacity: 0, transformPerspective: 800 }}
+                animate={{ rotateX: 0, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+                className="inline-block px-4 py-1 rounded-lg bg-yellow-500/10 border border-yellow-400/40 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+              >
+                <span className="text-5xl font-extrabold text-yellow-400 tracking-wide">
+                  {displayGameState.round.question?.answer ?? '—'}
+                </span>
+              </motion.div>
             </div>
 
             {(() => {
@@ -1064,6 +1162,34 @@ function DisplayApp() {
               )
             })()}
           </motion.div>
+        </div>
+      )}
+
+      {/* Chips flying layer (pot -> winner) */}
+      {displayGameState.phase === 'showdown' && showdownWinnerId && chipFlights.length > 0 && (
+        <div className="fixed inset-0 z-[55] pointer-events-none">
+          {(() => {
+            const potX = window.innerWidth / 2
+            const potY = window.innerHeight / 2 - 144
+            const idx = displayGameState.players.findIndex(p => p.id === showdownWinnerId)
+            const seat = getPlayerPosition(Math.max(0, idx), displayGameState.players.length)
+            const seatX = window.innerWidth / 2 + parseFloat(seat.x.replace('calc(50% + ', '').replace('px - 55px)', '')) + 55
+            const seatY = window.innerHeight / 2 + parseFloat(seat.y.replace('calc(50% + ', '').replace('px - 60px)', '')) + 10
+            return chipFlights.map(chip => (
+              <motion.div
+                key={chip.id}
+                className="absolute"
+                initial={{ x: potX + chip.ox, y: potY + chip.oy, rotate: chip.rot, opacity: 0 }}
+                animate={{ x: seatX, y: seatY, rotate: chip.rot * 3, opacity: [0, 1, 1, 0.8] }}
+                transition={{ delay: chip.delay, duration: 1.25, ease: 'easeOut' }}
+                style={{ left: 0, top: 0 }}
+              >
+                <div className="transform -translate-x-1/2 -translate-y-1/2">
+                  <PokerChip size="sm" />
+                </div>
+              </motion.div>
+            ))
+          })()}
         </div>
       )}
 
