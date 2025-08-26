@@ -947,6 +947,70 @@ function DisplayApp() {
 
       </div>
 
+      {/* Showdown Overlay */}
+      {displayGameState.phase === 'showdown' && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+          <motion.div
+            className="relative bg-black/90 border-2 border-yellow-500/60 rounded-2xl shadow-2xl max-w-4xl w-[90%] p-8 text-white"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="text-center mb-6">
+              <div className="text-white/80">Correct Answer</div>
+              <div className="text-5xl font-extrabold text-yellow-400">
+                {displayGameState.round.question?.answer ?? '—'}
+              </div>
+            </div>
+
+            {(() => {
+              const correct = displayGameState.round.question?.answer
+              const rows = displayGameState.players
+                .map(p => {
+                  const has = typeof (p as any).submittedAnswer === 'number' && !p.hasFolded
+                  const distance = has && typeof correct === 'number' ? Math.abs(((p as any).submittedAnswer as number) - correct) : Infinity
+                  return { player: p, has, distance }
+                })
+                .sort((a, b) => a.distance - b.distance)
+              const winnerId = rows.length && rows[0].distance !== Infinity ? rows[0].player.id : undefined
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left">
+                    <thead>
+                      <tr className="text-white/70">
+                        <th className="py-2 px-3">Player</th>
+                        <th className="py-2 px-3">Submitted</th>
+                        <th className="py-2 px-3">Distance</th>
+                        <th className="py-2 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map(({ player, has, distance }) => (
+                        <tr key={player.id} className={player.id === winnerId ? 'bg-white/10' : ''}>
+                          <td className="py-2 px-3 font-bold text-yellow-300">{player.name}</td>
+                          <td className="py-2 px-3">{has ? (player as any).submittedAnswer : '—'}</td>
+                          <td className="py-2 px-3">{has && typeof correct === 'number' ? distance : '—'}</td>
+                          <td className="py-2 px-3">
+                            {player.hasFolded ? (
+                              <span className="text-red-400 font-semibold">FOLDED</span>
+                            ) : has ? (
+                              player.id === winnerId ? <span className="text-yellow-400 font-extrabold">WINNER</span> : <span className="text-white/70">Submitted</span>
+                            ) : (
+                              <span className="text-white/50">No Answer</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
+          </motion.div>
+        </div>
+      )}
+
       {/* Game Info Panel - Docked to bottom of screen */}
       <div className="fixed bottom-0 left-0 right-0 z-30">
         <div className="max-w-4xl mx-auto px-4">
