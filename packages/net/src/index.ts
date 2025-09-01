@@ -41,6 +41,27 @@ export const BetAction = z.object({
 })
 export type BetAction = z.infer<typeof BetAction>
 
+export const CheckAction = z.object({
+  playerId: z.string()
+})
+export type CheckAction = z.infer<typeof CheckAction>
+
+export const CallAction = z.object({
+  playerId: z.string()
+})
+export type CallAction = z.infer<typeof CallAction>
+
+export const RaiseAction = z.object({
+  playerId: z.string(),
+  amount: z.number()
+})
+export type RaiseAction = z.infer<typeof RaiseAction>
+
+export const AllInAction = z.object({
+  playerId: z.string()
+})
+export type AllInAction = z.infer<typeof AllInAction>
+
 export const FoldAction = z.object({
   playerId: z.string()
 })

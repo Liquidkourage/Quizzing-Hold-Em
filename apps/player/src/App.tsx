@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { connect, onState, onToast, bet, fold, submitAnswer } from '@qhe/net'
+import { connect, onState, onToast, fold, submitAnswer, check as checkAction, callBet as callAction, raiseBet as raiseAction, allIn as allInAction, useSocket } from '@qhe/net'
 import { Card, NeonButton, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
 
@@ -17,9 +17,12 @@ function PlayerApp() {
   const [roomCode, setRoomCode] = useState('')
   const [isJoined, setIsJoined] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [betAmount, setBetAmount] = useState(20)
+  // Legacy bet amount (no longer used)
+  // const [betAmount] = useState(20)
+  const [raiseAmount, setRaiseAmount] = useState(0)
   const [composedAnswer, setComposedAnswer] = useState<ComposedAnswer>({ digits: [], display: '', value: 0 })
   const [selectedCards, setSelectedCards] = useState<Array<{type: 'hand' | 'community', index: number}>>([])
+  const socket = useSocket()
 
   const handleJoin = () => {
     if (!playerName || !roomCode) return
@@ -44,12 +47,28 @@ function PlayerApp() {
     }
   }, [isJoined])
 
-  const handleBet = () => {
-    bet(betAmount)
-  }
+  // Legacy free-form bet retained for compatibility (unused)
 
   const handleFold = () => {
     fold()
+  }
+
+  const handleCheck = () => {
+    checkAction()
+  }
+
+  const handleCall = () => {
+    callAction()
+  }
+
+  const handleRaise = () => {
+    if (raiseAmount > 0) {
+      raiseAction(raiseAmount)
+    }
+  }
+
+  const handleAllIn = () => {
+    allInAction()
   }
 
   // Answer composition functions
@@ -223,7 +242,20 @@ function PlayerApp() {
   }
 
   const currentPlayer = gameState.players.find(p => p.name === playerName)
-  const canBet = gameState.phase === 'betting' && currentPlayer && !currentPlayer.hasFolded
+  const myId = socket?.id
+  const myIndex = myId ? gameState.players.findIndex(p => p.id === myId) : gameState.players.findIndex(p => p.name === playerName)
+  const isBettingPhase = gameState.phase === 'betting'
+  const isBettingOpen = !!(gameState.round as any).isBettingOpen
+  const isMyTurn = isBettingPhase && isBettingOpen && typeof (gameState.round as any).currentPlayerIndex === 'number' && (gameState.round as any).currentPlayerIndex === myIndex && currentPlayer && !currentPlayer.hasFolded
+  const playerBets = (gameState.round as any).playerBets as Record<string, number> | undefined
+  const myContribution = currentPlayer ? (playerBets?.[currentPlayer.id] || 0) : 0
+  const currentBet = (gameState.round as any).currentBet || 0
+  const toCall = Math.max(0, currentBet - myContribution)
+  const canBet = isBettingPhase && currentPlayer && !currentPlayer.hasFolded
+  const canCheck = isMyTurn && toCall === 0
+  const canCall = isMyTurn && toCall > 0 && (currentPlayer?.bankroll || 0) > 0
+  const canRaise = isMyTurn && (currentPlayer?.bankroll || 0) > toCall && raiseAmount > 0 && (toCall + raiseAmount) <= (currentPlayer?.bankroll || 0)
+  const canAllIn = isMyTurn && (currentPlayer?.bankroll || 0) > 0
   const answerDeadline = gameState.round.answerDeadline ?? 0
   const remainingMs = Math.max(0, answerDeadline - Date.now())
   const remainingSec = Math.ceil(remainingMs / 1000)
@@ -477,35 +509,75 @@ function PlayerApp() {
           <Card variant="glass" className="p-6">
             <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Game Actions</h2>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm text-white/80">Bet Amount</label>
-                <input
-                  type="number"
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(Number(e.target.value))}
-                  min={0}
-                  max={currentPlayer?.bankroll || 0}
-                  className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white focus:border-casino-emerald focus:outline-none"
-                />
+              {gameState.phase === 'betting' && (
+                <div className="grid grid-cols-2 gap-3 text-white text-sm">
+                  <div>Betting Round: <span className="font-bold">{(gameState.round as any).bettingRound ?? 1}</span></div>
+                  <div>Your Bankroll: <span className="font-bold">${currentPlayer?.bankroll ?? 0}</span></div>
+                  <div>Current Bet: <span className="font-bold">${currentBet}</span></div>
+                  <div>Your Contribution: <span className="font-bold">${myContribution}</span></div>
+                  <div>To Call: <span className="font-bold">${toCall}</span></div>
+                  <div>Turn: <span className={`font-bold ${isMyTurn ? 'text-casino-gold' : ''}`}>{isMyTurn ? 'YOURS' : 'Other Player'}</span></div>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <NeonButton 
+                  variant="emerald"
+                  size="large"
+                  className="w-full" 
+                  onClick={handleCheck}
+                  disabled={!canCheck}
+                >
+                  Check
+                </NeonButton>
+                <NeonButton 
+                  variant="gold"
+                  size="large"
+                  className="w-full" 
+                  onClick={handleCall}
+                  disabled={!canCall}
+                >
+                  {toCall > 0 ? `Call $${toCall}` : 'Call'}
+                </NeonButton>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm text-white/80">Raise Amount</label>
+                  <div className="flex gap-3">
+                    <input
+                      type="number"
+                      value={raiseAmount}
+                      onChange={(e) => setRaiseAmount(Number(e.target.value))}
+                      min={0}
+                      max={Math.max(0, (currentPlayer?.bankroll || 0) - toCall)}
+                      className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white focus:border-casino-emerald focus:outline-none"
+                    />
+                    <NeonButton 
+                      variant="purple"
+                      size="large"
+                      onClick={handleRaise}
+                      disabled={!canRaise}
+                    >
+                      Raise
+                    </NeonButton>
+                  </div>
+                </div>
+                <NeonButton 
+                  variant="red"
+                  size="large"
+                  className="w-full" 
+                  onClick={handleFold}
+                  disabled={!isMyTurn || !canBet}
+                >
+                  Fold
+                </NeonButton>
+                <NeonButton 
+                  variant="blue"
+                  size="large"
+                  className="w-full" 
+                  onClick={handleAllIn}
+                  disabled={!canAllIn}
+                >
+                  All-In
+                </NeonButton>
               </div>
-              <NeonButton 
-                variant="emerald"
-                size="large"
-                className="w-full" 
-                onClick={handleBet}
-                disabled={!canBet || betAmount > (currentPlayer?.bankroll || 0)}
-              >
-                Bet ${betAmount}
-              </NeonButton>
-              <NeonButton 
-                variant="red"
-                size="large"
-                className="w-full" 
-                onClick={handleFold}
-                disabled={!canBet}
-              >
-                Fold
-              </NeonButton>
             </div>
           </Card>
         </div>

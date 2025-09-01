@@ -29,6 +29,12 @@ export interface RoundState {
   pot: number;
   dealerIndex: number;
   answerDeadline?: number;
+  // Betting state
+  bettingRound?: 1 | 2; // 1: pre-community, 2: post-community
+  currentBet?: number; // highest bet to be matched in current betting round
+  currentPlayerIndex?: number; // seat index of player to act, -1 when closed
+  isBettingOpen?: boolean; // when false, actions disabled until host advances
+  playerBets?: Record<string, number>; // contributions this betting round by playerId
 }
 
 export interface GameState {
@@ -102,6 +108,11 @@ export function createEmptyGame(code: string, hostId: string = ''): GameState {
       communityCards: [],
       pot: 0,
       dealerIndex: 0,
+      bettingRound: 1,
+      currentBet: 0,
+      currentPlayerIndex: -1,
+      isBettingOpen: false,
+      playerBets: {},
     },
     players: [],
   };
@@ -184,14 +195,55 @@ export function dealInitialCards(state: GameState): GameState {
     ...player,
     hand: [dealCard(), dealCard()],
   }));
-  
+
+  // Initialize betting state for round 1 and auto-post blinds
+  const smallBlindIndex = updatedPlayers.length > 0 ? (state.round.dealerIndex + 1) % Math.max(1, updatedPlayers.length) : -1;
+  const bigBlindIndex = updatedPlayers.length > 0 ? (state.round.dealerIndex + 2) % Math.max(1, updatedPlayers.length) : -1;
+
+  let playersAfterBlinds = updatedPlayers;
+  let pot = state.round.pot;
+  const playerBets: Record<string, number> = {};
+
+  const postBlind = (idx: number, amount: number) => {
+    if (idx < 0 || idx >= playersAfterBlinds.length || amount <= 0) return;
+    const player = playersAfterBlinds[idx];
+    const contribution = Math.min(player.bankroll, amount);
+    playersAfterBlinds = playersAfterBlinds.map((p, i) => i === idx ? { ...p, bankroll: p.bankroll - contribution, isAllIn: p.bankroll - contribution === 0 } : p);
+    pot += contribution;
+    playerBets[player.id] = (playerBets[player.id] || 0) + contribution;
+  };
+
+  postBlind(smallBlindIndex, state.smallBlind);
+  postBlind(bigBlindIndex, state.bigBlind);
+
+  const currentBet = Math.min(state.bigBlind, playersAfterBlinds[bigBlindIndex]?.bankroll !== undefined ? state.bigBlind : state.bigBlind);
+
+  // First to act is player after big blind
+  const startIndex = playersAfterBlinds.length > 0 ? (bigBlindIndex + 1) % playersAfterBlinds.length : -1;
+  const findNextToAct = (start: number): number => {
+    if (playersAfterBlinds.length === 0) return -1;
+    for (let step = 0; step < playersAfterBlinds.length; step++) {
+      const idx = (start + step) % playersAfterBlinds.length;
+      const p = playersAfterBlinds[idx];
+      if (!p.hasFolded && !p.isAllIn) return idx;
+    }
+    return -1;
+  };
+
+  const currentPlayerIndex = findNextToAct(startIndex);
+
   return { 
     ...state, 
     phase: 'betting', 
-    players: updatedPlayers,
+    players: playersAfterBlinds,
     round: {
       ...state.round,
       communityCards, // Community cards are now established for the entire round
+      bettingRound: 1,
+      currentBet: Math.max(state.bigBlind, 0),
+      currentPlayerIndex,
+      isBettingOpen: true,
+      playerBets,
     }
   };
 }
@@ -200,7 +252,32 @@ export function dealCommunityCards(state: GameState): GameState {
   // Community cards were already generated when the question was set
   // This function just triggers the reveal/animation of the pre-existing cards
   // No changes to state needed - cards are already there
-  return state;
+  // Reset betting state for round 2
+  const resetBets: Record<string, number> = {};
+  const findNextToAct = (): number => {
+    const players = state.players;
+    if (players.length === 0) return -1;
+    // First to act post-community is the player after dealer (small blind seat)
+    const start = (state.round.dealerIndex + 1) % players.length;
+    for (let step = 0; step < players.length; step++) {
+      const idx = (start + step) % players.length;
+      const p = players[idx];
+      if (!p.hasFolded && !p.isAllIn) return idx;
+    }
+    return -1;
+  };
+  return {
+    ...state,
+    phase: 'betting',
+    round: {
+      ...state.round,
+      bettingRound: 2,
+      currentBet: 0,
+      currentPlayerIndex: findNextToAct(),
+      isBettingOpen: true,
+      playerBets: resetBets,
+    }
+  };
 }
 
 export function placeBet(state: GameState, playerId: string, amount: number): GameState {
@@ -214,14 +291,120 @@ export function placeBet(state: GameState, playerId: string, amount: number): Ga
   });
   return {
     ...state,
-    round: { ...state.round, pot: state.round.pot + amount },
+    round: { 
+      ...state.round, 
+      pot: state.round.pot + amount,
+      playerBets: { ...(state.round.playerBets || {}), [playerId]: ((state.round.playerBets || {})[playerId] || 0) + amount }
+    },
     players: updatedPlayers,
   };
 }
 
+// Betting helpers and actions
+function getSeatIndexByPlayerId(state: GameState, playerId: string): number {
+  return state.players.findIndex(p => p.id === playerId);
+}
+
+function amountToCall(state: GameState, playerId: string): number {
+  const current = state.round.currentBet || 0;
+  const contributed = (state.round.playerBets || {})[playerId] || 0;
+  return Math.max(0, current - contributed);
+}
+
+function advanceToNextPlayer(state: GameState): number {
+  const players = state.players;
+  if (!players.length || typeof state.round.currentPlayerIndex !== 'number') return -1;
+  for (let step = 1; step <= players.length; step++) {
+    const idx = ((state.round.currentPlayerIndex as number) + step) % players.length;
+    const p = players[idx];
+    if (!p.hasFolded && !p.isAllIn) return idx;
+  }
+  return -1;
+}
+
+function isBettingComplete(state: GameState): boolean {
+  if (!state.round.isBettingOpen) return true;
+  const cur = state.round.currentBet || 0;
+  const bets = state.round.playerBets || {};
+  let activeCount = 0;
+  for (const p of state.players) {
+    if (p.hasFolded) continue;
+    if (p.isAllIn) continue;
+    activeCount++;
+    const contributed = bets[p.id] || 0;
+    if (contributed !== cur) return false;
+  }
+  // If zero or one active players remain, betting is trivially complete
+  return true;
+}
+
+export function playerCheck(state: GameState, playerId: string): GameState {
+  if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
+  const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat !== state.round.currentPlayerIndex) return state;
+  if ((state.round.currentBet || 0) > ((state.round.playerBets || {})[playerId] || 0)) return state; // cannot check facing a bet
+  const nextIndex = advanceToNextPlayer(state);
+  const nextState = { ...state, round: { ...state.round, currentPlayerIndex: nextIndex } };
+  return isBettingComplete(nextState) ? { ...nextState, round: { ...nextState.round, isBettingOpen: false, currentPlayerIndex: -1 } } : nextState;
+}
+
+export function playerCall(state: GameState, playerId: string): GameState {
+  if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
+  const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat !== state.round.currentPlayerIndex) return state;
+  const toCall = amountToCall(state, playerId);
+  if (toCall <= 0) return playerCheck(state, playerId);
+  const callAmount = Math.min(toCall, state.players[seat].bankroll);
+  let after = placeBet(state, playerId, callAmount);
+  const nextIndex = advanceToNextPlayer(after);
+  after = { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+  return isBettingComplete(after) ? { ...after, round: { ...after.round, isBettingOpen: false, currentPlayerIndex: -1 } } : after;
+}
+
+export function playerRaise(state: GameState, playerId: string, raiseAmount: number): GameState {
+  if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
+  if (raiseAmount <= 0) return state;
+  const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat !== state.round.currentPlayerIndex) return state;
+  const toCall = amountToCall(state, playerId);
+  const targetBet = (state.round.currentBet || 0) + raiseAmount;
+  // Total contribution needed this action = toCall + raiseAmount
+  const totalNeeded = toCall + raiseAmount;
+  const contribution = Math.min(totalNeeded, state.players[seat].bankroll);
+  let after = placeBet(state, playerId, contribution);
+  // Update current bet to the player's total contributed if it exceeds current
+  const contributedNow = (after.round.playerBets || {})[playerId] || 0;
+  after = { ...after, round: { ...after.round, currentBet: Math.max(after.round.currentBet || 0, contributedNow) } };
+  const nextIndex = advanceToNextPlayer(after);
+  return { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+}
+
+export function playerAllIn(state: GameState, playerId: string): GameState {
+  if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
+  const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat !== state.round.currentPlayerIndex) return state;
+  const bankroll = state.players[seat].bankroll;
+  if (bankroll <= 0) return state;
+  let after = placeBet(state, playerId, bankroll);
+  // If this increased the player's contribution beyond current bet, update current bet
+  const contributedNow = (after.round.playerBets || {})[playerId] || 0;
+  after = { ...after, round: { ...after.round, currentBet: Math.max(after.round.currentBet || 0, contributedNow) } };
+  const nextIndex = advanceToNextPlayer(after);
+  after = { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+  return isBettingComplete(after) ? { ...after, round: { ...after.round, isBettingOpen: false, currentPlayerIndex: -1 } } : after;
+}
+
 export function foldPlayer(state: GameState, playerId: string): GameState {
   const updatedPlayers = state.players.map(player => (player.id === playerId ? { ...player, hasFolded: true } : player));
-  return { ...state, players: updatedPlayers };
+  // Advance turn if the folder was the one to act
+  let nextIndex = state.round.currentPlayerIndex ?? -1;
+  const folderIndex = getSeatIndexByPlayerId(state, playerId);
+  if (folderIndex === state.round.currentPlayerIndex) {
+    const tempState: GameState = { ...state, players: updatedPlayers } as GameState;
+    nextIndex = advanceToNextPlayer(tempState);
+  }
+  const newState: GameState = { ...state, players: updatedPlayers, round: { ...state.round, currentPlayerIndex: nextIndex } };
+  return isBettingComplete(newState) ? { ...newState, round: { ...newState.round, isBettingOpen: false, currentPlayerIndex: -1 } } : newState;
 }
 
 export function submitAnswer(state: GameState, playerId: string, answer: number): GameState {

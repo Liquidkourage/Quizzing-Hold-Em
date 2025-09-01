@@ -32,8 +32,13 @@ import type {
   StartAnsweringAction,
   RevealAnswerAction,
   EndRoundAction,
-  NewGameAction
+  NewGameAction,
+  CheckAction,
+  CallAction,
+  RaiseAction,
+  AllInAction
 } from '@qhe/net'
+import { playerCheck, playerCall, playerRaise, playerAllIn } from '@qhe/core'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -817,15 +822,16 @@ io.on('connection', (socket) => {
           console.log('🎰 Server: Generated community cards:', gameState.round.communityCards)
           console.log('🎰 Server: Community cards count:', gameState.round.communityCards.length)
           
-          // Move to second betting phase (post-community)
-          gameState = { ...gameState, phase: 'betting' }
+          // Move to second betting phase (post-community) is handled in core
 
           // Update the room state FIRST
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
+          break
+
         case 'startAnswering':
           // Start answering phase with deadline and timer
-          if (gameState.phase !== 'betting') {
+          if (gameState.phase !== 'betting' || gameState.round.isBettingOpen) {
             socket.emit('toast', 'Can only start answering from betting phase.')
             break
           }
@@ -863,6 +869,22 @@ io.on('connection', (socket) => {
           const betAction = payload as BetAction
           gameState = placeBet(gameState, betAction.playerId, betAction.amount)
           io.to(roomCode).emit('toast', `${betAction.playerId} bet $${betAction.amount}`)
+          break
+        case 'check':
+          gameState = playerCheck(gameState, (payload as CheckAction).playerId)
+          io.to(roomCode).emit('toast', `Check`)
+          break
+        case 'call':
+          gameState = playerCall(gameState, (payload as CallAction).playerId)
+          io.to(roomCode).emit('toast', `Call`)
+          break
+        case 'raise':
+          gameState = playerRaise(gameState, (payload as RaiseAction).playerId, (payload as RaiseAction).amount)
+          io.to(roomCode).emit('toast', `Raise`)
+          break
+        case 'allIn':
+          gameState = playerAllIn(gameState, (payload as AllInAction).playerId)
+          io.to(roomCode).emit('toast', `All-in!`)
           break
           
         case 'fold':

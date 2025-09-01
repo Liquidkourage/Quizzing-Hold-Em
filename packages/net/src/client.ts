@@ -159,6 +159,42 @@ export function fold(callback?: (ack: ServerAck) => void) {
   }
 }
 
+export function check(callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', {
+    type: 'check',
+    payload: { playerId: socket.id }
+  })
+  if (callback) socket.once('ack', callback)
+}
+
+export function callBet(callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', {
+    type: 'call',
+    payload: { playerId: socket.id }
+  })
+  if (callback) socket.once('ack', callback)
+}
+
+export function raiseBet(amount: number, callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', {
+    type: 'raise',
+    payload: { playerId: socket.id, amount }
+  })
+  if (callback) socket.once('ack', callback)
+}
+
+export function allIn(callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', {
+    type: 'allIn',
+    payload: { playerId: socket.id }
+  })
+  if (callback) socket.once('ack', callback)
+}
+
 export function submitAnswer(answer: number, callback?: (ack: ServerAck) => void) {
   if (!socket) return
   socket.emit('action', { 
