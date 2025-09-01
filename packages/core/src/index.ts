@@ -367,6 +367,9 @@ export function playerRaise(state: GameState, playerId: string, raiseAmount: num
   const seat = getSeatIndexByPlayerId(state, playerId);
   if (seat !== state.round.currentPlayerIndex) return state;
   const toCall = amountToCall(state, playerId);
+  // Enforce min raise equal to big blind
+  const minRaise = Math.max(0, state.bigBlind);
+  if (raiseAmount < minRaise) return state;
   const targetBet = (state.round.currentBet || 0) + raiseAmount;
   // Total contribution needed this action = toCall + raiseAmount
   const totalNeeded = toCall + raiseAmount;
@@ -392,6 +395,27 @@ export function playerAllIn(state: GameState, playerId: string): GameState {
   const nextIndex = advanceToNextPlayer(after);
   after = { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
   return isBettingComplete(after) ? { ...after, round: { ...after.round, isBettingOpen: false, currentPlayerIndex: -1 } } : after;
+}
+
+// Admin/host helpers
+export function adminCloseBetting(state: GameState): GameState {
+  if (state.phase !== 'betting') return state;
+  return { ...state, round: { ...state.round, isBettingOpen: false, currentPlayerIndex: -1 } };
+}
+
+export function adminAdvanceTurn(state: GameState): GameState {
+  if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
+  const nextIdx = advanceToNextPlayer(state);
+  if (nextIdx === -1) {
+    return { ...state, round: { ...state.round, isBettingOpen: false, currentPlayerIndex: -1 } };
+  }
+  return { ...state, round: { ...state.round, currentPlayerIndex: nextIdx } };
+}
+
+export function adminSetBlinds(state: GameState, smallBlind: number, bigBlind: number): GameState {
+  const sb = Math.max(0, Math.floor(smallBlind));
+  const bb = Math.max(sb, Math.floor(bigBlind));
+  return { ...state, smallBlind: sb, bigBlind: bb };
 }
 
 export function foldPlayer(state: GameState, playerId: string): GameState {

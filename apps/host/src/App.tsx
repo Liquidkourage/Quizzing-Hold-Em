@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, NeonButton, JackpotDisplay, PokerChip } from '@qhe/ui'
-import { connect, onState, onToast, useSocket, startAnswering } from '@qhe/net'
+import { connect, onState, onToast, useSocket, startAnswering, adminAdvanceTurn, adminCloseBetting, adminSetBlinds } from '@qhe/net'
 import type { GameState } from '@qhe/core'
 
 function HostApp() {
@@ -223,6 +223,61 @@ function HostApp() {
                 Start Answering (45s)
               </NeonButton>
 
+              {/* Admin betting controls */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <NeonButton
+                  variant="gold"
+                  size="large"
+                  onClick={() => adminAdvanceTurn()}
+                  disabled={gameState.phase !== 'betting' || !(gameState.round as any).isBettingOpen}
+                  className="w-full"
+                >
+                  Force Next Player
+                </NeonButton>
+                <NeonButton
+                  variant="red"
+                  size="large"
+                  onClick={() => adminCloseBetting()}
+                  disabled={gameState.phase !== 'betting' || !(gameState.round as any).isBettingOpen}
+                  className="w-full"
+                >
+                  Close Betting
+                </NeonButton>
+              </div>
+
+              {/* Blinds controls */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                <div>
+                  <div className="text-sm text-white/80 mb-1">Small Blind</div>
+                  <input
+                    type="number"
+                    defaultValue={gameState.smallBlind}
+                    id="sb-input"
+                    className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white focus:border-casino-emerald focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <div className="text-sm text-white/80 mb-1">Big Blind</div>
+                  <input
+                    type="number"
+                    defaultValue={gameState.bigBlind}
+                    id="bb-input"
+                    className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white focus:border-casino-emerald focus:outline-none"
+                  />
+                </div>
+                <NeonButton
+                  variant="emerald"
+                  size="large"
+                  onClick={() => {
+                    const sb = Number((document.getElementById('sb-input') as HTMLInputElement)?.value || gameState.smallBlind)
+                    const bb = Number((document.getElementById('bb-input') as HTMLInputElement)?.value || gameState.bigBlind)
+                    adminSetBlinds(sb, bb)
+                  }}
+                >
+                  Set Blinds
+                </NeonButton>
+              </div>
+
               <NeonButton
                 variant="gold"
                 size="large"
@@ -275,6 +330,18 @@ function HostApp() {
                 <div className="text-lg text-white">Players:</div>
                 <span className="text-casino-emerald font-bold">{gameState.players.length}</span>
               </div>
+              {gameState.phase === 'betting' && (
+                <div className="text-center">
+                  <div className="text-lg text-white">Current Turn:</div>
+                  <span className="text-casino-gold font-extrabold">
+                    {(() => {
+                      const idx = (gameState.round as any).currentPlayerIndex as number | undefined
+                      const p = typeof idx === 'number' ? gameState.players[idx] : undefined
+                      return p ? p.name : '—'
+                    })()}
+                  </span>
+                </div>
+              )}
               {gameState.phase === 'answering' && (
                 <div className="text-center">
                   <div className="text-lg text-white">Answering Time Left:</div>

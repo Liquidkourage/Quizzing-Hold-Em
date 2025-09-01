@@ -107,6 +107,20 @@ export interface ClientToServerEvents {
   action: (data: { type: string; payload?: any }) => void
 }
 
+// Host admin actions
+export const AdminCloseBettingAction = z.object({ type: z.literal('adminCloseBetting') })
+export type AdminCloseBettingAction = z.infer<typeof AdminCloseBettingAction>
+
+export const AdminAdvanceTurnAction = z.object({ type: z.literal('adminAdvanceTurn') })
+export type AdminAdvanceTurnAction = z.infer<typeof AdminAdvanceTurnAction>
+
+export const AdminSetBlindsAction = z.object({
+  type: z.literal('adminSetBlinds'),
+  smallBlind: z.number(),
+  bigBlind: z.number()
+})
+export type AdminSetBlindsAction = z.infer<typeof AdminSetBlindsAction>
+
 export type InterServerEvents = Record<string, never>;
 export type SocketData = { role: ClientRole; name: string; room: string; userId: string };
 

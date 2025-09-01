@@ -18,7 +18,10 @@ import {
   revealAnswer,
   determineWinner,
   payoutWinner,
-  endRound
+  endRound,
+  adminCloseBetting,
+  adminAdvanceTurn,
+  adminSetBlinds
 } from '@qhe/core'
 import type { 
   ClientHello, 
@@ -36,7 +39,10 @@ import type {
   CheckAction,
   CallAction,
   RaiseAction,
-  AllInAction
+  AllInAction,
+  AdminCloseBettingAction,
+  AdminAdvanceTurnAction,
+  AdminSetBlindsAction
 } from '@qhe/net'
 import { playerCheck, playerCall, playerRaise, playerAllIn } from '@qhe/core'
 
@@ -885,6 +891,19 @@ io.on('connection', (socket) => {
         case 'allIn':
           gameState = playerAllIn(gameState, (payload as AllInAction).playerId)
           io.to(roomCode).emit('toast', `All-in!`)
+          break
+        case 'adminCloseBetting':
+          gameState = adminCloseBetting(gameState)
+          io.to(roomCode).emit('toast', 'Betting closed')
+          break
+        case 'adminAdvanceTurn':
+          gameState = adminAdvanceTurn(gameState)
+          io.to(roomCode).emit('toast', 'Advanced to next player')
+          break
+        case 'adminSetBlinds':
+          const { smallBlind, bigBlind } = (payload as any)
+          gameState = adminSetBlinds(gameState, Number(smallBlind), Number(bigBlind))
+          io.to(roomCode).emit('toast', `Blinds set: SB ${smallBlind}, BB ${bigBlind}`)
           break
           
         case 'fold':

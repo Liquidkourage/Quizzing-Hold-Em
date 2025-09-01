@@ -212,3 +212,22 @@ export function disconnect() {
     socket = null
   }
 }
+
+// Host admin actions
+export function adminCloseBetting(callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', { type: 'adminCloseBetting' })
+  if (callback) socket.once('ack', callback)
+}
+
+export function adminAdvanceTurn(callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', { type: 'adminAdvanceTurn' })
+  if (callback) socket.once('ack', callback)
+}
+
+export function adminSetBlinds(smallBlind: number, bigBlind: number, callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', { type: 'adminSetBlinds', payload: { smallBlind, bigBlind } })
+  if (callback) socket.once('ack', callback)
+}

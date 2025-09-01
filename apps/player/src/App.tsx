@@ -254,7 +254,8 @@ function PlayerApp() {
   const canBet = isBettingPhase && currentPlayer && !currentPlayer.hasFolded
   const canCheck = isMyTurn && toCall === 0
   const canCall = isMyTurn && toCall > 0 && (currentPlayer?.bankroll || 0) > 0
-  const canRaise = isMyTurn && (currentPlayer?.bankroll || 0) > toCall && raiseAmount > 0 && (toCall + raiseAmount) <= (currentPlayer?.bankroll || 0)
+  const minRaise = (gameState.bigBlind || 0)
+  const canRaise = isMyTurn && (currentPlayer?.bankroll || 0) > toCall && raiseAmount >= minRaise && (toCall + raiseAmount) <= (currentPlayer?.bankroll || 0)
   const canAllIn = isMyTurn && (currentPlayer?.bankroll || 0) > 0
   const answerDeadline = gameState.round.answerDeadline ?? 0
   const remainingMs = Math.max(0, answerDeadline - Date.now())
