@@ -540,14 +540,18 @@ function PlayerApp() {
                   {toCall > 0 ? `Call $${toCall}` : 'Call'}
                 </NeonButton>
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm text-white/80">Raise Amount</label>
+                  <label className="text-sm text-white/80">
+                    Raise Amount
+                    <span className="ml-2 text-white/50">(min ${minRaise})</span>
+                  </label>
                   <div className="flex gap-3">
                     <input
                       type="number"
                       value={raiseAmount}
                       onChange={(e) => setRaiseAmount(Number(e.target.value))}
-                      min={0}
+                      min={minRaise}
                       max={Math.max(0, (currentPlayer?.bankroll || 0) - toCall)}
+                      placeholder={String(minRaise)}
                       className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white focus:border-casino-emerald focus:outline-none"
                     />
                     <NeonButton 

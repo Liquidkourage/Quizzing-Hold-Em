@@ -12,7 +12,8 @@ export default defineConfig({
     },
   },
   server: {
-    port: 7777,
+    // Use a non-conflicting port; server listens on 7777
+    port: 7780,
     proxy: {
       '/api': {
         target: 'http://localhost:7777',
