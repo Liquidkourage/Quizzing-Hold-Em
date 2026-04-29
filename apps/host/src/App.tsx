@@ -116,6 +116,18 @@ function HostApp() {
     )
   }
 
+  // Engine only cares about phase ("question" → deal → "betting"). Trivia is optional UI-side.
+  const dealInitialBlocked = gameState.phase !== 'question'
+  const dealInitialHint = dealInitialBlocked
+    ? `Locked: phase is "${gameState.phase}" (need "question"—usually after Start Game, before dealing).`
+    : null
+  const triviaOptionalNote =
+    !dealInitialBlocked && !gameState.round?.question ? (
+      <p className="-mt-2 text-xs text-amber-200/80">
+        No trivia loaded yet—you can still deal to enter betting (use <strong>Set Question</strong> for a real quiz).
+      </p>
+    ) : null
+
   return (
     <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
       {/* Animated Background */}
@@ -200,11 +212,22 @@ function HostApp() {
                 variant="blue"
                 size="large"
                 onClick={handleDealInitialCards}
-                disabled={gameState.phase !== 'question' || !gameState.round.question}
+                disabled={dealInitialBlocked}
                 className="w-full"
+                data-phase={gameState.phase}
+                data-can-deal-initial={dealInitialBlocked ? 'no' : 'yes'}
               >
                 Deal Initial Cards
               </NeonButton>
+              {dealInitialHint && (
+                <p className="-mt-2 text-xs text-amber-200/90">{dealInitialHint}</p>
+              )}
+              {triviaOptionalNote}
+              {!dealInitialBlocked && !!gameState.round?.question && (
+                <p className="-mt-2 text-xs text-white/50">
+                  Players aren’t required—you can deal before anyone joins for a dry run.
+                </p>
+              )}
 
               <NeonButton
                 variant="blue"
