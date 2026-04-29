@@ -47,16 +47,8 @@ function HostApp() {
   }
 
   const handleSetQuestion = () => {
-    console.log('🎰 Host: Set Question button clicked')
-    // Immediate toast test
-    setToastMessage('Set Question button clicked!')
-    setTimeout(() => setToastMessage(null), 3000)
-    
     if (socket) {
-      console.log('🎰 Host: Emitting setQuestion action')
       socket.emit('action', { type: 'setQuestion' })
-    } else {
-      console.log('🎰 Host: No socket available')
     }
   }
 
@@ -170,7 +162,18 @@ function HostApp() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Game Controls */}
           <Card variant="glass" className="p-6">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game Controls</h2>
+            <h2 className="text-3xl font-bold text-casino-emerald mb-4 text-center">Game Controls</h2>
+            <div className="mb-6 rounded-lg border border-casino-emerald/30 bg-black/20 p-4 text-left text-sm text-white/90">
+              <div className="mb-2 font-bold text-casino-emerald">PoC — one full round</div>
+              <ol className="list-decimal list-inside space-y-1.5">
+                <li>Players open <strong className="text-white">/player</strong>, enter name + room code <strong className="text-casino-gold">{gameState.code}</strong></li>
+                <li><strong>Start Game</strong> → <strong>Set Question</strong> → <strong>Deal Initial Cards</strong></li>
+                <li><strong>Betting</strong>: use <strong>Close Betting</strong> when ready (or wait for play to finish)</li>
+                <li>Optional: <strong>Deal Community Cards</strong> + another betting round, then <strong>Close Betting</strong></li>
+                <li><strong>Start Answering (45s)</strong> → <strong>Reveal Answer</strong> if the timer has not fired</li>
+                <li><strong>End Round</strong> → back to lobby; <strong>Start Game</strong> again for the next round</li>
+              </ol>
+            </div>
             
             <div className="space-y-4">
               <NeonButton
@@ -197,7 +200,7 @@ function HostApp() {
                 variant="blue"
                 size="large"
                 onClick={handleDealInitialCards}
-                disabled={gameState.phase !== 'betting' || !gameState.round.question}
+                disabled={gameState.phase !== 'question' || !gameState.round.question}
                 className="w-full"
               >
                 Deal Initial Cards
