@@ -51,8 +51,14 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const app = express()
+app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json())
+
+// Lightweight health checks (Railway / load balancers)
+app.get('/health', (_req, res) => {
+  res.status(200).type('text').send('ok')
+})
 
 // Serve static files for all apps
 app.use('/host', express.static(path.join(__dirname, '../../host/dist')))
