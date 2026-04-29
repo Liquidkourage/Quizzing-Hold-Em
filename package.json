@@ -14,6 +14,7 @@
   "scripts": {
     "dev": "concurrently -n server,host,player,display -c cyan,magenta,green,yellow \"npm --workspace apps/server run dev\" \"npm --workspace apps/host run dev\" \"npm --workspace apps/player run dev\" \"npm --workspace apps/display run dev\"",
     "build": "npm run build --workspace packages/core && npm run build --workspace packages/net && npm run build --workspace packages/ui && npm run build --workspace apps/server && npm run build --workspace apps/host && npm run build --workspace apps/player && npm run build --workspace apps/display",
+    "start": "npm start --workspace apps/server",
     "serve": "npm start --workspace apps/server",
     "open": "powershell -Command Start-Process http://localhost:7777",
     "one": "npm run build && powershell -Command Start-Process http://localhost:7777 && npm start --workspace apps/server",

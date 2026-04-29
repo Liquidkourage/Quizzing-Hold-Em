@@ -979,11 +979,18 @@ io.on('connection', (socket) => {
   })
 })
 
-const PORT = 7777
-httpServer.listen(PORT, () => {
-      console.log(`🎰 All*InQuizition Server running on port ${PORT}`)
+const PORT = Number(process.env.PORT) || 7777
+const HOST = process.env.HOST ?? '0.0.0.0'
+const publicOrigin =
+  process.env.RAILWAY_PUBLIC_DOMAIN != null && process.env.RAILWAY_PUBLIC_DOMAIN !== ''
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : null
+
+httpServer.listen(PORT, HOST, () => {
+  console.log(`🎰 All*InQuizition Server running on ${HOST}:${PORT}`)
   console.log(`🌐 WebSocket server ready for connections`)
-  console.log(`📱 Host: http://localhost:${PORT}/host`)
-  console.log(`👤 Player: http://localhost:${PORT}/player`)
-  console.log(`📺 Display: http://localhost:${PORT}/display`)
+  const base = publicOrigin ?? `http://localhost:${PORT}`
+  console.log(`📱 Host: ${base}/host`)
+  console.log(`👤 Player: ${base}/player`)
+  console.log(`📺 Display: ${base}/display`)
 })

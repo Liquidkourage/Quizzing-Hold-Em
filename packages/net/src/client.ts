@@ -1,15 +1,30 @@
-﻿import { io, Socket } from 'socket.io-client'
+﻿/// <reference path="./vite-import-meta.d.ts" />
+
+import { io, Socket } from 'socket.io-client'
 import type { GameState, ClientHello, ServerAck } from './index'
 
 let socket: Socket | null = null
+
+function socketOrigin(): string {
+  const configured = import.meta.env?.VITE_SOCKET_URL as string | undefined
+  if (configured && configured.length > 0) {
+    return configured.replace(/\/$/, '')
+  }
+  if (import.meta.env?.DEV) {
+    return 'http://localhost:7777'
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+  return 'http://localhost:7777'
+}
 
 export function connect(role: 'host' | 'player' | 'display', name: string, roomCode: string = 'HOST01') {
   if (socket) {
     socket.disconnect()
   }
 
-  // Connect to port 7777
-  socket = io('http://localhost:7777')
+  socket = io(socketOrigin())
 
   socket.on('connect', () => {
     console.log('Connected to server')
