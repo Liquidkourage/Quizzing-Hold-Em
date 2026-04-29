@@ -118,8 +118,23 @@ function HostApp() {
 
   // Engine only cares about phase ("question" → deal → "betting"). Trivia is optional UI-side.
   const dealInitialBlocked = gameState.phase !== 'question'
-  const dealInitialHint = dealInitialBlocked
-    ? `Locked: phase is "${gameState.phase}" (need "question"—usually after Start Game, before dealing).`
+  const dealInitialHint: string | null = dealInitialBlocked
+    ? (() => {
+        const p = gameState.phase
+        if (p === 'lobby')
+          return 'Start Game first—you can deal once phase is “question”.'
+        if (p === 'betting')
+          return 'Initial cards are already dealt. Use betting controls, optional Deal Community Cards, then Close Betting → Start Answering.'
+        if (p === 'answering')
+          return 'Answering is open—initial deal is finished. Use Reveal Answer or wait for the timer.'
+        if (p === 'showdown' || p === 'payout') {
+          return 'Showdown / payout—initial deal is done. End Round to reset, then Start Game for the next round.'
+        }
+        if (p === 'intermission' || p === 'reveal') {
+          return 'Not in setup—use End Round or New Game if you need a clean state.'
+        }
+        return `Initial deal happens only while phase is “question” (yours: "${p}").`
+      })()
     : null
   const triviaOptionalNote =
     !dealInitialBlocked && !gameState.round?.question ? (
