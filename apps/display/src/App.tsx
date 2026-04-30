@@ -506,7 +506,8 @@ function DisplayApp() {
           transition={{ duration: 0.8 }}
         >
           <h1 className="text-3xl font-black text-yellow-400 mb-1 flex items-center justify-center gap-2">
-            🎰 ALL <PokerChip size="lg" className="mx-1" /> INQUIZITION
+            🎰 <PokerChip size="lg" className="mx-1" />
+            {'Quizz\u2019em'}
           </h1>
           <div className="text-base text-white">
             Room: <span className="text-yellow-400 font-bold">{displayGameState.code}</span> | 

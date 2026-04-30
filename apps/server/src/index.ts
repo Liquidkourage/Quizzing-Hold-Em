@@ -669,7 +669,7 @@ app.get('/', (req, res) => {
     <!DOCTYPE html>
     <html>
     <head>
-              <title>All*InQuizition</title>
+              <title>Quizz\u2019em</title>
       <style>
         body { 
           font-family: Arial, sans-serif; 
@@ -721,7 +721,7 @@ app.get('/', (req, res) => {
     </head>
     <body>
       <div class="container">
-        <h1>🎰 ALL*INQUIZITION</h1>
+        <h1>🎰 Quizz\u2019em</h1>
         <p>Welcome to the ultimate Vegas casino experience!</p>
         
         <div class="links">
@@ -993,7 +993,7 @@ const publicOrigin =
     : null
 
 httpServer.listen(PORT, HOST, () => {
-  console.log(`🎰 All*InQuizition Server running on ${HOST}:${PORT}`)
+  console.log(`🎰 Quizz\u2019em server running on ${HOST}:${PORT}`)
   console.log(`🌐 WebSocket server ready for connections`)
   const base = publicOrigin ?? `http://localhost:${PORT}`
   console.log(`📱 Host: ${base}/host`)

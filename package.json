@@ -1,8 +1,8 @@
 {
-  "name": "all-in-quizition",
+  "name": "quizzem",
   "private": true,
   "version": "0.1.0",
-  "description": "All*InQuizition monorepo: host, player, display apps with realtime server and shared packages.",
+  "description": "Quizz'em — real-time trivia + Hold'em hybrid; host, player, display apps and Socket.IO server.",
   "workspaces": [
     "apps/*",
     "packages/*"

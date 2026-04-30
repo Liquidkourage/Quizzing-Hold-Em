@@ -226,7 +226,8 @@ function PlayerApp() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            🎰 ALL <PokerChip size="lg" className="mx-1" /> INQUIZITION
+            🎰 <PokerChip size="lg" className="mx-1" />
+            {'Quizz\u2019em'}
           </motion.h1>
           <motion.div 
             className="text-2xl text-white"
