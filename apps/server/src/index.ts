@@ -825,26 +825,35 @@ io.on('connection', (socket) => {
           console.log('🎰 Server: Initial cards dealt, new phase:', gameState.phase)
           console.log('🎰 Server: Players with cards:', gameState.players.map(p => ({ name: p.name, cards: p.hand.length })))
           io.to(roomCode).emit('dealingCards') // Trigger dealing animation
-          io.to(roomCode).emit('toast', 'Initial cards dealt!')
+          io.to(roomCode).emit('toast', 'Hole cards dealt — wagering round 1!')
           break
           
-        case 'dealCommunityCards':
+        case 'dealCommunityCards': {
           console.log('🎰 Server: Received dealCommunityCards action')
+          const communityBefore = gameState.round.communityCards.length
           gameState = dealCommunityCards(gameState)
-          console.log('🎰 Server: Generated community cards:', gameState.round.communityCards)
-          console.log('🎰 Server: Community cards count:', gameState.round.communityCards.length)
-          
-          // Move to second betting phase (post-community) is handled in core
-
-          // Update the room state FIRST
+          const dealt = gameState.round.communityCards.length > communityBefore
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
+          if (dealt) {
+            io.to(roomCode).emit('dealingCommunityCards')
+            io.to(roomCode).emit('toast', 'Board complete — wagering round 2!')
+            console.log('🎰 Server: Community dealt:', gameState.round.communityCards)
+          } else {
+            io.to(roomCode).emit('toast',
+              'Close round 1 wagering first, then reveal the board (deal community cards).')
+          }
           break
+        }
 
         case 'startAnswering':
           // Start answering phase with deadline and timer
           if (gameState.phase !== 'betting' || gameState.round.isBettingOpen) {
-            socket.emit('toast', 'Can only start answering from betting phase.')
+            socket.emit('toast', 'Betting must be closed before answering.')
+            break
+          }
+          if ((gameState.round.communityCards?.length ?? 0) < 5) {
+            socket.emit('toast', 'Deal five community cards and close wagering round 2 first.')
             break
           }
           const deadlineMs2 = Date.now() + 45_000
@@ -870,13 +879,7 @@ io.on('connection', (socket) => {
           io.to(roomCode).emit('state', gameState)
           io.to(roomCode).emit('toast', 'Answering started!')
           break
-          
-          // THEN emit the animation event
-          console.log('🎰 Server: Emitting dealingCommunityCards event to room:', roomCode)
-          io.to(roomCode).emit('dealingCommunityCards') // Trigger community card dealing animation
-          io.to(roomCode).emit('toast', 'Community cards dealt!')
-          break
-          
+
         case 'bet':
           const betAction = payload as BetAction
           gameState = placeBet(gameState, betAction.playerId, betAction.amount)

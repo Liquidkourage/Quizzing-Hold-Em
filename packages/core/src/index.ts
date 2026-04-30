@@ -176,21 +176,13 @@ export function setQuestion(state: GameState): GameState {
     round: {
       ...state.round,
       question: randomQuestion,
-      // Community cards will be generated during initial deal
+      communityCards: [],
     },
   };
 }
 
+/** Hole cards only + blinds; first wagering round (no community yet). */
 export function dealInitialCards(state: GameState): GameState {
-  // Generate community cards during initial deal - this is the ONLY time they are established
-  const communityCards: NumericCard[] = [
-    dealCard(),
-    dealCard(),
-    dealCard(),
-    dealCard(),
-    dealCard()
-  ];
-  
   const updatedPlayers = state.players.map(player => ({
     ...player,
     hand: [dealCard(), dealCard()],
@@ -216,9 +208,6 @@ export function dealInitialCards(state: GameState): GameState {
   postBlind(smallBlindIndex, state.smallBlind);
   postBlind(bigBlindIndex, state.bigBlind);
 
-  const currentBet = Math.min(state.bigBlind, playersAfterBlinds[bigBlindIndex]?.bankroll !== undefined ? state.bigBlind : state.bigBlind);
-
-  // First to act is player after big blind
   const startIndex = playersAfterBlinds.length > 0 ? (bigBlindIndex + 1) % playersAfterBlinds.length : -1;
   const findNextToAct = (start: number): number => {
     if (playersAfterBlinds.length === 0) return -1;
@@ -232,32 +221,35 @@ export function dealInitialCards(state: GameState): GameState {
 
   const currentPlayerIndex = findNextToAct(startIndex);
 
-  return { 
-    ...state, 
-    phase: 'betting', 
+  return {
+    ...state,
+    phase: 'betting',
     players: playersAfterBlinds,
     round: {
       ...state.round,
-      communityCards, // Community cards are now established for the entire round
+      communityCards: [],
       bettingRound: 1,
       currentBet: Math.max(state.bigBlind, 0),
       currentPlayerIndex,
       isBettingOpen: true,
       playerBets,
-    }
+      pot,
+    },
   };
 }
 
+/** After round-1 wagering is closed: deal five community cards and open round-2 wagering. */
 export function dealCommunityCards(state: GameState): GameState {
-  // Community cards were already generated when the question was set
-  // This function just triggers the reveal/animation of the pre-existing cards
-  // No changes to state needed - cards are already there
-  // Reset betting state for round 2
-  const resetBets: Record<string, number> = {};
+  if (state.phase !== 'betting') return state;
+  if (state.round.bettingRound !== 1) return state;
+  if (state.round.isBettingOpen) return state;
+  if ((state.round.communityCards?.length ?? 0) >= 5) return state;
+
+  const communityCards: NumericCard[] = [dealCard(), dealCard(), dealCard(), dealCard(), dealCard()];
+
   const findNextToAct = (): number => {
     const players = state.players;
     if (players.length === 0) return -1;
-    // First to act post-community is the player after dealer (small blind seat)
     const start = (state.round.dealerIndex + 1) % players.length;
     for (let step = 0; step < players.length; step++) {
       const idx = (start + step) % players.length;
@@ -266,17 +258,19 @@ export function dealCommunityCards(state: GameState): GameState {
     }
     return -1;
   };
+
   return {
     ...state,
     phase: 'betting',
     round: {
       ...state.round,
+      communityCards,
       bettingRound: 2,
       currentBet: 0,
       currentPlayerIndex: findNextToAct(),
       isBettingOpen: true,
-      playerBets: resetBets,
-    }
+      playerBets: {},
+    },
   };
 }
 
@@ -477,6 +471,11 @@ export function endRound(state: GameState): GameState {
       communityCards: [],
       pot: 0,
       dealerIndex: (state.round.dealerIndex + 1) % Math.max(1, state.players.length),
+      bettingRound: 1,
+      currentBet: 0,
+      currentPlayerIndex: -1,
+      isBettingOpen: false,
+      playerBets: {},
     },
     players: afterPayout.players.map(p => ({ ...p, hand: [], hasFolded: false, isAllIn: false, submittedAnswer: undefined })),
   };

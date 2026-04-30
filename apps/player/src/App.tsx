@@ -261,6 +261,12 @@ function PlayerApp() {
   const answerDeadline = gameState.round.answerDeadline ?? 0
   const remainingMs = Math.max(0, answerDeadline - Date.now())
   const remainingSec = Math.ceil(remainingMs / 1000)
+  const wageringRound =
+    (gameState.round as { bettingRound?: 1 | 2 }).bettingRound ?? 0
+  const boardHiddenDuringBetting =
+    gameState.phase === 'betting' &&
+    wageringRound === 1 &&
+    gameState.round.communityCards.length === 0
 
   return (
     <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
@@ -300,6 +306,15 @@ function PlayerApp() {
           <div className="mt-4 inline-block p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
             <div className="text-sm text-white/80">Game Phase</div>
             <div className="text-lg font-bold text-casino-emerald capitalize">{gameState.phase}</div>
+            {gameState.phase === 'betting' && (
+              <div className="mt-2 border-t border-white/10 pt-2 text-sm text-white/75">
+                Wagering round{' '}
+                <span className="font-bold text-casino-gold">{wageringRound || '—'}</span>
+                {boardHiddenDuringBetting && (
+                  <div className="mt-1 text-xs text-white/60">Board hidden until the host deals community cards.</div>
+                )}
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -390,26 +405,42 @@ function PlayerApp() {
                     <div className="absolute right-0 top-0 w-0.5 h-2 bg-casino-emerald"></div>
                   </div>
                   <div className="flex gap-3 items-end">
-                    {gameState.round.communityCards.map((card, i) => {
-                      const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
-                      return (
-                        <motion.div 
-                          key={`community-${i}`} 
-                          className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
-                          onClick={() => handleCardSelect('community', i)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <NumericPlayingCard 
-                            digit={card.digit} 
-                            variant="cyan" 
-                            style="neon" 
-                            neonVariant={isSelected ? "pulse" : "matrix"} 
-                            size="large" 
+                    {boardHiddenDuringBetting ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <div key={`board-hidden-${i}`} className="opacity-55 pointer-events-none">
+                          <NumericPlayingCard
+                            digit={0}
+                            variant="cyan"
+                            style="neon"
+                            neonVariant="matrix"
+                            size="large"
+                            faceDown
+                            backDesign="star"
                           />
-                        </motion.div>
-                      )
-                    })}
+                        </div>
+                      ))
+                    ) : (
+                      gameState.round.communityCards.map((card, i) => {
+                        const isSelected = selectedCards.some(sc => sc.type === 'community' && sc.index === i)
+                        return (
+                          <motion.div
+                            key={`community-${i}`}
+                            className={`cursor-pointer ${isSelected ? 'ring-4 ring-casino-gold' : ''}`}
+                            onClick={() => handleCardSelect('community', i)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <NumericPlayingCard
+                              digit={card.digit}
+                              variant="cyan"
+                              style="neon"
+                              neonVariant={isSelected ? 'pulse' : 'matrix'}
+                              size="large"
+                            />
+                          </motion.div>
+                        )
+                      })
+                    )}
                   </div>
                 </div>
 

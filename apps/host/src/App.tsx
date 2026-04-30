@@ -125,7 +125,7 @@ function HostApp() {
         if (p === 'lobby')
           return 'Start Game first—you can deal once phase is “question”.'
         if (p === 'betting')
-          return 'Initial cards are already dealt. Use betting controls, optional Deal Community Cards, then Close Betting → Start Answering.'
+          return 'Hole cards dealt (round 1) or board is live (round 2)—see Deal Community / Close Betting hints below.'
         if (p === 'answering')
           return 'Answering is open—initial deal is finished. Use Reveal Answer or wait for the timer.'
         if (p === 'showdown' || p === 'payout') {
@@ -143,6 +143,31 @@ function HostApp() {
         No trivia loaded yet—you can still deal to enter betting (use <strong>Set Question</strong> for a real quiz).
       </p>
     ) : null
+
+  const round = gameState.round
+  const bettingRound = round.bettingRound ?? 0
+  const communityLen = round.communityCards?.length ?? 0
+  const dealCommunityBlocked =
+    gameState.phase !== 'betting' ||
+    bettingRound !== 1 ||
+    !!(round as { isBettingOpen?: boolean }).isBettingOpen ||
+    communityLen >= 5
+  const dealCommunityHint = dealCommunityBlocked
+    ? gameState.phase !== 'betting'
+      ? 'Available during wagering (betting phase).'
+      : bettingRound !== 1
+        ? 'Board already dealt — you are in wagering round 2.'
+        : (round as { isBettingOpen?: boolean }).isBettingOpen
+          ? 'Close wagering round 1 first, then deal the board.'
+          : communityLen >= 5
+            ? 'Board is already complete.'
+            : ''
+    : null
+
+  const startAnswerBlocked =
+    gameState.phase !== 'betting' ||
+    !!(round as { isBettingOpen?: boolean }).isBettingOpen ||
+    communityLen < 5
 
   return (
     <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
@@ -196,11 +221,11 @@ function HostApp() {
               <div className="mb-2 font-bold text-casino-emerald">PoC — one full round</div>
               <ol className="list-decimal list-inside space-y-1.5">
                 <li>Players open <strong className="text-white">/player</strong>, enter name + room code <strong className="text-casino-gold">{gameState.code}</strong></li>
-                <li><strong>Start Game</strong> → <strong>Set Question</strong> → <strong>Deal Initial Cards</strong></li>
-                <li><strong>Betting</strong>: use <strong>Close Betting</strong> when ready (or wait for play to finish)</li>
-                <li>Optional: <strong>Deal Community Cards</strong> + another betting round, then <strong>Close Betting</strong></li>
-                <li><strong>Start Answering (45s)</strong> → <strong>Reveal Answer</strong> if the timer has not fired</li>
-                <li><strong>End Round</strong> → back to lobby; <strong>Start Game</strong> again for the next round</li>
+                <li><strong>Start Game</strong> → <strong>Set Question</strong> → <strong>Deal Initial Cards</strong> (hole cards only)</li>
+                <li><strong>Wagering round 1:</strong> when ready → <strong>Close Betting</strong></li>
+                <li><strong>Deal Community Cards</strong> (full five-card board) → <strong>Wagering round 2</strong></li>
+                <li><strong>Close Betting</strong> again → <strong>Start Answering (45s)</strong> → <strong>Reveal Answer</strong> if needed</li>
+                <li><strong>End Round</strong> → lobby; <strong>Start Game</strong> again for next round</li>
               </ol>
             </div>
             
@@ -250,21 +275,31 @@ function HostApp() {
                 variant="blue"
                 size="large"
                 onClick={handleDealCommunityCards}
-                disabled={gameState.phase !== 'betting'}
+                disabled={dealCommunityBlocked}
                 className="w-full"
+                data-betting-round={bettingRound}
+                data-community-count={communityLen}
               >
-                Deal Community Cards
+                Deal Community Cards (board)
               </NeonButton>
+              {dealCommunityHint && (
+                <p className="-mt-2 text-xs text-amber-200/90">{dealCommunityHint}</p>
+              )}
 
               <NeonButton
                 variant="purple"
                 size="large"
                 onClick={handleStartAnswering}
-                disabled={gameState.phase !== 'betting'}
+                disabled={startAnswerBlocked}
                 className="w-full"
               >
                 Start Answering (45s)
               </NeonButton>
+              {startAnswerBlocked && gameState.phase === 'betting' && (
+                <p className="-mt-2 text-xs text-white/50">
+                  Needs full board (5 community) and both wagering rounds closed.
+                </p>
+              )}
 
               {/* Admin betting controls */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
