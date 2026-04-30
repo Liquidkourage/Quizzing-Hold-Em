@@ -45,6 +45,12 @@ import type {
   AdminSetBlindsAction
 } from '@qhe/net'
 import { playerCheck, playerCall, playerRaise, playerAllIn } from '@qhe/core'
+import {
+  addVirtualPlayers as spawnVirtualPlayers,
+  removeAllVirtualPlayers,
+  runVirtualPlayerSimulation,
+  liveVirtualCount,
+} from './virtual-players'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -770,12 +776,18 @@ io.on('connection', (socket) => {
       gameState = createEmptyGame(roomCode)
       rooms.set(roomCode, gameState)
     }
+
+    if (role === 'host' && (!gameState.hostId || gameState.hostId === '')) {
+      gameState = { ...gameState, hostId: socket.id }
+    }
     
     // Add player if it's a player role
     if (role === 'player') {
       gameState = addPlayer(gameState, socket.id, name)
-      rooms.set(roomCode, gameState)
     }
+
+    gameState = runVirtualPlayerSimulation(gameState)
+    rooms.set(roomCode, gameState)
     
     // Send acknowledgment
     const ack: ServerAck = { ok: true, message: 'Connected successfully' }
@@ -814,6 +826,7 @@ io.on('connection', (socket) => {
           console.log('🎰 Server: New phase:', gameState.phase)
           
           // Update the room state and emit to all clients
+          gameState = runVirtualPlayerSimulation(gameState)
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
           io.to(roomCode).emit('toast', 'Question set!')
@@ -833,6 +846,7 @@ io.on('connection', (socket) => {
           const communityBefore = gameState.round.communityCards.length
           gameState = dealCommunityCards(gameState)
           const dealt = gameState.round.communityCards.length > communityBefore
+          gameState = runVirtualPlayerSimulation(gameState)
           rooms.set(roomCode, gameState)
           io.to(roomCode).emit('state', gameState)
           if (dealt) {
@@ -862,6 +876,7 @@ io.on('connection', (socket) => {
             phase: 'answering',
             round: { ...gameState.round, answerDeadline: deadlineMs2 }
           }
+          gameState = runVirtualPlayerSimulation(gameState)
           const existingTimer2 = answerTimers.get(roomCode)
           if (existingTimer2) clearTimeout(existingTimer2)
           const timer2 = setTimeout(() => {
@@ -952,14 +967,42 @@ io.on('connection', (socket) => {
           gameState = createEmptyGame(roomCode, gameState.hostId)
           io.to(roomCode).emit('toast', 'New game started! All players removed.')
           break
+
+        case 'addVirtualPlayers': {
+          if (!gameState.hostId || socket.id !== gameState.hostId) {
+            socket.emit('toast', 'Only the room host can add virtual players.')
+            return
+          }
+          const vpCount = Math.min(8, Number((payload as { count?: number })?.count ?? 2))
+          gameState = spawnVirtualPlayers(gameState, vpCount || 2)
+          const nVirt = liveVirtualCount(gameState)
+          io.to(roomCode).emit('toast', `Test mode: added virtual seats (CPU total: ${nVirt}).`)
+          break
+        }
+
+        case 'clearVirtualPlayers': {
+          if (!gameState.hostId || socket.id !== gameState.hostId) {
+            socket.emit('toast', 'Only the room host can clear virtual players.')
+            return
+          }
+          const cleared = liveVirtualCount(gameState)
+          gameState = removeAllVirtualPlayers(gameState)
+          io.to(roomCode).emit(
+            'toast',
+            cleared > 0 ? `Removed ${cleared} virtual seat(s).` : 'No virtual seats to remove.'
+          )
+          break
+        }
           
         default:
           socket.emit('toast', 'Unknown action')
           return
       }
       
-      // Only update state here for non-community card actions
-      if (type !== 'dealCommunityCards') {
+      const skipDuplicateStateBroadcast =
+        type === 'dealCommunityCards' || type === 'startAnswering' || type === 'setQuestion'
+      if (!skipDuplicateStateBroadcast) {
+        gameState = runVirtualPlayerSimulation(gameState)
         rooms.set(roomCode, gameState)
         io.to(roomCode).emit('state', gameState)
       }
@@ -979,7 +1022,8 @@ io.on('connection', (socket) => {
         const gameState = rooms.get(roomCode)
         if (gameState) {
           // Find and remove the player
-          const updatedState = removePlayer(gameState, socket.id)
+          let updatedState = removePlayer(gameState, socket.id)
+          updatedState = runVirtualPlayerSimulation(updatedState)
           rooms.set(roomCode, updatedState)
           io.to(roomCode).emit('state', updatedState)
         }

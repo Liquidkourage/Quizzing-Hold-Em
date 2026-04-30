@@ -1,12 +1,13 @@
 ﻿import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, NeonButton, JackpotDisplay, PokerChip } from '@qhe/ui'
-import { connect, onState, onToast, useSocket, startAnswering, adminAdvanceTurn, adminCloseBetting, adminSetBlinds } from '@qhe/net'
+import { connect, onState, onToast, useSocket, startAnswering, adminAdvanceTurn, adminCloseBetting, adminSetBlinds, addVirtualPlayers, clearVirtualPlayers } from '@qhe/net'
 import type { GameState } from '@qhe/core'
 
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [virtualAddCount, setVirtualAddCount] = useState(2)
   const socket = useSocket()
 
   useEffect(() => {
@@ -147,6 +148,8 @@ function HostApp() {
   const round = gameState.round
   const bettingRound = round.bettingRound ?? 0
   const communityLen = round.communityCards?.length ?? 0
+  const virtualSeatCount = gameState.players.filter(p => p.id.startsWith('vp:')).length
+  const atPlayerCap = gameState.players.length >= gameState.maxPlayers
   const dealCommunityBlocked =
     gameState.phase !== 'betting' ||
     bettingRound !== 1 ||
@@ -356,6 +359,41 @@ function HostApp() {
                 </NeonButton>
               </div>
 
+              <div className="rounded-xl border border-amber-400/40 bg-black/25 p-4 space-y-3">
+                <div className="text-sm font-bold text-amber-200">Test mode — virtual seats</div>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  Adds CPU players for rehearsals. During betting they check whenever legal, otherwise call (or fold as a last resort). During answering they compose the closest numeric permutation to the trivia answer using their hole and board digits.
+                  {' '}Active virtual seats now:{' '}
+                  <span className="font-semibold text-casino-gold">{virtualSeatCount}</span>.
+                </p>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <select
+                    value={virtualAddCount}
+                    onChange={e => setVirtualAddCount(Number(e.target.value) || 1)}
+                    disabled={atPlayerCap}
+                    className="rounded-lg bg-white/10 border border-white/25 text-white px-3 py-2 text-sm disabled:opacity-40"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                  <NeonButton
+                    variant="gold"
+                    size="small"
+                    disabled={atPlayerCap}
+                    onClick={() => addVirtualPlayers(virtualAddCount)}
+                  >
+                    Add CPU seats
+                  </NeonButton>
+                  <NeonButton variant="purple" size="small" onClick={() => clearVirtualPlayers()}>
+                    Clear all CPUs
+                  </NeonButton>
+                </div>
+                {atPlayerCap && (
+                  <p className="text-xs text-amber-200/85">Room is at max players — remove humans or CPUs before inviting more bots.</p>
+                )}
+              </div>
+
               <NeonButton
                 variant="gold"
                 size="large"
@@ -406,7 +444,12 @@ function HostApp() {
 
               <div className="text-center">
                 <div className="text-lg text-white">Players:</div>
-                <span className="text-casino-emerald font-bold">{gameState.players.length}</span>
+                <span className="text-casino-emerald font-bold">
+                  {gameState.players.length}
+                  {virtualSeatCount > 0 ? (
+                    <span className="text-sm font-normal text-amber-200/90"> ({virtualSeatCount} CPU)</span>
+                  ) : null}
+                </span>
               </div>
               {gameState.phase === 'betting' && (
                 <div className="text-center">

@@ -246,3 +246,14 @@ export function adminSetBlinds(smallBlind: number, bigBlind: number, callback?: 
   socket.emit('action', { type: 'adminSetBlinds', payload: { smallBlind, bigBlind } })
   if (callback) socket.once('ack', callback)
 }
+
+/** Host-only: add CPU seats tracked as `vp:*` player ids (server autopilots betting and answers). */
+export function addVirtualPlayers(count = 2) {
+  if (!socket) return
+  socket.emit('action', { type: 'addVirtualPlayers', payload: { count } })
+}
+
+export function clearVirtualPlayers() {
+  if (!socket) return
+  socket.emit('action', { type: 'clearVirtualPlayers' })
+}
