@@ -777,7 +777,9 @@ io.on('connection', (socket) => {
       rooms.set(roomCode, gameState)
     }
 
-    if (role === 'host' && (!gameState.hostId || gameState.hostId === '')) {
+    // Always bind host to this socket on host hello so refresh/reconnect keeps host controls
+    // (otherwise hostId stays stuck on a stale socket id from the previous session).
+    if (role === 'host') {
       gameState = { ...gameState, hostId: socket.id }
     }
     
@@ -969,8 +971,8 @@ io.on('connection', (socket) => {
           break
 
         case 'addVirtualPlayers': {
-          if (!gameState.hostId || socket.id !== gameState.hostId) {
-            socket.emit('toast', 'Only the room host can add virtual players.')
+          if (socket.id !== gameState.hostId) {
+            socket.emit('toast', 'Only the room host can add virtual players. Refresh the host page if you reconnected.')
             return
           }
           const vpCount = Math.min(8, Number((payload as { count?: number })?.count ?? 2))
@@ -981,8 +983,8 @@ io.on('connection', (socket) => {
         }
 
         case 'clearVirtualPlayers': {
-          if (!gameState.hostId || socket.id !== gameState.hostId) {
-            socket.emit('toast', 'Only the room host can clear virtual players.')
+          if (socket.id !== gameState.hostId) {
+            socket.emit('toast', 'Only the room host can clear virtual players. Refresh the host page if you reconnected.')
             return
           }
           const cleared = liveVirtualCount(gameState)
