@@ -281,6 +281,7 @@ function PlayerApp() {
   const currentPlayer = gameState.players.find(p => p.name === playerName)
   const myId = socket?.id
   const myIndex = myId ? gameState.players.findIndex(p => p.id === myId) : gameState.players.findIndex(p => p.name === playerName)
+  const showSeatNumbers = (gameState.tableId ?? '') !== LOBBY_TABLE_ID
   const isBettingPhase = gameState.phase === 'betting'
   const isBettingOpen = !!(gameState.round as any).isBettingOpen
   const isMyTurn = isBettingPhase && isBettingOpen && typeof (gameState.round as any).currentPlayerIndex === 'number' && (gameState.round as any).currentPlayerIndex === myIndex && currentPlayer && !currentPlayer.hasFolded
@@ -339,6 +340,12 @@ function PlayerApp() {
             Venue: <span className="text-casino-emerald font-bold">{gameState.code}</span>
             {' · '}
             Table: <span className="text-casino-gold font-bold">{gameState.tableId ?? '1'}</span>
+            {showSeatNumbers && myIndex >= 0 && (
+              <>
+                {' · '}
+                Seat: <span className="text-casino-gold font-bold">{myIndex + 1}</span>
+              </>
+            )}
             {' | '}
             Player: <span className="text-casino-gold font-bold">{playerName}</span>
           </div>
@@ -668,13 +675,18 @@ function PlayerApp() {
         <Card variant="glass" className="mt-8 p-6">
           <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Other Players</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {gameState.players.filter(p => p.name !== playerName).map((player) => (
+            {gameState.players.filter(p => p.name !== playerName).map((player) => {
+              const seatNum = gameState.players.findIndex(p => p.id === player.id) + 1
+              return (
               <motion.div 
                 key={player.id} 
                 className="text-center p-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
+                {showSeatNumbers && seatNum > 0 && (
+                  <div className="text-[11px] uppercase tracking-wide text-white/55 mb-0.5">Seat {seatNum}</div>
+                )}
                 <div className="text-casino-emerald font-bold text-lg">{player.name}</div>
                 <div className="text-casino-gold text-xl font-bold">${player.bankroll}</div>
                 {player.hasFolded && <div className="text-red-400 font-bold">FOLDED</div>}
@@ -693,7 +705,8 @@ function PlayerApp() {
                   </div>
                 )}
               </motion.div>
-            ))}
+              )
+            })}
           </div>
         </Card>
       </div>

@@ -20,6 +20,7 @@
     "one": "npm run build && powershell -Command Start-Process http://localhost:7777 && npm start --workspace apps/server",
     "lint": "eslint . --ext .ts,.tsx,.js,.cjs --max-warnings 0",
     "typecheck": "tsc -b",
+    "test": "npm run test --workspace @qhe/core",
     "format": "prettier --write .",
     "prepare": "husky install"
   },

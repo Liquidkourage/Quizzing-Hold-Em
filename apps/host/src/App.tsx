@@ -544,12 +544,12 @@ function HostApp() {
             {(() => {
               const correct = gameState.round.question?.answer
               const rows = gameState.players
-                .map(p => {
+                .map((p, seatIdx) => {
                   const hasAnswer = typeof p.submittedAnswer === 'number'
                   const distance = hasAnswer && typeof correct === 'number'
                     ? Math.abs((p.submittedAnswer as number) - correct)
                     : Infinity
-                  return { player: p, hasAnswer, distance }
+                  return { player: p, seat: seatIdx + 1, hasAnswer, distance }
                 })
                 .sort((a, b) => a.distance - b.distance)
 
@@ -560,6 +560,7 @@ function HostApp() {
                   <table className="min-w-full text-left text-white/90">
                     <thead>
                       <tr className="text-white/70">
+                        <th className="py-2 px-3">Seat</th>
                         <th className="py-2 px-3">Player</th>
                         <th className="py-2 px-3">Submitted</th>
                         <th className="py-2 px-3">Distance</th>
@@ -567,8 +568,9 @@ function HostApp() {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map(({ player, hasAnswer, distance }) => (
+                      {rows.map(({ player, seat, hasAnswer, distance }) => (
                         <tr key={player.id} className={`${player.id === winnerId ? 'bg-white/10' : ''}`}>
+                          <td className="py-2 px-3 tabular-nums text-white/80">{seat}</td>
                           <td className="py-2 px-3 font-bold text-casino-emerald">{player.name}</td>
                           <td className="py-2 px-3">{hasAnswer ? player.submittedAnswer : '—'}</td>
                           <td className="py-2 px-3">{hasAnswer && typeof correct === 'number' ? distance : '—'}</td>
@@ -600,8 +602,9 @@ function HostApp() {
           <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Players</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {gameState.players.map((player) => (
+            {gameState.players.map((player, i) => (
               <div key={player.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-4">
+                <div className="text-xs uppercase tracking-wide text-white/50 mb-1">Seat {i + 1}</div>
                 <div className="text-lg font-bold text-casino-emerald">{player.name}</div>
                 <div className="text-white">
                   Bankroll: <span className="text-casino-gold font-bold">${player.bankroll}</span>

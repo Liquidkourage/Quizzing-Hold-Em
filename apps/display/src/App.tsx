@@ -855,6 +855,9 @@ function DisplayApp() {
                   />
                 )}
                 <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center w-[120px] h-[130px] shadow-lg transform scale-[1.40625] origin-center relative">
+                  <div className="text-yellow-600/85 text-[10px] font-semibold uppercase tracking-wide mb-0.5">
+                    Seat {index + 1}
+                  </div>
                   <div className="text-yellow-400 font-bold text-sm mb-1">{player.name}</div>
                   <div className="text-white text-sm mb-1">
                     ${player.bankroll}
@@ -1118,10 +1121,10 @@ function DisplayApp() {
             {(() => {
               const correct = displayGameState.round.question?.answer
               const rows = displayGameState.players
-                .map(p => {
+                .map((p, seatIdx) => {
                   const has = typeof (p as any).submittedAnswer === 'number' && !p.hasFolded
                   const distance = has && typeof correct === 'number' ? Math.abs(((p as any).submittedAnswer as number) - correct) : Infinity
-                  return { player: p, has, distance }
+                  return { player: p, seat: seatIdx + 1, has, distance }
                 })
                 .sort((a, b) => a.distance - b.distance)
               const winnerId = rows.length && rows[0].distance !== Infinity ? rows[0].player.id : undefined
@@ -1131,6 +1134,7 @@ function DisplayApp() {
                   <table className="min-w-full text-left">
                     <thead>
                       <tr className="text-white/70">
+                        <th className="py-2 px-3">Seat</th>
                         <th className="py-2 px-3">Player</th>
                         <th className="py-2 px-3">Submitted</th>
                         <th className="py-2 px-3">Distance</th>
@@ -1138,7 +1142,7 @@ function DisplayApp() {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map(({ player, has, distance }, idx) => (
+                      {rows.map(({ player, seat, has, distance }, idx) => (
                         <motion.tr
                           key={player.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -1146,6 +1150,7 @@ function DisplayApp() {
                           transition={{ delay: idx * 0.08 }}
                           className={player.id === winnerId ? 'bg-white/10' : ''}
                         >
+                          <td className="py-2 px-3 tabular-nums text-white/75">{seat}</td>
                           <td className="py-2 px-3 font-bold text-yellow-300">{player.name}</td>
                           <td className="py-2 px-3">
                             {has ? (
