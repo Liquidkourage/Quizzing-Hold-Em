@@ -1,7 +1,15 @@
 ﻿import { z } from 'zod'
-import type { GameState, Question } from '@qhe/core'
+import type { GameState, Question, Setlist } from '@qhe/core'
 
-export type { GameState, Question }
+export type { GameState, Question, Setlist }
+
+/** Full venue library + active rundown playhead (host-only via `hostLibrary`). */
+export type HostLibrarySnapshot = {
+  questions: Question[]
+  setlists: Setlist[]
+  activeSetlistId: string | null
+  activeSetlistNextIndex: number
+}
 
 export const ClientRole = z.enum(['host', 'player', 'display'])
 export type ClientRole = z.infer<typeof ClientRole>
@@ -104,8 +112,8 @@ export interface ServerToClientEvents {
   dealingCards: () => void
   dealingCommunityCards: () => void
   seated: (info: { tableId: string }) => void
-  /** Sent only to sockets in HOST:{venue} — full bank including answers */
-  questionBank: (questions: Question[]) => void
+  /** Sent only to sockets in HOST:{venue} — bank, setlists, active rundown */
+  hostLibrary: (snapshot: HostLibrarySnapshot) => void
 }
 
 export interface ClientToServerEvents {

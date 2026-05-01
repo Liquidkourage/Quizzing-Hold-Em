@@ -5,7 +5,7 @@ import {
   connect,
   onState,
   onToast,
-  onQuestionBank,
+  onHostLibrary,
   useSocket,
   startAnswering,
   adminAdvanceTurn,
@@ -21,6 +21,11 @@ import {
   questionBankMove,
   questionBankRestoreSamples,
   questionBankImportRows,
+  selectTriviaSetlist,
+  nextQuestionFromSetlist,
+  setlistCreate,
+  setlistSave,
+  setlistDelete,
 } from '@qhe/net'
 import type { GameState, Question } from '@qhe/core'
 import { LOBBY_TABLE_ID } from '@qhe/core'
@@ -39,6 +44,15 @@ function HostApp() {
   const socket = useSocket()
 
   const [questionBank, setQuestionBank] = useState<Question[]>([])
+  const [setlists, setSetlists] = useState<
+    Array<{ id: string; name: string; questionIds: string[] }>
+  >([])
+  const [activeSetlistId, setActiveSetlistId] = useState<string | null>(null)
+  const [activeSetlistNextIndex, setActiveSetlistNextIndex] = useState(0)
+  const [setlistDraftId, setSetlistDraftId] = useState<string | null>(null)
+  const [setlistRenameDraft, setSetlistRenameDraft] = useState('')
+  const [newSetlistName, setNewSetlistName] = useState('')
+  const [addToSetlistChoice, setAddToSetlistChoice] = useState<string>('')
   const [qbText, setQbText] = useState('')
   const [qbAnswer, setQbAnswer] = useState('')
   const [qbCategory, setQbCategory] = useState('')
@@ -88,7 +102,12 @@ function HostApp() {
   }, [])
 
   useEffect(() => {
-    const off = onQuestionBank((questions) => setQuestionBank(questions))
+    const off = onHostLibrary((snap) => {
+      setQuestionBank(snap.questions)
+      setSetlists(snap.setlists)
+      setActiveSetlistId(snap.activeSetlistId)
+      setActiveSetlistNextIndex(snap.activeSetlistNextIndex)
+    })
     return off
   }, [])
 
@@ -152,6 +171,31 @@ function HostApp() {
     setQbAnswer(String(q.answer))
     setQbCategory(q.category ?? '')
     setQbDifficulty(q.difficulty != null ? String(q.difficulty) : '')
+  }
+
+  function appendQuestionToSetlist(setlistId: string, questionId: string) {
+    const sl = setlists.find((s) => s.id === setlistId)
+    if (!sl || sl.questionIds.includes(questionId)) return
+    setlistSave({ id: setlistId, questionIds: [...sl.questionIds, questionId] })
+  }
+
+  function moveSetlistQuestion(setlistId: string, index: number, dir: 'up' | 'down') {
+    const sl = setlists.find((s) => s.id === setlistId)
+    if (!sl) return
+    const ids = [...sl.questionIds]
+    const j = dir === 'up' ? index - 1 : index + 1
+    if (j < 0 || j >= ids.length) return
+    ;[ids[index], ids[j]] = [ids[j], ids[index]]
+    setlistSave({ id: setlistId, questionIds: ids })
+  }
+
+  function removeSetlistQuestion(setlistId: string, index: number) {
+    const sl = setlists.find((s) => s.id === setlistId)
+    if (!sl) return
+    setlistSave({
+      id: setlistId,
+      questionIds: sl.questionIds.filter((_, i) => i !== index),
+    })
   }
 
   const handleDealInitialCards = () => {
@@ -242,7 +286,7 @@ function HostApp() {
   const triviaOptionalNote =
     !dealInitialBlocked && !gameState.round?.question ? (
       <p className="-mt-2 text-xs text-amber-200/80">
-        No trivia loaded yet—you can still deal to enter betting (use <strong>Random from bank</strong> or <strong>To tables</strong> in the Question bank).
+        No trivia loaded yet—you can still deal to enter betting (use <strong>Random from bank</strong>, <strong>To tables</strong>, or a <strong>setlist cue</strong>).
       </p>
     ) : null
 
@@ -272,6 +316,9 @@ function HostApp() {
     gameState.phase !== 'betting' ||
     !!(round as { isBettingOpen?: boolean }).isBettingOpen ||
     communityLen < 5
+
+  const draftSetlist =
+    setlistDraftId != null ? setlists.find((s) => s.id === setlistDraftId) : undefined
 
   return (
     <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
@@ -371,8 +418,8 @@ function HostApp() {
             <div>
               <h2 className="text-2xl font-bold text-casino-emerald">Question bank</h2>
               <p className="text-sm text-white/65 mt-1 max-w-2xl">
-                Ordered list for venue <strong className="text-white/90">{gameState.code}</strong>. Only you receive answers in this grid —{' '}
-                tables get questions when you use Random or To tables.
+                Ordered bank for venue <strong className="text-white/90">{gameState.code}</strong>. Build setlists below for a fixed rundown — only you see answers here;{' '}
+                tables get questions via random, row actions, or <strong className="text-white/80">Next from setlist</strong>.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 shrink-0">
@@ -432,8 +479,8 @@ function HostApp() {
                 </NeonButton>
               </div>
               <span className="text-[11px] text-white/45 text-right max-w-xs">
-                Saved automatically to <span className="text-white/60">apps/server/data/question-banks.json</span> on the server.
-                CSV: columns <span className="text-white/60">text</span>, <span className="text-white/60">answer</span>; optional{' '}
+                Saved automatically to <span className="text-white/60">apps/server/data/venue-libraries.json</span> on the server
+                (questions + setlists). CSV: columns <span className="text-white/60">text</span>, <span className="text-white/60">answer</span>; optional{' '}
                 <span className="text-white/60">category</span>, <span className="text-white/60">difficulty</span>. JSON: a top-level array, or any object that has a{' '}
                 <span className="text-white/60">questions</span> array.
               </span>
@@ -580,6 +627,183 @@ function HostApp() {
           </div>
         </Card>
 
+        <Card variant="glass" className="mb-8 p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-casino-emerald">Setlists (rundowns)</h2>
+              <p className="text-sm text-white/65 mt-1 max-w-2xl">
+                Ordered playlists drawn from your bank. Activate one under <strong className="text-white/80">Trivia rundown</strong> in Game Controls, then use{' '}
+                <strong className="text-white/80">Next from setlist</strong> to push cues in order.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 items-end mb-4">
+            <label className="block text-sm text-white/80">
+              New setlist name
+              <input
+                type="text"
+                value={newSetlistName}
+                onChange={(e) => setNewSetlistName(e.target.value)}
+                placeholder="e.g. Round 1 — Pop culture"
+                className="mt-1 block rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2 w-64 max-w-[80vw]"
+              />
+            </label>
+            <NeonButton
+              variant="emerald"
+              size="small"
+              type="button"
+              onClick={() => {
+                const n = newSetlistName.trim()
+                if (!n) return
+                setlistCreate(n)
+                setNewSetlistName('')
+              }}
+            >
+              Create empty setlist
+            </NeonButton>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-white/15 bg-black/25 p-4 space-y-3">
+              <label className="block text-sm text-white/80">
+                Edit setlist
+                <select
+                  className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
+                  value={setlistDraftId ?? ''}
+                  onChange={(e) => {
+                    const id = e.target.value || null
+                    setSetlistDraftId(id)
+                    const sl = id ? setlists.find((s) => s.id === id) : undefined
+                    setSetlistRenameDraft(sl?.name ?? '')
+                  }}
+                >
+                  <option value="">Select a setlist…</option>
+                  {setlists.map((sl) => (
+                    <option key={sl.id} value={sl.id}>
+                      {sl.name} ({sl.questionIds.length} cues)
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {setlistDraftId ? (
+                <>
+                  <label className="block text-sm text-white/80">
+                    Rundown name
+                    <input
+                      type="text"
+                      value={setlistRenameDraft}
+                      onChange={(e) => setSetlistRenameDraft(e.target.value)}
+                      onBlur={() => {
+                        const sl = setlists.find((s) => s.id === setlistDraftId)
+                        const next = setlistRenameDraft.trim()
+                        if (!sl || !next || next === sl.name) return
+                        setlistSave({ id: setlistDraftId, name: next })
+                      }}
+                      className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
+                    />
+                  </label>
+                  <NeonButton
+                    variant="red"
+                    size="small"
+                    type="button"
+                    onClick={() => {
+                      if (
+                        !confirm(
+                          'Delete this setlist? It will be removed from the rundown picker.'
+                        )
+                      )
+                        return
+                      setlistDelete(setlistDraftId)
+                      setSetlistDraftId(null)
+                      setSetlistRenameDraft('')
+                    }}
+                  >
+                    Delete setlist
+                  </NeonButton>
+                </>
+              ) : null}
+            </div>
+            <div className="rounded-xl border border-white/15 bg-black/25 p-4 min-h-[120px]">
+              {!setlistDraftId ? (
+                <p className="text-sm text-white/50">Select a setlist to arrange its questions.</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-sm font-bold text-white/90">Question order</div>
+                  <select
+                    className="w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2 text-sm"
+                    value={addToSetlistChoice}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      if (!v || !setlistDraftId) return
+                      appendQuestionToSetlist(setlistDraftId, v)
+                      setAddToSetlistChoice('')
+                    }}
+                  >
+                    <option value="">+ Add from bank…</option>
+                    {questionBank
+                      .filter((q) => draftSetlist && !draftSetlist.questionIds.includes(q.id))
+                      .map((q) => (
+                        <option key={q.id} value={q.id}>
+                          {q.text.length > 70 ? `${q.text.slice(0, 70)}…` : q.text}
+                        </option>
+                      ))}
+                  </select>
+                  <ul className="space-y-2 max-h-[min(320px,40vh)] overflow-y-auto">
+                    {!draftSetlist ? null : draftSetlist.questionIds.length === 0 ? (
+                      <li className="text-xs text-white/45">
+                        No questions yet — append from the bank above.
+                      </li>
+                    ) : (
+                      draftSetlist.questionIds.map((qid, i) => {
+                        const qRow = questionBank.find((b) => b.id === qid)
+                        const label = qRow ? qRow.text : `(missing bank id: ${qid})`
+                        const sid = setlistDraftId!
+                        return (
+                          <li
+                            key={`${sid}:${i}:${qid}`}
+                            className="rounded-lg border border-white/12 bg-black/30 px-2 py-2 text-sm text-white/90 flex gap-2 items-start justify-between"
+                          >
+                            <span className="min-w-0">
+                              <span className="text-white/40 tabular-nums mr-2">{i + 1}.</span>
+                              {label}
+                            </span>
+                            <span className="flex shrink-0 gap-1 items-center whitespace-nowrap">
+                              <button
+                                type="button"
+                                disabled={i === 0}
+                                className="text-white/55 hover:text-white disabled:opacity-25"
+                                title="Move earlier"
+                                onClick={() => moveSetlistQuestion(sid, i, 'up')}
+                              >
+                                ↑
+                              </button>
+                              <button
+                                type="button"
+                                disabled={i >= draftSetlist.questionIds.length - 1}
+                                className="text-white/55 hover:text-white disabled:opacity-25"
+                                title="Move later"
+                                onClick={() => moveSetlistQuestion(sid, i, 'down')}
+                              >
+                                ↓
+                              </button>
+                              <button
+                                type="button"
+                                className="text-red-400/90 hover:text-red-300 text-xs"
+                                onClick={() => removeSetlistQuestion(sid, i)}
+                              >
+                                Remove
+                              </button>
+                            </span>
+                          </li>
+                        )
+                      })
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Game Controls */}
           <Card variant="glass" className="p-6">
@@ -591,7 +815,7 @@ function HostApp() {
                   Players join venue with <strong>auto-assign</strong> (lobby) or pick a numbered table manually. Use{' '}
                   <strong className="text-casino-gold">Assign from lobby</strong> once everyone is pooled — seats are randomized and sized from headcount.
                 </li>
-                <li><strong>Start Game</strong> → <strong>Random from bank</strong> or <strong>To tables</strong> on a row → <strong>Deal Initial Cards</strong> (hole cards only)</li>
+                <li><strong>Start Game</strong> → <strong>Random from bank</strong>, <strong>To tables</strong> on a row, or an active <strong>setlist</strong> + <strong>Next from setlist</strong> → <strong>Deal Initial Cards</strong> (hole cards only)</li>
                 <li><strong>Wagering round 1:</strong> when ready → <strong>Close Betting</strong></li>
                 <li><strong>Deal Community Cards</strong> (full five-card board) → <strong>Wagering round 2</strong></li>
                 <li><strong>Close Betting</strong> again → <strong>Start Answering (45s)</strong> → <strong>Reveal Answer</strong> if needed</li>
@@ -637,8 +861,47 @@ function HostApp() {
                 Random from bank
               </NeonButton>
               <p className="-mt-2 text-xs text-white/50">
-                Or pick <strong className="text-white/70">To tables</strong> on a question in the bank for a chosen card.
+                Or pick <strong className="text-white/70">To tables</strong> on a bank row, or drive an ordered rundown with <strong className="text-white/70">Next from setlist</strong> (see below).
               </p>
+
+              <div className="rounded-lg border border-casino-emerald/25 bg-black/25 p-4 space-y-3">
+                <div className="text-sm font-bold text-casino-emerald">Trivia rundown</div>
+                <p className="text-xs text-white/55 leading-relaxed">
+                  Select a setlist to follow a fixed cue order on every table. Leave <strong className="text-white/70">None</strong> for ad-hoc random or per-row pushes.
+                </p>
+                <select
+                  className="w-full rounded-lg bg-white/10 border border-white/25 text-white px-3 py-2 text-sm"
+                  value={activeSetlistId ?? ''}
+                  onChange={(e) => selectTriviaSetlist(e.target.value || null)}
+                >
+                  <option value="">None (free play)</option>
+                  {setlists.map((sl) => (
+                    <option key={sl.id} value={sl.id}>
+                      {sl.name} ({sl.questionIds.length} cues)
+                    </option>
+                  ))}
+                </select>
+                {activeSetlistId ? (
+                  <p className="text-xs text-white/50">
+                    {(() => {
+                      const sl = setlists.find((s) => s.id === activeSetlistId)
+                      const n = sl?.questionIds.length ?? 0
+                      if (!n) return 'This setlist is empty — build it under Setlists.'
+                      if (activeSetlistNextIndex >= n) return 'End of rundown — choose another list or clear.'
+                      return `Next cue: ${activeSetlistNextIndex + 1} of ${n}`
+                    })()}
+                  </p>
+                ) : null}
+                <NeonButton
+                  variant="purple"
+                  size="large"
+                  onClick={() => nextQuestionFromSetlist()}
+                  disabled={gameState.phase !== 'lobby' && gameState.phase !== 'question'}
+                  className="w-full"
+                >
+                  Next from setlist
+                </NeonButton>
+              </div>
 
               <NeonButton
                 variant="blue"

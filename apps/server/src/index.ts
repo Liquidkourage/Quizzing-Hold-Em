@@ -60,10 +60,12 @@ import {
   liveVirtualCount,
 } from './virtual-players'
 import {
-  loadVenueQuestionBanks,
-  persistVenueQuestionBanks,
+  loadVenueLibraries,
+  persistVenueLibraries,
   coerceImportQuestions,
-} from './question-banks-persist'
+  pruneSetlistRefs,
+  type VenueLibraryData,
+} from './venue-library-persist'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -787,28 +789,66 @@ function tableSessionKey(venueCode: string, tableId?: string): string {
 
 const rooms = new Map<string, any>()
 const answerTimers = new Map<string, NodeJS.Timeout>()
-const venueQuestionBanks = loadVenueQuestionBanks()
+const venueLibraries = loadVenueLibraries()
+const venuePlayhead = new Map<string, { setlistId: string | null; nextIndex: number }>()
 
-function saveVenueBanksToDisk() {
-  persistVenueQuestionBanks(venueQuestionBanks)
+function persistVenues() {
+  persistVenueLibraries(venueLibraries)
 }
 
 function hostVenueRoom(venueCode: string): string {
   return `HOST:${normalizeVenueCode(venueCode)}`
 }
 
-function getOrInitQuestionBank(venueCode: string): Question[] {
+function ensureVenueLibrary(venueCode: string): VenueLibraryData {
   const k = normalizeVenueCode(venueCode)
-  if (!venueQuestionBanks.has(k)) {
-    venueQuestionBanks.set(k, SAMPLE_QUESTIONS.map((q) => ({ ...q })))
-    saveVenueBanksToDisk()
+  if (!venueLibraries.has(k)) {
+    venueLibraries.set(k, {
+      questions: SAMPLE_QUESTIONS.map((q) => ({ ...q })),
+      setlists: [],
+    })
+    persistVenues()
   }
-  return venueQuestionBanks.get(k)!
+  return venueLibraries.get(k)!
 }
 
-function broadcastQuestionBank(venueCode: string) {
-  const bank = getOrInitQuestionBank(venueCode)
-  io.to(hostVenueRoom(venueCode)).emit('questionBank', bank.map((q) => ({ ...q })))
+function getPlayhead(venueCode: string) {
+  return (
+    venuePlayhead.get(normalizeVenueCode(venueCode)) ?? {
+      setlistId: null,
+      nextIndex: 0,
+    }
+  )
+}
+
+function buildHostLibraryPayload(venueCode: string) {
+  const k = normalizeVenueCode(venueCode)
+  const lib = ensureVenueLibrary(k)
+  const ph = getPlayhead(k)
+  return {
+    questions: lib.questions.map((q) => ({ ...q })),
+    setlists: lib.setlists.map((s) => ({
+      ...s,
+      questionIds: [...s.questionIds],
+    })),
+    activeSetlistId: ph.setlistId,
+    activeSetlistNextIndex: ph.nextIndex,
+  }
+}
+
+function emitHostLibrary(venueCode: string) {
+  io.to(hostVenueRoom(venueCode)).emit('hostLibrary', buildHostLibraryPayload(venueCode))
+}
+
+function pruneIdFromAllSetlists(lib: VenueLibraryData, questionId: string) {
+  for (const sl of lib.setlists) {
+    sl.questionIds = sl.questionIds.filter((id) => id !== questionId)
+  }
+}
+
+function sanitizeSetlistQuestionIds(lib: VenueLibraryData, ids: string[]): string[] {
+  const known = new Set(lib.questions.map((q) => q.id))
+  return ids.filter((id) => known.has(id))
 }
 
 function assertVenueHost(socket: Socket, gs: { hostId: string }): boolean {
@@ -855,10 +895,22 @@ function allTableSessionsInVenue(venueCode: string): string[] {
   return allVenueSessionKeys(venueCode).filter(k => !isLobbySessionKey(k))
 }
 
+function applyQuestionToAllPlayable(venueCode: string, picked: Question) {
+  const playable = allTableSessionsInVenue(venueCode)
+  for (const tk of playable) {
+    let gs = rooms.get(tk)
+    gs = setQuestion(gs, picked)
+    gs = runVirtualPlayerSimulation(gs)
+    rooms.set(tk, gs)
+    io.to(tk).emit('state', gs)
+  }
+}
+
 /** Host controls that apply everywhere in the venue — rosters/hand/pot stay separate per session key. */
 const VENUE_SYNC_ACTION_TYPES = new Set<string>([
   'startGame',
   'setQuestion',
+  'nextQuestionFromSetlist',
   'dealInitialCards',
   'dealCommunityCards',
   'startAnswering',
@@ -905,7 +957,7 @@ io.on('connection', (socket) => {
     }
     if (role === 'host') {
       socket.join(hostVenueRoom(venueCode))
-      socket.emit('questionBank', getOrInitQuestionBank(venueCode).map((q) => ({ ...q })))
+      socket.emit('hostLibrary', buildHostLibraryPayload(venueCode))
     }
 
     let gameState = rooms.get(sessionKey)
@@ -977,7 +1029,8 @@ io.on('connection', (socket) => {
             break
           }
           if (!assertVenueHost(socket, gameState)) break
-          const bank = getOrInitQuestionBank(gameState.code)
+          const lib = ensureVenueLibrary(gameState.code)
+          const bank = lib.questions
           const questionIdRaw = payload?.questionId
           const questionId = typeof questionIdRaw === 'string' ? questionIdRaw.trim() : ''
           let picked: Question | undefined
@@ -994,15 +1047,162 @@ io.on('connection', (socket) => {
               break
             }
           }
-          for (const tk of playable) {
-            let gs = rooms.get(tk)
-            gs = setQuestion(gs, picked)
-            gs = runVirtualPlayerSimulation(gs)
-            rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
-          }
+          applyQuestionToAllPlayable(gameState.code, picked)
+          emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question synced to all tables at this venue.')
           gameState = rooms.get(sessionKey)!
+          break
+        }
+
+        case 'nextQuestionFromSetlist': {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
+            break
+          }
+          if (!assertVenueHost(socket, gameState)) break
+          const venue = normalizeVenueCode(gameState.code)
+          const lib = ensureVenueLibrary(gameState.code)
+          let ph = getPlayhead(venue)
+          if (!ph.setlistId) {
+            socket.emit('toast', 'Select a setlist for this game first.')
+            break
+          }
+          const sl = lib.setlists.find((s) => s.id === ph.setlistId)
+          if (!sl) {
+            socket.emit('toast', 'Active setlist was removed — pick another.')
+            venuePlayhead.set(venue, { setlistId: null, nextIndex: 0 })
+            emitHostLibrary(venue)
+            break
+          }
+          let dispatched = false
+          while (ph.nextIndex < sl.questionIds.length) {
+            const qid = sl.questionIds[ph.nextIndex]
+            const pos = ph.nextIndex + 1
+            ph = { ...ph, nextIndex: ph.nextIndex + 1 }
+            venuePlayhead.set(venue, ph)
+            const qFound = lib.questions.find((q) => q.id === qid)
+            if (qFound) {
+              applyQuestionToAllPlayable(gameState.code, qFound)
+              emitHostLibrary(gameState.code)
+              socket.emit(
+                'toast',
+                `Setlist “${sl.name}”: question ${pos} of ${sl.questionIds.length} → all tables.`
+              )
+              gameState = rooms.get(sessionKey)!
+              dispatched = true
+              break
+            }
+          }
+          if (!dispatched && ph.nextIndex >= sl.questionIds.length) {
+            emitHostLibrary(venue)
+            socket.emit(
+              'toast',
+              `End of setlist “${sl.name}” (or remaining ids missing from bank). Pick another rundown or free play.`
+            )
+          }
+          break
+        }
+
+        case 'selectTriviaSetlist': {
+          if (!assertVenueHost(socket, gameState)) break
+          const venue = normalizeVenueCode(gameState.code)
+          const lib = ensureVenueLibrary(venue)
+          const raw = payload?.setlistId
+          if (raw == null || raw === '') {
+            venuePlayhead.set(venue, { setlistId: null, nextIndex: 0 })
+            emitHostLibrary(venue)
+            socket.emit('toast', 'Setlist rundown cleared — free play from the full bank.')
+            break
+          }
+          const id = String(raw).trim()
+          if (!lib.setlists.some((s) => s.id === id)) {
+            socket.emit('toast', 'That setlist does not exist.')
+            break
+          }
+          venuePlayhead.set(venue, { setlistId: id, nextIndex: 0 })
+          emitHostLibrary(venue)
+          const sel = lib.setlists.find((s) => s.id === id)!
+          socket.emit(
+            'toast',
+            `Active rundown: “${sel.name}” — ${sel.questionIds.length} question(s); use Next from setlist for cue 1.`
+          )
+          break
+        }
+
+        case 'setlistCreate': {
+          if (!assertVenueHost(socket, gameState)) break
+          const name = String(payload?.name ?? '').trim()
+          if (!name) {
+            socket.emit('toast', 'Setlist needs a name.')
+            break
+          }
+          const lib = ensureVenueLibrary(gameState.code)
+          const id = `sl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`
+          lib.setlists.push({ id, name, questionIds: [] })
+          persistVenues()
+          emitHostLibrary(gameState.code)
+          socket.emit('toast', `Setlist created: ${name}`)
+          break
+        }
+
+        case 'setlistSave': {
+          if (!assertVenueHost(socket, gameState)) break
+          const id = String(payload?.id ?? '').trim()
+          if (!id) {
+            socket.emit('toast', 'setlistSave requires id.')
+            break
+          }
+          const lib = ensureVenueLibrary(gameState.code)
+          const idx = lib.setlists.findIndex((s) => s.id === id)
+          if (idx < 0) {
+            socket.emit('toast', 'Setlist not found.')
+            break
+          }
+          const prev = lib.setlists[idx]
+          const name =
+            typeof payload?.name === 'string' && payload.name.trim()
+              ? payload.name.trim()
+              : prev.name
+          let questionIds = prev.questionIds
+          if (Array.isArray(payload?.questionIds)) {
+            questionIds = sanitizeSetlistQuestionIds(
+              lib,
+              (payload.questionIds as unknown[]).filter((x): x is string => typeof x === 'string').map((x) => x.trim()),
+            )
+          }
+          lib.setlists[idx] = { id: prev.id, name, questionIds }
+          persistVenues()
+          const ph = getPlayhead(normalizeVenueCode(gameState.code))
+          if (ph.setlistId === id && ph.nextIndex > questionIds.length) {
+            venuePlayhead.set(normalizeVenueCode(gameState.code), {
+              setlistId: id,
+              nextIndex: Math.max(0, questionIds.length),
+            })
+          }
+          emitHostLibrary(gameState.code)
+          socket.emit('toast', `Setlist “${name}” saved (${questionIds.length} questions).`)
+          break
+        }
+
+        case 'setlistDelete': {
+          if (!assertVenueHost(socket, gameState)) break
+          const id = String(payload?.id ?? '').trim()
+          const venue = normalizeVenueCode(gameState.code)
+          const lib = ensureVenueLibrary(venue)
+          const next = lib.setlists.filter((s) => s.id !== id)
+          if (next.length === lib.setlists.length) {
+            socket.emit('toast', 'Setlist not found.')
+            break
+          }
+          lib.setlists = next
+          persistVenues()
+          const ph = getPlayhead(venue)
+          if (ph.setlistId === id) {
+            venuePlayhead.set(venue, { setlistId: null, nextIndex: 0 })
+          }
+          emitHostLibrary(gameState.code)
+          socket.emit('toast', 'Setlist removed.')
           break
         }
 
@@ -1341,7 +1541,8 @@ io.on('connection', (socket) => {
 
         case 'questionBankAdd': {
           if (!assertVenueHost(socket, gameState)) break
-          const bank = getOrInitQuestionBank(gameState.code)
+          const lib = ensureVenueLibrary(gameState.code)
+          const bank = lib.questions
           const text = String(payload?.text ?? '').trim()
           const answer = Number(payload?.answer)
           if (!text || Number.isNaN(answer)) {
@@ -1359,16 +1560,16 @@ io.on('connection', (socket) => {
             difficulty: Number.isFinite(diff) && diff >= 1 && diff <= 5 ? diff : undefined,
           }
           bank.push(q)
-          venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
-          saveVenueBanksToDisk()
-          broadcastQuestionBank(gameState.code)
+          persistVenues()
+          emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question added.')
           break
         }
 
         case 'questionBankUpdate': {
           if (!assertVenueHost(socket, gameState)) break
-          const bank = getOrInitQuestionBank(gameState.code)
+          const lib = ensureVenueLibrary(gameState.code)
+          const bank = lib.questions
           const id = String(payload?.id ?? '').trim()
           const idx = bank.findIndex((q) => q.id === id)
           if (idx < 0) {
@@ -1402,33 +1603,42 @@ io.on('connection', (socket) => {
             const d = Number(payload.difficulty)
             diff = Number.isFinite(d) && d >= 1 && d <= 5 ? d : undefined
           }
-          bank[idx] = { ...prev, id: prev.id, text, answer: ans, category: cat, difficulty: diff }
-          venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
-          saveVenueBanksToDisk()
-          broadcastQuestionBank(gameState.code)
+          bank[idx] = {
+            ...prev,
+            id: prev.id,
+            text,
+            answer: ans,
+            category: cat,
+            difficulty: diff,
+          }
+          persistVenues()
+          emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question saved.')
           break
         }
 
         case 'questionBankDelete': {
           if (!assertVenueHost(socket, gameState)) break
-          const bank = getOrInitQuestionBank(gameState.code)
+          const lib = ensureVenueLibrary(gameState.code)
+          const bank = lib.questions
           const id = String(payload?.id ?? '').trim()
           const filtered = bank.filter((q) => q.id !== id)
           if (filtered.length === bank.length) {
             socket.emit('toast', 'Question not found.')
             break
           }
-          venueQuestionBanks.set(normalizeVenueCode(gameState.code), filtered)
-          saveVenueBanksToDisk()
-          broadcastQuestionBank(gameState.code)
+          pruneIdFromAllSetlists(lib, id)
+          lib.questions = filtered
+          persistVenues()
+          emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question removed.')
           break
         }
 
         case 'questionBankMove': {
           if (!assertVenueHost(socket, gameState)) break
-          const bank = [...getOrInitQuestionBank(gameState.code)]
+          const lib = ensureVenueLibrary(gameState.code)
+          const bank = [...lib.questions]
           const id = String(payload?.id ?? '').trim()
           const dir = payload?.direction === 'down' ? 'down' : 'up'
           const idx = bank.findIndex((q) => q.id === id)
@@ -1436,9 +1646,9 @@ io.on('connection', (socket) => {
           const j = dir === 'up' ? idx - 1 : idx + 1
           if (j < 0 || j >= bank.length) break
           ;[bank[idx], bank[j]] = [bank[j], bank[idx]]
-          venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
-          saveVenueBanksToDisk()
-          broadcastQuestionBank(gameState.code)
+          lib.questions = bank
+          persistVenues()
+          emitHostLibrary(gameState.code)
           break
         }
 
@@ -1456,32 +1666,31 @@ io.on('connection', (socket) => {
             socket.emit('toast', 'No valid rows (each needs text plus a numeric answer).')
             break
           }
+          const lib = ensureVenueLibrary(venue)
           if (replace) {
-            venueQuestionBanks.set(venue, validated)
+            lib.questions = validated
           } else {
-            const cur = getOrInitQuestionBank(gameState.code)
-            venueQuestionBanks.set(venue, [...cur, ...validated])
+            lib.questions = [...lib.questions, ...validated]
           }
-          saveVenueBanksToDisk()
-          broadcastQuestionBank(gameState.code)
+          pruneSetlistRefs(lib)
+          persistVenues()
+          emitHostLibrary(gameState.code)
           socket.emit(
             'toast',
             replace
-              ? `Replaced bank with ${validated.length} question(s).`
+              ? `Replaced bank with ${validated.length} question(s); setlists pruned to valid ids.`
               : `Appended ${validated.length} question(s).`
           )
           break
         }
 
-
         case 'questionBankResetSamples': {
           if (!assertVenueHost(socket, gameState)) break
-          venueQuestionBanks.set(
-            normalizeVenueCode(gameState.code),
-            SAMPLE_QUESTIONS.map((q) => ({ ...q }))
-          )
-          saveVenueBanksToDisk()
-          broadcastQuestionBank(gameState.code)
+          const lib = ensureVenueLibrary(gameState.code)
+          lib.questions = SAMPLE_QUESTIONS.map((q) => ({ ...q }))
+          pruneSetlistRefs(lib)
+          persistVenues()
+          emitHostLibrary(gameState.code)
           socket.emit('toast', 'Starter pack restored.')
           break
         }

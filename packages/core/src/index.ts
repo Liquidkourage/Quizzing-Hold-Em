@@ -22,6 +22,13 @@ export interface Question {
   difficulty?: number; // 1-5
 }
 
+/** Ordered rundown for trivia night — question ids reference the venue question bank. */
+export interface Setlist {
+  id: string;
+  name: string;
+  questionIds: string[];
+}
+
 export interface RoundState {
   roundId: string;
   question: Question | null;

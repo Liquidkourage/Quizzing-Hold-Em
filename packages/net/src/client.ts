@@ -1,7 +1,7 @@
 ﻿/// <reference path="./vite-import-meta.d.ts" />
 
 import { io, Socket } from 'socket.io-client'
-import type { GameState, Question, ClientHello, ServerAck } from './index'
+import type { GameState, ClientHello, ServerAck, HostLibrarySnapshot } from './index'
 
 let socket: Socket | null = null
 
@@ -121,12 +121,12 @@ export function onSeated(callback: (info: { tableId: string }) => void) {
   }
 }
 
-export function onQuestionBank(callback: (questions: Question[]) => void) {
+export function onHostLibrary(callback: (snapshot: HostLibrarySnapshot) => void) {
   if (!socket) return () => {}
 
-  socket.on('questionBank', callback)
+  socket.on('hostLibrary', callback)
   return () => {
-    if (socket) socket.off('questionBank', callback)
+    if (socket) socket.off('hostLibrary', callback)
   }
 }
 
@@ -200,6 +200,35 @@ export function questionBankRestoreSamples() {
 export function questionBankImportRows(rows: unknown[], replace: boolean) {
   if (!socket) return
   socket.emit('action', { type: 'questionBankImportRows', payload: { rows, replace } })
+}
+
+export function selectTriviaSetlist(setlistId: string | null) {
+  if (!socket) return
+  if (setlistId == null || setlistId === '') {
+    socket.emit('action', { type: 'selectTriviaSetlist', payload: {} })
+  } else {
+    socket.emit('action', { type: 'selectTriviaSetlist', payload: { setlistId } })
+  }
+}
+
+export function nextQuestionFromSetlist() {
+  if (!socket) return
+  socket.emit('action', { type: 'nextQuestionFromSetlist' })
+}
+
+export function setlistCreate(name: string) {
+  if (!socket) return
+  socket.emit('action', { type: 'setlistCreate', payload: { name } })
+}
+
+export function setlistSave(payload: { id: string; name?: string; questionIds?: string[] }) {
+  if (!socket) return
+  socket.emit('action', { type: 'setlistSave', payload })
+}
+
+export function setlistDelete(id: string) {
+  if (!socket) return
+  socket.emit('action', { type: 'setlistDelete', payload: { id } })
 }
 
 export function dealCards(type: 'initial' | 'community', callback?: (ack: ServerAck) => void) {
