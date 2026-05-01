@@ -19,7 +19,17 @@ function socketOrigin(): string {
   return 'http://localhost:7777'
 }
 
-export function connect(role: 'host' | 'player' | 'display', name: string, roomCode: string = 'HOST01', tableId: string = '1') {
+export type ConnectOptions = {
+  hostSecret?: string
+}
+
+export function connect(
+  role: 'host' | 'player' | 'display',
+  name: string,
+  roomCode: string = 'HOST01',
+  tableId: string = '1',
+  options?: ConnectOptions
+) {
   if (socket) {
     socket.disconnect()
   }
@@ -33,7 +43,10 @@ export function connect(role: 'host' | 'player' | 'display', name: string, roomC
       role,
       name,
       roomCode,
-      tableId
+      tableId,
+      ...(options?.hostSecret?.trim()
+        ? { hostSecret: options.hostSecret.trim() }
+        : {}),
     }
     
     socket!.emit('hello', hello)
@@ -182,6 +195,11 @@ export function questionBankMove(id: string, direction: 'up' | 'down') {
 export function questionBankRestoreSamples() {
   if (!socket) return
   socket.emit('action', { type: 'questionBankResetSamples' })
+}
+
+export function questionBankImportRows(rows: unknown[], replace: boolean) {
+  if (!socket) return
+  socket.emit('action', { type: 'questionBankImportRows', payload: { rows, replace } })
 }
 
 export function dealCards(type: 'initial' | 'community', callback?: (ack: ServerAck) => void) {

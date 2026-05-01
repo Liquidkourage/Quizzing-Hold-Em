@@ -59,6 +59,11 @@ import {
   runVirtualPlayerSimulation,
   liveVirtualCount,
 } from './virtual-players'
+import {
+  loadVenueQuestionBanks,
+  persistVenueQuestionBanks,
+  coerceImportQuestions,
+} from './question-banks-persist'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -782,7 +787,11 @@ function tableSessionKey(venueCode: string, tableId?: string): string {
 
 const rooms = new Map<string, any>()
 const answerTimers = new Map<string, NodeJS.Timeout>()
-const venueQuestionBanks = new Map<string, Question[]>()
+const venueQuestionBanks = loadVenueQuestionBanks()
+
+function saveVenueBanksToDisk() {
+  persistVenueQuestionBanks(venueQuestionBanks)
+}
 
 function hostVenueRoom(venueCode: string): string {
   return `HOST:${normalizeVenueCode(venueCode)}`
@@ -791,10 +800,8 @@ function hostVenueRoom(venueCode: string): string {
 function getOrInitQuestionBank(venueCode: string): Question[] {
   const k = normalizeVenueCode(venueCode)
   if (!venueQuestionBanks.has(k)) {
-    venueQuestionBanks.set(
-      k,
-      SAMPLE_QUESTIONS.map((q) => ({ ...q }))
-    )
+    venueQuestionBanks.set(k, SAMPLE_QUESTIONS.map((q) => ({ ...q })))
+    saveVenueBanksToDisk()
   }
   return venueQuestionBanks.get(k)!
 }
@@ -805,9 +812,18 @@ function broadcastQuestionBank(venueCode: string) {
 }
 
 function assertVenueHost(socket: Socket, gs: { hostId: string }): boolean {
-  const role = (socket.data as { role?: string }).role
-  if (role !== 'host' || socket.id !== gs.hostId) {
-    socket.emit('toast', 'Only the venue host can manage questions.')
+  const sd = socket.data as { role?: string; hostAuthed?: boolean }
+  if (sd.role !== 'host') {
+    socket.emit('toast', 'Only the host can perform this action.')
+    return false
+  }
+  const required = process.env.HOST_SECRET?.trim()
+  if (required && !sd.hostAuthed) {
+    socket.emit('toast', 'Host session is not authenticated (check HOST_SECRET).')
+    return false
+  }
+  if (socket.id !== gs.hostId) {
+    socket.emit('toast', 'Only the venue host for this bound table can control the game.')
     return false
   }
   return true
@@ -860,13 +876,33 @@ io.on('connection', (socket) => {
   socket.on('hello', (data: ClientHello) => {
     const { role, name, roomCode } = data
 
+    const requiredHostSecret = process.env.HOST_SECRET?.trim()
+    if (role === 'host' && requiredHostSecret) {
+      const provided =
+        typeof (data as { hostSecret?: string }).hostSecret === 'string'
+          ? (data as { hostSecret: string }).hostSecret.trim()
+          : ''
+      if (provided !== requiredHostSecret) {
+        socket.emit('ack', { ok: false, message: 'Invalid host credentials.' })
+        socket.disconnect(true)
+        return
+      }
+    }
+
     const venueCode = normalizeVenueCode(roomCode)
     const tableId = normalizeTableId(data.tableId)
     const sessionKey = tableSessionKey(venueCode, tableId)
     socket.join(sessionKey)
-    const sockData = socket.data as { sessionKey?: string; role?: string }
+    const sockData = socket.data as {
+      sessionKey?: string
+      role?: string
+      hostAuthed?: boolean
+    }
     sockData.sessionKey = sessionKey
     sockData.role = role
+    if (role === 'host') {
+      sockData.hostAuthed = true
+    }
     if (role === 'host') {
       socket.join(hostVenueRoom(venueCode))
       socket.emit('questionBank', getOrInitQuestionBank(venueCode).map((q) => ({ ...q })))
@@ -913,6 +949,7 @@ io.on('connection', (socket) => {
     try {
       switch (type) {
         case 'startGame': {
+          if (!assertVenueHost(socket, gameState)) break
           const playable = allTableSessionsInVenue(gameState.code)
           if (playable.length === 0) {
             socket.emit(
@@ -970,6 +1007,7 @@ io.on('connection', (socket) => {
         }
 
         case 'dealInitialCards': {
+          if (!assertVenueHost(socket, gameState)) break
           const playable = allTableSessionsInVenue(gameState.code)
           if (playable.length === 0) {
             socket.emit('toast', 'No playable tables yet — assign the lobby first.')
@@ -989,6 +1027,7 @@ io.on('connection', (socket) => {
         }
 
         case 'dealCommunityCards': {
+          if (!assertVenueHost(socket, gameState)) break
           const playable = allTableSessionsInVenue(gameState.code)
           let anyDealt = false
           if (playable.length === 0) {
@@ -1019,6 +1058,7 @@ io.on('connection', (socket) => {
         }
 
         case 'startAnswering': {
+          if (!assertVenueHost(socket, gameState)) break
           if (gameState.phase !== 'betting' || gameState.round.isBettingOpen) {
             socket.emit('toast', 'Betting must be closed before answering.')
             break
@@ -1093,6 +1133,7 @@ io.on('connection', (socket) => {
           io.to(sessionKey).emit('toast', `All-in!`)
           break
         case 'adminCloseBetting': {
+          if (!assertVenueHost(socket, gameState)) break
           const playable = allTableSessionsInVenue(gameState.code)
           if (playable.length === 0) {
             socket.emit('toast', 'No playable tables yet.')
@@ -1110,10 +1151,12 @@ io.on('connection', (socket) => {
           break
         }
         case 'adminAdvanceTurn':
+          if (!assertVenueHost(socket, gameState)) break
           gameState = adminAdvanceTurn(gameState)
           io.to(sessionKey).emit('toast', `Advanced to next player`)
           break
         case 'adminSetBlinds': {
+          if (!assertVenueHost(socket, gameState)) break
           const { smallBlind, bigBlind } = payload as any
           const sb = Number(smallBlind)
           const bb = Number(bigBlind)
@@ -1151,6 +1194,7 @@ io.on('connection', (socket) => {
           break
           
         case 'revealAnswer': {
+          if (!assertVenueHost(socket, gameState)) break
           const playable = allTableSessionsInVenue(gameState.code)
           if (playable.length === 0) {
             socket.emit('toast', 'No playable tables yet.')
@@ -1168,6 +1212,7 @@ io.on('connection', (socket) => {
         }
 
         case 'endRound': {
+          if (!assertVenueHost(socket, gameState)) break
           const playable = allTableSessionsInVenue(gameState.code)
           if (playable.length === 0) {
             socket.emit('toast', 'No playable tables yet.')
@@ -1185,6 +1230,7 @@ io.on('connection', (socket) => {
         }
 
         case 'newGame': {
+          if (!assertVenueHost(socket, gameState)) break
           for (const tk of allVenueSessionKeys(gameState.code)) {
             const prev = rooms.get(tk)
             const fresh = createEmptyGame(prev.code, prev.hostId, prev.tableId)
@@ -1204,10 +1250,7 @@ io.on('connection', (socket) => {
             )
             break
           }
-          if (socket.id !== gameState.hostId) {
-            socket.emit('toast', 'Only the host can assign tables.')
-            break
-          }
+          if (!assertVenueHost(socket, gameState)) break
           if (gameState.phase !== 'lobby') {
             socket.emit('toast', 'Assign only while still in lobby phase.')
             break
@@ -1277,10 +1320,7 @@ io.on('connection', (socket) => {
         }
 
         case 'addVirtualPlayers': {
-          if (socket.id !== gameState.hostId) {
-            socket.emit('toast', 'Only the room host can add virtual players. Refresh the host page if you reconnected.')
-            return
-          }
+          if (!assertVenueHost(socket, gameState)) break
           const vpCount = Math.min(8, Number((payload as { count?: number })?.count ?? 2))
           gameState = spawnVirtualPlayers(gameState, vpCount || 2)
           const nVirt = liveVirtualCount(gameState)
@@ -1289,10 +1329,7 @@ io.on('connection', (socket) => {
         }
 
         case 'clearVirtualPlayers': {
-          if (socket.id !== gameState.hostId) {
-            socket.emit('toast', 'Only the room host can clear virtual players. Refresh the host page if you reconnected.')
-            return
-          }
+          if (!assertVenueHost(socket, gameState)) break
           const cleared = liveVirtualCount(gameState)
           gameState = removeAllVirtualPlayers(gameState)
           io.to(sessionKey).emit(
@@ -1323,6 +1360,7 @@ io.on('connection', (socket) => {
           }
           bank.push(q)
           venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
+          saveVenueBanksToDisk()
           broadcastQuestionBank(gameState.code)
           socket.emit('toast', 'Question added.')
           break
@@ -1366,6 +1404,7 @@ io.on('connection', (socket) => {
           }
           bank[idx] = { ...prev, id: prev.id, text, answer: ans, category: cat, difficulty: diff }
           venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
+          saveVenueBanksToDisk()
           broadcastQuestionBank(gameState.code)
           socket.emit('toast', 'Question saved.')
           break
@@ -1381,6 +1420,7 @@ io.on('connection', (socket) => {
             break
           }
           venueQuestionBanks.set(normalizeVenueCode(gameState.code), filtered)
+          saveVenueBanksToDisk()
           broadcastQuestionBank(gameState.code)
           socket.emit('toast', 'Question removed.')
           break
@@ -1397,9 +1437,42 @@ io.on('connection', (socket) => {
           if (j < 0 || j >= bank.length) break
           ;[bank[idx], bank[j]] = [bank[j], bank[idx]]
           venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
+          saveVenueBanksToDisk()
           broadcastQuestionBank(gameState.code)
           break
         }
+
+        case 'questionBankImportRows': {
+          if (!assertVenueHost(socket, gameState)) break
+          const replace = !!payload?.replace
+          const rows = payload?.rows
+          if (!Array.isArray(rows) || rows.length === 0) {
+            socket.emit('toast', 'Import payload must contain a rows array.')
+            break
+          }
+          const venue = normalizeVenueCode(gameState.code)
+          const validated = coerceImportQuestions(venue, rows)
+          if (validated.length === 0) {
+            socket.emit('toast', 'No valid rows (each needs text plus a numeric answer).')
+            break
+          }
+          if (replace) {
+            venueQuestionBanks.set(venue, validated)
+          } else {
+            const cur = getOrInitQuestionBank(gameState.code)
+            venueQuestionBanks.set(venue, [...cur, ...validated])
+          }
+          saveVenueBanksToDisk()
+          broadcastQuestionBank(gameState.code)
+          socket.emit(
+            'toast',
+            replace
+              ? `Replaced bank with ${validated.length} question(s).`
+              : `Appended ${validated.length} question(s).`
+          )
+          break
+        }
+
 
         case 'questionBankResetSamples': {
           if (!assertVenueHost(socket, gameState)) break
@@ -1407,6 +1480,7 @@ io.on('connection', (socket) => {
             normalizeVenueCode(gameState.code),
             SAMPLE_QUESTIONS.map((q) => ({ ...q }))
           )
+          saveVenueBanksToDisk()
           broadcastQuestionBank(gameState.code)
           socket.emit('toast', 'Starter pack restored.')
           break

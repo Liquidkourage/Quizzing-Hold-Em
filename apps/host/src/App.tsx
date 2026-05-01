@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, type FormEvent } from 'react'
+﻿import { useEffect, useState, useRef, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, NeonButton, JackpotDisplay, PokerChip } from '@qhe/ui'
 import {
@@ -20,9 +20,11 @@ import {
   questionBankDelete,
   questionBankMove,
   questionBankRestoreSamples,
+  questionBankImportRows,
 } from '@qhe/net'
 import type { GameState, Question } from '@qhe/core'
 import { LOBBY_TABLE_ID } from '@qhe/core'
+import { parseQuestionsCsv, parseQuestionsJson } from './questionImport'
 
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
@@ -43,10 +45,21 @@ function HostApp() {
   const [qbDifficulty, setQbDifficulty] = useState('')
   const [editingBankId, setEditingBankId] = useState<string | null>(null)
 
+  const [hostSecretApplied, setHostSecretApplied] = useState('')
+  const [secretDraft, setSecretDraft] = useState('')
+  const importFileRef = useRef<HTMLInputElement>(null)
+  const importReplaceRef = useRef(false)
+
+  const viteHostSecret =
+    typeof import.meta.env.VITE_HOST_SECRET === 'string' ? import.meta.env.VITE_HOST_SECRET.trim() : ''
+  const effectiveHostSecret = viteHostSecret || hostSecretApplied.trim() || undefined
+
   useEffect(() => {
-    const cleanup = connect('host', 'HOST01', hostVenueCode, hostTableId)
+    const cleanup = connect('host', 'HOST01', hostVenueCode, hostTableId, {
+      hostSecret: effectiveHostSecret,
+    })
     return cleanup
-  }, [hostVenueCode, hostTableId])
+  }, [hostVenueCode, hostTableId, effectiveHostSecret])
 
   useEffect(() => {
     const unsubscribe = onState((newGameState) => {
@@ -325,6 +338,32 @@ function HostApp() {
               <span className="text-casino-gold">{gameState.code}</span>. Trivia wording is synced to tables; numeric answers remain host-only except on reveal/showdown per table.
             </span>
           </div>
+          {!viteHostSecret ? (
+            <form
+              className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm"
+              onSubmit={(e) => {
+                e.preventDefault()
+                setHostSecretApplied(secretDraft)
+              }}
+            >
+              <span className="text-white/60">Host password</span>
+              <input
+                type="password"
+                value={secretDraft}
+                onChange={(e) => setSecretDraft(e.target.value)}
+                placeholder='if SERVER sets HOST_SECRET'
+                className="rounded-lg bg-black/40 border border-white/25 text-white px-3 py-1.5 w-56 max-w-[80vw]"
+                autoComplete="off"
+              />
+              <NeonButton variant="blue" size="small" type="submit">
+                Apply & reconnect
+              </NeonButton>
+            </form>
+          ) : (
+            <p className="mt-3 text-xs text-emerald-200/85">
+              Host auth from <code className="text-white/90">VITE_HOST_SECRET</code> (bundled).
+            </p>
+          )}
         </motion.div>
 
         <Card variant="glass" className="mb-8 p-6">
@@ -336,9 +375,69 @@ function HostApp() {
                 tables get questions when you use Random or To tables.
               </p>
             </div>
-            <NeonButton variant="purple" size="small" type="button" onClick={() => questionBankRestoreSamples()}>
-              Restore starter pack
-            </NeonButton>
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".json,.csv,application/json,text/csv,text/plain"
+                className="hidden"
+                onChange={(e) => {
+                  const input = e.target
+                  const f = input.files?.[0]
+                  input.value = ''
+                  if (!f) return
+                  const reader = new FileReader()
+                  reader.onload = () => {
+                    try {
+                      const txt = String(reader.result ?? '')
+                      const lower = f.name.toLowerCase()
+                      const rows = lower.endsWith('.csv')
+                        ? parseQuestionsCsv(txt)
+                        : parseQuestionsJson(txt)
+                      questionBankImportRows(rows, importReplaceRef.current)
+                    } catch (err) {
+                      const msg = err instanceof Error ? err.message : String(err)
+                      setToastMessage(`Import failed: ${msg}`)
+                      setTimeout(() => setToastMessage(null), 4500)
+                    }
+                  }
+                  reader.readAsText(f)
+                }}
+              />
+              <div className="flex flex-wrap justify-end gap-2">
+                <NeonButton
+                  variant="gold"
+                  size="small"
+                  type="button"
+                  onClick={() => {
+                    importReplaceRef.current = false
+                    importFileRef.current?.click()
+                  }}
+                >
+                  Import append
+                </NeonButton>
+                <NeonButton
+                  variant="red"
+                  size="small"
+                  type="button"
+                  onClick={() => {
+                    importReplaceRef.current = true
+                    importFileRef.current?.click()
+                  }}
+                >
+                  Import replace bank
+                </NeonButton>
+                <NeonButton variant="purple" size="small" type="button" onClick={() => questionBankRestoreSamples()}>
+                  Restore starter pack
+                </NeonButton>
+              </div>
+              <span className="text-[11px] text-white/45 text-right max-w-xs">
+                Saved automatically to <span className="text-white/60">apps/server/data/question-banks.json</span> on the server.
+                CSV: columns <span className="text-white/60">text</span>, <span className="text-white/60">answer</span>; optional{' '}
+                <span className="text-white/60">category</span>, <span className="text-white/60">difficulty</span>. JSON: a top-level array, or any object that has a{' '}
+                <span className="text-white/60">questions</span> array.
+              </span>
+            </div>
           </div>
 
           <form onSubmit={handleSaveBankQuestion} className="mb-6 rounded-xl border border-white/15 bg-black/25 p-4 space-y-3">

@@ -10,7 +10,9 @@ export const ClientHello = z.object({
   role: ClientRole,
   name: z.string(),
   roomCode: z.string(),
-  tableId: z.string().optional()
+  tableId: z.string().optional(),
+  /** Sent by host builds when server.env HOST_SECRET is set */
+  hostSecret: z.string().optional()
 })
 export type ClientHello = z.infer<typeof ClientHello>
 

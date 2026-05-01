@@ -16,3 +16,4 @@ coverage/
 *.tsbuildinfo
 apps/*/node_modules/
 packages/*/node_modules/
+apps/server/data/question-banks.json
