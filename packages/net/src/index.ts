@@ -1,7 +1,7 @@
 ﻿import { z } from 'zod'
-import type { GameState } from '@qhe/core'
+import type { GameState, Question } from '@qhe/core'
 
-export type { GameState }
+export type { GameState, Question }
 
 export const ClientRole = z.enum(['host', 'player', 'display'])
 export type ClientRole = z.infer<typeof ClientRole>
@@ -102,6 +102,8 @@ export interface ServerToClientEvents {
   dealingCards: () => void
   dealingCommunityCards: () => void
   seated: (info: { tableId: string }) => void
+  /** Sent only to sockets in HOST:{venue} — full bank including answers */
+  questionBank: (questions: Question[]) => void
 }
 
 export interface ClientToServerEvents {

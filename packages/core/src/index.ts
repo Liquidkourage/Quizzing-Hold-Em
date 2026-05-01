@@ -204,18 +204,23 @@ export function startGame(state: GameState): GameState {
   return { ...state, phase: 'question' };
 }
 
-export function setQuestion(state: GameState): GameState {
-  const randomQuestion = SAMPLE_QUESTIONS[Math.floor(Math.random() * SAMPLE_QUESTIONS.length)];
-  
+/** Sets the active round question (synced to tables by the server). */
+export function setQuestion(state: GameState, question: Question): GameState {
   return {
     ...state,
-    phase: 'question', // Stay in question phase so players can see the question
+    phase: 'question',
     round: {
       ...state.round,
-      question: randomQuestion,
+      question,
       communityCards: [],
     },
   };
+}
+
+export function pickRandomQuestion(bank: Question[]): Question | undefined {
+  if (bank.length === 0) return undefined
+  const i = Math.floor(Math.random() * bank.length)
+  return bank[i]
 }
 
 /** Hole cards only + blinds; first wagering round (no community yet). */

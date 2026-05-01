@@ -26,16 +26,17 @@ import {
   splitIntoTableSizes,
   shuffle,
   LOBBY_TABLE_ID,
+  pickRandomQuestion,
   playerCheck,
   playerCall,
   playerRaise,
-  playerAllIn
+  playerAllIn,
+  SAMPLE_QUESTIONS,
 } from '@qhe/core'
+import type { Question } from '@qhe/core'
 import type { 
   ClientHello, 
   ServerAck, 
-  StartGameAction,
-  SetQuestionAction,
   DealCardsAction,
   BetAction,
   FoldAction,
@@ -781,6 +782,36 @@ function tableSessionKey(venueCode: string, tableId?: string): string {
 
 const rooms = new Map<string, any>()
 const answerTimers = new Map<string, NodeJS.Timeout>()
+const venueQuestionBanks = new Map<string, Question[]>()
+
+function hostVenueRoom(venueCode: string): string {
+  return `HOST:${normalizeVenueCode(venueCode)}`
+}
+
+function getOrInitQuestionBank(venueCode: string): Question[] {
+  const k = normalizeVenueCode(venueCode)
+  if (!venueQuestionBanks.has(k)) {
+    venueQuestionBanks.set(
+      k,
+      SAMPLE_QUESTIONS.map((q) => ({ ...q }))
+    )
+  }
+  return venueQuestionBanks.get(k)!
+}
+
+function broadcastQuestionBank(venueCode: string) {
+  const bank = getOrInitQuestionBank(venueCode)
+  io.to(hostVenueRoom(venueCode)).emit('questionBank', bank.map((q) => ({ ...q })))
+}
+
+function assertVenueHost(socket: Socket, gs: { hostId: string }): boolean {
+  const role = (socket.data as { role?: string }).role
+  if (role !== 'host' || socket.id !== gs.hostId) {
+    socket.emit('toast', 'Only the venue host can manage questions.')
+    return false
+  }
+  return true
+}
 
 function getActiveSessionKey(socket: Socket): string | undefined {
   const fromData = (socket.data as { sessionKey?: string }).sessionKey
@@ -833,7 +864,13 @@ io.on('connection', (socket) => {
     const tableId = normalizeTableId(data.tableId)
     const sessionKey = tableSessionKey(venueCode, tableId)
     socket.join(sessionKey)
-    ;(socket.data as { sessionKey?: string }).sessionKey = sessionKey
+    const sockData = socket.data as { sessionKey?: string; role?: string }
+    sockData.sessionKey = sessionKey
+    sockData.role = role
+    if (role === 'host') {
+      socket.join(hostVenueRoom(venueCode))
+      socket.emit('questionBank', getOrInitQuestionBank(venueCode).map((q) => ({ ...q })))
+    }
 
     let gameState = rooms.get(sessionKey)
     if (!gameState) {
@@ -902,9 +939,27 @@ io.on('connection', (socket) => {
             socket.emit('toast', 'No playable tables yet — assign the lobby first.')
             break
           }
+          if (!assertVenueHost(socket, gameState)) break
+          const bank = getOrInitQuestionBank(gameState.code)
+          const questionIdRaw = payload?.questionId
+          const questionId = typeof questionIdRaw === 'string' ? questionIdRaw.trim() : ''
+          let picked: Question | undefined
+          if (questionId.length > 0) {
+            picked = bank.find((q) => q.id === questionId)
+            if (!picked) {
+              socket.emit('toast', 'That question is not in your bank.')
+              break
+            }
+          } else {
+            picked = pickRandomQuestion(bank)
+            if (!picked) {
+              socket.emit('toast', 'Question bank is empty — add questions or restore the starter pack.')
+              break
+            }
+          }
           for (const tk of playable) {
             let gs = rooms.get(tk)
-            gs = setQuestion(gs)
+            gs = setQuestion(gs, picked)
             gs = runVirtualPlayerSimulation(gs)
             rooms.set(tk, gs)
             io.to(tk).emit('state', gs)
@@ -1244,6 +1299,116 @@ io.on('connection', (socket) => {
             'toast',
             cleared > 0 ? `Removed ${cleared} virtual seat(s).` : 'No virtual seats to remove.'
           )
+          break
+        }
+
+        case 'questionBankAdd': {
+          if (!assertVenueHost(socket, gameState)) break
+          const bank = getOrInitQuestionBank(gameState.code)
+          const text = String(payload?.text ?? '').trim()
+          const answer = Number(payload?.answer)
+          if (!text || Number.isNaN(answer)) {
+            socket.emit('toast', 'Question text and a numeric answer are required.')
+            break
+          }
+          const id = `qb-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`
+          const catRaw = payload?.category != null ? String(payload.category).trim() : ''
+          const diff = Number(payload?.difficulty)
+          const q: Question = {
+            id,
+            text,
+            answer,
+            category: catRaw.length > 0 ? catRaw : undefined,
+            difficulty: Number.isFinite(diff) && diff >= 1 && diff <= 5 ? diff : undefined,
+          }
+          bank.push(q)
+          venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
+          broadcastQuestionBank(gameState.code)
+          socket.emit('toast', 'Question added.')
+          break
+        }
+
+        case 'questionBankUpdate': {
+          if (!assertVenueHost(socket, gameState)) break
+          const bank = getOrInitQuestionBank(gameState.code)
+          const id = String(payload?.id ?? '').trim()
+          const idx = bank.findIndex((q) => q.id === id)
+          if (idx < 0) {
+            socket.emit('toast', 'Question not found.')
+            break
+          }
+          const prev = bank[idx]
+          const text =
+            typeof payload?.text === 'string' ? payload.text.trim() : prev.text
+          const ans =
+            payload?.answer !== undefined ? Number(payload.answer) : prev.answer
+          if (!text || Number.isNaN(ans)) {
+            socket.emit('toast', 'Invalid text or answer.')
+            break
+          }
+          let cat: string | undefined
+          if (!('category' in (payload ?? {}))) {
+            cat = prev.category
+          } else if (payload?.category === null || payload?.category === '') {
+            cat = undefined
+          } else {
+            const c = typeof payload.category === 'string' ? payload.category.trim() : ''
+            cat = c.length > 0 ? c : undefined
+          }
+          let diff: number | undefined
+          if (!('difficulty' in (payload ?? {}))) {
+            diff = prev.difficulty
+          } else if (payload?.difficulty === null) {
+            diff = undefined
+          } else {
+            const d = Number(payload.difficulty)
+            diff = Number.isFinite(d) && d >= 1 && d <= 5 ? d : undefined
+          }
+          bank[idx] = { ...prev, id: prev.id, text, answer: ans, category: cat, difficulty: diff }
+          venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
+          broadcastQuestionBank(gameState.code)
+          socket.emit('toast', 'Question saved.')
+          break
+        }
+
+        case 'questionBankDelete': {
+          if (!assertVenueHost(socket, gameState)) break
+          const bank = getOrInitQuestionBank(gameState.code)
+          const id = String(payload?.id ?? '').trim()
+          const filtered = bank.filter((q) => q.id !== id)
+          if (filtered.length === bank.length) {
+            socket.emit('toast', 'Question not found.')
+            break
+          }
+          venueQuestionBanks.set(normalizeVenueCode(gameState.code), filtered)
+          broadcastQuestionBank(gameState.code)
+          socket.emit('toast', 'Question removed.')
+          break
+        }
+
+        case 'questionBankMove': {
+          if (!assertVenueHost(socket, gameState)) break
+          const bank = [...getOrInitQuestionBank(gameState.code)]
+          const id = String(payload?.id ?? '').trim()
+          const dir = payload?.direction === 'down' ? 'down' : 'up'
+          const idx = bank.findIndex((q) => q.id === id)
+          if (idx < 0) break
+          const j = dir === 'up' ? idx - 1 : idx + 1
+          if (j < 0 || j >= bank.length) break
+          ;[bank[idx], bank[j]] = [bank[j], bank[idx]]
+          venueQuestionBanks.set(normalizeVenueCode(gameState.code), bank)
+          broadcastQuestionBank(gameState.code)
+          break
+        }
+
+        case 'questionBankResetSamples': {
+          if (!assertVenueHost(socket, gameState)) break
+          venueQuestionBanks.set(
+            normalizeVenueCode(gameState.code),
+            SAMPLE_QUESTIONS.map((q) => ({ ...q }))
+          )
+          broadcastQuestionBank(gameState.code)
+          socket.emit('toast', 'Starter pack restored.')
           break
         }
           

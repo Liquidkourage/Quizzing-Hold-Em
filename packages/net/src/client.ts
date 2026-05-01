@@ -1,7 +1,7 @@
 ﻿/// <reference path="./vite-import-meta.d.ts" />
 
 import { io, Socket } from 'socket.io-client'
-import type { GameState, ClientHello, ServerAck } from './index'
+import type { GameState, Question, ClientHello, ServerAck } from './index'
 
 let socket: Socket | null = null
 
@@ -108,6 +108,15 @@ export function onSeated(callback: (info: { tableId: string }) => void) {
   }
 }
 
+export function onQuestionBank(callback: (questions: Question[]) => void) {
+  if (!socket) return () => {}
+
+  socket.on('questionBank', callback)
+  return () => {
+    if (socket) socket.off('questionBank', callback)
+  }
+}
+
 export function useSocket() {
   return socket
 }
@@ -121,12 +130,58 @@ export function startGame(callback?: (ack: ServerAck) => void) {
   }
 }
 
-export function setQuestion(callback?: (ack: ServerAck) => void) {
+export function setQuestion(callback?: (ack: ServerAck) => void): void
+export function setQuestion(opts: { questionId?: string }, callback?: (ack: ServerAck) => void): void
+export function setQuestion(
+  optsOrCallback?: { questionId?: string } | ((ack: ServerAck) => void),
+  maybeCallback?: (ack: ServerAck) => void
+) {
   if (!socket) return
-  socket.emit('action', { type: 'setQuestion' })
-  if (callback) {
-    socket.once('ack', callback)
+  let payload: Record<string, unknown> = {}
+  let cb = maybeCallback
+  if (typeof optsOrCallback === 'function') {
+    cb = optsOrCallback
+  } else if (optsOrCallback?.questionId != null && optsOrCallback.questionId !== '') {
+    payload = { questionId: optsOrCallback.questionId }
   }
+  socket.emit('action', { type: 'setQuestion', payload })
+  if (cb) socket.once('ack', cb)
+}
+
+export function questionBankAdd(payload: {
+  text: string
+  answer: number
+  category?: string
+  difficulty?: number
+}) {
+  if (!socket) return
+  socket.emit('action', { type: 'questionBankAdd', payload })
+}
+
+export function questionBankUpdate(payload: {
+  id: string
+  text?: string
+  answer?: number
+  category?: string | null
+  difficulty?: number | null
+}) {
+  if (!socket) return
+  socket.emit('action', { type: 'questionBankUpdate', payload })
+}
+
+export function questionBankDelete(id: string) {
+  if (!socket) return
+  socket.emit('action', { type: 'questionBankDelete', payload: { id } })
+}
+
+export function questionBankMove(id: string, direction: 'up' | 'down') {
+  if (!socket) return
+  socket.emit('action', { type: 'questionBankMove', payload: { id, direction } })
+}
+
+export function questionBankRestoreSamples() {
+  if (!socket) return
+  socket.emit('action', { type: 'questionBankResetSamples' })
 }
 
 export function dealCards(type: 'initial' | 'community', callback?: (ack: ServerAck) => void) {

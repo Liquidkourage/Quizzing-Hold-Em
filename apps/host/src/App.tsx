@@ -1,8 +1,27 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useState, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, NeonButton, JackpotDisplay, PokerChip } from '@qhe/ui'
-import { connect, onState, onToast, useSocket, startAnswering, adminAdvanceTurn, adminCloseBetting, adminSetBlinds, addVirtualPlayers, clearVirtualPlayers, assignTablesFromLobby } from '@qhe/net'
-import type { GameState } from '@qhe/core'
+import {
+  connect,
+  onState,
+  onToast,
+  onQuestionBank,
+  useSocket,
+  startAnswering,
+  adminAdvanceTurn,
+  adminCloseBetting,
+  adminSetBlinds,
+  addVirtualPlayers,
+  clearVirtualPlayers,
+  assignTablesFromLobby,
+  setQuestion as pushQuestionToVenue,
+  questionBankAdd,
+  questionBankUpdate,
+  questionBankDelete,
+  questionBankMove,
+  questionBankRestoreSamples,
+} from '@qhe/net'
+import type { GameState, Question } from '@qhe/core'
 import { LOBBY_TABLE_ID } from '@qhe/core'
 
 function HostApp() {
@@ -16,6 +35,13 @@ function HostApp() {
       : LOBBY_TABLE_ID
   )
   const socket = useSocket()
+
+  const [questionBank, setQuestionBank] = useState<Question[]>([])
+  const [qbText, setQbText] = useState('')
+  const [qbAnswer, setQbAnswer] = useState('')
+  const [qbCategory, setQbCategory] = useState('')
+  const [qbDifficulty, setQbDifficulty] = useState('')
+  const [editingBankId, setEditingBankId] = useState<string | null>(null)
 
   useEffect(() => {
     const cleanup = connect('host', 'HOST01', hostVenueCode, hostTableId)
@@ -48,16 +74,71 @@ function HostApp() {
     return unsubscribe
   }, [])
 
+  useEffect(() => {
+    const off = onQuestionBank((questions) => setQuestionBank(questions))
+    return off
+  }, [])
+
   const handleStartGame = () => {
     if (socket) {
       socket.emit('action', { type: 'startGame' })
     }
   }
 
-  const handleSetQuestion = () => {
-    if (socket) {
-      socket.emit('action', { type: 'setQuestion' })
+  const handleSetRandomQuestion = () => {
+    pushQuestionToVenue()
+  }
+
+  const handlePushBankQuestion = (questionId: string) => {
+    pushQuestionToVenue({ questionId })
+  }
+
+  function resetQuestionDraft() {
+    setQbText('')
+    setQbAnswer('')
+    setQbCategory('')
+    setQbDifficulty('')
+    setEditingBankId(null)
+  }
+
+  function handleSaveBankQuestion(e: FormEvent) {
+    e.preventDefault()
+    const ans = Number(qbAnswer)
+    if (!qbText.trim() || Number.isNaN(ans)) return
+    const dt = qbDifficulty.trim()
+    const normalizedDiff =
+      dt === ''
+        ? null
+        : (() => {
+            const d = Number(dt)
+            return !Number.isNaN(d) && d >= 1 && d <= 5 ? d : null
+          })()
+
+    if (editingBankId) {
+      questionBankUpdate({
+        id: editingBankId,
+        text: qbText.trim(),
+        answer: ans,
+        category: qbCategory.trim() === '' ? null : qbCategory.trim(),
+        difficulty: dt === '' ? null : normalizedDiff,
+      })
+    } else {
+      questionBankAdd({
+        text: qbText.trim(),
+        answer: ans,
+        category: qbCategory.trim() || undefined,
+        ...(normalizedDiff != null ? { difficulty: normalizedDiff } : {}),
+      })
     }
+    resetQuestionDraft()
+  }
+
+  function startEditBankQuestion(q: Question) {
+    setEditingBankId(q.id)
+    setQbText(q.text)
+    setQbAnswer(String(q.answer))
+    setQbCategory(q.category ?? '')
+    setQbDifficulty(q.difficulty != null ? String(q.difficulty) : '')
   }
 
   const handleDealInitialCards = () => {
@@ -148,7 +229,7 @@ function HostApp() {
   const triviaOptionalNote =
     !dealInitialBlocked && !gameState.round?.question ? (
       <p className="-mt-2 text-xs text-amber-200/80">
-        No trivia loaded yet—you can still deal to enter betting (use <strong>Set Question</strong> for a real quiz).
+        No trivia loaded yet—you can still deal to enter betting (use <strong>Random from bank</strong> or <strong>To tables</strong> in the Question bank).
       </p>
     ) : null
 
@@ -240,12 +321,165 @@ function HostApp() {
               </select>
             </label>
             <span className="text-white/55 max-w-md">
-              <strong className="text-white">Venue-wide sync:</strong> question, blinds, dealing, timers, betting close/end/reveal/new game apply to every table active for{' '}
-              <span className="text-casino-gold">{gameState.code}</span>. Each table still has its own seats, chips, cards, and pot. Pick a preset id (or add named ids later — server accepts A–Z, 0–9, _ and - ).{' '}
-              <strong>Force next player</strong> only affects your bound table — use it sparingly mid-sync.
+              <strong className="text-white">Venue-wide sync:</strong> live question, blinds, dealing, timers, and round flow apply to every table under{' '}
+              <span className="text-casino-gold">{gameState.code}</span>. Trivia wording is synced to tables; numeric answers remain host-only except on reveal/showdown per table.
             </span>
           </div>
         </motion.div>
+
+        <Card variant="glass" className="mb-8 p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-casino-emerald">Question bank</h2>
+              <p className="text-sm text-white/65 mt-1 max-w-2xl">
+                Ordered list for venue <strong className="text-white/90">{gameState.code}</strong>. Only you receive answers in this grid —{' '}
+                tables get questions when you use Random or To tables.
+              </p>
+            </div>
+            <NeonButton variant="purple" size="small" type="button" onClick={() => questionBankRestoreSamples()}>
+              Restore starter pack
+            </NeonButton>
+          </div>
+
+          <form onSubmit={handleSaveBankQuestion} className="mb-6 rounded-xl border border-white/15 bg-black/25 p-4 space-y-3">
+            <div className="text-sm font-bold text-white/90">{editingBankId ? 'Edit question' : 'Add question'}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label className="block md:col-span-2 text-sm text-white/80">
+                Prompt
+                <textarea
+                  value={qbText}
+                  onChange={e => setQbText(e.target.value)}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
+                  placeholder="Trivia prompt with a numeric correct answer…"
+                />
+              </label>
+              <label className="block text-sm text-white/80">
+                Correct answer (number)
+                <input
+                  type="number"
+                  value={qbAnswer}
+                  onChange={e => setQbAnswer(e.target.value)}
+                  step="any"
+                  className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
+                />
+              </label>
+              <label className="block text-sm text-white/80">
+                Category (optional)
+                <input
+                  type="text"
+                  value={qbCategory}
+                  onChange={e => setQbCategory(e.target.value)}
+                  className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
+                />
+              </label>
+              <label className="block text-sm text-white/80 md:col-span-2">
+                Difficulty (1–5, optional)
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={qbDifficulty}
+                  onChange={e => setQbDifficulty(e.target.value)}
+                  placeholder="blank"
+                  className="mt-1 w-full max-w-[200px] rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
+                />
+              </label>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <NeonButton variant="emerald" size="small" type="submit">
+                {editingBankId ? 'Save changes' : 'Add to bank'}
+              </NeonButton>
+              {editingBankId ? (
+                <NeonButton variant="purple" size="small" type="button" onClick={() => resetQuestionDraft()}>
+                  Cancel edit
+                </NeonButton>
+              ) : null}
+            </div>
+          </form>
+
+          <div className="overflow-x-auto max-h-[min(480px,50vh)] overflow-y-auto rounded-lg border border-white/15">
+            <table className="min-w-full text-left text-sm text-white/90">
+              <thead className="sticky top-0 bg-gray-950/95 z-10 text-white/60">
+                <tr>
+                  <th className="py-2 px-3 w-12">#</th>
+                  <th className="py-2 px-3">Question</th>
+                  <th className="py-2 px-3">Answer</th>
+                  <th className="py-2 px-3">Cat</th>
+                  <th className="py-2 px-3 w-10">Lv</th>
+                  <th className="py-2 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {questionBank.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 px-3 text-center text-white/50">
+                      Bank is empty — add questions or restore the starter pack.
+                    </td>
+                  </tr>
+                ) : (
+                  questionBank.map((q, i) => (
+                    <tr
+                      key={q.id}
+                      className={`border-t border-white/10 ${
+                        gameState.round.question?.id === q.id ? 'bg-emerald-500/10' : ''
+                      }`}
+                    >
+                      <td className="py-2 px-3 tabular-nums text-white/70">{i + 1}</td>
+                      <td className="py-2 px-3 align-top max-w-md">{q.text}</td>
+                      <td className="py-2 px-3 align-top whitespace-nowrap text-casino-gold">{q.answer}</td>
+                      <td className="py-2 px-3 align-top text-white/60">{q.category ?? '—'}</td>
+                      <td className="py-2 px-3 align-top text-white/60">{q.difficulty ?? '—'}</td>
+                      <td className="py-2 px-3 align-top text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          className="text-white/65 hover:text-white mr-1 disabled:opacity-30"
+                          disabled={i === 0}
+                          onClick={() => questionBankMove(q.id, 'up')}
+                          title="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className="text-white/65 hover:text-white mr-2 disabled:opacity-30"
+                          disabled={i === questionBank.length - 1}
+                          onClick={() => questionBankMove(q.id, 'down')}
+                          title="Move down"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          className="text-casino-emerald hover:underline mr-2 text-xs uppercase font-bold"
+                          onClick={() => handlePushBankQuestion(q.id)}
+                        >
+                          To tables
+                        </button>
+                        <button
+                          type="button"
+                          className="text-white/65 hover:text-white mr-2 text-xs"
+                          onClick={() => startEditBankQuestion(q)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="text-red-400/90 hover:text-red-300 text-xs"
+                          onClick={() => {
+                            if (confirm('Remove this question from the bank?')) questionBankDelete(q.id)
+                          }}
+                        >
+                          Del
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Game Controls */}
@@ -258,7 +492,7 @@ function HostApp() {
                   Players join venue with <strong>auto-assign</strong> (lobby) or pick a numbered table manually. Use{' '}
                   <strong className="text-casino-gold">Assign from lobby</strong> once everyone is pooled — seats are randomized and sized from headcount.
                 </li>
-                <li><strong>Start Game</strong> → <strong>Set Question</strong> → <strong>Deal Initial Cards</strong> (hole cards only)</li>
+                <li><strong>Start Game</strong> → <strong>Random from bank</strong> or <strong>To tables</strong> on a row → <strong>Deal Initial Cards</strong> (hole cards only)</li>
                 <li><strong>Wagering round 1:</strong> when ready → <strong>Close Betting</strong></li>
                 <li><strong>Deal Community Cards</strong> (full five-card board) → <strong>Wagering round 2</strong></li>
                 <li><strong>Close Betting</strong> again → <strong>Start Answering (45s)</strong> → <strong>Reveal Answer</strong> if needed</li>
@@ -297,12 +531,15 @@ function HostApp() {
               <NeonButton
                 variant="purple"
                 size="large"
-                onClick={handleSetQuestion}
+                onClick={handleSetRandomQuestion}
                 disabled={gameState.phase !== 'lobby' && gameState.phase !== 'question'}
                 className="w-full"
               >
-                Set Question
+                Random from bank
               </NeonButton>
+              <p className="-mt-2 text-xs text-white/50">
+                Or pick <strong className="text-white/70">To tables</strong> on a question in the bank for a chosen card.
+              </p>
 
               <NeonButton
                 variant="blue"
