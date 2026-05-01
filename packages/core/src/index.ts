@@ -54,6 +54,39 @@ export interface GameState {
 
 export const DIGITS: ReadonlyArray<0|1|2|3|4|5|6|7|8|9> = Object.freeze([0,1,2,3,4,5,6,7,8,9]);
 
+/** Sentinel table id — everyone joins here for auto-seating; host runs assign to split into numbered tables. */
+export const LOBBY_TABLE_ID = 'LOBBY' as const;
+
+/**
+ * Chooses how many tables to use for N players given per-table min/max.
+ * - At least ceil(N/max) so no table exceeds capacity.
+ * - At most floor(N/min) so each table can satisfy min roster (when possible).
+ * - Prefers roughly ~6 per table (capped by max) for balance.
+ */
+export function computeOptimalTableCount(numPlayers: number, maxPerTable: number, minPerTable: number): number {
+  if (numPlayers <= 0) return 1;
+  const maxPt = Math.max(1, maxPerTable);
+  const minPt = Math.max(1, minPerTable);
+  const tLow = Math.max(1, Math.ceil(numPlayers / maxPt));
+  const tHigh = Math.max(tLow, Math.floor(numPlayers / minPt));
+  const target = Math.min(6, maxPt);
+  const ideal = Math.max(tLow, Math.round(numPlayers / target));
+  return Math.min(tHigh, Math.max(tLow, ideal));
+}
+
+/** Near-equal split, e.g. 11 → [6,5] for 2 tables. */
+export function splitIntoTableSizes(totalPlayers: number, tableCount: number): number[] {
+  const t = Math.max(1, Math.floor(tableCount));
+  if (totalPlayers <= 0) return Array(t).fill(0);
+  const base = Math.floor(totalPlayers / t);
+  const rem = totalPlayers % t;
+  const sizes: number[] = [];
+  for (let i = 0; i < t; i++) {
+    sizes.push(base + (i < rem ? 1 : 0));
+  }
+  return sizes;
+}
+
 export function compareHandsToAnswer(candidateNumbers: number[], correctAnswer: number): number {
   if (candidateNumbers.length === 0) return Infinity;
   let best = Infinity;

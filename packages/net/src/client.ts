@@ -99,6 +99,15 @@ export function onDealingCommunityCards(callback: () => void) {
   }
 }
 
+export function onSeated(callback: (info: { tableId: string }) => void) {
+  if (!socket) return () => {}
+
+  socket.on('seated', callback)
+  return () => {
+    if (socket) socket.off('seated', callback)
+  }
+}
+
 export function useSocket() {
   return socket
 }
@@ -246,6 +255,11 @@ export function adminSetBlinds(smallBlind: number, bigBlind: number, callback?: 
   if (!socket) return
   socket.emit('action', { type: 'adminSetBlinds', payload: { smallBlind, bigBlind } })
   if (callback) socket.once('ack', callback)
+}
+
+export function assignTablesFromLobby() {
+  if (!socket) return
+  socket.emit('action', { type: 'assignTablesFromLobby' })
 }
 
 /** Host-only: add CPU seats tracked as `vp:*` player ids (server autopilots betting and answers). */

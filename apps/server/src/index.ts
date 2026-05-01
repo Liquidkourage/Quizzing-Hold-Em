@@ -1,12 +1,12 @@
 ﻿import express from 'express'
 import { createServer } from 'http'
-import { Server } from 'socket.io'
+import { Server, Socket } from 'socket.io'
 import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { 
-  createEmptyGame, 
-  addPlayer, 
+import {
+  createEmptyGame,
+  addPlayer,
   removePlayer,
   startGame,
   setQuestion,
@@ -21,7 +21,15 @@ import {
   endRound,
   adminCloseBetting,
   adminAdvanceTurn,
-  adminSetBlinds
+  adminSetBlinds,
+  computeOptimalTableCount,
+  splitIntoTableSizes,
+  shuffle,
+  LOBBY_TABLE_ID,
+  playerCheck,
+  playerCall,
+  playerRaise,
+  playerAllIn
 } from '@qhe/core'
 import type { 
   ClientHello, 
@@ -44,7 +52,6 @@ import type {
   AdminAdvanceTurnAction,
   AdminSetBlindsAction
 } from '@qhe/net'
-import { playerCheck, playerCall, playerRaise, playerAllIn } from '@qhe/core'
 import {
   addVirtualPlayers as spawnVirtualPlayers,
   removeAllVirtualPlayers,
@@ -775,14 +782,30 @@ function tableSessionKey(venueCode: string, tableId?: string): string {
 const rooms = new Map<string, any>()
 const answerTimers = new Map<string, NodeJS.Timeout>()
 
+function getActiveSessionKey(socket: Socket): string | undefined {
+  const fromData = (socket.data as { sessionKey?: string }).sessionKey
+  if (typeof fromData === 'string' && fromData.length > 0) return fromData
+  const ids = Array.from(socket.rooms)
+  return ids.length > 1 ? ids[1] : undefined
+}
+
 /** Socket map keys belonging to every table in one venue (`VENUE:tableId`). */
 function venueSessionKeyPrefix(venueCode: string): string {
   return `${normalizeVenueCode(venueCode)}:`
 }
 
-function allTableSessionsInVenue(venueCode: string): string[] {
+function isLobbySessionKey(sessionKey: string): boolean {
+  return sessionKey.endsWith(`:${LOBBY_TABLE_ID}`)
+}
+
+function allVenueSessionKeys(venueCode: string): string[] {
   const pref = venueSessionKeyPrefix(venueCode)
   return [...rooms.keys()].filter(k => k.startsWith(pref)).sort()
+}
+
+/** Playable tables only (excludes lobby pool). */
+function allTableSessionsInVenue(venueCode: string): string[] {
+  return allVenueSessionKeys(venueCode).filter(k => !isLobbySessionKey(k))
 }
 
 /** Host controls that apply everywhere in the venue — rosters/hand/pot stay separate per session key. */
@@ -796,7 +819,8 @@ const VENUE_SYNC_ACTION_TYPES = new Set<string>([
   'endRound',
   'newGame',
   'adminSetBlinds',
-  'adminCloseBetting'
+  'adminCloseBetting',
+  'assignTablesFromLobby'
 ])
 
 io.on('connection', (socket) => {
@@ -809,6 +833,7 @@ io.on('connection', (socket) => {
     const tableId = normalizeTableId(data.tableId)
     const sessionKey = tableSessionKey(venueCode, tableId)
     socket.join(sessionKey)
+    ;(socket.data as { sessionKey?: string }).sessionKey = sessionKey
 
     let gameState = rooms.get(sessionKey)
     if (!gameState) {
@@ -835,7 +860,7 @@ io.on('connection', (socket) => {
 
   socket.on('action', (data: any) => {
     const { type, payload } = data
-    const sessionKey = Array.from(socket.rooms)[1] // venue:table (after socket.id)
+    const sessionKey = getActiveSessionKey(socket)
     
     if (!sessionKey) {
       socket.emit('toast', 'No room found')
@@ -851,7 +876,15 @@ io.on('connection', (socket) => {
     try {
       switch (type) {
         case 'startGame': {
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit(
+              'toast',
+              'No numbered tables yet. Seat the lobby first (Assign from lobby), then start the game.'
+            )
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = startGame(gs)
             gs = runVirtualPlayerSimulation(gs)
@@ -864,7 +897,12 @@ io.on('connection', (socket) => {
         }
 
         case 'setQuestion': {
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = setQuestion(gs)
             gs = runVirtualPlayerSimulation(gs)
@@ -877,7 +915,12 @@ io.on('connection', (socket) => {
         }
 
         case 'dealInitialCards': {
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = dealInitialCards(gs)
             gs = runVirtualPlayerSimulation(gs)
@@ -891,8 +934,13 @@ io.on('connection', (socket) => {
         }
 
         case 'dealCommunityCards': {
+          const playable = allTableSessionsInVenue(gameState.code)
           let anyDealt = false
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             const communityBefore = gs.round.communityCards.length
             gs = dealCommunityCards(gs)
@@ -926,7 +974,12 @@ io.on('connection', (socket) => {
           }
           const deadlineMs2 = Date.now() + 45_000
           let count = 0
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             if (gs.phase !== 'betting' || gs.round.isBettingOpen || (gs.round.communityCards?.length ?? 0) < 5) {
               continue
@@ -985,7 +1038,12 @@ io.on('connection', (socket) => {
           io.to(sessionKey).emit('toast', `All-in!`)
           break
         case 'adminCloseBetting': {
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet.')
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = adminCloseBetting(gs)
             gs = runVirtualPlayerSimulation(gs)
@@ -1004,7 +1062,7 @@ io.on('connection', (socket) => {
           const { smallBlind, bigBlind } = payload as any
           const sb = Number(smallBlind)
           const bb = Number(bigBlind)
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          for (const tk of allVenueSessionKeys(gameState.code)) {
             let gs = rooms.get(tk)
             gs = adminSetBlinds(gs, sb, bb)
             rooms.set(tk, gs)
@@ -1038,7 +1096,12 @@ io.on('connection', (socket) => {
           break
           
         case 'revealAnswer': {
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet.')
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = revealAnswer(gs)
             rooms.set(tk, gs)
@@ -1050,7 +1113,12 @@ io.on('connection', (socket) => {
         }
 
         case 'endRound': {
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          const playable = allTableSessionsInVenue(gameState.code)
+          if (playable.length === 0) {
+            socket.emit('toast', 'No playable tables yet.')
+            break
+          }
+          for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = endRound(gs)
             rooms.set(tk, gs)
@@ -1062,14 +1130,94 @@ io.on('connection', (socket) => {
         }
 
         case 'newGame': {
-          for (const tk of allTableSessionsInVenue(gameState.code)) {
+          for (const tk of allVenueSessionKeys(gameState.code)) {
             const prev = rooms.get(tk)
             const fresh = createEmptyGame(prev.code, prev.hostId, prev.tableId)
             rooms.set(tk, fresh)
             io.to(tk).emit('state', fresh)
           }
-          socket.emit('toast', 'New game — all roster slots cleared venue-wide.')
+          socket.emit('toast', 'New game — lobby and all tables reset.')
           gameState = rooms.get(sessionKey)!
+          break
+        }
+
+        case 'assignTablesFromLobby': {
+          if (!isLobbySessionKey(sessionKey)) {
+            socket.emit(
+              'toast',
+              'Run “Assign” from the lobby session only (join host as table LOBBY).'
+            )
+            break
+          }
+          if (socket.id !== gameState.hostId) {
+            socket.emit('toast', 'Only the host can assign tables.')
+            break
+          }
+          if (gameState.phase !== 'lobby') {
+            socket.emit('toast', 'Assign only while still in lobby phase.')
+            break
+          }
+          const lobbyKey = sessionKey
+          const lobbyGs = rooms.get(lobbyKey)
+          const roster = [...lobbyGs.players]
+          if (roster.length === 0) {
+            socket.emit('toast', 'No players in the lobby.')
+            break
+          }
+          const hostIdSnap = lobbyGs.hostId
+          const N = roster.length
+          const tableCount = computeOptimalTableCount(N, lobbyGs.maxPlayers, lobbyGs.minPlayers)
+          const sizes = splitIntoTableSizes(N, tableCount)
+          const shuffled = shuffle(roster)
+          let offset = 0
+          for (let ti = 0; ti < tableCount; ti++) {
+            const slice = shuffled.slice(offset, offset + sizes[ti])
+            offset += sizes[ti]
+            const tid = String(ti + 1)
+            const tk = tableSessionKey(lobbyGs.code, tid)
+            let gsNew = createEmptyGame(lobbyGs.code, hostIdSnap, tid)
+            gsNew = {
+              ...gsNew,
+              smallBlind: lobbyGs.smallBlind,
+              bigBlind: lobbyGs.bigBlind,
+              players: slice,
+            }
+            gsNew = runVirtualPlayerSimulation(gsNew)
+            rooms.set(tk, gsNew)
+            for (const p of slice) {
+              if (p.id.startsWith('vp:')) continue
+              const sock = io.sockets.sockets.get(p.id)
+              if (sock) {
+                sock.leave(lobbyKey)
+                sock.join(tk)
+                ;(sock.data as { sessionKey?: string }).sessionKey = tk
+                sock.emit('seated', { tableId: tid })
+              }
+            }
+            io.to(tk).emit('state', gsNew)
+          }
+
+          const emptyLobby = {
+            ...createEmptyGame(normalizeVenueCode(lobbyGs.code), hostIdSnap, LOBBY_TABLE_ID),
+            smallBlind: lobbyGs.smallBlind,
+            bigBlind: lobbyGs.bigBlind,
+          }
+          rooms.set(lobbyKey, emptyLobby)
+          io.to(lobbyKey).emit('state', emptyLobby)
+
+          const t1Key = tableSessionKey(lobbyGs.code, '1')
+          const hostSock = io.sockets.sockets.get(hostIdSnap)
+          if (hostSock) {
+            hostSock.leave(lobbyKey)
+            hostSock.join(t1Key)
+            ;(hostSock.data as { sessionKey?: string }).sessionKey = t1Key
+          }
+
+          socket.emit(
+            'toast',
+            `Seated ${N} players randomly across ${tableCount} tables (${sizes.join(', ')}). You are now on table 1.`
+          )
+          gameState = rooms.get(t1Key)!
           break
         }
 

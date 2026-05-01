@@ -1,8 +1,9 @@
 ﻿import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, NeonButton, JackpotDisplay, PokerChip } from '@qhe/ui'
-import { connect, onState, onToast, useSocket, startAnswering, adminAdvanceTurn, adminCloseBetting, adminSetBlinds, addVirtualPlayers, clearVirtualPlayers } from '@qhe/net'
+import { connect, onState, onToast, useSocket, startAnswering, adminAdvanceTurn, adminCloseBetting, adminSetBlinds, addVirtualPlayers, clearVirtualPlayers, assignTablesFromLobby } from '@qhe/net'
 import type { GameState } from '@qhe/core'
+import { LOBBY_TABLE_ID } from '@qhe/core'
 
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
@@ -10,7 +11,9 @@ function HostApp() {
   const [virtualAddCount, setVirtualAddCount] = useState(2)
   const [hostVenueCode] = useState('HOST01')
   const [hostTableId, setHostTableId] = useState(() =>
-    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('table') ?? '1' : '1'
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('table') ?? LOBBY_TABLE_ID
+      : LOBBY_TABLE_ID
   )
   const socket = useSocket()
 
@@ -229,9 +232,9 @@ function HostApp() {
                 onChange={e => setHostTableId(e.target.value)}
                 className="rounded-lg bg-black/40 border border-white/25 text-white px-3 py-2"
               >
-                {['1', '2', '3', '4', '5', '6', '7', '8'].map(t => (
-                  <option key={t} value={t}>
-                    Table {t}
+                {[LOBBY_TABLE_ID, '1', '2', '3', '4', '5', '6', '7', '8'].map(v => (
+                  <option key={v} value={v}>
+                    {v === LOBBY_TABLE_ID ? 'Lobby (pool — auto-assign)' : `Table ${v}`}
                   </option>
                 ))}
               </select>
@@ -251,7 +254,10 @@ function HostApp() {
             <div className="mb-6 rounded-lg border border-casino-emerald/30 bg-black/20 p-4 text-left text-sm text-white/90">
               <div className="mb-2 font-bold text-casino-emerald">PoC — one full round</div>
               <ol className="list-decimal list-inside space-y-1.5">
-                <li>Players open <strong className="text-white">/player</strong>, enter name + room <strong className="text-casino-gold">{gameState.code}</strong> and matching <strong className="text-casino-gold">table number</strong></li>
+                <li>
+                  Players join venue with <strong>auto-assign</strong> (lobby) or pick a numbered table manually. Use{' '}
+                  <strong className="text-casino-gold">Assign from lobby</strong> once everyone is pooled — seats are randomized and sized from headcount.
+                </li>
                 <li><strong>Start Game</strong> → <strong>Set Question</strong> → <strong>Deal Initial Cards</strong> (hole cards only)</li>
                 <li><strong>Wagering round 1:</strong> when ready → <strong>Close Betting</strong></li>
                 <li><strong>Deal Community Cards</strong> (full five-card board) → <strong>Wagering round 2</strong></li>
@@ -270,6 +276,23 @@ function HostApp() {
               >
                 Start Game
               </NeonButton>
+
+              <NeonButton
+                variant="blue"
+                size="large"
+                onClick={() => assignTablesFromLobby()}
+                disabled={
+                  gameState.phase !== 'lobby' ||
+                  (gameState.tableId ?? '') !== LOBBY_TABLE_ID ||
+                  gameState.players.length === 0
+                }
+                className="w-full"
+              >
+                Assign from lobby (random seats)
+              </NeonButton>
+              {gameState.phase === 'lobby' && (gameState.tableId ?? '') === LOBBY_TABLE_ID && gameState.players.length === 0 ? (
+                <p className="-mt-2 text-xs text-white/55">Waiting for players to join the lobby…</p>
+              ) : null}
 
               <NeonButton
                 variant="purple"

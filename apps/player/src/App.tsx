@@ -1,8 +1,9 @@
 ﻿import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { connect, onState, onToast, fold, submitAnswer, check as checkAction, callBet as callAction, raiseBet as raiseAction, allIn as allInAction, useSocket } from '@qhe/net'
+import { connect, onState, onToast, fold, submitAnswer, check as checkAction, callBet as callAction, raiseBet as raiseAction, allIn as allInAction, useSocket, onSeated } from '@qhe/net'
 import { Card, NeonButton, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
+import { LOBBY_TABLE_ID } from '@qhe/core'
 
 // Types for answer composition
 interface ComposedAnswer {
@@ -15,8 +16,14 @@ function PlayerApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [playerName, setPlayerName] = useState('')
   const [roomCode, setRoomCode] = useState('')
+  /** When true (default), join venue lobby for random balancing; when false, use `tableId` manually. */
+  const [autoSeat, setAutoSeat] = useState(() =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('manual') !== 'true' : true
+  )
   const [tableId, setTableId] = useState(() =>
-    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('table') ?? '1' : '1'
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('table') ?? '1'
+      : '1'
   )
   const [isJoined, setIsJoined] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -27,9 +34,12 @@ function PlayerApp() {
   const [selectedCards, setSelectedCards] = useState<Array<{type: 'hand' | 'community', index: number}>>([])
   const socket = useSocket()
 
+  const joinTableId = autoSeat ? LOBBY_TABLE_ID : String(tableId || '').trim() || '1'
+
   const handleJoin = () => {
-    if (!playerName || !roomCode || !String(tableId || '').trim()) return
-    connect('player', playerName, roomCode, String(tableId).trim() || '1')
+    if (!playerName || !roomCode) return
+    if (!autoSeat && !String(tableId || '').trim()) return
+    connect('player', playerName, roomCode, joinTableId)
     setIsJoined(true)
 
     return undefined
@@ -42,10 +52,15 @@ function PlayerApp() {
         setToastMessage(message)
         setTimeout(() => setToastMessage(null), 3000)
       })
-      
+      const unsubscribeSeated = onSeated(({ tableId: tid }) => {
+        setToastMessage(`You're at table ${tid}`)
+        setTimeout(() => setToastMessage(null), 4000)
+      })
+
       return () => {
         unsubscribeState()
         unsubscribeToast()
+        unsubscribeSeated()
       }
     }
   }, [isJoined])
@@ -202,19 +217,30 @@ function PlayerApp() {
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                   className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:border-casino-emerald focus:outline-none"
                 />
-                <input
-                  type="text"
-                  placeholder="Table (same as host)"
-                  value={tableId}
-                  onChange={(e) => setTableId(e.target.value)}
-                  className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:border-casino-emerald focus:outline-none"
-                />
+                <label className="flex items-start gap-3 cursor-pointer text-left text-sm text-white/90">
+                  <input
+                    type="checkbox"
+                    checked={autoSeat}
+                    onChange={e => setAutoSeat(e.target.checked)}
+                    className="mt-1 rounded border-white/30"
+                  />
+                  <span>Join lobby — host auto-assigns my table randomly when the round starts.</span>
+                </label>
+                {!autoSeat && (
+                  <input
+                    type="text"
+                    placeholder="Table id (same as host, e.g. 1)"
+                    value={tableId}
+                    onChange={(e) => setTableId(e.target.value)}
+                    className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:border-casino-emerald focus:outline-none"
+                  />
+                )}
                 <NeonButton 
                   variant="emerald"
                   size="large"
                   className="w-full" 
                   onClick={handleJoin}
-                  disabled={!playerName || !roomCode || !String(tableId || '').trim()}
+                  disabled={!playerName || !roomCode || (!autoSeat && !String(tableId || '').trim())}
                 >
                   Join Game
                 </NeonButton>
@@ -330,6 +356,12 @@ function PlayerApp() {
             )}
           </div>
         </motion.div>
+
+        {(gameState.tableId ?? '') === LOBBY_TABLE_ID && gameState.phase === 'lobby' && (
+          <div className="mb-6 mx-auto max-w-xl rounded-xl border border-amber-400/50 bg-amber-950/35 px-4 py-3 text-center text-sm text-amber-100">
+            Lobby pool — the host will randomly assign you to a table when they tap <strong>Assign from lobby</strong>.
+          </div>
+        )}
 
         {/* Game Info Section */}
         <Card variant="glass" className="mb-8 p-8">

@@ -101,6 +101,7 @@ export interface ServerToClientEvents {
   ack: (ack: ServerAck) => void
   dealingCards: () => void
   dealingCommunityCards: () => void
+  seated: (info: { tableId: string }) => void
 }
 
 export interface ClientToServerEvents {
