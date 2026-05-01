@@ -775,6 +775,30 @@ function tableSessionKey(venueCode: string, tableId?: string): string {
 const rooms = new Map<string, any>()
 const answerTimers = new Map<string, NodeJS.Timeout>()
 
+/** Socket map keys belonging to every table in one venue (`VENUE:tableId`). */
+function venueSessionKeyPrefix(venueCode: string): string {
+  return `${normalizeVenueCode(venueCode)}:`
+}
+
+function allTableSessionsInVenue(venueCode: string): string[] {
+  const pref = venueSessionKeyPrefix(venueCode)
+  return [...rooms.keys()].filter(k => k.startsWith(pref)).sort()
+}
+
+/** Host controls that apply everywhere in the venue — rosters/hand/pot stay separate per session key. */
+const VENUE_SYNC_ACTION_TYPES = new Set<string>([
+  'startGame',
+  'setQuestion',
+  'dealInitialCards',
+  'dealCommunityCards',
+  'startAnswering',
+  'revealAnswer',
+  'endRound',
+  'newGame',
+  'adminSetBlinds',
+  'adminCloseBetting'
+])
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
 
@@ -826,54 +850,72 @@ io.on('connection', (socket) => {
 
     try {
       switch (type) {
-        case 'startGame':
-          gameState = startGame(gameState)
-          io.to(sessionKey).emit('toast', 'Game started!')
-          break
-          
-        case 'setQuestion':
-          console.log('🎰 Server: Received setQuestion action')
-          gameState = setQuestion(gameState)
-          console.log('🎰 Server: Question set:', gameState.round.question)
-          console.log('🎰 Server: New phase:', gameState.phase)
-          
-          // Update the room state and emit to all clients
-          gameState = runVirtualPlayerSimulation(gameState)
-          rooms.set(sessionKey, gameState)
-          io.to(sessionKey).emit('state', gameState)
-          io.to(sessionKey).emit('toast', 'Question set!')
-          break
-          
-        case 'dealInitialCards':
-          console.log('🎰 Server: Received dealInitialCards action')
-          gameState = dealInitialCards(gameState)
-          console.log('🎰 Server: Initial cards dealt, new phase:', gameState.phase)
-          console.log('🎰 Server: Players with cards:', gameState.players.map(p => ({ name: p.name, cards: p.hand.length })))
-          io.to(sessionKey).emit('dealingCards') // Trigger dealing animation
-          io.to(sessionKey).emit('toast', 'Hole cards dealt — wagering round 1!')
-          break
-          
-        case 'dealCommunityCards': {
-          console.log('🎰 Server: Received dealCommunityCards action')
-          const communityBefore = gameState.round.communityCards.length
-          gameState = dealCommunityCards(gameState)
-          const dealt = gameState.round.communityCards.length > communityBefore
-          gameState = runVirtualPlayerSimulation(gameState)
-          rooms.set(sessionKey, gameState)
-          io.to(sessionKey).emit('state', gameState)
-          if (dealt) {
-            io.to(sessionKey).emit('dealingCommunityCards')
-            io.to(sessionKey).emit('toast', 'Board complete — wagering round 2!')
-            console.log('🎰 Server: Community dealt:', gameState.round.communityCards)
-          } else {
-            io.to(sessionKey).emit('toast',
-              'Close round 1 wagering first, then reveal the board (deal community cards).')
+        case 'startGame': {
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            gs = startGame(gs)
+            gs = runVirtualPlayerSimulation(gs)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
           }
+          socket.emit('toast', 'Game started — synced to all tables at this venue.')
+          gameState = rooms.get(sessionKey)!
           break
         }
 
-        case 'startAnswering':
-          // Start answering phase with deadline and timer
+        case 'setQuestion': {
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            gs = setQuestion(gs)
+            gs = runVirtualPlayerSimulation(gs)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
+          }
+          socket.emit('toast', 'Question synced to all tables at this venue.')
+          gameState = rooms.get(sessionKey)!
+          break
+        }
+
+        case 'dealInitialCards': {
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            gs = dealInitialCards(gs)
+            gs = runVirtualPlayerSimulation(gs)
+            rooms.set(tk, gs)
+            io.to(tk).emit('dealingCards')
+            io.to(tk).emit('state', gs)
+          }
+          socket.emit('toast', 'Hole cards dealt — wagering round 1 (all tables).')
+          gameState = rooms.get(sessionKey)!
+          break
+        }
+
+        case 'dealCommunityCards': {
+          let anyDealt = false
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            const communityBefore = gs.round.communityCards.length
+            gs = dealCommunityCards(gs)
+            const dealt = gs.round.communityCards.length > communityBefore
+            if (dealt) anyDealt = true
+            gs = runVirtualPlayerSimulation(gs)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
+            if (dealt) {
+              io.to(tk).emit('dealingCommunityCards')
+            }
+          }
+          if (anyDealt) {
+            socket.emit('toast', 'Board complete — wagering round 2 (all ready tables).')
+          } else {
+            socket.emit('toast',
+              'No table advanced: close wagering round 1 on each table, then try again.')
+          }
+          gameState = rooms.get(sessionKey)!
+          break
+        }
+
+        case 'startAnswering': {
           if (gameState.phase !== 'betting' || gameState.round.isBettingOpen) {
             socket.emit('toast', 'Betting must be closed before answering.')
             break
@@ -883,29 +925,43 @@ io.on('connection', (socket) => {
             break
           }
           const deadlineMs2 = Date.now() + 45_000
-          gameState = {
-            ...gameState,
-            phase: 'answering',
-            round: { ...gameState.round, answerDeadline: deadlineMs2 }
-          }
-          gameState = runVirtualPlayerSimulation(gameState)
-          const existingTimer2 = answerTimers.get(sessionKey)
-          if (existingTimer2) clearTimeout(existingTimer2)
-          const timer2 = setTimeout(() => {
-            const current = rooms.get(sessionKey)
-            if (!current) return
-            if (current.phase === 'answering') {
-              const revealed = revealAnswer(current)
-              rooms.set(sessionKey, revealed)
-              io.to(sessionKey).emit('state', revealed)
-              io.to(sessionKey).emit('toast', '⏱️ Time up! Revealing answers...')
+          let count = 0
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            if (gs.phase !== 'betting' || gs.round.isBettingOpen || (gs.round.communityCards?.length ?? 0) < 5) {
+              continue
             }
-          }, 45_000)
-          answerTimers.set(sessionKey, timer2)
-          rooms.set(sessionKey, gameState)
-          io.to(sessionKey).emit('state', gameState)
-          io.to(sessionKey).emit('toast', 'Answering started!')
+            count++
+            gs = {
+              ...gs,
+              phase: 'answering',
+              round: { ...gs.round, answerDeadline: deadlineMs2 }
+            }
+            gs = runVirtualPlayerSimulation(gs)
+            const prev = answerTimers.get(tk)
+            if (prev) clearTimeout(prev)
+            const timer2 = setTimeout(() => {
+              const cur = rooms.get(tk)
+              if (!cur) return
+              if (cur.phase === 'answering') {
+                const revealed = revealAnswer(cur)
+                rooms.set(tk, revealed)
+                io.to(tk).emit('state', revealed)
+                io.to(tk).emit('toast', '⏱️ Time up! Revealing answers...')
+              }
+            }, 45_000)
+            answerTimers.set(tk, timer2)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
+          }
+          if (count === 0) {
+            socket.emit('toast', 'No other tables matched this venue’s ready state.')
+          } else {
+            socket.emit('toast', `Answering started — ${count} table(s); same countdown at each.`)
+          }
+          gameState = rooms.get(sessionKey)!
           break
+        }
 
         case 'bet':
           const betAction = payload as BetAction
@@ -928,19 +984,36 @@ io.on('connection', (socket) => {
           gameState = playerAllIn(gameState, (payload as AllInAction).playerId)
           io.to(sessionKey).emit('toast', `All-in!`)
           break
-        case 'adminCloseBetting':
-          gameState = adminCloseBetting(gameState)
-          io.to(sessionKey).emit('toast', 'Betting closed')
+        case 'adminCloseBetting': {
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            gs = adminCloseBetting(gs)
+            gs = runVirtualPlayerSimulation(gs)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
+          }
+          socket.emit('toast', 'Betting closed — all tables at this venue.')
+          gameState = rooms.get(sessionKey)!
           break
+        }
         case 'adminAdvanceTurn':
           gameState = adminAdvanceTurn(gameState)
-          io.to(sessionKey).emit('toast', 'Advanced to next player')
+          io.to(sessionKey).emit('toast', `Advanced to next player`)
           break
-        case 'adminSetBlinds':
-          const { smallBlind, bigBlind } = (payload as any)
-          gameState = adminSetBlinds(gameState, Number(smallBlind), Number(bigBlind))
-          io.to(sessionKey).emit('toast', `Blinds set: SB ${smallBlind}, BB ${bigBlind}`)
+        case 'adminSetBlinds': {
+          const { smallBlind, bigBlind } = payload as any
+          const sb = Number(smallBlind)
+          const bb = Number(bigBlind)
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            gs = adminSetBlinds(gs, sb, bb)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
+          }
+          socket.emit('toast', `Blinds synced: SB ${sb}, BB ${bb}`)
+          gameState = rooms.get(sessionKey)!
           break
+        }
           
         case 'fold':
           const foldAction = payload as FoldAction
@@ -964,21 +1037,41 @@ io.on('connection', (socket) => {
           io.to(sessionKey).emit('toast', `Answer submitted: ${submitAnswerAction.answer}`)
           break
           
-        case 'revealAnswer':
-          gameState = revealAnswer(gameState)
-          io.to(sessionKey).emit('toast', 'Answer revealed!')
+        case 'revealAnswer': {
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            gs = revealAnswer(gs)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
+          }
+          socket.emit('toast', 'Answers revealed — all tables at this venue.')
+          gameState = rooms.get(sessionKey)!
           break
-          
-        case 'endRound':
-          gameState = endRound(gameState)
-          io.to(sessionKey).emit('toast', 'Round ended!')
+        }
+
+        case 'endRound': {
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            let gs = rooms.get(tk)
+            gs = endRound(gs)
+            rooms.set(tk, gs)
+            io.to(tk).emit('state', gs)
+          }
+          socket.emit('toast', 'Round ended — all tables at this venue.')
+          gameState = rooms.get(sessionKey)!
           break
-          
-        case 'newGame':
-          // Create a completely new game — same venue + table, fresh roster
-          gameState = createEmptyGame(gameState.code, gameState.hostId, gameState.tableId ?? '1')
-          io.to(sessionKey).emit('toast', 'New game started! All players removed.')
+        }
+
+        case 'newGame': {
+          for (const tk of allTableSessionsInVenue(gameState.code)) {
+            const prev = rooms.get(tk)
+            const fresh = createEmptyGame(prev.code, prev.hostId, prev.tableId)
+            rooms.set(tk, fresh)
+            io.to(tk).emit('state', fresh)
+          }
+          socket.emit('toast', 'New game — all roster slots cleared venue-wide.')
+          gameState = rooms.get(sessionKey)!
           break
+        }
 
         case 'addVirtualPlayers': {
           if (socket.id !== gameState.hostId) {
@@ -1011,9 +1104,7 @@ io.on('connection', (socket) => {
           return
       }
       
-      const skipDuplicateStateBroadcast =
-        type === 'dealCommunityCards' || type === 'startAnswering' || type === 'setQuestion'
-      if (!skipDuplicateStateBroadcast) {
+      if (!VENUE_SYNC_ACTION_TYPES.has(type)) {
         gameState = runVirtualPlayerSimulation(gameState)
         rooms.set(sessionKey, gameState)
         io.to(sessionKey).emit('state', gameState)

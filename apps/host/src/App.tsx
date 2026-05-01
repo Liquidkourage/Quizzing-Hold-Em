@@ -237,7 +237,9 @@ function HostApp() {
               </select>
             </label>
             <span className="text-white/55 max-w-md">
-              Each table shares the venue code but has its own player cap and game state. Changing this reconnects only this host UI.
+              <strong className="text-white">Venue-wide sync:</strong> question, blinds, dealing, timers, betting close/end/reveal/new game apply to every table active for{' '}
+              <span className="text-casino-gold">{gameState.code}</span>. Each table still has its own seats, chips, cards, and pot. Pick a preset id (or add named ids later — server accepts A–Z, 0–9, _ and - ).{' '}
+              <strong>Force next player</strong> only affects your bound table — use it sparingly mid-sync.
             </span>
           </div>
         </motion.div>
