@@ -15,6 +15,9 @@ function PlayerApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [playerName, setPlayerName] = useState('')
   const [roomCode, setRoomCode] = useState('')
+  const [tableId, setTableId] = useState(() =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('table') ?? '1' : '1'
+  )
   const [isJoined, setIsJoined] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   // Legacy bet amount (no longer used)
@@ -25,11 +28,11 @@ function PlayerApp() {
   const socket = useSocket()
 
   const handleJoin = () => {
-    if (!playerName || !roomCode) return
-    const cleanup = connect('player', playerName, roomCode)
+    if (!playerName || !roomCode || !String(tableId || '').trim()) return
+    connect('player', playerName, roomCode, String(tableId).trim() || '1')
     setIsJoined(true)
-    
-    return cleanup
+
+    return undefined
   }
 
   useEffect(() => {
@@ -194,9 +197,16 @@ function PlayerApp() {
                 />
                 <input
                   type="text"
-                  placeholder="Room Code"
+                  placeholder="Venue / room code"
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                  className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:border-casino-emerald focus:outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Table (same as host)"
+                  value={tableId}
+                  onChange={(e) => setTableId(e.target.value)}
                   className="w-full p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 focus:border-casino-emerald focus:outline-none"
                 />
                 <NeonButton 
@@ -204,7 +214,7 @@ function PlayerApp() {
                   size="large"
                   className="w-full" 
                   onClick={handleJoin}
-                  disabled={!playerName || !roomCode}
+                  disabled={!playerName || !roomCode || !String(tableId || '').trim()}
                 >
                   Join Game
                 </NeonButton>
@@ -300,7 +310,10 @@ function PlayerApp() {
         >
           <h1 className="text-4xl font-black text-casino-emerald mb-4">🎮 PLAYER VIEW</h1>
           <div className="text-xl text-white">
-            Room: <span className="text-casino-emerald font-bold">{roomCode}</span> | 
+            Venue: <span className="text-casino-emerald font-bold">{gameState.code}</span>
+            {' · '}
+            Table: <span className="text-casino-gold font-bold">{gameState.tableId ?? '1'}</span>
+            {' | '}
             Player: <span className="text-casino-gold font-bold">{playerName}</span>
           </div>
           <div className="mt-4 inline-block p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">

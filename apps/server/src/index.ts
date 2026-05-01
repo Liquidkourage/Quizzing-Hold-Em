@@ -758,6 +758,20 @@ const io = new Server(httpServer, {
   }
 })
 
+function normalizeVenueCode(roomCode: string): string {
+  return roomCode.trim().toUpperCase()
+}
+
+function normalizeTableId(tableId: string | undefined): string {
+  const t = (tableId ?? '1').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '') || '1'
+  return t
+}
+
+/** One isolated table roster + deck + phase inside a venue (maps to sockets + persisted state key). */
+function tableSessionKey(venueCode: string, tableId?: string): string {
+  return `${normalizeVenueCode(venueCode)}:${normalizeTableId(tableId)}`
+}
+
 const rooms = new Map<string, any>()
 const answerTimers = new Map<string, NodeJS.Timeout>()
 
@@ -766,49 +780,45 @@ io.on('connection', (socket) => {
 
   socket.on('hello', (data: ClientHello) => {
     const { role, name, roomCode } = data
-    
-    // Join the room
-    socket.join(roomCode)
-    
-    // Get or create game state
-    let gameState = rooms.get(roomCode)
+
+    const venueCode = normalizeVenueCode(roomCode)
+    const tableId = normalizeTableId(data.tableId)
+    const sessionKey = tableSessionKey(venueCode, tableId)
+    socket.join(sessionKey)
+
+    let gameState = rooms.get(sessionKey)
     if (!gameState) {
-      gameState = createEmptyGame(roomCode)
-      rooms.set(roomCode, gameState)
+      gameState = createEmptyGame(venueCode, '', tableId)
+      rooms.set(sessionKey, gameState)
     }
 
-    // Always bind host to this socket on host hello so refresh/reconnect keeps host controls
-    // (otherwise hostId stays stuck on a stale socket id from the previous session).
     if (role === 'host') {
       gameState = { ...gameState, hostId: socket.id }
     }
-    
-    // Add player if it's a player role
+
     if (role === 'player') {
       gameState = addPlayer(gameState, socket.id, name)
     }
 
     gameState = runVirtualPlayerSimulation(gameState)
-    rooms.set(roomCode, gameState)
-    
-    // Send acknowledgment
+    rooms.set(sessionKey, gameState)
+
     const ack: ServerAck = { ok: true, message: 'Connected successfully' }
     socket.emit('ack', ack)
-    
-    // Broadcast updated state to all clients in the room
-    io.to(roomCode).emit('state', gameState)
+
+    io.to(sessionKey).emit('state', gameState)
   })
 
   socket.on('action', (data: any) => {
     const { type, payload } = data
-    const roomCode = Array.from(socket.rooms)[1] // Get the room code (first room is socket.id)
+    const sessionKey = Array.from(socket.rooms)[1] // venue:table (after socket.id)
     
-    if (!roomCode) {
+    if (!sessionKey) {
       socket.emit('toast', 'No room found')
       return
     }
     
-    let gameState = rooms.get(roomCode)
+    let gameState = rooms.get(sessionKey)
     if (!gameState) {
       socket.emit('toast', 'Game not found')
       return
@@ -818,7 +828,7 @@ io.on('connection', (socket) => {
       switch (type) {
         case 'startGame':
           gameState = startGame(gameState)
-          io.to(roomCode).emit('toast', 'Game started!')
+          io.to(sessionKey).emit('toast', 'Game started!')
           break
           
         case 'setQuestion':
@@ -829,9 +839,9 @@ io.on('connection', (socket) => {
           
           // Update the room state and emit to all clients
           gameState = runVirtualPlayerSimulation(gameState)
-          rooms.set(roomCode, gameState)
-          io.to(roomCode).emit('state', gameState)
-          io.to(roomCode).emit('toast', 'Question set!')
+          rooms.set(sessionKey, gameState)
+          io.to(sessionKey).emit('state', gameState)
+          io.to(sessionKey).emit('toast', 'Question set!')
           break
           
         case 'dealInitialCards':
@@ -839,8 +849,8 @@ io.on('connection', (socket) => {
           gameState = dealInitialCards(gameState)
           console.log('🎰 Server: Initial cards dealt, new phase:', gameState.phase)
           console.log('🎰 Server: Players with cards:', gameState.players.map(p => ({ name: p.name, cards: p.hand.length })))
-          io.to(roomCode).emit('dealingCards') // Trigger dealing animation
-          io.to(roomCode).emit('toast', 'Hole cards dealt — wagering round 1!')
+          io.to(sessionKey).emit('dealingCards') // Trigger dealing animation
+          io.to(sessionKey).emit('toast', 'Hole cards dealt — wagering round 1!')
           break
           
         case 'dealCommunityCards': {
@@ -849,14 +859,14 @@ io.on('connection', (socket) => {
           gameState = dealCommunityCards(gameState)
           const dealt = gameState.round.communityCards.length > communityBefore
           gameState = runVirtualPlayerSimulation(gameState)
-          rooms.set(roomCode, gameState)
-          io.to(roomCode).emit('state', gameState)
+          rooms.set(sessionKey, gameState)
+          io.to(sessionKey).emit('state', gameState)
           if (dealt) {
-            io.to(roomCode).emit('dealingCommunityCards')
-            io.to(roomCode).emit('toast', 'Board complete — wagering round 2!')
+            io.to(sessionKey).emit('dealingCommunityCards')
+            io.to(sessionKey).emit('toast', 'Board complete — wagering round 2!')
             console.log('🎰 Server: Community dealt:', gameState.round.communityCards)
           } else {
-            io.to(roomCode).emit('toast',
+            io.to(sessionKey).emit('toast',
               'Close round 1 wagering first, then reveal the board (deal community cards).')
           }
           break
@@ -879,63 +889,63 @@ io.on('connection', (socket) => {
             round: { ...gameState.round, answerDeadline: deadlineMs2 }
           }
           gameState = runVirtualPlayerSimulation(gameState)
-          const existingTimer2 = answerTimers.get(roomCode)
+          const existingTimer2 = answerTimers.get(sessionKey)
           if (existingTimer2) clearTimeout(existingTimer2)
           const timer2 = setTimeout(() => {
-            const current = rooms.get(roomCode)
+            const current = rooms.get(sessionKey)
             if (!current) return
             if (current.phase === 'answering') {
               const revealed = revealAnswer(current)
-              rooms.set(roomCode, revealed)
-              io.to(roomCode).emit('state', revealed)
-              io.to(roomCode).emit('toast', '⏱️ Time up! Revealing answers...')
+              rooms.set(sessionKey, revealed)
+              io.to(sessionKey).emit('state', revealed)
+              io.to(sessionKey).emit('toast', '⏱️ Time up! Revealing answers...')
             }
           }, 45_000)
-          answerTimers.set(roomCode, timer2)
-          rooms.set(roomCode, gameState)
-          io.to(roomCode).emit('state', gameState)
-          io.to(roomCode).emit('toast', 'Answering started!')
+          answerTimers.set(sessionKey, timer2)
+          rooms.set(sessionKey, gameState)
+          io.to(sessionKey).emit('state', gameState)
+          io.to(sessionKey).emit('toast', 'Answering started!')
           break
 
         case 'bet':
           const betAction = payload as BetAction
           gameState = placeBet(gameState, betAction.playerId, betAction.amount)
-          io.to(roomCode).emit('toast', `${betAction.playerId} bet $${betAction.amount}`)
+          io.to(sessionKey).emit('toast', `${betAction.playerId} bet $${betAction.amount}`)
           break
         case 'check':
           gameState = playerCheck(gameState, (payload as CheckAction).playerId)
-          io.to(roomCode).emit('toast', `Check`)
+          io.to(sessionKey).emit('toast', `Check`)
           break
         case 'call':
           gameState = playerCall(gameState, (payload as CallAction).playerId)
-          io.to(roomCode).emit('toast', `Call`)
+          io.to(sessionKey).emit('toast', `Call`)
           break
         case 'raise':
           gameState = playerRaise(gameState, (payload as RaiseAction).playerId, (payload as RaiseAction).amount)
-          io.to(roomCode).emit('toast', `Raise`)
+          io.to(sessionKey).emit('toast', `Raise`)
           break
         case 'allIn':
           gameState = playerAllIn(gameState, (payload as AllInAction).playerId)
-          io.to(roomCode).emit('toast', `All-in!`)
+          io.to(sessionKey).emit('toast', `All-in!`)
           break
         case 'adminCloseBetting':
           gameState = adminCloseBetting(gameState)
-          io.to(roomCode).emit('toast', 'Betting closed')
+          io.to(sessionKey).emit('toast', 'Betting closed')
           break
         case 'adminAdvanceTurn':
           gameState = adminAdvanceTurn(gameState)
-          io.to(roomCode).emit('toast', 'Advanced to next player')
+          io.to(sessionKey).emit('toast', 'Advanced to next player')
           break
         case 'adminSetBlinds':
           const { smallBlind, bigBlind } = (payload as any)
           gameState = adminSetBlinds(gameState, Number(smallBlind), Number(bigBlind))
-          io.to(roomCode).emit('toast', `Blinds set: SB ${smallBlind}, BB ${bigBlind}`)
+          io.to(sessionKey).emit('toast', `Blinds set: SB ${smallBlind}, BB ${bigBlind}`)
           break
           
         case 'fold':
           const foldAction = payload as FoldAction
           gameState = foldPlayer(gameState, foldAction.playerId)
-          io.to(roomCode).emit('toast', `${foldAction.playerId} folded`)
+          io.to(sessionKey).emit('toast', `${foldAction.playerId} folded`)
           break
           
         case 'submitAnswer':
@@ -951,23 +961,23 @@ io.on('connection', (socket) => {
             break
           }
           gameState = submitAnswer(gameState, submitAnswerAction.playerId, submitAnswerAction.answer)
-          io.to(roomCode).emit('toast', `Answer submitted: ${submitAnswerAction.answer}`)
+          io.to(sessionKey).emit('toast', `Answer submitted: ${submitAnswerAction.answer}`)
           break
           
         case 'revealAnswer':
           gameState = revealAnswer(gameState)
-          io.to(roomCode).emit('toast', 'Answer revealed!')
+          io.to(sessionKey).emit('toast', 'Answer revealed!')
           break
           
         case 'endRound':
           gameState = endRound(gameState)
-          io.to(roomCode).emit('toast', 'Round ended!')
+          io.to(sessionKey).emit('toast', 'Round ended!')
           break
           
         case 'newGame':
-          // Create a completely new game with the same room code - remove all players
-          gameState = createEmptyGame(roomCode, gameState.hostId)
-          io.to(roomCode).emit('toast', 'New game started! All players removed.')
+          // Create a completely new game — same venue + table, fresh roster
+          gameState = createEmptyGame(gameState.code, gameState.hostId, gameState.tableId ?? '1')
+          io.to(sessionKey).emit('toast', 'New game started! All players removed.')
           break
 
         case 'addVirtualPlayers': {
@@ -978,7 +988,7 @@ io.on('connection', (socket) => {
           const vpCount = Math.min(8, Number((payload as { count?: number })?.count ?? 2))
           gameState = spawnVirtualPlayers(gameState, vpCount || 2)
           const nVirt = liveVirtualCount(gameState)
-          io.to(roomCode).emit('toast', `Test mode: added virtual seats (CPU total: ${nVirt}).`)
+          io.to(sessionKey).emit('toast', `Test mode: added virtual seats (CPU total: ${nVirt}).`)
           break
         }
 
@@ -989,7 +999,7 @@ io.on('connection', (socket) => {
           }
           const cleared = liveVirtualCount(gameState)
           gameState = removeAllVirtualPlayers(gameState)
-          io.to(roomCode).emit(
+          io.to(sessionKey).emit(
             'toast',
             cleared > 0 ? `Removed ${cleared} virtual seat(s).` : 'No virtual seats to remove.'
           )
@@ -1005,8 +1015,8 @@ io.on('connection', (socket) => {
         type === 'dealCommunityCards' || type === 'startAnswering' || type === 'setQuestion'
       if (!skipDuplicateStateBroadcast) {
         gameState = runVirtualPlayerSimulation(gameState)
-        rooms.set(roomCode, gameState)
-        io.to(roomCode).emit('state', gameState)
+        rooms.set(sessionKey, gameState)
+        io.to(sessionKey).emit('state', gameState)
       }
       
     } catch (error) {
@@ -1019,15 +1029,15 @@ io.on('connection', (socket) => {
     console.log('Client disconnected:', socket.id)
     
     // Remove player from all rooms they were in
-    socket.rooms.forEach(roomCode => {
-      if (roomCode !== socket.id) {
-        const gameState = rooms.get(roomCode)
+    socket.rooms.forEach(joinedRoom => {
+      if (joinedRoom !== socket.id) {
+        const gameState = rooms.get(joinedRoom)
         if (gameState) {
           // Find and remove the player
           let updatedState = removePlayer(gameState, socket.id)
           updatedState = runVirtualPlayerSimulation(updatedState)
-          rooms.set(roomCode, updatedState)
-          io.to(roomCode).emit('state', updatedState)
+          rooms.set(joinedRoom, updatedState)
+          io.to(joinedRoom).emit('state', updatedState)
         }
       }
     })

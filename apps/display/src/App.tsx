@@ -25,7 +25,9 @@ function DisplayApp() {
   const [sharedCommunityCards, setSharedCommunityCards] = useState<Array<{digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}>>([])
 
   useEffect(() => {
-    const cleanup = connect('display', 'DISPLAY01')
+    const venue = new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase() || 'HOST01'
+    const table = new URLSearchParams(window.location.search).get('table')?.trim() || '1'
+    const cleanup = connect('display', 'DISPLAY01', venue, table)
     return cleanup
   }, [])
 
@@ -82,6 +84,7 @@ function DisplayApp() {
   // Create demo game state with 8 players for demonstration
   const [demoGameState, setDemoGameState] = useState<GameState>({
     code: 'ABC123',
+    tableId: '1',
     hostId: 'demo',
     createdAt: Date.now(),
     phase: 'betting',

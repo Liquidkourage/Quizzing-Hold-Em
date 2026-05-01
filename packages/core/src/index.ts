@@ -38,7 +38,9 @@ export interface RoundState {
 }
 
 export interface GameState {
-  code: string; // room code
+  code: string; // venue / event code (shown to humans; not the socket session id)
+  /** Table/seat grouping within one venue — each table has its own capped roster and phase. */
+  tableId: string;
   hostId: string;
   createdAt: number;
   phase: GamePhase;
@@ -92,9 +94,11 @@ export function bestHandDistanceToAnswer(hand: NumericCard[], community: Numeric
   return compareHandsToAnswer(candidates, answer);
 }
 
-export function createEmptyGame(code: string, hostId: string = ''): GameState {
+export function createEmptyGame(code: string, hostId: string = '', tableId: string = '1'): GameState {
+  const table = typeof tableId === 'string' && tableId.trim() ? tableId.trim() : '1'
   return {
     code,
+    tableId: table,
     hostId,
     createdAt: Date.now(),
     phase: 'lobby',

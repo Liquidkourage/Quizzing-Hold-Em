@@ -8,12 +8,16 @@ function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [virtualAddCount, setVirtualAddCount] = useState(2)
+  const [hostVenueCode] = useState('HOST01')
+  const [hostTableId, setHostTableId] = useState(() =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('table') ?? '1' : '1'
+  )
   const socket = useSocket()
 
   useEffect(() => {
-    const cleanup = connect('host', 'HOST01')
+    const cleanup = connect('host', 'HOST01', hostVenueCode, hostTableId)
     return cleanup
-  }, [])
+  }, [hostVenueCode, hostTableId])
 
   useEffect(() => {
     const unsubscribe = onState((newGameState) => {
@@ -209,10 +213,32 @@ function HostApp() {
             {'Quizz\u2019em'}
           </h1>
           <div className="text-xl text-white">
-            Room Code: <span className="text-casino-emerald font-bold">{gameState.code}</span>
+            Venue: <span className="text-casino-emerald font-bold">{gameState.code}</span>
+            <span className="text-white/50"> · </span>
+            Table{' '}
+            <span className="text-casino-gold font-bold">{gameState.tableId ?? '1'}</span>
           </div>
           <div className="text-lg text-white mt-2">
             Phase: <span className="text-casino-gold font-bold">{gameState.phase}</span>
+          </div>
+          <div className="flex flex-wrap gap-3 items-center justify-center text-sm text-white/85 mt-4">
+            <label className="flex items-center gap-2">
+              <span>Host binds to:</span>
+              <select
+                value={hostTableId}
+                onChange={e => setHostTableId(e.target.value)}
+                className="rounded-lg bg-black/40 border border-white/25 text-white px-3 py-2"
+              >
+                {['1', '2', '3', '4', '5', '6', '7', '8'].map(t => (
+                  <option key={t} value={t}>
+                    Table {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="text-white/55 max-w-md">
+              Each table shares the venue code but has its own player cap and game state. Changing this reconnects only this host UI.
+            </span>
           </div>
         </motion.div>
 
@@ -223,7 +249,7 @@ function HostApp() {
             <div className="mb-6 rounded-lg border border-casino-emerald/30 bg-black/20 p-4 text-left text-sm text-white/90">
               <div className="mb-2 font-bold text-casino-emerald">PoC — one full round</div>
               <ol className="list-decimal list-inside space-y-1.5">
-                <li>Players open <strong className="text-white">/player</strong>, enter name + room code <strong className="text-casino-gold">{gameState.code}</strong></li>
+                <li>Players open <strong className="text-white">/player</strong>, enter name + room <strong className="text-casino-gold">{gameState.code}</strong> and matching <strong className="text-casino-gold">table number</strong></li>
                 <li><strong>Start Game</strong> → <strong>Set Question</strong> → <strong>Deal Initial Cards</strong> (hole cards only)</li>
                 <li><strong>Wagering round 1:</strong> when ready → <strong>Close Betting</strong></li>
                 <li><strong>Deal Community Cards</strong> (full five-card board) → <strong>Wagering round 2</strong></li>

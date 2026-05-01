@@ -19,7 +19,7 @@ function socketOrigin(): string {
   return 'http://localhost:7777'
 }
 
-export function connect(role: 'host' | 'player' | 'display', name: string, roomCode: string = 'HOST01') {
+export function connect(role: 'host' | 'player' | 'display', name: string, roomCode: string = 'HOST01', tableId: string = '1') {
   if (socket) {
     socket.disconnect()
   }
@@ -32,7 +32,8 @@ export function connect(role: 'host' | 'player' | 'display', name: string, roomC
     const hello: ClientHello = {
       role,
       name,
-      roomCode
+      roomCode,
+      tableId
     }
     
     socket!.emit('hello', hello)

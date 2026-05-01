@@ -9,7 +9,8 @@ export type ClientRole = z.infer<typeof ClientRole>
 export const ClientHello = z.object({
   role: ClientRole,
   name: z.string(),
-  roomCode: z.string()
+  roomCode: z.string(),
+  tableId: z.string().optional()
 })
 export type ClientHello = z.infer<typeof ClientHello>
 
