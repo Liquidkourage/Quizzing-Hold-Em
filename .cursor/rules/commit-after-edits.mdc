@@ -1,17 +1,20 @@
 ---
-description: After modifying project files, commit and push every change unless the user explicitly opts out for that turn.
+description: After modifying project files, always commit AND push unless the user opts out that turn—never end with unpushed commits.
 alwaysApply: true
 ---
 
-# Commit and push after edits
+# Commit and push after edits (every time)
 
-Whenever you edit, add, move, remove, or format project source or config (anything that should live in git), finish the session turn by committing and pushing.
+Whenever you edit, add, move, remove, or format project source or config (anything that should live in git), **that turn is not finished** until changes are **committed and pushed**.
+
+If `git status` is clean **and** the current branch has **nothing to push** to its upstream tracking branch, you are done. **Do not leave the branch ahead of origin** after completing work—the default is **`git push` immediately after `git commit`**.
 
 ## Requirements
 
 1. Run `git status` and stage **everything** intended to be preserved: `git add -A` (or stage specific paths only if leaving unrelated dirty files—which is rare—per user direction).
 2. Write a concise commit message in normal sentences (summarize **what** and **why**).
-3. Run `git push` to update the tracked remote branch (typically `origin`).
+3. **Always run `git push`** after a successful commit to update `origin`/tracked remote (`git status` must not show **ahead by N commits** when you stop for that round of work).
+
 4. Resolve push failures yourself when safe (pull/rebase **only if** appropriate and the user expects shared history coordination; otherwise report the blocker clearly).
 
 ## exceptions
