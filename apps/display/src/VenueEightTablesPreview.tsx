@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { PokerChip } from '@qhe/ui'
+import { QuizzEmWordmark } from '@qhe/ui'
 import {
   DISPLAY_PREVIEW_DEMO_QUESTION_TEXT,
   DISPLAY_PREVIEW_SYNCED_PHASE,
@@ -123,28 +123,27 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
         />
       </div>
 
-      <header className="relative z-10 border-b border-white/10 bg-black/40 px-6 py-5 text-center backdrop-blur-md">
-        <motion.h1
-          className="flex items-center justify-center gap-2 text-4xl font-black tracking-tight text-yellow-400 sm:text-5xl"
-          initial={{ opacity: 0, y: -12 }}
+      <header className="relative z-10 border-b border-white/10 bg-black/40 px-6 py-5 backdrop-blur-md">
+        <motion.div
+          className="mx-auto flex max-w-[1600px] flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between"
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <PokerChip size="lg" /> Venue wall —{' '}
-          <span className="text-yellow-400 underline decoration-yellow-600/55 decoration-4 underline-offset-4">
-            8 tables
-          </span>
-        </motion.h1>
-        <p className="mt-3 text-lg text-white/85">
-          Event <span className="font-bold text-casino-emerald">{venueCode}</span>
-          <span className="text-white/55"> · </span>
-          <span className="text-white/65">parallel play, host-sync’d cue & beats</span>
-        </p>
-        <p className="mx-auto mt-3 max-w-3xl text-sm text-white/50">
-          Read-only display (no on-screen controls). The host uses <strong className="text-white/70">Venue &amp; roster</strong> for
-          all eight felts, to <strong className="text-white/70">spotlight</strong> one table (full live felt), or a single live felt.
-          Ops URL:{' '}
-          <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">tablesPreview</code>.
-        </p>
+          <div className="flex flex-col items-center gap-1.5 sm:items-start">
+            <QuizzEmWordmark size="lg" className="justify-center sm:justify-start" />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">
+              Venue wall
+            </p>
+          </div>
+          <div className="text-center sm:text-right">
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
+              Room / event code
+            </div>
+            <div className="font-mono text-3xl font-black tabular-nums tracking-tight text-casino-emerald sm:text-4xl">
+              {venueCode}
+            </div>
+          </div>
+        </motion.div>
       </header>
 
       <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-8 sm:px-6">
@@ -180,23 +179,17 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
           <div className="border-t border-white/10 pt-4">
             <div className="text-xs font-semibold uppercase tracking-widest text-white/45">Synced trivia</div>
             <p className="mt-2 text-xl font-semibold leading-snug text-yellow-400 sm:text-2xl">{DISPLAY_PREVIEW_DEMO_QUESTION_TEXT}</p>
-            <p className="mt-3 text-xs leading-relaxed text-white/55 sm:text-sm">
-              In production, the host advances one lifecycle for this room code; every playable table receives the same{' '}
-              <strong className="text-white/85">phase</strong> and <strong className="text-white/85">question</strong>.
-              Stacks, blinds, folds, pots, and rosters remain <strong className="text-white/85">local to each felt</strong>.
+            <p className="mt-3 text-[11px] text-white/50 sm:text-xs">
+              Same phase and question everywhere for this code; stacks and pots stay local to each table.
             </p>
           </div>
         </motion.section>
       </div>
 
       <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 sm:px-6">
-        <h2 className="mb-2 text-center text-sm font-bold uppercase tracking-[0.18em] text-white/45">
-          Per-table — local pot & seats (read-only tiles)
+        <h2 className="mb-6 text-center text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+          Tables 1–8 · local pot &amp; seats
         </h2>
-        <p className="mx-auto mb-6 max-w-2xl text-center text-[13px] text-white/55">
-          To show the <strong className="text-white/80">full live felt</strong> for one table, pick it under{' '}
-          <strong className="text-white/75">Venue &amp; roster → Public TVs</strong> — never by touching this screen.
-        </p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {tileRows.map((row, idx) => {
                 const tn = row.tableNum

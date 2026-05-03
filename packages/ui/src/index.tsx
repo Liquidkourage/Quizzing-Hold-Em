@@ -623,4 +623,5 @@ export function NumericPlayingCard({
 }
 
 export { PokerChip };
+export { QuizzEmWordmark, type QuizzEmWordmarkProps } from './QuizzEmWordmark';
 export default {};
