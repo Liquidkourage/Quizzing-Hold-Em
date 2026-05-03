@@ -395,7 +395,7 @@ function DisplayTableLive() {
   }
 
   /** Negative = move felt + seats up together in the main panel (see table wrapper `top`). */
-  const displayTableLiftPx = -40
+  const displayTableLiftPx = -64
 
   // Calculate player positions around the table (perfectly aligned with cupholders)
   const getPlayerPosition = (index: number, total: number) => {
