@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { DisplayLayoutPayload } from '@qhe/net'
-import { connect, onDisplayLayout } from '@qhe/net'
+import type { DisplayLayoutPayload, DisplayVenueTileSnapshot } from '@qhe/net'
+import { connect, onDisplayLayout, onDisplayVenueSnapshot } from '@qhe/net'
 import DisplayTableLive from './App.tsx'
 import { readUrlLayoutBootstrap } from './displayUrlParams'
 import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
@@ -100,6 +100,8 @@ export default function DisplayRouter() {
   const [feltEntranceIdle, setFeltEntranceIdle] = useState(false)
   /** Fullscreen feels shrinks onto this tile until complete; sockets stay spotlight until cleared. */
   const [shrinkingExit, setShrinkingExit] = useState<ShrinkingExit | null>(null)
+  /** Live summaries for tables 1–8 from server; null until first `displayVenueSnapshot`. */
+  const [venueWallTiles, setVenueWallTiles] = useState<DisplayVenueTileSnapshot[] | null>(null)
 
   const wallOverview = venueOverview(layout)
   const spotlightN = venueSpotlightTable(layout)
@@ -202,6 +204,13 @@ export default function DisplayRouter() {
     }
   }, [connectFingerprint, venueCode])
 
+  useEffect(() => {
+    const unsub = onDisplayVenueSnapshot((tiles) => {
+      if (Array.isArray(tiles) && tiles.length === 8) setVenueWallTiles(tiles)
+    })
+    return () => unsub()
+  }, [connectFingerprint])
+
   /** Show the 8-panel grid under fullscreen felt exits and while overview. */
   const showGridBehind = wallOverview || shrinkingExit !== null
 
@@ -245,7 +254,7 @@ export default function DisplayRouter() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
-          <VenueEightTablesPreview venueCode={venueCode} />
+          <VenueEightTablesPreview venueCode={venueCode} tiles={venueWallTiles} />
         </motion.div>
       )}
       {showPrimaryFullscreenLayer && (

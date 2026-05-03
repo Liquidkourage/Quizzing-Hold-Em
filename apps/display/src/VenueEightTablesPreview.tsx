@@ -7,6 +7,7 @@ import {
   DISPLAY_PREVIEW_SYNCED_SUBTITLE,
   DISPLAY_PREVIEW_TABLES,
 } from '@qhe/core'
+import type { DisplayVenueTileSnapshot } from '@qhe/net'
 
 function SeatDots({
   seatedCount,
@@ -57,10 +58,14 @@ function SeatDots({
 }
 
 function phaseLabel(ph: string) {
+  if (ph === 'lobby') return 'Lobby'
   if (ph === 'question') return 'Question setup'
   if (ph === 'betting') return 'Wagering'
   if (ph === 'answering') return 'Answering'
+  if (ph === 'reveal') return 'Reveal'
   if (ph === 'showdown') return 'Showdown'
+  if (ph === 'payout') return 'Payout'
+  if (ph === 'intermission') return 'Break'
   return ph
 }
 
@@ -73,14 +78,26 @@ function phaseAccent(ph: string) {
 
 type VenueEightTablesPreviewProps = {
   venueCode: string
+  /** Live summaries from Socket.IO (`displayVenueSnapshot`); fallback to DISPLAY_PREVIEW_* until arrive. */
+  tiles: DisplayVenueTileSnapshot[] | null
 }
 
 /**
- * Venue wall — eight mock felts (overview only). Spotlight from the host swaps to full live felt in `DisplayRouter`.
+ * Mosaic rows mirror each table session on the server; spotlight shows the matching full felt.
  * See repo rule: display-readonly.
  */
-export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesPreviewProps) {
+export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEightTablesPreviewProps) {
   const [bannerSecondsLeft, setBannerSecondsLeft] = useState<number | null>(null)
+
+  const tileRows: DisplayVenueTileSnapshot[] =
+    tiles && tiles.length === 8
+      ? [...tiles].sort((a, b) => a.tableNum - b.tableNum)
+      : DISPLAY_PREVIEW_TABLES.map((snap, i) => ({
+          tableNum: i + 1,
+          seated: snap.seated,
+          pot: snap.pot,
+          phase: DISPLAY_PREVIEW_SYNCED_PHASE,
+        }))
 
   useEffect(() => {
     const deadline = Date.now() + 43_000
@@ -181,10 +198,11 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
           <strong className="text-white/75">Venue &amp; roster → Public TVs</strong> — never by touching this screen.
         </p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {DISPLAY_PREVIEW_TABLES.map((snap, idx) => {
-                const tn = idx + 1
-                const seats = snap.seated
-                const pot = snap.pot
+          {tileRows.map((row, idx) => {
+                const tn = row.tableNum
+                const seats = row.seated
+                const pot = row.pot
+                const ph = row.phase
                 return (
                   <motion.article
                     key={tn}
@@ -199,13 +217,13 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
                         <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
                         <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
                       </div>
-                      <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(DISPLAY_PREVIEW_SYNCED_PHASE)}`}>
-                        {phaseLabel(DISPLAY_PREVIEW_SYNCED_PHASE)}
+                      <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(ph)}`}>
+                        {phaseLabel(ph)}
                       </span>
                     </div>
 
                     <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-casino-emerald/85">
-                      In sync ✓
+                      {tiles ? 'Matched to felt ✓' : 'Venue rehearsal'}
                     </div>
 
                     <div className="mt-3 flex-shrink-0">

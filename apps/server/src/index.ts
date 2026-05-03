@@ -33,11 +33,14 @@ import {
   playerAllIn,
   SAMPLE_QUESTIONS,
   buildDisplayPreviewGameState,
+  DISPLAY_PREVIEW_SYNCED_PHASE,
+  DISPLAY_PREVIEW_TABLES,
 } from '@qhe/core'
-import type { Question } from '@qhe/core'
+import type { Question, GameState } from '@qhe/core'
 import type { 
   ClientHello,
   DisplayLayoutPayload,
+  DisplayVenueTileSnapshot,
   ServerAck, 
   DealCardsAction,
   BetAction,
@@ -938,6 +941,71 @@ function allTableSessionsInVenue(venueCode: string): string[] {
   return allVenueSessionKeys(venueCode).filter(k => !isLobbySessionKey(k))
 }
 
+const displayVenueSnapshotTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+function tableNumFromSessionKey(venueCode: string, sessionKey: string): number | null {
+  const vn = normalizeVenueCode(venueCode)
+  const pref = `${vn}:`
+  if (!sessionKey.startsWith(pref)) return null
+  const rest = sessionKey.slice(pref.length)
+  if (rest === LOBBY_TABLE_ID) return null
+  const n = Number.parseInt(rest, 10)
+  if (!Number.isInteger(n) || n < 1 || n > 8 || String(n) !== rest) return null
+  return n
+}
+
+function emitDisplayVenueSnapshotNow(vnRaw: string) {
+  const vn = normalizeVenueCode(vnRaw)
+  const tiles: DisplayVenueTileSnapshot[] = []
+  for (let n = 1; n <= 8; n++) {
+    const key = tableSessionKey(vn, String(n))
+    const gs = rooms.get(key)
+    const fb = DISPLAY_PREVIEW_TABLES[n - 1] ?? DISPLAY_PREVIEW_TABLES[0]
+    if (gs != null && gs.players.length > 0) {
+      tiles.push({
+        tableNum: n,
+        seated: gs.players.length,
+        pot: gs.round.pot,
+        phase: gs.phase,
+      })
+    } else {
+      tiles.push({
+        tableNum: n,
+        seated: fb.seated,
+        pot: fb.pot,
+        phase: DISPLAY_PREVIEW_SYNCED_PHASE,
+      })
+    }
+  }
+  io.to(displayVenueRoom(vn)).emit('displayVenueSnapshot', tiles)
+}
+
+function scheduleDisplayVenueSnapshot(venueCode: string) {
+  const k = normalizeVenueCode(venueCode)
+  const prev = displayVenueSnapshotTimers.get(k)
+  if (prev !== undefined) clearTimeout(prev)
+  displayVenueSnapshotTimers.set(
+    k,
+    setTimeout(() => {
+      displayVenueSnapshotTimers.delete(k)
+      emitDisplayVenueSnapshotNow(k)
+    }, 140)
+  )
+}
+
+function afterTableStateBroadcast(gs: GameState, sessionKey: string) {
+  const n = tableNumFromSessionKey(gs.code, sessionKey)
+  if (n !== null) {
+    scheduleDisplayVenueSnapshot(gs.code)
+  }
+}
+
+/** Emit felt state then refresh DISPLAY:{venue} wall summaries for numbered felts */
+function emitVenueTableState(sessionKey: string, gs: GameState) {
+  io.to(sessionKey).emit('state', gs)
+  afterTableStateBroadcast(gs, sessionKey)
+}
+
 function applyQuestionToAllPlayable(venueCode: string, picked: Question) {
   const playable = allTableSessionsInVenue(venueCode)
   for (const tk of playable) {
@@ -945,7 +1013,7 @@ function applyQuestionToAllPlayable(venueCode: string, picked: Question) {
     gs = setQuestion(gs, picked)
     gs = runVirtualPlayerSimulation(gs)
     rooms.set(tk, gs)
-    io.to(tk).emit('state', gs)
+    emitVenueTableState(tk, gs!)
   }
 }
 
@@ -1023,6 +1091,7 @@ io.on('connection', (socket) => {
         sockData.sessionKey = undefined
         const ackWall: ServerAck = { ok: true, message: 'Connected successfully' }
         socket.emit('ack', ackWall)
+        scheduleDisplayVenueSnapshot(venueCode)
         return
       }
 
@@ -1046,7 +1115,7 @@ io.on('connection', (socket) => {
       rooms.set(watchKey, gs)
       const ackDs: ServerAck = { ok: true, message: 'Connected successfully' }
       socket.emit('ack', ackDs)
-      io.to(watchKey).emit('state', gs)
+      emitVenueTableState(watchKey, gs)
       return
     }
 
@@ -1073,7 +1142,7 @@ io.on('connection', (socket) => {
     const ack: ServerAck = { ok: true, message: 'Connected successfully' }
     socket.emit('ack', ack)
 
-    io.to(helloSessionKey).emit('state', gameState)
+    emitVenueTableState(helloSessionKey, gameState)
   })
 
   socket.on('action', (data: any) => {
@@ -1100,6 +1169,7 @@ io.on('connection', (socket) => {
       }
       venueDisplayLayouts.set(normalizeVenueCode(gsCtl.code), nextLayout)
       io.to(displayVenueRoom(gsCtl.code)).emit('displayLayout', nextLayout)
+      scheduleDisplayVenueSnapshot(gsCtl.code)
       socket.emit('toast', 'TV / display layout updated for the venue.')
       return
     }
@@ -1134,7 +1204,7 @@ io.on('connection', (socket) => {
             gs = startGame(gs)
             gs = runVirtualPlayerSimulation(gs)
             rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
           }
           socket.emit('toast', 'Game started — synced to all tables at this venue.')
           gameState = rooms.get(sessionKey)!
@@ -1338,7 +1408,7 @@ io.on('connection', (socket) => {
             gs = runVirtualPlayerSimulation(gs)
             rooms.set(tk, gs)
             io.to(tk).emit('dealingCards')
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
           }
           socket.emit('toast', 'Hole cards dealt — wagering round 1 (all tables).')
           gameState = rooms.get(sessionKey)!
@@ -1361,7 +1431,7 @@ io.on('connection', (socket) => {
             if (dealt) anyDealt = true
             gs = runVirtualPlayerSimulation(gs)
             rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
             if (dealt) {
               io.to(tk).emit('dealingCommunityCards')
             }
@@ -1413,13 +1483,13 @@ io.on('connection', (socket) => {
               if (cur.phase === 'answering') {
                 const revealed = revealAnswer(cur)
                 rooms.set(tk, revealed)
-                io.to(tk).emit('state', revealed)
+                emitVenueTableState(tk, revealed)
                 io.to(tk).emit('toast', '⏱️ Time up! Revealing answers...')
               }
             }, 45_000)
             answerTimers.set(tk, timer2)
             rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
           }
           if (count === 0) {
             socket.emit('toast', 'No other tables matched this venue’s ready state.')
@@ -1463,7 +1533,7 @@ io.on('connection', (socket) => {
             gs = adminCloseBetting(gs)
             gs = runVirtualPlayerSimulation(gs)
             rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
           }
           socket.emit('toast', 'Betting closed — all tables at this venue.')
           gameState = rooms.get(sessionKey)!
@@ -1483,7 +1553,7 @@ io.on('connection', (socket) => {
             let gs = rooms.get(tk)
             gs = adminSetBlinds(gs, sb, bb)
             rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
           }
           socket.emit('toast', `Blinds synced: SB ${sb}, BB ${bb}`)
           gameState = rooms.get(sessionKey)!
@@ -1523,7 +1593,7 @@ io.on('connection', (socket) => {
             let gs = rooms.get(tk)
             gs = revealAnswer(gs)
             rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
           }
           socket.emit('toast', 'Answers revealed — all tables at this venue.')
           gameState = rooms.get(sessionKey)!
@@ -1541,7 +1611,7 @@ io.on('connection', (socket) => {
             let gs = rooms.get(tk)
             gs = endRound(gs)
             rooms.set(tk, gs)
-            io.to(tk).emit('state', gs)
+            emitVenueTableState(tk, gs)
           }
           socket.emit('toast', 'Round ended — all tables at this venue.')
           gameState = rooms.get(sessionKey)!
@@ -1554,7 +1624,7 @@ io.on('connection', (socket) => {
             const prev = rooms.get(tk)
             const fresh = createEmptyGame(prev.code, prev.hostId, prev.tableId)
             rooms.set(tk, fresh)
-            io.to(tk).emit('state', fresh)
+            emitVenueTableState(tk, fresh)
           }
           socket.emit('toast', 'New game — lobby and all tables reset.')
           gameState = rooms.get(sessionKey)!
@@ -1611,7 +1681,7 @@ io.on('connection', (socket) => {
                 sock.emit('seated', { tableId: tid })
               }
             }
-            io.to(tk).emit('state', gsNew)
+            emitVenueTableState(tk, gsNew)
           }
 
           const emptyLobby = {
@@ -1822,7 +1892,7 @@ io.on('connection', (socket) => {
       if (!VENUE_SYNC_ACTION_TYPES.has(type)) {
         gameState = runVirtualPlayerSimulation(gameState)
         rooms.set(sessionKey, gameState)
-        io.to(sessionKey).emit('state', gameState)
+        emitVenueTableState(sessionKey, gameState)
       }
       
     } catch (error) {
@@ -1843,7 +1913,7 @@ io.on('connection', (socket) => {
           let updatedState = removePlayer(gameState, socket.id)
           updatedState = runVirtualPlayerSimulation(updatedState)
           rooms.set(joinedRoom, updatedState)
-          io.to(joinedRoom).emit('state', updatedState)
+          emitVenueTableState(joinedRoom, updatedState)
         }
       }
     })

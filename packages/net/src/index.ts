@@ -18,6 +18,14 @@ export type DisplayLayoutPayload =
   | { layout: 'singleTable'; tableId: string }
   | { layout: 'venueWall'; focusTable: number | null }
 
+/** Mosaic row for `/display` venue wall — derived live from tables 1–8 sessions. */
+export type DisplayVenueTileSnapshot = {
+  tableNum: number
+  seated: number
+  pot: number
+  phase: string
+}
+
 export const ClientHello = z.object({
   role: ClientRole,
   name: z.string(),
@@ -124,6 +132,8 @@ export interface ServerToClientEvents {
   hostLibrary: (snapshot: HostLibrarySnapshot) => void
   /** Venue displays (DISPLAY:{venue}); host drives via displaySetLayout */
   displayLayout: (layout: DisplayLayoutPayload) => void
+  /** Venue wall mosaic — summaries for tables 1–8 */
+  displayVenueSnapshot: (tiles: DisplayVenueTileSnapshot[]) => void
 }
 
 export interface ClientToServerEvents {
