@@ -2,8 +2,47 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
-import type { GameState } from '@qhe/core'
+import type { GameState, GamePhase } from '@qhe/core'
+import { LOBBY_TABLE_ID } from '@qhe/core'
 import confetti from 'canvas-confetti'
+
+function displayPhaseLabel(phase: GamePhase): string {
+  switch (phase) {
+    case 'lobby':
+      return 'Lobby'
+    case 'question':
+      return 'Question'
+    case 'betting':
+      return 'Wagering'
+    case 'answering':
+      return 'Answering'
+    case 'reveal':
+      return 'Reveal'
+    case 'showdown':
+      return 'Showdown'
+    case 'payout':
+      return 'Payout'
+    case 'intermission':
+      return 'Intermission'
+    default:
+      return phase
+  }
+}
+
+function displayStreetLabel(gs: GameState): string {
+  const ph = gs.phase
+  if (ph === 'lobby' || ph === 'question') return '—'
+  const n = gs.round.communityCards.length
+  if (n === 0) return 'Pre-flop'
+  if (n === 3) return 'Flop'
+  if (n === 4) return 'Turn'
+  if (n >= 5) return 'River'
+  return '—'
+}
+
+function displayTableLabel(tableId: string): string {
+  return tableId === LOBBY_TABLE_ID ? 'Lobby' : `Table ${tableId}`
+}
 
 function DisplayTableLive() {
   const [gameState, setGameState] = useState<GameState | null>(null)
@@ -538,7 +577,7 @@ function DisplayTableLive() {
             {'Quizz\u2019em'}
           </h1>
           <div className="text-base text-white">
-            Room: <span className="text-yellow-400 font-bold">{displayGameState.code}</span> | 
+            Venue: <span className="text-yellow-400 font-bold">{displayGameState.code}</span> | 
             Phase: <span className="text-yellow-400 font-bold">{displayGameState.phase}</span>
             {!gameState && <span className="text-red-400 ml-2">(DEMO MODE - 8 Players)</span>}
           </div>
@@ -1316,21 +1355,27 @@ function DisplayTableLive() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-t-lg p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div>
-                <div className="text-white text-sm">Players</div>
-                <div className="text-yellow-400 font-bold text-xl">{displayGameState.players.length}</div>
-            </div>
-            <div>
-                <div className="text-white text-sm">Total Pot</div>
-                <div className="text-yellow-400 font-bold text-xl">${displayGameState.round.pot}</div>
-            </div>
-            <div>
+              <div>
+                <div className="text-white text-sm">Felt</div>
+                <div className="text-yellow-400 font-bold text-xl">
+                  {displayTableLabel(displayGameState.tableId ?? '1')}
+                </div>
+              </div>
+              <div>
+                <div className="text-white text-sm">Blinds</div>
+                <div className="text-yellow-400 font-bold text-xl tabular-nums">
+                  ${displayGameState.smallBlind} / ${displayGameState.bigBlind}
+                </div>
+              </div>
+              <div>
                 <div className="text-white text-sm">Phase</div>
-                <div className="text-yellow-400 font-bold text-xl">{displayGameState.phase}</div>
-            </div>
-            <div>
-                <div className="text-white text-sm">Room Code</div>
-                <div className="text-yellow-400 font-bold text-xl">{displayGameState.code}</div>
+                <div className="text-yellow-400 font-bold text-xl">
+                  {displayPhaseLabel(displayGameState.phase)}
+                </div>
+              </div>
+              <div>
+                <div className="text-white text-sm">Street</div>
+                <div className="text-yellow-400 font-bold text-xl">{displayStreetLabel(displayGameState)}</div>
               </div>
             </div>
           </div>
