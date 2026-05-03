@@ -1211,8 +1211,8 @@ function HostApp() {
             Read-only browsers on{' '}
             <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display?room={gameState.code}</code>.
             Buttons here steer every display on this venue to the{' '}
-            <strong className="text-white/80">venue wall preview</strong> (eight felts mock) or a{' '}
-            <strong className="text-white/80">single live felt</strong>; nothing is tapped at the TV.
+            <strong className="text-white/80">venue wall preview</strong> (eight mock felts){' '}
+            or <strong className="text-white/80">full live felt</strong> for one table — nothing is tapped at the TV.
           </p>
           <div className="mx-auto mb-8 max-w-5xl rounded-xl bg-black/30 p-5">
             <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Venue wall</div>
@@ -1223,7 +1223,7 @@ function HostApp() {
               >
                 All 8 felts
               </NeonButton>
-              <span className="mx-2 text-xs text-white/40">Spotlight:</span>
+              <span className="mx-2 text-xs text-white/40">Spotlight (live felt)</span>
               {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                 <NeonButton
                   key={n}
@@ -1235,6 +1235,10 @@ function HostApp() {
                 </NeonButton>
               ))}
             </div>
+            <p className="mt-4 text-center text-[12px] leading-relaxed text-white/48">
+              Numbers zoom that table’s <strong className="text-white/65">live</strong> game to the whole display (animated). Use{' '}
+              <strong className="text-white/65">All 8 felts</strong> to return to the overview.
+            </p>
           </div>
           <div className="mx-auto max-w-5xl rounded-xl bg-black/30 p-5">
             <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">

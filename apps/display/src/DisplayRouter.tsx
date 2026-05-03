@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { DisplayLayoutPayload } from '@qhe/net'
 import { connect, onDisplayLayout } from '@qhe/net'
 import DisplayTableLive from './App.tsx'
@@ -25,7 +26,9 @@ function readUrlLayoutBootstrap(): DisplayLayoutPayload {
 }
 
 /**
- * Holds the websocket for the venue’s displays. Host pushes layout from the Venue tab.
+ * Host-driven layout from the Venue tab.
+ * Venue wall (no spotlight): grid preview only — no felt `state`.
+ * Spotlight or single-table: full `DisplayTableLive` subscribed to one felt session.
  */
 export default function DisplayRouter() {
   const venueCode =
@@ -39,23 +42,31 @@ export default function DisplayRouter() {
       : ({ layout: 'singleTable', tableId: '1' } satisfies DisplayLayoutPayload)
   )
 
-  const connectFingerprint = useMemo(() => {
-    if (layout.layout === 'venueWall') return `${venueCode}:wall`
-    return `${venueCode}:tbl:${layout.tableId}`
-  }, [
-    venueCode,
-    layout.layout,
-    layout.layout === 'singleTable' ? layout.tableId : '',
-  ])
+  const wallOverview = layout.layout === 'venueWall' && layout.focusTable == null
+
+  const watchedLiveTableId = (): string => {
+    if (layout.layout === 'singleTable') return layout.tableId
+    if (layout.layout === 'venueWall' && layout.focusTable != null) return String(layout.focusTable)
+    return '1'
+  }
+
+  const connectFingerprint = wallOverview ? `${venueCode}:wall` : `${venueCode}:tbl:${watchedLiveTableId()}`
 
   useEffect(() => {
-    const disconnectSock =
-      layout.layout === 'venueWall'
-        ? connect('display', 'DISPLAY01', venueCode, '1', {
-            displayVenueWall: true,
-            displayFocusTable: layout.focusTable ?? null,
-          })
-        : connect('display', 'DISPLAY01', venueCode, layout.tableId)
+    let disconnectSock: () => void
+    if (layout.layout === 'venueWall' && layout.focusTable == null) {
+      disconnectSock = connect('display', 'DISPLAY01', venueCode, '1', {
+        displayVenueWall: true,
+        displayFocusTable: null,
+      })
+    } else if (layout.layout === 'venueWall' && layout.focusTable != null) {
+      disconnectSock = connect('display', 'DISPLAY01', venueCode, String(layout.focusTable), {
+        displayVenueWall: true,
+        displayFocusTable: layout.focusTable,
+      })
+    } else {
+      disconnectSock = connect('display', 'DISPLAY01', venueCode, watchedLiveTableId())
+    }
 
     const offDisplay = onDisplayLayout((next) => setLayout(next))
 
@@ -63,13 +74,43 @@ export default function DisplayRouter() {
       offDisplay()
       disconnectSock()
     }
-    // Spotlight-only updates do not reconnect (same fingerprint). When connect() swaps the
-    // socket instance, layout listeners must attach to the new one — hence one effect with cleanup.
+    // Narrow deps: reconnect only when which socket/session we bind to changes
   }, [connectFingerprint, venueCode])
 
-  if (layout.layout === 'venueWall') {
-    return <VenueEightTablesPreview venueCode={venueCode} focusTable={layout.focusTable} />
-  }
+  const feltMotionKey =
+    layout.layout === 'singleTable'
+      ? `felt-${layout.tableId}`
+      : layout.layout === 'venueWall' && layout.focusTable != null
+        ? `felt-spot-${layout.focusTable}`
+        : 'felt-none'
 
-  return <DisplayTableLive />
+  return (
+    <AnimatePresence mode="wait">
+      {wallOverview ? (
+        <motion.div
+          key="venue-wall-grid"
+          className="relative min-h-screen w-full bg-slate-950"
+          role="presentation"
+          initial={{ opacity: 0, scale: 1.035 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.93 }}
+          transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <VenueEightTablesPreview venueCode={venueCode} />
+        </motion.div>
+      ) : (
+        <motion.div
+          key={feltMotionKey}
+          className="relative min-h-screen w-full overflow-hidden"
+          role="presentation"
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.05 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <DisplayTableLive />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
 }

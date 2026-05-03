@@ -1005,18 +1005,32 @@ io.on('connection', (socket) => {
       socket.join(displayVenueRoom(venueCode))
       const layout = resolveDisplayLayoutForHello(venueCode, data)
       socket.emit('displayLayout', layout)
-      if (layout.layout === 'venueWall') {
+
+      const spotlightWatchTableId =
+        layout.layout === 'venueWall' &&
+        layout.focusTable != null &&
+        Number.isInteger(layout.focusTable) &&
+        layout.focusTable >= 1 &&
+        layout.focusTable <= 8
+          ? String(layout.focusTable)
+          : null
+
+      const sessionTableIdRaw =
+        layout.layout === 'singleTable' ? layout.tableId : spotlightWatchTableId
+
+      if (!sessionTableIdRaw) {
         sockData.sessionKey = undefined
         const ackWall: ServerAck = { ok: true, message: 'Connected successfully' }
         socket.emit('ack', ackWall)
         return
       }
-      const watchKey = tableSessionKey(venueCode, layout.tableId)
+
+      const watchKey = tableSessionKey(venueCode, normalizeTableId(sessionTableIdRaw))
       socket.join(watchKey)
       sockData.sessionKey = watchKey
       let gs = rooms.get(watchKey)
       if (!gs) {
-        gs = createEmptyGame(venueCode, '', layout.tableId)
+        gs = createEmptyGame(venueCode, '', normalizeTableId(sessionTableIdRaw))
         rooms.set(watchKey, gs)
       }
       gs = runVirtualPlayerSimulation(gs)
