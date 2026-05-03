@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { PokerChip } from '@qhe/ui'
 
@@ -78,34 +78,17 @@ function phaseAccent(ph: string) {
   return 'text-white/85'
 }
 
-function parseFocusTableParam(sp: URLSearchParams): number | null {
-  const raw = sp.get('focusTable') ?? sp.get('tableFocus')
-  if (raw == null || raw.trim() === '') return null
-  const n = Number(raw)
-  if (!Number.isInteger(n) || n < 1 || n > 8) return null
-  return n
-}
-
-/** Read-only: URL is set by host / signage / browser controller — display has no touch targets. */
-function subscribeFocusParam(cb: () => void) {
-  window.addEventListener('popstate', cb)
-  return () => window.removeEventListener('popstate', cb)
-}
-
-function focusTableSnapshot(): number | null {
-  return parseFocusTableParam(new URLSearchParams(window.location.search))
+type VenueEightTablesPreviewProps = {
+  venueCode: string
+  /** Spotlight one felt (1–8), or null for grid of all felts — driven by host, not the TV. */
+  focusTable: number | null
 }
 
 /**
- * Opens from ?tablesPreview (see main.tsx). Optional ?focusTable=N from host-configured URL only.
- * No buttons or click targets — see repo rule: display-readonly.
+ * Venue wall mock (parallel felts). Spotlight is set from the host app, not on this screen.
+ * See repo rule: display-readonly.
  */
-export default function VenueEightTablesPreview() {
-  const venue =
-    new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase() || 'HOST01'
-
-  const focusedTable = useSyncExternalStore(subscribeFocusParam, focusTableSnapshot, () => null)
-
+export default function VenueEightTablesPreview({ venueCode, focusTable }: VenueEightTablesPreviewProps) {
   const [bannerSecondsLeft, setBannerSecondsLeft] = useState<number | null>(null)
 
   useEffect(() => {
@@ -120,7 +103,7 @@ export default function VenueEightTablesPreview() {
     return () => window.clearInterval(id)
   }, [])
 
-  const fi = focusedTable != null ? focusedTable - 1 : -1
+  const fi = focusTable != null ? focusTable - 1 : -1
   const focusSeats = fi >= 0 ? TABLE_SEATS[fi] : 0
   const focusPot = fi >= 0 ? TABLE_POTS[fi] : 0
 
@@ -151,16 +134,16 @@ export default function VenueEightTablesPreview() {
           </span>
         </motion.h1>
         <p className="mt-3 text-lg text-white/85">
-          Event <span className="font-bold text-casino-emerald">{venue}</span>
+          Event <span className="font-bold text-casino-emerald">{venueCode}</span>
           <span className="text-white/55"> · </span>
           <span className="text-white/65">parallel play, host-sync’d cue & beats</span>
         </p>
         <p className="mx-auto mt-3 max-w-3xl text-sm text-white/50">
-          Read-only display (no on-screen controls).{' '}
-          <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">focusTable=1–8</code> is set on the URL by the host
-          or browser controller — not tapped here. Reload without{' '}
-          <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">tablesPreview</code> for live single-table (
-          <code className="font-mono">&amp;table=…</code>).
+          Read-only display (no on-screen controls). The host sets TV layout from <strong className="text-white/70">Venue &amp; roster</strong>
+          (venue wall vs one felt, plus spotlight). Opening URL query still works for ops (
+          <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">tablesPreview</code>,{' '}
+          <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">focusTable</code>
+          ).
         </p>
       </header>
 
@@ -176,9 +159,9 @@ export default function VenueEightTablesPreview() {
                 <div className="text-xs font-bold uppercase tracking-[0.2em] text-casino-emerald/85">
                   Venue-wide (tables 1–8)
                 </div>
-                {focusedTable != null && (
+                {focusTable != null && (
                   <span className="rounded-full border border-amber-400/50 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-200">
-                    Table spotlight · felt {focusedTable}
+                    Table spotlight · felt {focusTable}
                   </span>
                 )}
               </div>
@@ -212,15 +195,17 @@ export default function VenueEightTablesPreview() {
       </div>
 
       <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 sm:px-6">
-        {focusedTable == null ? (
+        {focusTable == null ? (
           <>
             <h2 className="mb-2 text-center text-sm font-bold uppercase tracking-[0.18em] text-white/45">
               Per-table — local pot & seats (read-only tiles)
             </h2>
             <p className="mx-auto mb-6 max-w-2xl text-center text-[13px] text-white/55">
-              To spotlight one felt, load this page with{' '}
-              <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-emerald-200/90">&amp;focusTable=3</code> from the
-              host app, QR, or signage — never by touching this screen.
+              Spotlight one felt from the host{' '}
+              <strong className="text-white/75">Venue &amp; roster → Public TVs</strong>
+              , or temporarily via ops URL{' '}
+              <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-emerald-200/90">&amp;focusTable=3</code> — never by
+              touching this screen.
             </p>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {TABLE_SEATS.map((seats, idx) => {
@@ -271,9 +256,10 @@ export default function VenueEightTablesPreview() {
           <div className="mx-auto max-w-3xl space-y-6">
             <div className="rounded-xl border border-white/15 bg-black/35 px-4 py-4 text-center sm:text-left">
               <p className="text-sm text-white/70">
-                <span className="font-bold text-amber-200/95">Table spotlight</span> — URL includes{' '}
-                <code className="rounded bg-white/10 px-1.5 font-mono text-xs">focusTable={focusedTable}</code>. Switch felts or
-                return to the wall by changing the loaded URL from the host or device controller (not from this display).
+                <span className="font-bold text-amber-200/95">Table spotlight</span> — felt{' '}
+                <code className="rounded bg-white/10 px-1.5 font-mono text-xs">{focusTable}</code>. The host changes this from{' '}
+                <strong className="text-white/85">Venue &amp; roster</strong>{' '}
+                (same room code); TVs have no tap targets here.
               </p>
             </div>
 
@@ -286,7 +272,7 @@ export default function VenueEightTablesPreview() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-[0.25em] text-white/50">Spotlighted table</div>
-                  <div className="text-5xl font-black tabular-nums text-yellow-400 sm:text-6xl">{focusedTable}</div>
+                  <div className="text-5xl font-black tabular-nums text-yellow-400 sm:text-6xl">{focusTable}</div>
                 </div>
                 <span className={`rounded-lg px-3 py-2 text-xs font-black uppercase ${phaseAccent(VENUE.phase)}`}>
                   {phaseLabel(VENUE.phase)}

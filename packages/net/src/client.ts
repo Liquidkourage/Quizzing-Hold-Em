@@ -1,7 +1,13 @@
 ﻿/// <reference path="./vite-import-meta.d.ts" />
 
 import { io, Socket } from 'socket.io-client'
-import type { GameState, ClientHello, ServerAck, HostLibrarySnapshot } from './index'
+import type {
+  GameState,
+  ClientHello,
+  ServerAck,
+  HostLibrarySnapshot,
+  DisplayLayoutPayload,
+} from './index'
 
 let socket: Socket | null = null
 
@@ -21,6 +27,9 @@ function socketOrigin(): string {
 
 export type ConnectOptions = {
   hostSecret?: string
+  /** Role display: bootstrap when server has no persisted layout */
+  displayVenueWall?: boolean
+  displayFocusTable?: number | null
 }
 
 export function connect(
@@ -46,6 +55,16 @@ export function connect(
       tableId,
       ...(options?.hostSecret?.trim()
         ? { hostSecret: options.hostSecret.trim() }
+        : {}),
+      ...(role === 'display'
+        ? {
+            ...(typeof options?.displayVenueWall === 'boolean'
+              ? { displayVenueWall: options.displayVenueWall }
+              : {}),
+            ...(options?.displayFocusTable !== undefined
+              ? { displayFocusTable: options.displayFocusTable }
+              : {}),
+          }
         : {}),
     }
     
@@ -127,6 +146,14 @@ export function onHostLibrary(callback: (snapshot: HostLibrarySnapshot) => void)
   socket.on('hostLibrary', callback)
   return () => {
     if (socket) socket.off('hostLibrary', callback)
+  }
+}
+
+export function onDisplayLayout(callback: (layout: DisplayLayoutPayload) => void) {
+  if (!socket) return () => {}
+  socket.on('displayLayout', callback)
+  return () => {
+    if (socket) socket.off('displayLayout', callback)
   }
 }
 
@@ -373,4 +400,10 @@ export function addVirtualPlayers(count = 2) {
 export function clearVirtualPlayers() {
   if (!socket) return
   socket.emit('action', { type: 'clearVirtualPlayers' })
+}
+
+/** Host-only: where TVs should point (venue wall vs single felt). */
+export function displaySetLayout(layout: DisplayLayoutPayload) {
+  if (!socket) return
+  socket.emit('action', { type: 'displaySetLayout', payload: layout })
 }

@@ -14,6 +14,7 @@ import {
   addVirtualPlayers,
   clearVirtualPlayers,
   assignTablesFromLobby,
+  displaySetLayout,
   setQuestion as pushQuestionToVenue,
   questionBankAdd,
   questionBankUpdate,
@@ -1203,6 +1204,58 @@ function HostApp() {
         )}
 
         {hostTab === 'venue' && (
+        <>
+        <Card variant="glass" className="p-6 mb-8 border border-white/15">
+          <h2 className="text-2xl font-bold text-casino-emerald mb-3 text-center">Public TVs ({gameState.code})</h2>
+          <p className="mx-auto mb-6 max-w-3xl text-center text-sm leading-relaxed text-white/65">
+            Read-only browsers on{' '}
+            <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display?room={gameState.code}</code>.
+            Buttons here steer every display on this venue to the{' '}
+            <strong className="text-white/80">venue wall preview</strong> (eight felts mock) or a{' '}
+            <strong className="text-white/80">single live felt</strong>; nothing is tapped at the TV.
+          </p>
+          <div className="mx-auto mb-8 max-w-5xl rounded-xl bg-black/30 p-5">
+            <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Venue wall</div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <NeonButton
+                variant="emerald"
+                onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: null })}
+              >
+                All 8 felts
+              </NeonButton>
+              <span className="mx-2 text-xs text-white/40">Spotlight:</span>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <NeonButton
+                  key={n}
+                  variant="gold"
+                  className="!px-3 !py-2 min-w-[2.75rem]"
+                  onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: n })}
+                >
+                  {n}
+                </NeonButton>
+              ))}
+            </div>
+          </div>
+          <div className="mx-auto max-w-5xl rounded-xl bg-black/30 p-5">
+            <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">
+              Single live felt — full motions &amp; state
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <NeonButton
+                  key={n}
+                  variant="purple"
+                  onClick={() =>
+                    displaySetLayout({ layout: 'singleTable', tableId: String(n) })
+                  }
+                >
+                  Table {n}
+                </NeonButton>
+              ))}
+            </div>
+          </div>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card variant="glass" className="p-6">
             <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game status</h2>
@@ -1277,6 +1330,7 @@ function HostApp() {
             </div>
           </Card>
         </div>
+        </>
         )}
 
       </div>

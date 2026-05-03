@@ -17,14 +17,12 @@ TV and wall **display** builds (`apps/display/**`) are **never** operated by som
 
 The **host** and **player** apps (or future remote control / CMS) own:
 
-- Choosing layout, table spotlight, venue vs single-table URL, and any “actions”
-- Messaging that might later use **socket events** to tell a display to reload or switch view
+- Choosing layout (venue wall vs single felt, spotlight) via the host app (**`displaySetLayout`** → server **`displayLayout`** to all TVs on the venue code), legacy URL/query for ops setups, or future CMS
 
 ## Allowed on display
 
-- Purely **read-only** presentation driven by **props, server state, or initial URL query** set elsewhere
+- Purely **read-only** presentation driven by **socket `state`, `displayLayout`**, props, initial URL/query (ops), set elsewhere — never authored from touches on this screen
 - Passive **`useEffect`** timers and animations
-- **`useSyncExternalStore`** or similar to read URL for **initial / popstate** snapshot only — not to write URL from user gestures
 
 ## Checklist before merging display changes
 

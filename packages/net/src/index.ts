@@ -14,13 +14,21 @@ export type HostLibrarySnapshot = {
 export const ClientRole = z.enum(['host', 'player', 'display'])
 export type ClientRole = z.infer<typeof ClientRole>
 
+export type DisplayLayoutPayload =
+  | { layout: 'singleTable'; tableId: string }
+  | { layout: 'venueWall'; focusTable: number | null }
+
 export const ClientHello = z.object({
   role: ClientRole,
   name: z.string(),
   roomCode: z.string(),
   tableId: z.string().optional(),
   /** Sent by host builds when server.env HOST_SECRET is set */
-  hostSecret: z.string().optional()
+  hostSecret: z.string().optional(),
+  /** Display: URL / bootstrap hint when server has no persisted layout yet */
+  displayVenueWall: z.boolean().optional(),
+  /** Display: spotlight felt 1–8 for venue wall */
+  displayFocusTable: z.number().int().min(1).max(8).nullable().optional(),
 })
 export type ClientHello = z.infer<typeof ClientHello>
 
@@ -114,6 +122,8 @@ export interface ServerToClientEvents {
   seated: (info: { tableId: string }) => void
   /** Sent only to sockets in HOST:{venue} — bank, setlists, active rundown */
   hostLibrary: (snapshot: HostLibrarySnapshot) => void
+  /** Venue displays (DISPLAY:{venue}); host drives via displaySetLayout */
+  displayLayout: (layout: DisplayLayoutPayload) => void
 }
 
 export interface ClientToServerEvents {

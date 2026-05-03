@@ -1,11 +1,11 @@
 ﻿import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
-import { connect, onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
+import { onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
 import type { GameState } from '@qhe/core'
 import confetti from 'canvas-confetti'
 
-function DisplayApp() {
+function DisplayTableLive() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [isDealing, setIsDealing] = useState(false)
@@ -23,13 +23,6 @@ function DisplayApp() {
   
   // Shared community cards state - used by both animation and static display
   const [sharedCommunityCards, setSharedCommunityCards] = useState<Array<{digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}>>([])
-
-  useEffect(() => {
-    const venue = new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase() || 'HOST01'
-    const table = new URLSearchParams(window.location.search).get('table')?.trim() || '1'
-    const cleanup = connect('display', 'DISPLAY01', venue, table)
-    return cleanup
-  }, [])
 
   useEffect(() => {
     const unsubscribe = onState((newGameState) => {
@@ -1331,4 +1324,4 @@ function DisplayApp() {
   )
 }
 
-export default DisplayApp
+export default DisplayTableLive

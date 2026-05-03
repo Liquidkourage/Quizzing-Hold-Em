@@ -35,7 +35,8 @@ import {
 } from '@qhe/core'
 import type { Question } from '@qhe/core'
 import type { 
-  ClientHello, 
+  ClientHello,
+  DisplayLayoutPayload,
   ServerAck, 
   DealCardsAction,
   BetAction,
@@ -800,6 +801,47 @@ function hostVenueRoom(venueCode: string): string {
   return `HOST:${normalizeVenueCode(venueCode)}`
 }
 
+function displayVenueRoom(venueCode: string): string {
+  return `DISPLAY:${normalizeVenueCode(venueCode)}`
+}
+
+const venueDisplayLayouts = new Map<string, DisplayLayoutPayload>()
+
+function normalizeDisplayFocusTable(raw: unknown): number | null {
+  if (raw == null) return null
+  if (typeof raw !== 'number' || !Number.isInteger(raw)) return null
+  if (raw < 1 || raw > 8) return null
+  return raw
+}
+
+function parseDisplaySetLayoutPayload(payload: unknown): DisplayLayoutPayload | null {
+  if (!payload || typeof payload !== 'object') return null
+  const p = payload as Record<string, unknown>
+  const layout = p.layout
+  if (layout === 'venueWall') {
+    return { layout: 'venueWall', focusTable: normalizeDisplayFocusTable(p.focusTable) }
+  }
+  if (layout === 'singleTable') {
+    const tid = typeof p.tableId === 'string' ? p.tableId.trim() : ''
+    if (!tid) return null
+    return { layout: 'singleTable', tableId: normalizeTableId(tid) }
+  }
+  return null
+}
+
+function resolveDisplayLayoutForHello(venueCode: string, data: ClientHello): DisplayLayoutPayload {
+  const k = normalizeVenueCode(venueCode)
+  const stored = venueDisplayLayouts.get(k)
+  if (stored) return stored
+  if (data.displayVenueWall) {
+    return {
+      layout: 'venueWall',
+      focusTable: normalizeDisplayFocusTable(data.displayFocusTable),
+    }
+  }
+  return { layout: 'singleTable', tableId: normalizeTableId(data.tableId) }
+}
+
 function ensureVenueLibrary(venueCode: string): VenueLibraryData {
   const k = normalizeVenueCode(venueCode)
   if (!venueLibraries.has(k)) {
@@ -943,14 +985,13 @@ io.on('connection', (socket) => {
 
     const venueCode = normalizeVenueCode(roomCode)
     const tableId = normalizeTableId(data.tableId)
-    const sessionKey = tableSessionKey(venueCode, tableId)
-    socket.join(sessionKey)
+    const helloSessionKey = tableSessionKey(venueCode, tableId)
+
     const sockData = socket.data as {
       sessionKey?: string
       role?: string
       hostAuthed?: boolean
     }
-    sockData.sessionKey = sessionKey
     sockData.role = role
     if (role === 'host') {
       sockData.hostAuthed = true
@@ -960,10 +1001,39 @@ io.on('connection', (socket) => {
       socket.emit('hostLibrary', buildHostLibraryPayload(venueCode))
     }
 
-    let gameState = rooms.get(sessionKey)
+    if (role === 'display') {
+      socket.join(displayVenueRoom(venueCode))
+      const layout = resolveDisplayLayoutForHello(venueCode, data)
+      socket.emit('displayLayout', layout)
+      if (layout.layout === 'venueWall') {
+        sockData.sessionKey = undefined
+        const ackWall: ServerAck = { ok: true, message: 'Connected successfully' }
+        socket.emit('ack', ackWall)
+        return
+      }
+      const watchKey = tableSessionKey(venueCode, layout.tableId)
+      socket.join(watchKey)
+      sockData.sessionKey = watchKey
+      let gs = rooms.get(watchKey)
+      if (!gs) {
+        gs = createEmptyGame(venueCode, '', layout.tableId)
+        rooms.set(watchKey, gs)
+      }
+      gs = runVirtualPlayerSimulation(gs)
+      rooms.set(watchKey, gs)
+      const ackDs: ServerAck = { ok: true, message: 'Connected successfully' }
+      socket.emit('ack', ackDs)
+      io.to(watchKey).emit('state', gs)
+      return
+    }
+
+    socket.join(helloSessionKey)
+    sockData.sessionKey = helloSessionKey
+
+    let gameState = rooms.get(helloSessionKey)
     if (!gameState) {
       gameState = createEmptyGame(venueCode, '', tableId)
-      rooms.set(sessionKey, gameState)
+      rooms.set(helloSessionKey, gameState)
     }
 
     if (role === 'host') {
@@ -975,16 +1045,42 @@ io.on('connection', (socket) => {
     }
 
     gameState = runVirtualPlayerSimulation(gameState)
-    rooms.set(sessionKey, gameState)
+    rooms.set(helloSessionKey, gameState)
 
     const ack: ServerAck = { ok: true, message: 'Connected successfully' }
     socket.emit('ack', ack)
 
-    io.to(sessionKey).emit('state', gameState)
+    io.to(helloSessionKey).emit('state', gameState)
   })
 
   socket.on('action', (data: any) => {
     const { type, payload } = data
+
+    if (type === 'displaySetLayout') {
+      const sessionKey = getActiveSessionKey(socket)
+      if (!sessionKey) {
+        socket.emit('toast', 'No room found')
+        return
+      }
+      const gsCtl = rooms.get(sessionKey)
+      if (!gsCtl) {
+        socket.emit('toast', 'Game not found')
+        return
+      }
+      if (!assertVenueHost(socket, gsCtl)) {
+        return
+      }
+      const nextLayout = parseDisplaySetLayoutPayload(payload)
+      if (!nextLayout) {
+        socket.emit('toast', 'Invalid TV layout (use venue wall or single table + table id).')
+        return
+      }
+      venueDisplayLayouts.set(normalizeVenueCode(gsCtl.code), nextLayout)
+      io.to(displayVenueRoom(gsCtl.code)).emit('displayLayout', nextLayout)
+      socket.emit('toast', 'TV / display layout updated for the venue.')
+      return
+    }
+
     const sessionKey = getActiveSessionKey(socket)
     
     if (!sessionKey) {
