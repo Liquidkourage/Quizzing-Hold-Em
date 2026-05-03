@@ -394,6 +394,9 @@ function DisplayTableLive() {
     )
   }
 
+  /** Negative = move felt + seats up together in the main panel (see table wrapper `top`). */
+  const displayTableLiftPx = -40
+
   // Calculate player positions around the table (perfectly aligned with cupholders)
   const getPlayerPosition = (index: number, total: number) => {
     const angle = (index / total) * 2 * Math.PI - Math.PI / 2 // Start from top
@@ -457,7 +460,10 @@ function DisplayTableLive() {
     // Position relative to the table center
     // Table is centered at 50% with transform translate
     // Adjust for offset to align with visual center
-    return { x: `calc(50% + ${playerX}px - 55px)`, y: `calc(50% + ${playerY}px - 60px)` }
+    return {
+      x: `calc(50% + ${playerX}px - 55px)`,
+      y: `calc(50% + ${playerY + displayTableLiftPx}px - 60px)`,
+    }
   }
 
   return (
@@ -541,7 +547,7 @@ function DisplayTableLive() {
         {/* Question + answering timer — readable from the whole room */}
         {displayGameState.round.question && (
           <motion.div
-            className="fixed top-14 left-0 right-0 z-40 px-3 sm:px-6"
+            className="fixed top-28 left-0 right-0 z-40 px-3 sm:px-6"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -590,7 +596,7 @@ function DisplayTableLive() {
         {/* Main Game Area */}
         <div
           className={`relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
-            displayGameState.round.question ? 'mt-[min(220px,24vh)]' : 'mt-[5vh]'
+            displayGameState.round.question ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
           }`}
         >
           
@@ -606,8 +612,8 @@ function DisplayTableLive() {
                   className="absolute"
                   style={{
                     left: 'calc(50% - 50px)', // Move deck more to the right
-                    top: 'calc(50% + 100px)', // Move deck down below the tableau (match community animation)
-                    transform: 'translate(-50%, -50%)'
+                    top: `calc(50% + ${100 + displayTableLiftPx}px)`,
+                    transform: 'translate(-50%, -50%)',
                   }}
                   initial={{ scale: 0, opacity: 0, rotateY: 0 }}
                   animate={{ scale: 1, opacity: 1, rotateY: 0 }}
@@ -714,7 +720,9 @@ function DisplayTableLive() {
                   
                   // Calculate exact center for animation start (same as deck position)
                   const centerX = (window.innerWidth / 2) - 50 // Match deck position
-                  const centerY = (window.innerHeight / 2 + 100) - (window.innerHeight * 0.10) // Match deck position, move up 10%
+                  const centerY =
+                    (window.innerHeight / 2 + 100 + displayTableLiftPx) -
+                    window.innerHeight * 0.1 // Match deck position, move up 10%
                   
                   const finalX = endpoint.x
                   const finalY = endpoint.y
@@ -777,8 +785,8 @@ function DisplayTableLive() {
                     className="absolute"
                     style={{
                       left: 'calc(50% - 50px)', // Move deck more to the right
-                      top: 'calc(50% + 100px)', // Move deck down below the tableau
-                      transform: 'translate(-50%, -50%)'
+                      top: `calc(50% + ${100 + displayTableLiftPx}px)`,
+                      transform: 'translate(-50%, -50%)',
                     }}
                     initial={{ scale: 0, opacity: 0, rotateY: 0 }}
                     animate={{ scale: 1, opacity: 1, rotateY: 0 }}
@@ -823,7 +831,12 @@ function DisplayTableLive() {
                   const calculateCommunityCardEndpoint = (cardIndex: number) => {
                     // Community cards are positioned at the center of the table (accounting for 5vh margin, then moved up 12% and right 2%, then fine-tuned)
                     const tableCenterX = (window.innerWidth / 2) + (window.innerWidth * 0.02) - 18 // Move right 2%, then left 18px (1px more left)
-                    const tableCenterY = (window.innerHeight / 2) + (window.innerHeight * 0.05) - (window.innerHeight * 0.12) + 3 // Account for 5vh margin, then move up 12%, then down 3px (2px more up)
+                    const tableCenterY =
+                      (window.innerHeight / 2) +
+                      (window.innerHeight * 0.05) -
+                      window.innerHeight * 0.12 +
+                      3 +
+                      displayTableLiftPx // match static felt lift
                     
                                       // Calculate position for each community card in a horizontal row
                   const cardWidth = 64 // small card width (64px)
@@ -842,7 +855,7 @@ function DisplayTableLive() {
                   
                   // Calculate center for animation start (same as deck position)
                   const centerX = (window.innerWidth / 2) - 50 // Match deck position
-                  const centerY = window.innerHeight / 2 + 100 // Match deck position (no margin added)
+                  const centerY = window.innerHeight / 2 + 100 + displayTableLiftPx // Match deck position (no margin added)
                   
                   return (
                     <motion.div
@@ -946,8 +959,11 @@ function DisplayTableLive() {
             )
           })}
 
-          {/* Realistic Poker Table - Centered vertically in available space */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+          {/* Realistic Poker Table — same vertical lift as `getPlayerPosition` */}
+          <div
+            className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
+            style={{ top: `calc(50% + ${displayTableLiftPx}px)` }}
+          >
             {/* Table shadow */}
             <div className="absolute inset-0 w-[842px] h-[637px] bg-black/40 rounded-full blur-lg transform translate-y-2"></div>
             
@@ -1258,7 +1274,7 @@ function DisplayTableLive() {
         <div className="fixed inset-0 z-[55] pointer-events-none">
           {(() => {
             const potX = window.innerWidth / 2
-            const potY = window.innerHeight / 2 - 144
+            const potY = window.innerHeight / 2 - 144 + displayTableLiftPx
             const idx = displayGameState.players.findIndex(p => p.id === showdownWinnerId)
             const seat = getPlayerPosition(Math.max(0, idx), displayGameState.players.length)
             const seatX = window.innerWidth / 2 + parseFloat(seat.x.replace('calc(50% + ', '').replace('px - 55px)', '')) + 55
