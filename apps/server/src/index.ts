@@ -32,6 +32,7 @@ import {
   playerRaise,
   playerAllIn,
   SAMPLE_QUESTIONS,
+  buildDisplayPreviewGameState,
 } from '@qhe/core'
 import type { Question } from '@qhe/core'
 import type { 
@@ -1032,6 +1033,14 @@ io.on('connection', (socket) => {
       if (!gs) {
         gs = createEmptyGame(venueCode, '', normalizeTableId(sessionTableIdRaw))
         rooms.set(watchKey, gs)
+      }
+      const tid = normalizeTableId(sessionTableIdRaw)
+      if (gs.players.length === 0 && gs.phase === 'lobby') {
+        const tn = Number.parseInt(String(tid), 10)
+        if (Number.isInteger(tn) && tn >= 1 && tn <= 8) {
+          gs = buildDisplayPreviewGameState(normalizeVenueCode(venueCode), tid)
+          rooms.set(watchKey, gs)
+        }
       }
       gs = runVirtualPlayerSimulation(gs)
       rooms.set(watchKey, gs)

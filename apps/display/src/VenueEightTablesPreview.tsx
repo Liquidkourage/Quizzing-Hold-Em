@@ -1,19 +1,12 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { PokerChip } from '@qhe/ui'
-
-/** One venue timeline — mirrored on every playable table (rosters/pots diverge locally). */
-const VENUE = {
-  /** Host advances one rhythm for room code → every felt matches. */
-  phase: 'answering' as const,
-  question:
-    'In whole minutes, boiling point of pure water at standard atmospheric pressure?',
-  subtitle: 'Shared deadline when answering — countdown is identical venue-wide.',
-}
-
-/** Seats filled & pot illustrate parallel table state — not synced across venue. */
-const TABLE_SEATS = [8, 6, 7, 5, 8, 6, 7, 8] as const
-const TABLE_POTS = [920, 640, 880, 400, 1100, 520, 760, 1340] as const
+import {
+  DISPLAY_PREVIEW_DEMO_QUESTION_TEXT,
+  DISPLAY_PREVIEW_SYNCED_PHASE,
+  DISPLAY_PREVIEW_SYNCED_SUBTITLE,
+  DISPLAY_PREVIEW_TABLES,
+} from '@qhe/core'
 
 function SeatDots({
   seatedCount,
@@ -90,12 +83,9 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
   const [bannerSecondsLeft, setBannerSecondsLeft] = useState<number | null>(null)
 
   useEffect(() => {
-    if (VENUE.phase !== 'answering') {
-      setBannerSecondsLeft(null)
-      return
-    }
     const deadline = Date.now() + 43_000
-    const tick = () => setBannerSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)))
+    const tick = () =>
+      setBannerSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)))
     tick()
     const id = window.setInterval(tick, 250)
     return () => window.clearInterval(id)
@@ -154,13 +144,13 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
-                <span className={`rounded-lg px-3 py-1 text-sm font-black uppercase ${phaseAccent(VENUE.phase)}`}>
-                  {phaseLabel(VENUE.phase)}
+                <span className={`rounded-lg px-3 py-1 text-sm font-black uppercase ${phaseAccent(DISPLAY_PREVIEW_SYNCED_PHASE)}`}>
+                  {phaseLabel(DISPLAY_PREVIEW_SYNCED_PHASE)}
                 </span>
-                <span className="text-sm text-white/65">{VENUE.subtitle}</span>
+                <span className="text-sm text-white/65">{DISPLAY_PREVIEW_SYNCED_SUBTITLE}</span>
               </div>
             </div>
-            {VENUE.phase === 'answering' && bannerSecondsLeft != null && (
+            {DISPLAY_PREVIEW_SYNCED_PHASE === 'answering' && bannerSecondsLeft != null && (
               <div className="rounded-xl border border-amber-500/35 bg-amber-950/30 px-5 py-2 text-center">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-white/55">
                   Same deadline everywhere
@@ -172,7 +162,7 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
 
           <div className="border-t border-white/10 pt-4">
             <div className="text-xs font-semibold uppercase tracking-widest text-white/45">Synced trivia</div>
-            <p className="mt-2 text-xl font-semibold leading-snug text-yellow-400 sm:text-2xl">{VENUE.question}</p>
+            <p className="mt-2 text-xl font-semibold leading-snug text-yellow-400 sm:text-2xl">{DISPLAY_PREVIEW_DEMO_QUESTION_TEXT}</p>
             <p className="mt-3 text-xs leading-relaxed text-white/55 sm:text-sm">
               In production, the host advances one lifecycle for this room code; every playable table receives the same{' '}
               <strong className="text-white/85">phase</strong> and <strong className="text-white/85">question</strong>.
@@ -191,9 +181,10 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
           <strong className="text-white/75">Venue &amp; roster → Public TVs</strong> — never by touching this screen.
         </p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {TABLE_SEATS.map((seats, idx) => {
+          {DISPLAY_PREVIEW_TABLES.map((snap, idx) => {
                 const tn = idx + 1
-                const pot = TABLE_POTS[idx]
+                const seats = snap.seated
+                const pot = snap.pot
                 return (
                   <motion.article
                     key={tn}
@@ -208,8 +199,8 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
                         <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
                         <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
                       </div>
-                      <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(VENUE.phase)}`}>
-                        {phaseLabel(VENUE.phase)}
+                      <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(DISPLAY_PREVIEW_SYNCED_PHASE)}`}>
+                        {phaseLabel(DISPLAY_PREVIEW_SYNCED_PHASE)}
                       </span>
                     </div>
 

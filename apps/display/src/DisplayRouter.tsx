@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import type { DisplayLayoutPayload } from '@qhe/net'
 import { connect, onDisplayLayout } from '@qhe/net'
 import DisplayTableLive from './App.tsx'
+import { readUrlLayoutBootstrap } from './displayUrlParams'
 import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
 
 /** Tile rect in viewport used to “iris” open the full felt from the grid. */
@@ -11,30 +12,6 @@ type IrisRect = { top: number; left: number; width: number; height: number }
 type ShrinkingExit = { tableNum: number; rect: IrisRect }
 
 const IRIS_SEC = 0.58
-
-function readUrlLayoutBootstrap(): DisplayLayoutPayload {
-  const s = new URLSearchParams(window.location.search)
-  const tp = (s.get('tablesPreview') ?? '').trim().toLowerCase()
-  const wallFromUrl =
-    s.has('tablesPreview') &&
-    tp !== '' &&
-    !['0', 'false', 'no', 'off'].includes(tp)
-  if (wallFromUrl) {
-    const raw = s.get('focusTable') ?? s.get('tableFocus')
-    let focusTable: number | null = null
-    if (raw != null && raw.trim() !== '') {
-      const n = Number(raw)
-      if (Number.isInteger(n) && n >= 1 && n <= 8) focusTable = n
-    }
-    return { layout: 'venueWall', focusTable }
-  }
-  const tableParam = s.get('table')?.trim() || '1'
-  const n = Number(tableParam)
-  if (Number.isInteger(n) && n >= 1 && n <= 8) {
-    return { layout: 'venueWall', focusTable: n }
-  }
-  return { layout: 'singleTable', tableId: tableParam }
-}
 
 function venueOverview(l: DisplayLayoutPayload) {
   return l.layout === 'venueWall' && l.focusTable == null
