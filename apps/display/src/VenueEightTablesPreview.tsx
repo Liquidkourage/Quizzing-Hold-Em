@@ -1,28 +1,19 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { PokerChip } from '@qhe/ui'
 
-/** Illustrative snapshots for eight numbered tables — not live-synced data. */
-const SNAP = [
-  { seats: 8, phase: 'betting' as const, pot: 1120 },
-  { seats: 6, phase: 'question' as const, pot: 0 },
-  { seats: 7, phase: 'betting' as const, pot: 880 },
-  { seats: 5, phase: 'answering' as const, pot: 0 },
-  { seats: 8, phase: 'betting' as const, pot: 1540 },
-  { seats: 6, phase: 'betting' as const, pot: 640 },
-  { seats: 7, phase: 'question' as const, pot: 0 },
-  { seats: 8, phase: 'showdown' as const, pot: 2460 },
-] as const
+/** One venue timeline — mirrored on every playable table (rosters/pots diverge locally). */
+const VENUE = {
+  /** Host advances one rhythm for room code → every felt matches. */
+  phase: 'answering' as const,
+  question:
+    'In whole minutes, boiling point of pure water at standard atmospheric pressure?',
+  subtitle: 'Shared deadline when answering — countdown is identical venue-wide.',
+}
 
-const Q_SNIPPET = [
-  'Metro station count in Paris?',
-  'Year the first moon landing?',
-  'Height of Everest in kilometers?',
-  'Digits in Pi (millionth)?',
-  'Speed of sound at sea level?',
-  'Gold atomic number?',
-  'States in the contiguous US?',
-  'Hours in a leap year?',
-]
+/** Seats filled & pot illustrate parallel table state — not synced across venue. */
+const TABLE_SEATS = [8, 6, 7, 5, 8, 6, 7, 8] as const
+const TABLE_POTS = [920, 640, 880, 400, 1100, 520, 760, 1340] as const
 
 function SeatDots({ seatedCount }: { seatedCount: number }) {
   return (
@@ -65,7 +56,7 @@ function SeatDots({ seatedCount }: { seatedCount: number }) {
 }
 
 function phaseLabel(ph: string) {
-  if (ph === 'question') return 'Question'
+  if (ph === 'question') return 'Question setup'
   if (ph === 'betting') return 'Wagering'
   if (ph === 'answering') return 'Answering'
   if (ph === 'showdown') return 'Showdown'
@@ -80,11 +71,26 @@ function phaseAccent(ph: string) {
 }
 
 /**
- * Opens from <code>?tablesPreview</code> (see main.tsx). Synthetic eight-table venue wall.
+ * Opens from ?tablesPreview (see main.tsx). Shows venue-wide trivia + phase sync;
+ * pots & seat counts vary per table like live parallel states.
  */
 export default function VenueEightTablesPreview() {
   const venue =
     new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase() || 'HOST01'
+
+  const [bannerSecondsLeft, setBannerSecondsLeft] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (VENUE.phase !== 'answering') {
+      setBannerSecondsLeft(null)
+      return
+    }
+    const deadline = Date.now() + 43_000
+    const tick = () => setBannerSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)))
+    tick()
+    const id = window.setInterval(tick, 250)
+    return () => window.clearInterval(id)
+  }, [])
 
   return (
     <div className="relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
@@ -115,20 +121,66 @@ export default function VenueEightTablesPreview() {
         <p className="mt-3 text-lg text-white/85">
           Event <span className="font-bold text-casino-emerald">{venue}</span>
           <span className="text-white/55"> · </span>
-          <span className="text-white/65">preview layout (sample seats & phases)</span>
+          <span className="text-white/65">parallel play, host-sync’d cue & beats</span>
         </p>
-        <p className="mx-auto mt-2 max-w-3xl text-sm text-white/50">
-          This view is mocked for televisions and rehearsals. Reload without{' '}
-          <code className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/85">tablesPreview</code>{' '}
-          to attach to one live table (<code className="font-mono">&amp;table=…</code>).
+        <p className="mx-auto mt-3 max-w-3xl text-sm text-white/50">
+          This view is mocked. Reload without{' '}
+          <code className="rounded bg-white/10 px-2 py-0.5 font-mono text-white/85">
+            tablesPreview
+          </code>{' '}
+          for one live room (<code className="font-mono">&amp;table=…</code>).
         </p>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-8 sm:px-6">
+        <motion.section
+          className="mb-8 rounded-2xl border-2 border-casino-emerald/40 bg-black/65 p-6 shadow-[0_0_40px_rgba(0,255,180,0.08)] backdrop-blur-md"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center sm:justify-between sm:text-left">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-casino-emerald/85">
+                Venue-wide (tables 1–8)
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className={`rounded-lg px-3 py-1 text-sm font-black uppercase ${phaseAccent(VENUE.phase)}`}>
+                  {phaseLabel(VENUE.phase)}
+                </span>
+                <span className="text-sm text-white/65">{VENUE.subtitle}</span>
+              </div>
+            </div>
+            {VENUE.phase === 'answering' && bannerSecondsLeft != null && (
+              <div className="rounded-xl border border-amber-500/35 bg-amber-950/30 px-5 py-2 text-center">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/55">
+                  Same deadline everywhere
+                </div>
+                <div className="font-mono text-3xl font-black tabular-nums text-amber-200">{bannerSecondsLeft}s</div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <div className="text-xs font-semibold uppercase tracking-widest text-white/45">Synced trivia</div>
+            <p className="mt-2 text-xl font-semibold leading-snug text-yellow-400 sm:text-2xl">{VENUE.question}</p>
+            <p className="mt-3 text-xs leading-relaxed text-white/55 sm:text-sm">
+              In production, the host advances one lifecycle for this room code; every playable table receives the same{' '}
+              <strong className="text-white/85">phase</strong> and <strong className="text-white/85">question</strong>.
+              Stacks, blinds, folds, pots, and rosters remain <strong className="text-white/85">local to each felt</strong>
+              .
+            </p>
+          </div>
+        </motion.section>
+      </div>
+
+      <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 sm:px-6">
+        <h2 className="mb-4 text-center text-sm font-bold uppercase tracking-[0.18em] text-white/45">
+          Per-table view (pots & fills differ — phase & cue match venue bar above)
+        </h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {SNAP.map((row, idx) => {
+          {TABLE_SEATS.map((seats, idx) => {
             const tn = idx + 1
-            const q = Q_SNIPPET[idx]
+            const pot = TABLE_POTS[idx]
             return (
               <motion.article
                 key={tn}
@@ -142,33 +194,33 @@ export default function VenueEightTablesPreview() {
                     <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
                     <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
                   </div>
-                  <span
-                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase ${phaseAccent(row.phase)}`}
-                  >
-                    {phaseLabel(row.phase)}
+                  <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(VENUE.phase)}`}>
+                    {phaseLabel(VENUE.phase)}
                   </span>
                 </div>
 
-                <div className="mt-4 flex-shrink-0">
-                  <SeatDots seatedCount={row.seats} />
+                <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-casino-emerald/85">
+                  In sync ✓
                 </div>
 
-                <dl className="mt-5 space-y-2 text-sm leading-snug border-t border-white/10 pt-4">
+                <div className="mt-3 flex-shrink-0">
+                  <SeatDots seatedCount={seats} />
+                </div>
+
+                <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm leading-snug">
                   <div className="flex justify-between gap-2">
                     <dt className="text-white/55">Occupied seats</dt>
-                    <dd className="font-mono tabular-nums font-bold text-casino-emerald">
-                      {row.seats} / 8
+                    <dd className="font-mono font-bold tabular-nums text-casino-emerald">
+                      {seats} / 8
                     </dd>
                   </div>
                   <div className="flex justify-between gap-2">
-                    <dt className="text-white/55">Pot</dt>
-                    <dd className="font-mono tabular-nums font-bold text-yellow-300">
-                      ${row.pot.toLocaleString()}
-                    </dd>
+                    <dt className="text-white/55">Pot (local)</dt>
+                    <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
                   </div>
                   <div>
-                    <dt className="text-white/55">Cue (readable from room)</dt>
-                    <dd className="mt-1 line-clamp-3 text-[15px] font-semibold leading-snug text-white/90">{q}</dd>
+                    <dt className="text-white/55">Trivia cue (venue)</dt>
+                    <dd className="mt-1 line-clamp-3 text-[13px] font-semibold leading-snug text-white/90">{VENUE.question}</dd>
                   </div>
                 </dl>
               </motion.article>
