@@ -379,10 +379,10 @@ function HostApp() {
               <select
                 value={hostTableId}
                 onChange={e => setHostTableId(e.target.value)}
-                className="rounded-lg bg-black/40 border border-white/25 text-white px-3 py-2"
+                className="rounded-lg border border-white/25 bg-zinc-950 px-3 py-2 text-white [color-scheme:dark]"
               >
                 {[LOBBY_TABLE_ID, '1', '2', '3', '4', '5', '6', '7', '8'].map(v => (
-                  <option key={v} value={v}>
+                  <option key={v} value={v} className="bg-zinc-950 text-white">
                     {v === LOBBY_TABLE_ID ? 'Lobby (pool — auto-assign)' : `Table ${v}`}
                   </option>
                 ))}
@@ -707,7 +707,7 @@ function HostApp() {
               <label className="block text-sm text-white/80">
                 Edit setlist
                 <select
-                  className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-white/20 bg-zinc-950 px-3 py-2 text-white [color-scheme:dark]"
                   value={setlistDraftId ?? ''}
                   onChange={(e) => {
                     const id = e.target.value || null
@@ -716,9 +716,11 @@ function HostApp() {
                     setSetlistRenameDraft(sl?.name ?? '')
                   }}
                 >
-                  <option value="">Select a setlist…</option>
+                  <option value="" className="bg-zinc-950 text-white">
+                    Select a setlist…
+                  </option>
                   {setlists.map((sl) => (
-                    <option key={sl.id} value={sl.id}>
+                    <option key={sl.id} value={sl.id} className="bg-zinc-950 text-white">
                       {sl.name} ({sl.questionIds.length} cues)
                     </option>
                   ))}
@@ -769,7 +771,7 @@ function HostApp() {
                 <div className="space-y-3">
                   <div className="text-sm font-bold text-white/90">Question order</div>
                   <select
-                    className="w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-white/20 bg-zinc-950 px-3 py-2 text-sm text-white [color-scheme:dark]"
                     value={addToSetlistChoice}
                     onChange={(e) => {
                       const v = e.target.value
@@ -778,11 +780,13 @@ function HostApp() {
                       setAddToSetlistChoice('')
                     }}
                   >
-                    <option value="">+ Add from bank…</option>
+                    <option value="" className="bg-zinc-950 text-white">
+                      + Add from bank…
+                    </option>
                     {questionBank
                       .filter((q) => draftSetlist && !draftSetlist.questionIds.includes(q.id))
                       .map((q) => (
-                        <option key={q.id} value={q.id}>
+                        <option key={q.id} value={q.id} className="bg-zinc-950 text-white">
                           {q.text.length > 70 ? `${q.text.slice(0, 70)}…` : q.text}
                         </option>
                       ))}
@@ -911,13 +915,15 @@ function HostApp() {
                   Select a setlist (from the Setlists tab) for a fixed cue order. <strong className="text-white/70">None</strong> = use random / bank row pushes only.
                 </p>
                 <select
-                  className="w-full rounded-lg bg-white/10 border border-white/25 text-white px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-white/25 bg-zinc-950 px-3 py-2 text-sm text-white [color-scheme:dark]"
                   value={activeSetlistId ?? ''}
                   onChange={(e) => selectTriviaSetlist(e.target.value || null)}
                 >
-                  <option value="">None (free play)</option>
+                  <option value="" className="bg-zinc-950 text-white">
+                    None (free play)
+                  </option>
                   {setlists.map((sl) => (
-                    <option key={sl.id} value={sl.id}>
+                    <option key={sl.id} value={sl.id} className="bg-zinc-950 text-white">
                       {sl.name} ({sl.questionIds.length} cues)
                     </option>
                   ))}
@@ -1058,16 +1064,27 @@ function HostApp() {
                   <span className="font-semibold text-casino-gold">{virtualSeatCount}</span>.
                 </p>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <select
-                    value={virtualAddCount}
-                    onChange={e => setVirtualAddCount(Number(e.target.value) || 1)}
-                    disabled={atPlayerCap}
-                    className="rounded-lg bg-white/10 border border-white/25 text-white px-3 py-2 text-sm disabled:opacity-40"
+                  <div
+                    className="flex flex-wrap gap-1.5 rounded-lg border border-white/20 bg-black/40 p-1"
+                    role="group"
+                    aria-label="Number of virtual CPUs to add"
                   >
-                    {[1, 2, 3, 4, 5, 6].map(n => (
-                      <option key={n} value={n}>{n}</option>
+                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        disabled={atPlayerCap}
+                        onClick={() => setVirtualAddCount(n)}
+                        className={`min-w-[2.5rem] rounded-md px-2.5 py-2 text-center text-sm font-bold tabular-nums transition-colors disabled:opacity-40 ${
+                          virtualAddCount === n
+                            ? 'border border-amber-400/60 bg-amber-500/25 text-amber-100 shadow-[0_0_12px_rgba(251,191,36,0.2)]'
+                            : 'border border-transparent text-white/75 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {n}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                   <NeonButton
                     variant="gold"
                     size="small"
