@@ -175,7 +175,7 @@ export default function VenueEightTablesPreview() {
 
       <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 sm:px-6">
         <h2 className="mb-4 text-center text-sm font-bold uppercase tracking-[0.18em] text-white/45">
-          Per-table view (pots & fills differ — phase & cue match venue bar above)
+          Per-table — local pot & seats · phase matches above (trivia only in venue bar)
         </h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {TABLE_SEATS.map((seats, idx) => {
@@ -218,11 +218,11 @@ export default function VenueEightTablesPreview() {
                     <dt className="text-white/55">Pot (local)</dt>
                     <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
                   </div>
-                  <div>
-                    <dt className="text-white/55">Trivia cue (venue)</dt>
-                    <dd className="mt-1 line-clamp-3 text-[13px] font-semibold leading-snug text-white/90">{VENUE.question}</dd>
-                  </div>
                 </dl>
+                <p className="mt-3 text-center text-[11px] text-white/45">
+                  Trivia lives in the{' '}
+                  <span className="text-white/65">venue bar above</span> — nothing here but this felt.
+                </p>
               </motion.article>
             )
           })}
