@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useSyncExternalStore, useState } from 'react'
 import { motion } from 'framer-motion'
 import { PokerChip } from '@qhe/ui'
 
@@ -56,7 +56,6 @@ function SeatDots({
                 : 'border-white/20 bg-black/35'
             }`}
             style={{ left: `calc(50% + ${xr}%)`, top: `calc(50% + ${yr}%)` }}
-            title={`Seat ${i + 1}`}
           />
         )
       })}
@@ -87,35 +86,25 @@ function parseFocusTableParam(sp: URLSearchParams): number | null {
   return n
 }
 
-function replaceUrlFocus(table: number | null) {
-  const u = new URL(window.location.href)
-  if (table == null) {
-    u.searchParams.delete('focusTable')
-    u.searchParams.delete('tableFocus')
-  } else {
-    u.searchParams.set('focusTable', String(table))
-    u.searchParams.delete('tableFocus')
-  }
-  window.history.replaceState(null, '', `${u.pathname}${u.search}${u.hash}`)
+/** Read-only: URL is set by host / signage / browser controller — display has no touch targets. */
+function subscribeFocusParam(cb: () => void) {
+  window.addEventListener('popstate', cb)
+  return () => window.removeEventListener('popstate', cb)
+}
+
+function focusTableSnapshot(): number | null {
+  return parseFocusTableParam(new URLSearchParams(window.location.search))
 }
 
 /**
- * Opens from ?tablesPreview (see main.tsx). Venue wall + optional ?focusTable=N (table view).
+ * Opens from ?tablesPreview (see main.tsx). Optional ?focusTable=N from host-configured URL only.
+ * No buttons or click targets — see repo rule: display-readonly.
  */
 export default function VenueEightTablesPreview() {
   const venue =
     new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase() || 'HOST01'
 
-  const initialFocus = useMemo(
-    () => parseFocusTableParam(new URLSearchParams(window.location.search)),
-    [],
-  )
-
-  const [focusedTable, setFocusedTable] = useState<number | null>(initialFocus)
-
-  useEffect(() => {
-    replaceUrlFocus(focusedTable)
-  }, [focusedTable])
+  const focusedTable = useSyncExternalStore(subscribeFocusParam, focusTableSnapshot, () => null)
 
   const [bannerSecondsLeft, setBannerSecondsLeft] = useState<number | null>(null)
 
@@ -167,9 +156,9 @@ export default function VenueEightTablesPreview() {
           <span className="text-white/65">parallel play, host-sync’d cue & beats</span>
         </p>
         <p className="mx-auto mt-3 max-w-3xl text-sm text-white/50">
-          This view is mocked. Use{' '}
-          <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">focusTable=1–8</code> to open in{' '}
-          <strong className="text-white/70">table view</strong>. Reload without{' '}
+          Read-only display (no on-screen controls).{' '}
+          <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">focusTable=1–8</code> is set on the URL by the host
+          or browser controller — not tapped here. Reload without{' '}
           <code className="rounded bg-white/10 px-1.5 font-mono text-white/85">tablesPreview</code> for live single-table (
           <code className="font-mono">&amp;table=…</code>).
         </p>
@@ -189,7 +178,7 @@ export default function VenueEightTablesPreview() {
                 </div>
                 {focusedTable != null && (
                   <span className="rounded-full border border-amber-400/50 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-200">
-                    Table view · felt {focusedTable}
+                    Table spotlight · felt {focusedTable}
                   </span>
                 )}
               </div>
@@ -226,12 +215,12 @@ export default function VenueEightTablesPreview() {
         {focusedTable == null ? (
           <>
             <h2 className="mb-2 text-center text-sm font-bold uppercase tracking-[0.18em] text-white/45">
-              Per-table — local pot & seats · click a felt to emulate host table focus
+              Per-table — local pot & seats (read-only tiles)
             </h2>
             <p className="mx-auto mb-6 max-w-2xl text-center text-[13px] text-white/55">
-              Or deep-link{' '}
-              <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-emerald-200/90">&amp;focusTable=3</code> to start
-              spotlighted on table 3.
+              To spotlight one felt, load this page with{' '}
+              <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-emerald-200/90">&amp;focusTable=3</code> from the
+              host app, QR, or signage — never by touching this screen.
             </p>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {TABLE_SEATS.map((seats, idx) => {
@@ -240,19 +229,10 @@ export default function VenueEightTablesPreview() {
                 return (
                   <motion.article
                     key={tn}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setFocusedTable(tn)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        setFocusedTable(tn)
-                      }
-                    }}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.045, duration: 0.35 }}
-                    className="flex cursor-pointer flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl outline-none backdrop-blur-md ring-casino-emerald transition-shadow hover:border-casino-emerald/50 hover:shadow-[0_0_24px_rgba(0,255,180,0.12)] focus-visible:ring-2"
+                    className="flex flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -282,7 +262,6 @@ export default function VenueEightTablesPreview() {
                         <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
                       </div>
                     </dl>
-                    <p className="mt-3 text-center text-[11px] text-casino-emerald/85">Click → table view</p>
                   </motion.article>
                 )
               })}
@@ -290,36 +269,13 @@ export default function VenueEightTablesPreview() {
           </>
         ) : (
           <div className="mx-auto max-w-3xl space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/15 bg-black/35 px-4 py-3">
-              <button
-                type="button"
-                onClick={() => setFocusedTable(null)}
-                className="rounded-lg border border-white/25 bg-white/5 px-4 py-2 text-sm font-bold text-white transition-colors hover:border-casino-emerald hover:bg-white/10"
-              >
-                ← Venue wall (all felts)
-              </button>
-              <p className="text-xs text-white/55 sm:text-sm">
-                <span className="font-semibold text-white/80">Host emulation:</span> one felt enlarged; venue trivia & timers stay
-                global above.
+            <div className="rounded-xl border border-white/15 bg-black/35 px-4 py-4 text-center sm:text-left">
+              <p className="text-sm text-white/70">
+                <span className="font-bold text-amber-200/95">Table spotlight</span> — URL includes{' '}
+                <code className="rounded bg-white/10 px-1.5 font-mono text-xs">focusTable={focusedTable}</code>. Switch felts or
+                return to the wall by changing the loaded URL from the host or device controller (not from this display).
               </p>
             </div>
-
-            <nav className="flex flex-wrap items-center gap-2" aria-label="Switch felt">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setFocusedTable(n)}
-                  className={`min-w-[3rem] rounded-lg border px-3 py-2 text-sm font-bold tabular-nums transition-colors ${
-                    n === focusedTable
-                      ? 'border-casino-emerald bg-casino-emerald/25 text-white shadow-[0_0_14px_rgba(0,255,180,0.25)]'
-                      : 'border-white/15 bg-black/40 text-white/70 hover:border-white/35 hover:text-white'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </nav>
 
             <motion.article
               layout
@@ -329,7 +285,7 @@ export default function VenueEightTablesPreview() {
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.25em] text-white/50">Focused table</div>
+                  <div className="text-xs uppercase tracking-[0.25em] text-white/50">Spotlighted table</div>
                   <div className="text-5xl font-black tabular-nums text-yellow-400 sm:text-6xl">{focusedTable}</div>
                 </div>
                 <span className={`rounded-lg px-3 py-2 text-xs font-black uppercase ${phaseAccent(VENUE.phase)}`}>
@@ -337,7 +293,7 @@ export default function VenueEightTablesPreview() {
                 </span>
               </div>
 
-              <p className="mt-2 text-sm font-semibold text-casino-emerald/95">Receiving same phase & trivia as venue bar ↑</p>
+              <p className="mt-2 text-sm font-semibold text-casino-emerald/95">Same phase & trivia as venue bar ↑</p>
 
               <div className="mt-8 flex justify-center">
                 <SeatDots seatedCount={focusSeats} size="lg" />

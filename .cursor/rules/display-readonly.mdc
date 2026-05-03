@@ -1,0 +1,32 @@
+---
+description: Public display UIs are read-only; never add touch, click, or keyboard actions on apps/display.
+globs: apps/display/**
+alwaysApply: false
+---
+
+# Public display is non-interactive
+
+TV and wall **display** builds (`apps/display/**`) are **never** operated by someone standing at the screen. Do not add:
+
+- `<button>`, links used as controls, or **`onClick` / `onKeyDown` / `pointer` handlers** that change app state
+- Form controls (`input`, `select`, `textarea`) except where the platform forces them and they are hidden/disabled (prefer none)
+- **`tabIndex` / `role="button"`** on decorative or informational blocks
+- **`history.pushState` / `replaceState` from the display** to drive navigation (URL is chosen when the page is loaded or by external tooling)
+
+## Where control lives
+
+The **host** and **player** apps (or future remote control / CMS) own:
+
+- Choosing layout, table spotlight, venue vs single-table URL, and any “actions”
+- Messaging that might later use **socket events** to tell a display to reload or switch view
+
+## Allowed on display
+
+- Purely **read-only** presentation driven by **props, server state, or initial URL query** set elsewhere
+- Passive **`useEffect`** timers and animations
+- **`useSyncExternalStore`** or similar to read URL for **initial / popstate** snapshot only — not to write URL from user gestures
+
+## Checklist before merging display changes
+
+- [ ] No interactive elements unless product explicitly exempts a dedicated “operator” build (not default display).
+- [ ] Copy does not instruct the audience to “tap” or “click here” on the display.
