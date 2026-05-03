@@ -813,9 +813,16 @@ const venueDisplayLayouts = new Map<string, DisplayLayoutPayload>()
 
 function normalizeDisplayFocusTable(raw: unknown): number | null {
   if (raw == null) return null
-  if (typeof raw !== 'number' || !Number.isInteger(raw)) return null
-  if (raw < 1 || raw > 8) return null
-  return raw
+  if (typeof raw === 'number' && Number.isInteger(raw)) {
+    if (raw >= 1 && raw <= 8) return raw
+    return null
+  }
+  if (typeof raw === 'string') {
+    const n = Number.parseInt(raw.trim(), 10)
+    if (Number.isInteger(n) && n >= 1 && n <= 8) return n
+    return null
+  }
+  return null
 }
 
 function parseDisplaySetLayoutPayload(payload: unknown): DisplayLayoutPayload | null {
@@ -1084,8 +1091,20 @@ io.on('connection', (socket) => {
           ? String(layout.focusTable)
           : null
 
-      const sessionTableIdRaw =
+      let sessionTableIdRaw =
         layout.layout === 'singleTable' ? layout.tableId : spotlightWatchTableId
+
+      // Persisted layout can lag "overview" while the display client is reconnecting into spotlight mode (hello includes displayFocusTable).
+      // Using only the persisted map would strand the TV with no subscription and the felt would fall back to URL demo (often table 1).
+      if (
+        !sessionTableIdRaw &&
+        layout.layout === 'venueWall' &&
+        layout.focusTable == null &&
+        typeof data.displayFocusTable === 'number'
+      ) {
+        const ftJoin = normalizeDisplayFocusTable(data.displayFocusTable)
+        if (ftJoin != null) sessionTableIdRaw = String(ftJoin)
+      }
 
       if (!sessionTableIdRaw) {
         sockData.sessionKey = undefined

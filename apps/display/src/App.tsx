@@ -5,7 +5,7 @@ import { onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/
 import type { GameState, GamePhase } from '@qhe/core'
 import { LOBBY_TABLE_ID, buildDisplayPreviewGameState } from '@qhe/core'
 import confetti from 'canvas-confetti'
-import { readDisplayTableIdFromUrl, readDisplayVenueCode } from './displayUrlParams'
+import { readDisplayVenueCode } from './displayUrlParams'
 
 function displayPhaseLabel(phase: GamePhase): string {
   switch (phase) {
@@ -45,7 +45,12 @@ function displayTableLabel(tableId: string): string {
   return tableId === LOBBY_TABLE_ID ? 'Lobby' : `Table ${tableId}`
 }
 
-function DisplayTableLive() {
+type DisplayTableLiveProps = {
+  /** Target felt 1–8 (or alphanumeric single-table URL) — drives demo scaffolding when socket state has not arrived. */
+  feltTableHint: string
+}
+
+function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [isDealing, setIsDealing] = useState(false)
@@ -114,12 +119,14 @@ function DisplayTableLive() {
     return unsubscribe
   }, [])
 
-  // Offline / pre-socket scaffold — matches seeded display sessions + venue wall tiles (@qhe/core display preview fixture).
+  // Offline / pre-socket scaffold — matches seeded display sessions (@qhe/core display preview fixture).
   const [demoGameState, setDemoGameState] = useState<GameState>(() =>
-    buildDisplayPreviewGameState(readDisplayVenueCode(), readDisplayTableIdFromUrl())
+    buildDisplayPreviewGameState(readDisplayVenueCode(), feltTableHint)
   )
 
-  // Use real game state or demo state
+  useEffect(() => {
+    setDemoGameState(buildDisplayPreviewGameState(readDisplayVenueCode(), feltTableHint))
+  }, [feltTableHint])
   const displayGameState = gameState || demoGameState
 
   // Compute showdown winner id (used for seat glow)

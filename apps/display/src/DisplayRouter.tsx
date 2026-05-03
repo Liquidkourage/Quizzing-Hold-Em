@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import type { DisplayLayoutPayload, DisplayVenueTileSnapshot } from '@qhe/net'
 import { connect, onDisplayLayout, onDisplayVenueSnapshot } from '@qhe/net'
 import DisplayTableLive from './App.tsx'
-import { readUrlLayoutBootstrap } from './displayUrlParams'
+import { readDisplayTableIdFromUrl, readUrlLayoutBootstrap } from './displayUrlParams'
 import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
 
 /** Tile rect in viewport used to “iris” open the full felt from the grid. */
@@ -22,6 +22,13 @@ function venueSpotlightTable(l: DisplayLayoutPayload): number | null {
     return l.focusTable
   }
   return null
+}
+
+function feltTableIdForFullscreen(l: DisplayLayoutPayload): string {
+  const spot = venueSpotlightTable(l)
+  if (spot != null) return String(spot)
+  if (l.layout === 'singleTable') return l.tableId
+  return readDisplayTableIdFromUrl()
 }
 
 /** Fullscreen live felt — venue spotlight table or legacy single-table URL. */
@@ -286,7 +293,7 @@ export default function DisplayRouter() {
           }}
         >
           <div className="relative z-[1] min-h-screen w-full">
-            <DisplayTableLive />
+            <DisplayTableLive feltTableHint={feltTableIdForFullscreen(layout)} />
           </div>
         </motion.div>
       )}
@@ -302,7 +309,7 @@ export default function DisplayRouter() {
           onAnimationComplete={() => setShrinkingExit(null)}
         >
           <div className="relative z-[1] min-h-screen w-full">
-            <DisplayTableLive />
+            <DisplayTableLive feltTableHint={String(shrinkingExit.tableNum)} />
           </div>
         </motion.div>
       )}
