@@ -197,6 +197,7 @@ export default function VenueEightTablesPreview({ venueCode }: VenueEightTablesP
                 return (
                   <motion.article
                     key={tn}
+                    data-spotlight-tile={tn}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.045, duration: 0.35 }}
