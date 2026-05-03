@@ -1,0 +1,29 @@
+---
+description: After modifying project files, commit and push every change unless the user explicitly opts out for that turn.
+alwaysApply: true
+---
+
+# Commit and push after edits
+
+Whenever you edit, add, move, remove, or format project source or config (anything that should live in git), finish the session turn by committing and pushing.
+
+## Requirements
+
+1. Run `git status` and stage **everything** intended to be preserved: `git add -A` (or stage specific paths only if leaving unrelated dirty files—which is rare—per user direction).
+2. Write a concise commit message in normal sentences (summarize **what** and **why**).
+3. Run `git push` to update the tracked remote branch (typically `origin`).
+4. Resolve push failures yourself when safe (pull/rebase **only if** appropriate and the user expects shared history coordination; otherwise report the blocker clearly).
+
+## exceptions
+
+Do **not** commit if in the **same message** the user clearly says **not** to commit/push **for that turn**—or only if there are genuinely **no repository changes**.
+
+Do **not** commit generated secrets or local-only artifacts; obey `.gitignore` and never force-add `.env`.
+
+## Example cadence
+
+```bash
+git add -A
+git commit -m "fix(display): show question and answering countdown together"
+git push
+```

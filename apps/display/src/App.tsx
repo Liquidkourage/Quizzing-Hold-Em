@@ -350,6 +350,32 @@ function DisplayApp() {
     }
   }, [gameState?.round?.roundId])
 
+  const [answerSecondsLeft, setAnswerSecondsLeft] = useState<number | null>(null)
+
+  useEffect(() => {
+    const gs = gameState ?? demoGameState
+    const deadline = gs.round?.answerDeadline
+    const inAnswering = gs.phase === 'answering'
+
+    if (!inAnswering || deadline == null) {
+      setAnswerSecondsLeft(null)
+      return
+    }
+
+    const tick = () => {
+      const s = Math.max(0, Math.ceil((deadline - Date.now()) / 1000))
+      setAnswerSecondsLeft(s)
+    }
+    tick()
+    const id = window.setInterval(tick, 200)
+    return () => window.clearInterval(id)
+  }, [
+    gameState?.phase,
+    gameState?.round?.answerDeadline,
+    demoGameState.phase,
+    demoGameState.round?.answerDeadline,
+  ])
+
   if (!displayGameState) {
     return (
       <div className="min-h-screen bg-casino-gradient flex items-center justify-center">
@@ -519,23 +545,61 @@ function DisplayApp() {
           </div>
         </motion.div>
 
-        {/* Current Question - Large and prominent above the table */}
+        {/* Question + answering timer — readable from the whole room */}
         {displayGameState.round.question && (
-          <motion.div 
-            className="fixed top-20 left-0 right-0 z-40 text-center px-4"
-            initial={{ opacity: 0, scale: 0.9 }}
+          <motion.div
+            className="fixed top-14 left-0 right-0 z-40 px-3 sm:px-6"
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-500/50 rounded-2xl p-6 shadow-2xl w-full max-w-none">
-              <div className="text-white text-2xl mb-3 font-semibold">🎯 CURRENT QUESTION</div>
-              <div className="text-yellow-400 font-bold text-4xl leading-relaxed">{displayGameState.round.question.text}</div>
+            <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-2xl border-2 border-yellow-500/50 bg-black/90 p-5 shadow-2xl backdrop-blur-md sm:flex-row sm:items-stretch">
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                <div className="mb-2 text-xl font-semibold text-white">🎯 Current question</div>
+                <div className="text-3xl font-bold leading-snug text-yellow-400 sm:text-4xl">
+                  {displayGameState.round.question.text}
+                </div>
+              </div>
+
+              {displayGameState.phase === 'answering' ? (
+                <div
+                  className={`flex shrink-0 flex-col items-center justify-center rounded-xl border px-6 py-4 sm:border-l sm:border-t-0 sm:border-yellow-500/35 sm:pl-8 ${
+                    typeof answerSecondsLeft === 'number' && answerSecondsLeft <= 10
+                      ? 'border-red-400/55 bg-red-950/35'
+                      : 'border-yellow-500/25 bg-yellow-950/20'
+                  }`}
+                >
+                  <div className="text-xs font-bold uppercase tracking-widest text-white/65">Time left</div>
+                  <motion.div
+                    key={answerSecondsLeft ?? 'wait'}
+                    className={`tabular-nums text-6xl font-black sm:text-7xl ${
+                      typeof answerSecondsLeft === 'number' && answerSecondsLeft <= 10
+                        ? 'text-red-300'
+                        : 'text-yellow-400'
+                    }`}
+                    animate={
+                      typeof answerSecondsLeft === 'number' &&
+                      answerSecondsLeft > 0 &&
+                      answerSecondsLeft <= 10
+                        ? { scale: [1, 1.04, 1] }
+                        : {}
+                    }
+                    transition={{ repeat: Infinity, duration: 0.9 }}
+                  >
+                    {typeof answerSecondsLeft === 'number' ? `${answerSecondsLeft}s` : '—'}
+                  </motion.div>
+                </div>
+              ) : null}
             </div>
           </motion.div>
         )}
 
         {/* Main Game Area */}
-        <div className="relative w-full h-[calc(100vh-200px)] max-w-7xl mx-auto mt-[5vh]">
+        <div
+          className={`relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
+            displayGameState.round.question ? 'mt-[min(220px,24vh)]' : 'mt-[5vh]'
+          }`}
+        >
           
 
           

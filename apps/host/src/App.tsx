@@ -31,6 +31,13 @@ import type { GameState, Question } from '@qhe/core'
 import { LOBBY_TABLE_ID } from '@qhe/core'
 import { parseQuestionsCsv, parseQuestionsJson } from './questionImport'
 
+const HOST_TABS = [
+  { id: 'live' as const, label: 'Live show', hint: 'Run the round' },
+  { id: 'library' as const, label: 'Question bank', hint: 'Build & import' },
+  { id: 'setlists' as const, label: 'Setlists', hint: 'Rundowns' },
+  { id: 'venue' as const, label: 'Venue & roster', hint: 'Status & seats' },
+]
+
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -59,6 +66,7 @@ function HostApp() {
   const [qbDifficulty, setQbDifficulty] = useState('')
   const [editingBankId, setEditingBankId] = useState<string | null>(null)
 
+  const [hostTab, setHostTab] = useState<(typeof HOST_TABS)[number]['id']>('live')
   const [hostSecretApplied, setHostSecretApplied] = useState('')
   const [secretDraft, setSecretDraft] = useState('')
   const importFileRef = useRef<HTMLInputElement>(null)
@@ -413,13 +421,43 @@ function HostApp() {
           )}
         </motion.div>
 
+        <div
+          className="mb-8 rounded-2xl border border-white/15 bg-black/35 backdrop-blur-md p-2 sm:p-3"
+          role="tablist"
+          aria-label="Host sections"
+        >
+          <div className="flex flex-wrap gap-2">
+            {HOST_TABS.map((t) => {
+              const active = hostTab === t.id
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={`rounded-xl px-4 py-2.5 text-left text-sm font-semibold transition-colors sm:min-w-[11rem] ${
+                    active
+                      ? 'bg-casino-emerald/20 text-casino-emerald border border-casino-emerald/50 shadow-[0_0_20px_rgba(0,255,180,0.12)]'
+                      : 'text-white/70 border border-transparent hover:bg-white/8 hover:text-white'
+                  }`}
+                  onClick={() => setHostTab(t.id)}
+                >
+                  <span className="block leading-tight">{t.label}</span>
+                  <span className="mt-0.5 block text-[11px] font-normal text-white/45">{t.hint}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {hostTab === 'library' && (
         <Card variant="glass" className="mb-8 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
             <div>
               <h2 className="text-2xl font-bold text-casino-emerald">Question bank</h2>
               <p className="text-sm text-white/65 mt-1 max-w-2xl">
-                Ordered bank for venue <strong className="text-white/90">{gameState.code}</strong>. Build setlists below for a fixed rundown — only you see answers here;{' '}
-                tables get questions via random, row actions, or <strong className="text-white/80">Next from setlist</strong>.
+                Ordered bank for venue <strong className="text-white/90">{gameState.code}</strong>. Use <strong className="text-white/80">Setlists</strong> for ordered rundowns; push to tables from here or from the{' '}
+                <strong className="text-white/80">Live show</strong> tab.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 shrink-0">
@@ -626,14 +664,16 @@ function HostApp() {
             </table>
           </div>
         </Card>
+        )}
 
+        {hostTab === 'setlists' && (
         <Card variant="glass" className="mb-8 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
             <div>
               <h2 className="text-2xl font-bold text-casino-emerald">Setlists (rundowns)</h2>
               <p className="text-sm text-white/65 mt-1 max-w-2xl">
-                Ordered playlists drawn from your bank. Activate one under <strong className="text-white/80">Trivia rundown</strong> in Game Controls, then use{' '}
-                <strong className="text-white/80">Next from setlist</strong> to push cues in order.
+                Ordered playlists drawn from your bank. Pick an active rundown on the{' '}
+                <strong className="text-white/80">Live show</strong> tab, then use <strong className="text-white/80">Next from setlist</strong> for each cue.
               </p>
             </div>
           </div>
@@ -803,11 +843,12 @@ function HostApp() {
             </div>
           </div>
         </Card>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Game Controls */}
-          <Card variant="glass" className="p-6">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-4 text-center">Game Controls</h2>
+        {hostTab === 'live' && (
+        <>
+        <Card variant="glass" className="max-w-3xl mx-auto mb-8 p-6">
+            <h2 className="text-3xl font-bold text-casino-emerald mb-4 text-center">Live show</h2>
             <div className="mb-6 rounded-lg border border-casino-emerald/30 bg-black/20 p-4 text-left text-sm text-white/90">
               <div className="mb-2 font-bold text-casino-emerald">PoC — one full round</div>
               <ol className="list-decimal list-inside space-y-1.5">
@@ -861,13 +902,13 @@ function HostApp() {
                 Random from bank
               </NeonButton>
               <p className="-mt-2 text-xs text-white/50">
-                Or pick <strong className="text-white/70">To tables</strong> on a bank row, or drive an ordered rundown with <strong className="text-white/70">Next from setlist</strong> (see below).
+                Or push from the <strong className="text-white/70">Question bank</strong> tab (<strong className="text-white/70">To tables</strong>), or cue a setlist you built under <strong className="text-white/70">Setlists</strong>.
               </p>
 
               <div className="rounded-lg border border-casino-emerald/25 bg-black/25 p-4 space-y-3">
                 <div className="text-sm font-bold text-casino-emerald">Trivia rundown</div>
                 <p className="text-xs text-white/55 leading-relaxed">
-                  Select a setlist to follow a fixed cue order on every table. Leave <strong className="text-white/70">None</strong> for ad-hoc random or per-row pushes.
+                  Select a setlist (from the Setlists tab) for a fixed cue order. <strong className="text-white/70">None</strong> = use random / bank row pushes only.
                 </p>
                 <select
                   className="w-full rounded-lg bg-white/10 border border-white/25 text-white px-3 py-2 text-sm"
@@ -886,7 +927,7 @@ function HostApp() {
                     {(() => {
                       const sl = setlists.find((s) => s.id === activeSetlistId)
                       const n = sl?.questionIds.length ?? 0
-                      if (!n) return 'This setlist is empty — build it under Setlists.'
+                      if (!n) return 'This setlist is empty — build it on the Setlists tab.'
                       if (activeSetlistNextIndex >= n) return 'End of rundown — choose another list or clear.'
                       return `Next cue: ${activeSetlistNextIndex + 1} of ${n}`
                     })()}
@@ -1075,63 +1116,8 @@ function HostApp() {
             </div>
           </Card>
 
-          {/* Game Status */}
-          <Card variant="glass" className="p-6">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game Status</h2>
-            
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-lg text-white">Current Pot:</div>
-                <span className="text-casino-emerald font-bold text-xl">${gameState.round.pot}</span>
-              </div>
-
-              {gameState.round.question && (
-                <div className="text-center">
-                  <div className="text-lg text-white">Current Question:</div>
-                  <div className="text-casino-gold font-bold">{gameState.round.question.text}</div>
-                </div>
-              )}
-
-              <div className="text-center">
-                <div className="text-lg text-white">Players:</div>
-                <span className="text-casino-emerald font-bold">
-                  {gameState.players.length}
-                  {virtualSeatCount > 0 ? (
-                    <span className="text-sm font-normal text-amber-200/90"> ({virtualSeatCount} CPU)</span>
-                  ) : null}
-                </span>
-              </div>
-              {gameState.phase === 'betting' && (
-                <div className="text-center">
-                  <div className="text-lg text-white">Current Turn:</div>
-                  <span className="text-casino-gold font-extrabold">
-                    {(() => {
-                      const idx = (gameState.round as any).currentPlayerIndex as number | undefined
-                      const p = typeof idx === 'number' ? gameState.players[idx] : undefined
-                      return p ? p.name : '—'
-                    })()}
-                  </span>
-                </div>
-              )}
-              {gameState.phase === 'answering' && (
-                <div className="text-center">
-                  <div className="text-lg text-white">Answering Time Left:</div>
-                  <span className="text-casino-gold font-extrabold text-2xl">
-                    {Math.max(0, Math.ceil(((gameState.round.answerDeadline ?? 0) - Date.now()) / 1000))}s
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-8">
-              <JackpotDisplay amount={gameState.round.pot} />
-            </div>
-          </Card>
-        </div>
-
-        {/* Showdown Results */}
         {gameState.phase === 'showdown' && (
-          <Card variant="glass" className="mt-8 p-6">
+          <Card variant="glass" className="max-w-3xl mx-auto mt-8 p-6">
             <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Showdown</h2>
             <div className="text-center text-white mb-6">
               <div className="text-white/80">Correct Answer</div>
@@ -1196,11 +1182,66 @@ function HostApp() {
           </Card>
         )}
 
-        {/* Player List */}
-        <Card variant="glass" className="mt-8 p-6">
-          <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Players</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </>
+        )}
+
+        {hostTab === 'venue' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <Card variant="glass" className="p-6">
+            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game status</h2>
+
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-lg text-white">Current Pot:</div>
+                <span className="text-casino-emerald font-bold text-xl">${gameState.round.pot}</span>
+              </div>
+
+              {gameState.round.question && (
+                <div className="text-center">
+                  <div className="text-lg text-white">Current Question:</div>
+                  <div className="text-casino-gold font-bold">{gameState.round.question.text}</div>
+                </div>
+              )}
+
+              <div className="text-center">
+                <div className="text-lg text-white">Players:</div>
+                <span className="text-casino-emerald font-bold">
+                  {gameState.players.length}
+                  {virtualSeatCount > 0 ? (
+                    <span className="text-sm font-normal text-amber-200/90"> ({virtualSeatCount} CPU)</span>
+                  ) : null}
+                </span>
+              </div>
+              {gameState.phase === 'betting' && (
+                <div className="text-center">
+                  <div className="text-lg text-white">Current Turn:</div>
+                  <span className="text-casino-gold font-extrabold">
+                    {(() => {
+                      const idx = (gameState.round as any).currentPlayerIndex as number | undefined
+                      const p = typeof idx === 'number' ? gameState.players[idx] : undefined
+                      return p ? p.name : '—'
+                    })()}
+                  </span>
+                </div>
+              )}
+              {gameState.phase === 'answering' && (
+                <div className="text-center">
+                  <div className="text-lg text-white">Answering Time Left:</div>
+                  <span className="text-casino-gold font-extrabold text-2xl">
+                    {Math.max(0, Math.ceil(((gameState.round.answerDeadline ?? 0) - Date.now()) / 1000))}s
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8">
+              <JackpotDisplay amount={gameState.round.pot} />
+            </div>
+          </Card>
+
+          <Card variant="glass" className="p-6 max-h-[min(720px,80vh)] flex flex-col">
+            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center shrink-0">Seats</h2>
+            <div className="overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 min-h-0">
             {gameState.players.map((player, i) => (
               <div key={player.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-4">
                 <div className="text-xs uppercase tracking-wide text-white/50 mb-1">Seat {i + 1}</div>
@@ -1216,8 +1257,11 @@ function HostApp() {
                 )}
               </div>
             ))}
-          </div>
-        </Card>
+            </div>
+          </Card>
+        </div>
+        )}
+
       </div>
     </div>
   )
