@@ -49,20 +49,23 @@ export default function DisplayRouter() {
   ])
 
   useEffect(() => {
-    if (layout.layout === 'venueWall') {
-      return connect('display', 'DISPLAY01', venueCode, '1', {
-        displayVenueWall: true,
-        displayFocusTable: layout.focusTable ?? null,
-      })
-    }
-    return connect('display', 'DISPLAY01', venueCode, layout.tableId)
-    // Spotlight-only changes reuse the socket; reconnect when wall ↔ table or watched table changes
-  }, [connectFingerprint, venueCode])
+    const disconnectSock =
+      layout.layout === 'venueWall'
+        ? connect('display', 'DISPLAY01', venueCode, '1', {
+            displayVenueWall: true,
+            displayFocusTable: layout.focusTable ?? null,
+          })
+        : connect('display', 'DISPLAY01', venueCode, layout.tableId)
 
-  useEffect(() => {
-    const off = onDisplayLayout((next) => setLayout(next))
-    return off
-  }, [])
+    const offDisplay = onDisplayLayout((next) => setLayout(next))
+
+    return () => {
+      offDisplay()
+      disconnectSock()
+    }
+    // Spotlight-only updates do not reconnect (same fingerprint). When connect() swaps the
+    // socket instance, layout listeners must attach to the new one — hence one effect with cleanup.
+  }, [connectFingerprint, venueCode])
 
   if (layout.layout === 'venueWall') {
     return <VenueEightTablesPreview venueCode={venueCode} focusTable={layout.focusTable} />
