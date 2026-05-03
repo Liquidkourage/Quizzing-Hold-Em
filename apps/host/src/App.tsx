@@ -1236,27 +1236,11 @@ function HostApp() {
               ))}
             </div>
             <p className="mt-4 text-center text-[12px] leading-relaxed text-white/48">
-              Numbers zoom that table’s <strong className="text-white/65">live</strong> game to the whole display (animated). Use{' '}
-              <strong className="text-white/65">All 8 felts</strong> to return to the overview.
+              Spotlight numbers zoom that table’s <strong className="text-white/65">live</strong> game to the whole display — and{' '}
+              <strong className="text-white/65">All 8 felts</strong> animates back to the overview grid. Bare{' '}
+              <code className="rounded bg-white/10 px-1 font-mono text-[11px] text-white/80">/display?table=N</code> (N =
+              1–8) is the same spotlight mode.
             </p>
-          </div>
-          <div className="mx-auto max-w-5xl rounded-xl bg-black/30 p-5">
-            <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">
-              Single live felt — full motions &amp; state
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <NeonButton
-                  key={n}
-                  variant="purple"
-                  onClick={() =>
-                    displaySetLayout({ layout: 'singleTable', tableId: String(n) })
-                  }
-                >
-                  Table {n}
-                </NeonButton>
-              ))}
-            </div>
           </div>
         </Card>
 
