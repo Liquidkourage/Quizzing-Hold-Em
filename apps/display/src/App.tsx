@@ -553,9 +553,9 @@ function DisplayTableLive() {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-2xl border-2 border-yellow-500/50 bg-black/90 p-5 shadow-2xl backdrop-blur-md sm:flex-row sm:items-stretch">
-              <div className="min-w-0 flex-1 text-center sm:text-left">
+              <div className="min-w-0 flex-1 text-center">
                 <div className="mb-2 text-xl font-semibold text-white">🎯 Current question</div>
-                <div className="text-3xl font-bold leading-snug text-yellow-400 sm:text-4xl">
+                <div className="text-balance text-3xl font-bold leading-snug text-yellow-400 sm:text-4xl">
                   {displayGameState.round.question.text}
                 </div>
               </div>
