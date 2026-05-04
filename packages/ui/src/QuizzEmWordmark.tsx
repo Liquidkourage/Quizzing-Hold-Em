@@ -3,32 +3,47 @@ import { clsx } from 'clsx'
 import officialLogo from './assets/quizzem-official-logo.png'
 
 /**
- * Max box for `object-contain`. Venue TVs need the lockup visually subordinate to the room code.
- * (Sizes are deliberately small vs typical hero logos.)
+ * Sizes as inline CSS so host/display Tailwind pipelines never purge them —
+ * `@qhe/ui` class strings live outside `${app}/src` and won't be scanned.
  */
-const box = {
-  sm: 'max-h-[18px] max-w-[4.25rem]',
-  md: 'max-h-[22px] max-w-[5.125rem]',
-  lg: 'max-h-[26px] max-w-[min(28vw,5.75rem)] sm:max-h-7 sm:max-w-[6.125rem]',
+const imgStyleFor = {
+  sm: {
+    maxHeight: 'clamp(10px, 2.1vmin, 16px)',
+    maxWidth: 'min(34vmin, 96px)',
+  },
+  md: {
+    maxHeight: 'clamp(11px, 2.65vmin, 19px)',
+    maxWidth: 'min(38vmin, 132px)',
+  },
+  lg: {
+    maxHeight: 'clamp(12px, 3vmin, 24px)',
+    maxWidth: 'min(42vmin, 168px)',
+  },
 } as const
 
 export type QuizzEmWordmarkProps = {
-  size?: keyof typeof box
+  size?: keyof typeof imgStyleFor
   className?: string
+}
+
+const imgFit: React.CSSProperties = {
+  width: 'auto',
+  height: 'auto',
+  objectFit: 'contain',
+  objectPosition: 'left center',
+  display: 'block',
+  backgroundColor: 'transparent',
+  filter: 'drop-shadow(0 1px 8px rgba(0, 0, 0, 0.45))',
 }
 
 /** Official Quizz'Em marquee logo (RGBA artwork). */
 export function QuizzEmWordmark({ size = 'md', className }: QuizzEmWordmarkProps) {
   return (
-    <div className={clsx('flex shrink-0 items-center bg-transparent', className)} role="img" aria-label={"Quizz'Em"}>
+    <div className={clsx('flex shrink-0 bg-transparent leading-none', className)} role="img" aria-label={"Quizz'Em"}>
       <img
         src={officialLogo}
         alt={"Quizz'Em"}
-        className={clsx(
-          'h-auto w-auto bg-transparent object-contain object-left',
-          'drop-shadow-[0_1px_10px_rgba(0,0,0,0.5)]',
-          box[size],
-        )}
+        style={{ ...imgFit, ...imgStyleFor[size] }}
         decoding="async"
       />
     </div>

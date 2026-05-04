@@ -123,7 +123,7 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
         />
       </div>
 
-      <header className="relative z-10 border-b border-white/10 bg-black/20 px-4 py-3 backdrop-blur-sm sm:px-6 sm:py-3.5">
+      <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
         <motion.div
           className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           initial={{ opacity: 0, y: -10 }}
@@ -139,7 +139,7 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
             <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
               Room / event code
             </div>
-            <div className="font-mono text-3xl font-black tabular-nums tracking-tight text-casino-emerald sm:text-4xl">
+            <div className="font-mono text-3xl font-black tabular-nums tracking-tight text-casino-emerald [text-shadow:_0_2px_12px_rgb(0_0_0/0.85)] sm:text-4xl">
               {venueCode}
             </div>
           </div>
