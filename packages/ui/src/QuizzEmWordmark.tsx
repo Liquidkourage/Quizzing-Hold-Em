@@ -56,7 +56,7 @@ export function QuizzEmWordmark({ size = 'md', layout = 'fixed', className }: Qu
   const rootClass =
     layout === 'fill'
       ? clsx(
-          'flex min-h-0 min-w-0 flex-1 grow items-center justify-center bg-transparent leading-none',
+          'flex h-full min-h-0 w-full min-w-0 items-center justify-center bg-transparent leading-none',
           className,
         )
       : clsx('flex shrink-0 bg-transparent leading-none', className)

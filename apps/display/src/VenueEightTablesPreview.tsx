@@ -123,7 +123,7 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
         />
       </div>
 
-      <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
+      <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-1.5 sm:px-6 sm:py-2">
         <motion.div
           className="mx-auto flex max-w-[1600px] flex-row items-center justify-between gap-4"
           initial={{ opacity: 0, y: -10 }}
@@ -141,23 +141,23 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
         </motion.div>
       </header>
 
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pt-6 sm:px-6">
+      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pt-1 sm:px-6 sm:pt-2">
         <motion.section
-          className="flex w-full justify-center"
+          className="flex w-full justify-center pb-3 sm:pb-4"
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
         >
-          {/* Tile shell + width formulas match `<main>` table grid (`gap-5`): (100%-1.25rem)/2 · (100%-3.75rem)/4 */}
-          <div
-            className="flex min-h-[300px] w-full flex-col overflow-hidden rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md sm:min-h-[340px] sm:w-[calc((100%-1.25rem)/2)] lg:min-h-[400px] lg:w-[calc((100%-3.75rem)/4)]"
-          >
-            <QuizzEmWordmark layout="fill" className="min-h-[220px] sm:min-h-[260px]" />
+          {/* Width matches table grid (`gap-5`); height follows logo raster 1024:655 */}
+          <div className="w-full overflow-hidden rounded-2xl border border-yellow-700/35 bg-black/55 p-2.5 shadow-xl backdrop-blur-md sm:w-[calc((100%-1.25rem)/2)] sm:p-3 lg:w-[calc((100%-3.75rem)/4)]">
+            <div className="w-full" style={{ aspectRatio: '1024 / 655' }}>
+              <QuizzEmWordmark layout="fill" />
+            </div>
           </div>
         </motion.section>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-8 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-4 sm:px-6 sm:pt-5">
         <motion.section
           className="mb-8 rounded-2xl border-2 border-casino-emerald/40 bg-black/65 p-6 shadow-[0_0_40px_rgba(0,255,180,0.08)] backdrop-blur-md"
           initial={{ opacity: 0, y: 8 }}
