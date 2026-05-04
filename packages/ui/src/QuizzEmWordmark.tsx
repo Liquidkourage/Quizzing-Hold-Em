@@ -23,6 +23,8 @@ const imgStyleFor = {
 
 export type QuizzEmWordmarkProps = {
   size?: keyof typeof imgStyleFor
+  /** When set, ignores `size`; image scales to fill the parent box (contain, centered). */
+  layout?: 'fixed' | 'fill'
   className?: string
 }
 
@@ -36,16 +38,32 @@ const imgFit: React.CSSProperties = {
   filter: 'drop-shadow(0 1px 8px rgba(0, 0, 0, 0.45))',
 }
 
+const imgFillContain: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  maxWidth: '100%',
+  maxHeight: '100%',
+  objectFit: 'contain',
+  objectPosition: 'center',
+  display: 'block',
+  backgroundColor: 'transparent',
+  filter: 'drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5))',
+}
+
 /** Official Quizz'Em marquee logo (RGBA artwork). */
-export function QuizzEmWordmark({ size = 'md', className }: QuizzEmWordmarkProps) {
+export function QuizzEmWordmark({ size = 'md', layout = 'fixed', className }: QuizzEmWordmarkProps) {
+  const imgStyle = layout === 'fill' ? imgFillContain : { ...imgFit, ...imgStyleFor[size] }
+  const rootClass =
+    layout === 'fill'
+      ? clsx(
+          'flex min-h-0 min-w-0 flex-1 grow items-center justify-center bg-transparent leading-none',
+          className,
+        )
+      : clsx('flex shrink-0 bg-transparent leading-none', className)
+
   return (
-    <div className={clsx('flex shrink-0 bg-transparent leading-none', className)} role="img" aria-label={"Quizz'Em"}>
-      <img
-        src={officialLogo}
-        alt={"Quizz'Em"}
-        style={{ ...imgFit, ...imgStyleFor[size] }}
-        decoding="async"
-      />
+    <div className={rootClass} role="img" aria-label={"Quizz'Em"}>
+      <img src={officialLogo} alt={"Quizz'Em"} style={imgStyle} decoding="async" />
     </div>
   )
 }

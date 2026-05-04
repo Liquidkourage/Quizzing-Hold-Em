@@ -125,16 +125,11 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
 
       <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
         <motion.div
-          className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+          className="mx-auto flex max-w-[1600px] flex-row items-center justify-between gap-4"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex flex-col items-center gap-1.5 sm:items-start">
-            <QuizzEmWordmark size="md" className="justify-center sm:justify-start" />
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">
-              Venue wall
-            </p>
-          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">Venue wall</p>
           <div className="text-center sm:text-right">
             <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
               Room / event code
@@ -145,6 +140,22 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
           </div>
         </motion.div>
       </header>
+
+      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pt-6 sm:px-6">
+        <motion.section
+          className="flex w-full justify-center"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          {/* Tile shell + width formulas match `<main>` table grid (`gap-5`): (100%-1.25rem)/2 · (100%-3.75rem)/4 */}
+          <div
+            className="flex min-h-[300px] w-full flex-col overflow-hidden rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md sm:min-h-[340px] sm:w-[calc((100%-1.25rem)/2)] lg:min-h-[400px] lg:w-[calc((100%-3.75rem)/4)]"
+          >
+            <QuizzEmWordmark layout="fill" className="min-h-[220px] sm:min-h-[260px]" />
+          </div>
+        </motion.section>
+      </div>
 
       <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-8 sm:px-6">
         <motion.section
