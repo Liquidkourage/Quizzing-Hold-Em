@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.tsx --format esm,cjs --dts --out-dir dist --clean"
+    "build": "tsup --config tsup.config.ts"
   },
   "peerDependencies": {
     "react": ">=18",
