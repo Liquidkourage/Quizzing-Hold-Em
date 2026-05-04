@@ -130,7 +130,7 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex flex-col items-center gap-1.5 sm:items-start">
-            <QuizzEmWordmark size="lg" className="justify-center sm:justify-start" />
+            <QuizzEmWordmark size="md" className="justify-center sm:justify-start" />
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">
               Venue wall
             </p>
