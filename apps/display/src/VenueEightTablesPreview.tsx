@@ -123,9 +123,9 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
         />
       </div>
 
-      <header className="relative z-10 border-b border-white/10 bg-black/40 px-6 py-5 backdrop-blur-md">
+      <header className="relative z-10 border-b border-white/10 bg-black/20 px-4 py-3 backdrop-blur-sm sm:px-6 sm:py-3.5">
         <motion.div
-          className="mx-auto flex max-w-[1600px] flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between"
+          className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >

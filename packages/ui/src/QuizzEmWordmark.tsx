@@ -2,25 +2,30 @@ import React from 'react'
 import { clsx } from 'clsx'
 import officialLogo from './assets/quizzem-official-logo.png'
 
-const heights = {
-  sm: 'h-9 w-auto max-h-9 sm:h-10 sm:max-h-10',
-  md: 'h-11 w-auto max-h-11 sm:h-14 sm:max-h-14',
-  lg: 'h-[4.75rem] w-auto max-h-[4.75rem] sm:h-28 sm:max-h-28',
+/** Max box for `object-contain`; wide lockup needs both caps (height alone lets width dominate). */
+const box = {
+  sm: 'max-h-8 max-w-[min(34vw,7.75rem)] sm:max-h-9 sm:max-w-[min(38vw,8.75rem)]',
+  md: 'max-h-9 max-w-[min(40vw,9.25rem)] sm:max-h-10 sm:max-w-[min(44vw,10.5rem)]',
+  lg: 'max-h-10 max-w-[min(42vw,11rem)] sm:max-h-11 sm:max-w-[min(44vw,12.25rem)] md:max-h-12 md:max-w-[13rem]',
 } as const
 
 export type QuizzEmWordmarkProps = {
-  size?: keyof typeof heights
+  size?: keyof typeof box
   className?: string
 }
 
-/** Official Quizz'Em marquee logo (brand asset). */
+/** Official Quizz'Em marquee logo (RGBA artwork). */
 export function QuizzEmWordmark({ size = 'md', className }: QuizzEmWordmarkProps) {
   return (
-    <div className={clsx('flex shrink-0 items-center', className)} role="img" aria-label={"Quizz'Em"}>
+    <div className={clsx('flex shrink-0 items-center bg-transparent', className)} role="img" aria-label={"Quizz'Em"}>
       <img
         src={officialLogo}
         alt={"Quizz'Em"}
-        className={clsx('object-contain object-left drop-shadow-[0_0_20px_rgba(56,189,248,0.25)]', heights[size])}
+        className={clsx(
+          'h-auto w-auto bg-transparent object-contain object-left',
+          'drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)]',
+          box[size],
+        )}
         decoding="async"
       />
     </div>
