@@ -1,0 +1,25 @@
+---
+description: After implementing code changes from a user request—commit and push so the repo stays the source of truth.
+alwaysApply: true
+---
+
+# Git closeout after implementation
+
+When you **edit tracked project files** (code, config, or rules) to satisfy **this user’s active request**, treating the task as “done” **without** updating the remote wastes their time on the next machine or deploy.
+
+## Required before you end your turn
+
+1. Run **`git status`** in the repo root.
+2. If there are **meaningful uncommitted changes** (not only editor noise the user will discard):
+   - **`git add`** the files that belong to the request.
+   - **`git commit`** with a clear message (full sentences).
+   - **`git push`** to the current branch’s upstream (e.g. `origin/master`). If push fails, say so and paste the error; do **not** imply the change is on GitHub.
+
+## When this does *not* apply
+
+- The user **explicitly** asked to keep changes local, skip commit, or skip push.
+- You only **read** files or ran **read-only** diagnostics and made **no** edits.
+
+## Why
+
+Local edits are not “the project” until they are **committed and pushed**. Cursor user rules are easy to miss after long tool runs; this file is **in-repo** so agents working in this workspace see it every session.
