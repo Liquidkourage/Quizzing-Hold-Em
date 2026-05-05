@@ -55,7 +55,11 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
   /** Room code — vw + capped vh so short codes stay compact in the box without ultra-wide bars. */
   const venueMono =
-    'text-left font-mono font-black leading-none tracking-[0.08em] text-yellow-400 text-[clamp(2.25rem,_min(11vw,_12vh),_5.5rem)]'
+    'text-center font-mono font-black leading-none tracking-[0.08em] text-yellow-400 text-[clamp(2.25rem,_min(11vw,_12vh),_5.5rem)]'
+
+  /** Join card URL line — larger than body mono for wall distance reading. */
+  const joinUrlText =
+    'break-words text-center font-mono font-bold leading-snug tracking-tight text-amber-200 text-[clamp(1.08rem,_min(3vw,_3.35vh),_2.35rem)]'
 
   return (
     <div
@@ -123,20 +127,18 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
             <div className="flex min-h-0 min-w-0 flex-col gap-[clamp(8px,_1.35vmin,_14px)] overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] lg:overscroll-contain lg:pb-px lg:pr-1">
               <section
                 aria-label="Player URL then venue room code"
-                className="min-w-0 rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-emerald-500/45 bg-black/72 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.12)]"
+                className="mx-auto w-full max-w-[min(100%,38rem)] min-w-0 rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-emerald-500/45 bg-black/72 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.12)]"
               >
-                <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)]">
-                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-left`}>Player URL</p>
-                  <p className="break-all font-mono text-[clamp(0.88rem,_min(2.15vw,_2.6vh),_1.55rem)] font-bold leading-snug tracking-tight text-amber-200">
-                    {joinUrl}
-                  </p>
+                <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center">
+                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
+                  <p className={joinUrlText}>{joinUrl}</p>
                 </div>
                 <div
                   aria-hidden
                   className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/18"
                 />
-                <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(10px,_1.8vmin,_18px)] pt-[clamp(8px,_1.35vmin,_14px)]">
-                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-left opacity-95`}>Venue / room code</p>
+                <div className="flex flex-col items-center px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(10px,_1.8vmin,_18px)] pt-[clamp(8px,_1.35vmin,_14px)] text-center">
+                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-center opacity-95`}>Venue / room code</p>
                   <div className="inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-yellow-400/85 bg-black/80 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(6px,_1.35vmin,_14px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.16)]">
                     <div className={venueMono}>{venueCode}</div>
                   </div>
