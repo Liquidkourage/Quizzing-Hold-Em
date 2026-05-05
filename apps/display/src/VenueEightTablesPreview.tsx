@@ -77,13 +77,18 @@ function phaseAccent(ph: string) {
 type VenueEightTablesPreviewProps = {
   /** null until first `displayVenueSnapshot` from socket */
   wall: DisplayVenueWallSnapshot | null
+  /**
+   * Skip Framer entrance on header / headline / tiles (mosaic briefly unmounts when
+   * fullscreen felt covers it — replaying fades looks like a glitch).
+   */
+  skipMountIntro?: boolean
 }
 
 /**
  * Mosaic rows mirror each table session on the server; spotlight opens the matching full felt.
  * Headline shows only live question text + countdown from the server snapshot.
  */
-export default function VenueEightTablesPreview({ wall }: VenueEightTablesPreviewProps) {
+export default function VenueEightTablesPreview({ wall, skipMountIntro = false }: VenueEightTablesPreviewProps) {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
 
   const headlineQuestionText = wall?.headlineQuestionText ?? null
@@ -133,7 +138,7 @@ export default function VenueEightTablesPreview({ wall }: VenueEightTablesPrevie
       <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
         <motion.div
           className="mx-auto flex w-full max-w-[1600px] justify-center"
-          initial={{ opacity: 0, y: -10 }}
+          initial={skipMountIntro ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex min-w-0 justify-center">
@@ -151,7 +156,7 @@ export default function VenueEightTablesPreview({ wall }: VenueEightTablesPrevie
         {showHeadline ? (
           <motion.section
             className="mb-8 rounded-2xl border-2 border-casino-emerald/40 bg-black/65 p-6 shadow-[0_0_40px_rgba(0,255,180,0.08)] backdrop-blur-md sm:p-8"
-            initial={{ opacity: 0, y: 8 }}
+            initial={skipMountIntro ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start lg:gap-10">
@@ -191,9 +196,12 @@ export default function VenueEightTablesPreview({ wall }: VenueEightTablesPrevie
               <motion.article
                 key={tn}
                 data-spotlight-tile={tn}
-                initial={{ opacity: 0, y: 12 }}
+                initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.045, duration: 0.35 }}
+                transition={{
+                  delay: skipMountIntro ? 0 : idx * 0.045,
+                  duration: skipMountIntro ? 0 : 0.35,
+                }}
                 className="flex flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md"
               >
                 <div className="flex items-start justify-between gap-3">

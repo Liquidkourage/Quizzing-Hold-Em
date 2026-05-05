@@ -115,6 +115,8 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const [shrinkingExit, setShrinkingExit] = useState<ShrinkingExit | null>(null)
   /** Venue wall mosaic + headline from server */
   const [venueWall, setVenueWall] = useState<DisplayVenueWallSnapshot | null>(null)
+  /** After first time the 8-panel grid mounts, suppress re-entry fades (mosaic remounts when felt goes fullscreen). */
+  const venueMosaicWasShownRef = useRef(false)
 
   const wallOverview = venueOverview(layout)
   const spotlightN = venueSpotlightTable(layout)
@@ -239,7 +241,6 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   }, [connectFingerprint, venueCode, pairingBootstrap])
 
   useEffect(() => {
-    setVenueWall(null)
     const unsub = onDisplayVenueSnapshot((payload) => {
       if (payload?.tiles?.length === 8) setVenueWall(payload)
     })
@@ -248,6 +249,10 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
 
   /** Show the 8-panel grid under fullscreen felt exits and while overview. */
   const showGridBehind = wallOverview || shrinkingExit !== null
+
+  useEffect(() => {
+    if (showGridBehind) venueMosaicWasShownRef.current = true
+  }, [showGridBehind])
 
   const spotTable = spotlightN
 
@@ -284,12 +289,12 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
           key="venue-wall-grid"
           className="relative z-10 min-h-screen w-full bg-slate-950"
           role="presentation"
-          initial={{ opacity: 0, scale: 1.02 }}
+          initial={venueMosaicWasShownRef.current ? false : { opacity: 0, scale: 1.02 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: venueMosaicWasShownRef.current ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
-          <VenueEightTablesPreview wall={venueWall} />
+          <VenueEightTablesPreview wall={venueWall} skipMountIntro={venueMosaicWasShownRef.current} />
         </motion.div>
       )}
       {showPrimaryFullscreenLayer && (
