@@ -22,7 +22,7 @@ const WALL_VIEWPORT_SCALE = 0.9
 const INV_WALL_SCALE = 1 / WALL_VIEWPORT_SCALE
 
 /**
- * Venue lobby wall · ~10 ft reads: large section titles + bounded hero row (no overlaps).
+ * Venue lobby wall (widescreen-only): full-bleed usable width, ~10 ft typography.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -67,19 +67,19 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
       <motion.div
         style={{
-          width: `min(calc(100vw * ${INV_WALL_SCALE}), calc(1580px * ${INV_WALL_SCALE}))`,
+          width: `calc(100vw * ${INV_WALL_SCALE})`,
           height: `calc(100dvh * ${INV_WALL_SCALE})`,
           transformOrigin: 'top center',
           transform: `translateX(-50%) scale(${WALL_VIEWPORT_SCALE})`,
         }}
-        className="absolute left-1/2 top-0 z-10 mx-0 grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(6px,_1vmin,_14px)] px-[clamp(12px,3.6vmin,48px)] py-[clamp(8px,_1.35vh,20px)]"
+        className="absolute left-1/2 top-0 z-10 mx-0 grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(6px,_1vmin,_14px)] px-[clamp(20px,_2.75vw,_72px)] py-[clamp(8px,_1.35vh,20px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
         <header className="flex shrink-0 flex-col items-center">
           <div
-            className="h-[clamp(46px,min(9.5vh,104px))] w-auto max-w-[min(70vw,620px)] shrink-0"
+            className="h-[clamp(46px,min(9.5vh,104px))] w-auto max-w-[min(920px,_48vw)] shrink-0"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
@@ -90,10 +90,10 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         </header>
 
         {/* Row 2: absorbs overflow; sibling rows never overlap this band */}
-        <div className="flex min-h-0 flex-col gap-[clamp(8px,_1.75vmin,_22px)] lg:flex-row lg:items-start lg:justify-between lg:gap-[clamp(10px,_2.5vmin,_32px)]">
+        <div className="flex min-h-0 flex-row items-start justify-between gap-[clamp(12px,_2.5vmin,_42px)]">
             <section
               aria-label="Scan QR to open player app"
-              className={`mx-auto flex w-[min(min(44vmin,_40vh),_430px)] max-w-[min(92vw,430px)] shrink-0 flex-col items-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_22px)] shadow-[0_0_60px_rgba(34,211,153,0.11)]`}
+              className={`flex w-[clamp(260px,_28vw,_560px)] shrink-0 flex-col items-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_22px)] shadow-[0_0_60px_rgba(34,211,153,0.11)]`}
             >
               <span className={`${sectionRibbon} mb-[clamp(8px,_1.35vmin,_16px)] text-center leading-snug`}>
                 Aim camera here
@@ -122,18 +122,18 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
             <section className="flex min-h-0 min-w-0 flex-1 flex-col justify-start gap-[clamp(8px,_1.95vmin,_20px)]">
               <div>
-                <p className={`text-center lg:text-left ${sectionRibbon} mb-[clamp(8px,_1.2vmin,_12px)]`}>
+                <p className={`text-left ${sectionRibbon} mb-[clamp(8px,_1.2vmin,_12px)]`}>
                   Venue / room code
                 </p>
                 <div className="rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-yellow-400/85 bg-black/72 px-[clamp(8px,_2vmin,_26px)] py-[clamp(10px,_2.1vmin,_20px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.18)]">
-                  <div className="text-center font-mono text-[clamp(2.65rem,_13vmin,_7.85rem)] font-black leading-none tracking-[0.08em] text-yellow-400 lg:text-left">
+                  <div className="text-left font-mono text-[clamp(2.65rem,_13vmin,_7.85rem)] font-black leading-none tracking-[0.08em] text-yellow-400">
                     {venueCode}
                   </div>
                 </div>
               </div>
 
               <div className="rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-emerald-500/42 bg-emerald-950/38 px-[clamp(8px,_1.95vmin,_24px)] py-[clamp(10px,_1.85vmin,_18px)]">
-                <p className={`${sectionRibbon} mb-[clamp(6px,_1.1vmin,_12px)] text-center lg:text-left`}>Player URL</p>
+                <p className={`${sectionRibbon} mb-[clamp(6px,_1.1vmin,_12px)] text-left`}>Player URL</p>
                 <p className="break-words font-mono text-[clamp(0.94rem,_3.35vmin,_2.2rem)] font-bold leading-snug tracking-tight text-amber-200">
                   {joinUrl}
                 </p>
