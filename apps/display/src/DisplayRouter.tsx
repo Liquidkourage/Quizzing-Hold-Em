@@ -151,13 +151,20 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const [shrinkingExit, setShrinkingExit] = useState<ShrinkingExit | null>(null)
   /** Venue wall mosaic + headline from server */
   const [venueWall, setVenueWall] = useState<DisplayVenueWallSnapshot | null>(null)
+  /** Host clicked “All 8 felts” (local relay) — show mosaic even if snapshot still has showAudienceWelcome. */
+  const [mosaicForcedByHost, setMosaicForcedByHost] = useState(false)
   /** After first time the 8-panel grid mounts, suppress re-entry fades (mosaic remounts when felt goes fullscreen). */
   const venueMosaicWasShownRef = useRef(false)
+  /** Tracks showAudienceWelcome across venueWall snapshot updates */
+  const prevAudienceWelcomeRef = useRef<boolean | undefined>(undefined)
 
   const wallOverview = venueOverview(layout)
   /** Lobby / join briefing — only after we have wall payload; avoids hiding the mosaic forever when snapshot never applies. */
   const audienceBriefing =
-    wallOverview && venueWall != null && venueWall.showAudienceWelcome !== false
+    wallOverview &&
+    venueWall != null &&
+    venueWall.showAudienceWelcome !== false &&
+    !mosaicForcedByHost
   const spotlightN = venueSpotlightTable(layout)
   const fullscreenLive = showFullscreenLiveFelt(layout)
 
@@ -236,6 +243,12 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
       setShrinkingExit(nextShrinkingExit)
     }
 
+    /** Local relay only — same layout as before still means host chose mosaic over welcome */
+    function handleLocalLayoutRelay(next: DisplayLayoutPayload) {
+      handleDisplayLayout(next)
+      if (venueOverview(next)) setMosaicForcedByHost(true)
+    }
+
     const wallFingerprint = `${venueCode}:wall`
     const skipHeavyConnect =
       pairingBootstrap &&
@@ -245,7 +258,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     if (skipHeavyConnect) {
       pairingWarmBootstrapConsumedRef.current = true
       const offDisplay = onDisplayLayout(handleDisplayLayout)
-      const offLocal = subscribeDisplayLayoutLocal(handleDisplayLayout)
+      const offLocal = subscribeDisplayLayoutLocal(handleLocalLayoutRelay)
       return () => {
         offDisplay()
         offLocal()
@@ -274,7 +287,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     // Must subscribe AFTER connect(): onDisplayLayout is a noop when socket was null,
     // and connect() replaces the socket (pairing teardown), so attaching before loses broadcast updates.
     const offDisplay = onDisplayLayout(handleDisplayLayout)
-    const offLocal = subscribeDisplayLayoutLocal(handleDisplayLayout)
+    const offLocal = subscribeDisplayLayoutLocal(handleLocalLayoutRelay)
 
     return () => {
       offDisplay()
@@ -282,6 +295,19 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
       disconnectSock()
     }
   }, [connectFingerprint, venueCode, pairingBootstrap])
+
+  useEffect(() => {
+    if (!venueWall) {
+      prevAudienceWelcomeRef.current = undefined
+      return
+    }
+    const show = venueWall.showAudienceWelcome !== false
+    const prev = prevAudienceWelcomeRef.current
+    if (prev === false && show === true) {
+      setMosaicForcedByHost(false)
+    }
+    prevAudienceWelcomeRef.current = show
+  }, [venueWall])
 
   useEffect(() => {
     const unsub = onDisplayVenueSnapshot((payload) => {
