@@ -76,7 +76,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       >
         <header className="flex shrink-0 flex-col items-center">
           <div
-            className="h-[clamp(46px,min(9.5vh,104px))] w-auto max-w-[min(1100px,_58vw)] shrink-0"
+            className="h-[clamp(39px,min(8.075vh,88px))] w-auto max-w-[min(935px,_49.3vw)] shrink-0"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
