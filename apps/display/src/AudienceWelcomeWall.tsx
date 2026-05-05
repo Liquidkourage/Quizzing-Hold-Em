@@ -90,12 +90,12 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           </p>
         </header>
 
-        {/* Row 2: QR fills column height without clipping; only the instructions column scrolls if needed */}
+        {/* Row 2: [QR · join card centered under logo · rules] */}
         <div className="min-h-0 min-w-0">
-          <div className="grid h-full min-h-0 grid-cols-1 gap-x-[clamp(16px,_3vw,_56px)] gap-y-[clamp(12px,_1.85vmin,_20px)] lg:grid-cols-[minmax(240px,_min(32vw,_40vh))_minmax(0,1fr)] lg:items-stretch">
+          <div className="grid h-full min-h-0 grid-cols-1 gap-x-[clamp(12px,_2.25vw,_40px)] gap-y-[clamp(12px,_1.85vmin,_20px)] lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-stretch">
             <section
               aria-label="Scan QR to open player app"
-              className={`flex h-full min-h-0 w-full flex-col items-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_20px)] shadow-[0_0_60px_rgba(34,211,153,0.11)]`}
+              className={`flex h-full min-h-0 w-full max-w-[min(100%,_min(34vw,_40vh))] flex-col justify-self-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_20px)] shadow-[0_0_60px_rgba(34,211,153,0.11)] lg:justify-self-end`}
             >
               <span className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug`}>
                 Aim camera here
@@ -116,7 +116,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 </div>
               ) : (
                 <div className="flex min-h-0 flex-1 items-center rounded-xl border-2 border-dashed border-white/35 bg-white/[0.04] px-6 py-10 text-center text-[clamp(1rem,2.6vmin,1.35rem)] font-semibold leading-snug text-amber-200">
-                  QR blocked — use the join card beside this scan box for the URL
+                  QR blocked — check the centered join card for the URL and code.
                 </div>
               )}
               <span className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90`}>
@@ -124,32 +124,35 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               </span>
             </section>
 
-            <div className="flex min-h-0 min-w-0 flex-col gap-[clamp(8px,_1.35vmin,_14px)] overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] lg:overscroll-contain lg:pb-px lg:pr-1">
-              <section
-                aria-label="Player URL then venue room code"
-                className="mx-auto w-full max-w-[min(100%,38rem)] min-w-0 rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-emerald-500/45 bg-black/72 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.12)]"
-              >
-                <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center">
-                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
-                  <p className={joinUrlText}>{joinUrl}</p>
+            <section
+              aria-label="Player URL then venue room code"
+              className="mx-auto w-full min-w-0 max-w-[min(100%,38rem)] justify-self-center rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-emerald-500/45 bg-black/72 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.12)] lg:mx-0"
+            >
+              <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center">
+                <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
+                <p className={joinUrlText}>{joinUrl}</p>
+              </div>
+              <div
+                aria-hidden
+                className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/18"
+              />
+              <div className="flex flex-col items-center px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(10px,_1.8vmin,_18px)] pt-[clamp(8px,_1.35vmin,_14px)] text-center">
+                <p className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-center opacity-95`}>Venue / room code</p>
+                <div className="inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-yellow-400/85 bg-black/80 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(6px,_1.35vmin,_14px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.16)]">
+                  <div className={venueMono}>{venueCode}</div>
                 </div>
-                <div
-                  aria-hidden
-                  className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/18"
-                />
-                <div className="flex flex-col items-center px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(10px,_1.8vmin,_18px)] pt-[clamp(8px,_1.35vmin,_14px)] text-center">
-                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-center opacity-95`}>Venue / room code</p>
-                  <div className="inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-yellow-400/85 bg-black/80 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(6px,_1.35vmin,_14px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.16)]">
-                    <div className={venueMono}>{venueCode}</div>
-                  </div>
-                </div>
-              </section>
+              </div>
+            </section>
 
-              <ol className="grid shrink-0 gap-[clamp(6px,_1.35vmin,_12px)]">
+            <div className="flex min-h-0 min-w-0 w-full flex-col justify-self-center overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] lg:max-w-[min(100%,42rem)] lg:justify-self-start lg:overscroll-contain lg:pb-px lg:pl-px lg:pr-1">
+              <h2 id="join-steps-title" className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-left`}>
+                How to join
+              </h2>
+              <ol className="grid shrink-0 gap-[clamp(6px,_1.35vmin,_12px)]" aria-labelledby="join-steps-title">
                 <li className="flex items-start gap-[clamp(10px,_1.75vw,_18px)]">
                   <span className={stepCircleClasses}>1</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
-                    Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL above</strong> or scan the QR.
+                    Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL on this screen</strong>, or scan the QR.
                   </span>
                 </li>
                 <li className="flex items-start gap-[clamp(10px,_1.75vw,_18px)]">
