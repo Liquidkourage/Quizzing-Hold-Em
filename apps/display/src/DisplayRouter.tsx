@@ -161,7 +161,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   useEffect(() => {
     const sl = socketLayout
 
-    const offDisplay = onDisplayLayout((next: DisplayLayoutPayload) => {
+    function handleDisplayLayout(next: DisplayLayoutPayload) {
       const prev = layoutRef.current
       let iris: IrisRect | null = null
       let nextShrinkingExit: ShrinkingExit | null = null
@@ -193,7 +193,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
       setLayout(next)
 
       setShrinkingExit(nextShrinkingExit)
-    })
+    }
 
     const wallFingerprint = `${venueCode}:wall`
     const skipHeavyConnect =
@@ -203,6 +203,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
 
     if (skipHeavyConnect) {
       pairingWarmBootstrapConsumedRef.current = true
+      const offDisplay = onDisplayLayout(handleDisplayLayout)
       return () => {
         offDisplay()
         pairingWarmBootstrapConsumedRef.current = false
@@ -226,6 +227,10 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     } else {
       disconnectSock = connect('display', 'DISPLAY01', venueCode, watchedLiveTableId())
     }
+
+    // Must subscribe AFTER connect(): onDisplayLayout is a noop when socket was null,
+    // and connect() replaces the socket (pairing teardown), so attaching before loses broadcast updates.
+    const offDisplay = onDisplayLayout(handleDisplayLayout)
 
     return () => {
       offDisplay()
