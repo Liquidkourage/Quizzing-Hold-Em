@@ -39,19 +39,24 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'font-semibold uppercase tracking-[0.16em] text-emerald-200/95 text-[clamp(1.35rem,_3.55vw,_2.2rem)]'
 
   const statRibbon =
-    'font-black uppercase tracking-[0.13em] text-white/82 text-[clamp(1.12rem,_2.85vw,_1.92rem)]'
+    'font-black uppercase tracking-[0.13em] text-white/82 text-[clamp(1.28rem,_3.35vw,_2.22rem)]'
 
   const statHint =
-    'font-semibold text-white/68 text-[clamp(1.02rem,_2.35vw,_1.65rem)]'
+    'font-semibold text-white/68 text-[clamp(1.18rem,_2.72vw,_1.92rem)]'
 
   const stepCircleClasses =
-    'flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.36)] h-[clamp(2.95rem,_6.85vw,_4.95rem)] min-w-[clamp(2.95rem,_6.85vw,_4.95rem)] text-[clamp(1.3rem,_3.55vw,_1.98rem)]'
+    'flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.36)] h-[clamp(3.08rem,_7.05vw,_5.22rem)] min-w-[clamp(3.08rem,_7.05vw,_5.22rem)] text-[clamp(1.38rem,_3.72vw,_2.12rem)]'
 
+  /** Rules column — step body copy (slightly larger than joining info ribbons). */
   const stepLine =
-    'text-[clamp(1.42rem,_3.05vw,_2.45rem)] font-bold leading-snug text-white [text-shadow:0_2px_14px_rgba(0,0,0,.45)]'
+    'text-[clamp(1.58rem,_3.35vw,_2.72rem)] font-bold leading-snug text-white [text-shadow:0_2px_14px_rgba(0,0,0,.45)]'
+
+  /** “How to join” heading matches rules emphasis without inflating QR / join ribbons. */
+  const stepsHeading =
+    'font-black uppercase tracking-[0.19em] text-amber-100/95 text-[clamp(1.62rem,_4.35vw,_2.72rem)] [text-shadow:0_3px_22px_rgba(0,0,0,.5)]'
 
   const footnote =
-    'font-semibold leading-snug text-emerald-200/93 text-[clamp(1.05rem,_2.35vw,_1.72rem)]'
+    'font-semibold leading-snug text-emerald-200/93 text-[clamp(1.2rem,_2.72vw,_2.02rem)]'
 
   /** Room code — vw + capped vh so short codes stay compact in the box without ultra-wide bars. */
   const venueMono =
@@ -77,14 +82,14 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(4px,_0.85vmin,_10px)] px-[clamp(12px,_2.75vw,_80px)] py-[clamp(6px,_1vh,_16px)]"
+        className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(4px,_0.85vmin,_10px)] px-[clamp(18px,_3.35vw,_96px)] py-[clamp(6px,_1vh,_16px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
-        <header className="flex shrink-0 flex-col items-center">
+        <header className="flex w-full max-w-full shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
           <div
-            className="h-[clamp(39px,min(8.075vh,88px))] w-auto max-w-[min(935px,_49.3vw)] shrink-0"
+            className="h-[clamp(36px,min(7.6vh,82px))] w-auto max-w-[min(885px,_46vw)] shrink-0"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
@@ -149,7 +154,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
             </section>
 
             <div className="flex min-h-0 min-w-0 w-full flex-col justify-self-center overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] lg:max-w-[min(100%,42rem)] lg:justify-self-start lg:overscroll-contain lg:pb-px lg:pl-px lg:pr-1">
-              <h2 id="join-steps-title" className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-left`}>
+              <h2 id="join-steps-title" className={`${stepsHeading} mb-[clamp(6px,_0.95vmin,_10px)] text-left`}>
                 How to join
               </h2>
               <ol className="grid shrink-0 gap-[clamp(6px,_1.35vmin,_12px)]" aria-labelledby="join-steps-title">
@@ -203,8 +208,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <div
                 className={`py-[clamp(4px,_1.1vmin,_10px)] font-mono tabular-nums tracking-tight ${
                   accent
-                    ? 'text-[clamp(2.05rem,_min(9.5vw,_11.5vh),_5.85rem)] font-black text-yellow-300'
-                    : 'text-[clamp(2.05rem,_min(9.5vw,_11.5vh),_5.85rem)] font-black text-white'
+                    ? 'text-[clamp(2.42rem,_min(11vw,_13.25vh),_6.95rem)] font-black text-yellow-300'
+                    : 'text-[clamp(2.42rem,_min(11vw,_13.25vh),_6.95rem)] font-black text-white'
                 }`}
               >
                 {v}
