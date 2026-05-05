@@ -4,6 +4,7 @@ import type { DisplayLayoutPayload, DisplayVenueWallSnapshot } from '@qhe/net'
 import { connect, onDisplayLayout, onDisplayVenueSnapshot } from '@qhe/net'
 import DisplayTableLive from './App.tsx'
 import { readDisplayTableIdFromUrl, readUrlLayoutBootstrap } from './displayUrlParams'
+import AudienceWelcomeOverlay from './AudienceWelcomeOverlay.tsx'
 import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
 
 /** Tile rect in viewport used to “iris” open the full felt from the grid. */
@@ -119,6 +120,9 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const venueMosaicWasShownRef = useRef(false)
 
   const wallOverview = venueOverview(layout)
+  /** Lobby / join briefing from server (`showAudienceWelcome`); hides after first venue Start Game until New Game. */
+  const audienceBriefing =
+    wallOverview && (venueWall == null ? true : venueWall.showAudienceWelcome !== false)
   const spotlightN = venueSpotlightTable(layout)
   const fullscreenLive = showFullscreenLiveFelt(layout)
 
@@ -242,7 +246,22 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
 
   useEffect(() => {
     const unsub = onDisplayVenueSnapshot((payload) => {
-      if (payload?.tiles?.length === 8) setVenueWall(payload)
+      if (!payload?.tiles || payload.tiles.length !== 8) return
+      const p = payload as Partial<DisplayVenueWallSnapshot> & {
+        tiles: DisplayVenueWallSnapshot['tiles']
+      }
+      const next: DisplayVenueWallSnapshot = {
+        tiles: p.tiles,
+        headlineQuestionText: p.headlineQuestionText ?? null,
+        answerDeadlineMs: p.answerDeadlineMs ?? null,
+        lobbyPlayerCount:
+          typeof p.lobbyPlayerCount === 'number' ? p.lobbyPlayerCount : 0,
+        totalSeatedAtTables:
+          typeof p.totalSeatedAtTables === 'number' ? p.totalSeatedAtTables : 0,
+        /** Older servers never sent this — keep briefing until reconnect to a newer build. */
+        showAudienceWelcome: p.showAudienceWelcome !== false,
+      }
+      setVenueWall(next)
     })
     return () => unsub()
   }, [connectFingerprint])
@@ -295,6 +314,9 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
           transition={{ duration: venueMosaicWasShownRef.current ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
           <VenueEightTablesPreview wall={venueWall} skipMountIntro={venueMosaicWasShownRef.current} />
+          {audienceBriefing && (
+            <AudienceWelcomeOverlay venueCode={venueCode} wall={venueWall} />
+          )}
         </motion.div>
       )}
       {showPrimaryFullscreenLayer && (

@@ -32,6 +32,15 @@ export type DisplayVenueWallSnapshot = {
   headlineQuestionText: string | null
   /** Server epoch ms; present only while a table in this venue is in `answering` with a deadline. */
   answerDeadlineMs: number | null
+  /** Humans in lobby pool (`LOBBY` session); 0 before anyone joins lobby. */
+  lobbyPlayerCount: number
+  /** Sum of seated humans across numbered tables (1–8). */
+  totalSeatedAtTables: number
+  /**
+   * Public TV briefing: true until host runs **Start Game** at least once for this venue since last **New Game** (process memory).
+   * After dismiss, mosaic stays unobstructed until `newGame` resets the venue briefing flag.
+   */
+  showAudienceWelcome: boolean
 }
 
 export const ClientHello = z.object({

@@ -33,8 +33,6 @@ import {
   playerAllIn,
   SAMPLE_QUESTIONS,
   buildDisplayPreviewGameState,
-  DISPLAY_PREVIEW_SYNCED_PHASE,
-  DISPLAY_PREVIEW_TABLES,
 } from '@qhe/core'
 import type { Question, GameState } from '@qhe/core'
 import type { 
@@ -1055,6 +1053,21 @@ function allTableSessionsInVenue(venueCode: string): string[] {
 
 const displayVenueSnapshotTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
+function humanAudienceCount(gs: GameState): number {
+  return gs.players.filter((p) => !String(p.id).startsWith('vp:')).length
+}
+
+/** Hidden on displays after venue-wide Start Game until New Game resets the venue. */
+const venueAudienceWelcomeExpired = new Set<string>()
+
+function markVenueShowStarted(code: string): void {
+  const vn = normalizeVenueCode(code)
+  if (!venueAudienceWelcomeExpired.has(vn)) {
+    venueAudienceWelcomeExpired.add(vn)
+    scheduleDisplayVenueSnapshot(vn)
+  }
+}
+
 function tableNumFromSessionKey(venueCode: string, sessionKey: string): number | null {
   const vn = normalizeVenueCode(venueCode)
   const pref = `${vn}:`
@@ -1079,24 +1092,30 @@ function pickHeadlineGameState(venueCode: string): GameState | null {
 
 function emitDisplayVenueSnapshotNow(vnRaw: string) {
   const vn = normalizeVenueCode(vnRaw)
+  const lobbyKey = tableSessionKey(vn, LOBBY_TABLE_ID)
+  const lobbyGs = rooms.get(lobbyKey)
+  const lobbyPlayerCount = lobbyGs != null ? humanAudienceCount(lobbyGs) : 0
+
   const tiles: DisplayVenueTileSnapshot[] = []
+  let totalSeatedAtTables = 0
   for (let n = 1; n <= 8; n++) {
     const key = tableSessionKey(vn, String(n))
     const gs = rooms.get(key)
-    const fb = DISPLAY_PREVIEW_TABLES[n - 1] ?? DISPLAY_PREVIEW_TABLES[0]
-    if (gs != null && gs.players.length > 0) {
+    if (gs != null) {
+      const seated = humanAudienceCount(gs)
+      totalSeatedAtTables += seated
       tiles.push({
         tableNum: n,
-        seated: gs.players.length,
-        pot: gs.round.pot,
+        seated,
+        pot: gs.round.pot ?? 0,
         phase: gs.phase,
       })
     } else {
       tiles.push({
         tableNum: n,
-        seated: fb.seated,
-        pot: fb.pot,
-        phase: DISPLAY_PREVIEW_SYNCED_PHASE,
+        seated: 0,
+        pot: 0,
+        phase: 'lobby',
       })
     }
   }
@@ -1117,6 +1136,9 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     tiles,
     headlineQuestionText,
     answerDeadlineMs,
+    lobbyPlayerCount,
+    totalSeatedAtTables,
+    showAudienceWelcome: !venueAudienceWelcomeExpired.has(vn),
   }
   io.to(displayVenueRoom(vn)).emit('displayVenueSnapshot', payload)
 }
@@ -1134,11 +1156,8 @@ function scheduleDisplayVenueSnapshot(venueCode: string) {
   )
 }
 
-function afterTableStateBroadcast(gs: GameState, sessionKey: string) {
-  const n = tableNumFromSessionKey(gs.code, sessionKey)
-  if (n !== null) {
-    scheduleDisplayVenueSnapshot(gs.code)
-  }
+function afterTableStateBroadcast(gs: GameState, _sessionKey: string) {
+  scheduleDisplayVenueSnapshot(gs.code)
 }
 
 /** Emit felt state then refresh DISPLAY:{venue} wall summaries for numbered felts */
@@ -1379,6 +1398,7 @@ io.on('connection', (socket) => {
             emitVenueTableState(tk, gs)
           }
           socket.emit('toast', 'Game started — synced to all tables at this venue.')
+          markVenueShowStarted(gameState.code)
           gameState = rooms.get(sessionKey)!
           break
         }
@@ -1799,6 +1819,8 @@ io.on('connection', (socket) => {
             emitVenueTableState(tk, fresh)
           }
           socket.emit('toast', 'New game — lobby and all tables reset.')
+          venueAudienceWelcomeExpired.delete(normalizeVenueCode(gameState.code))
+          scheduleDisplayVenueSnapshot(gameState.code)
           gameState = rooms.get(sessionKey)!
           break
         }
