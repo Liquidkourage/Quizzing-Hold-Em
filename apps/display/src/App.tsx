@@ -561,7 +561,6 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
             {'Quizz\u2019em'}
           </h1>
           <div className="text-base text-white">
-            Venue: <span className="text-yellow-400 font-bold">{displayGameState.code}</span> | 
             Phase: <span className="text-yellow-400 font-bold">{displayGameState.phase}</span>
             {!gameState && <span className="text-red-400 ml-2">(DEMO MODE - 8 Players)</span>}
           </div>

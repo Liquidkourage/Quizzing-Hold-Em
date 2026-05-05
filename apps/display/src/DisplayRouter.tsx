@@ -283,7 +283,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
           exit={{ opacity: 0 }}
           transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
-          <VenueEightTablesPreview venueCode={venueCode} tiles={venueWallTiles} />
+          <VenueEightTablesPreview tiles={venueWallTiles} />
         </motion.div>
       )}
       {showPrimaryFullscreenLayer && (

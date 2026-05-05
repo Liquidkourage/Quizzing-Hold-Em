@@ -77,7 +77,6 @@ function phaseAccent(ph: string) {
 }
 
 type VenueEightTablesPreviewProps = {
-  venueCode: string
   /** Live summaries from Socket.IO (`displayVenueSnapshot`); fallback to DISPLAY_PREVIEW_* until arrive. */
   tiles: DisplayVenueTileSnapshot[] | null
 }
@@ -86,7 +85,7 @@ type VenueEightTablesPreviewProps = {
  * Mosaic rows mirror each table session on the server; spotlight shows the matching full felt.
  * See repo rule: display-readonly.
  */
-export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEightTablesPreviewProps) {
+export default function VenueEightTablesPreview({ tiles }: VenueEightTablesPreviewProps) {
   const [bannerSecondsLeft, setBannerSecondsLeft] = useState<number | null>(null)
 
   const tileRows: DisplayVenueTileSnapshot[] =
@@ -125,27 +124,16 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
 
       <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
         <motion.div
-          className="mx-auto grid w-full max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-1 sm:gap-x-6"
+          className="mx-auto flex w-full max-w-[1600px] justify-center"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="min-w-0" aria-hidden />
-          {/* Transparent sizing only — no panel; marquee asset already has alpha */}
-          <div className="flex min-w-0 justify-center justify-self-center">
+          <div className="flex min-w-0 justify-center">
             <div
               className="max-w-full w-[min(86vw,calc((min(1600px,100vw)-2rem)*0.92))] sm:w-[calc((min(1600px,100vw)-2rem-1.25rem)/2)] lg:w-[calc((min(1600px,100vw)-2rem-3.75rem)/4)]"
               style={{ aspectRatio: '1024 / 655' }}
             >
               <QuizzEmWordmark layout="fill" />
-            </div>
-          </div>
-
-          <div className="justify-self-end text-right sm:min-w-[8.5rem]">
-            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
-              Room / event code
-            </div>
-            <div className="font-mono text-3xl font-black tabular-nums tracking-tight text-casino-emerald [text-shadow:_0_2px_12px_rgb(0_0_0/0.85)] sm:text-4xl">
-              {venueCode}
             </div>
           </div>
         </motion.div>
@@ -185,7 +173,7 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
             <div className="text-xs font-semibold uppercase tracking-widest text-white/45">Synced trivia</div>
             <p className="mt-2 text-xl font-semibold leading-snug text-yellow-400 sm:text-2xl">{DISPLAY_PREVIEW_DEMO_QUESTION_TEXT}</p>
             <p className="mt-3 text-[11px] text-white/50 sm:text-xs">
-              Same phase and question everywhere for this code; stacks and pots stay local to each table.
+              Same phase and question everywhere on this venue; stacks and pots stay local to each table.
             </p>
           </div>
         </motion.section>
