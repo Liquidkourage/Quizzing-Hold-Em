@@ -12,6 +12,38 @@ import type {
 
 let socket: Socket | null = null
 
+/** Same-origin demo bridge (e.g. host tab → display tab) when socket/server is unavailable. */
+const DISPLAY_LAYOUT_LOCAL_BROADCAST_CHANNEL = 'qhe-display-layout-demo'
+
+function isDisplayLayoutPayloadLocal(v: unknown): v is DisplayLayoutPayload {
+  if (!v || typeof v !== 'object') return false
+  const o = v as Record<string, unknown>
+  if (o.layout === 'singleTable') {
+    return typeof o.tableId === 'string' && o.tableId.length > 0
+  }
+  if (o.layout === 'venueWall') {
+    if (o.focusTable === null) return true
+    return (
+      typeof o.focusTable === 'number' &&
+      Number.isInteger(o.focusTable) &&
+      o.focusTable >= 1 &&
+      o.focusTable <= 8
+    )
+  }
+  return false
+}
+
+function postDisplayLayoutLocal(layout: DisplayLayoutPayload) {
+  if (typeof BroadcastChannel === 'undefined') return
+  try {
+    const ch = new BroadcastChannel(DISPLAY_LAYOUT_LOCAL_BROADCAST_CHANNEL)
+    ch.postMessage(layout)
+    ch.close()
+  } catch {
+    /* private mode / quota */
+  }
+}
+
 function socketOrigin(): string {
   const configured = import.meta.env?.VITE_SOCKET_URL as string | undefined
   if (configured && configured.length > 0) {
@@ -466,8 +498,32 @@ export function clearVirtualPlayers() {
 
 /** Host-only: where TVs should point (venue wall vs single felt). */
 export function displaySetLayout(layout: DisplayLayoutPayload) {
-  if (!socket) return
-  socket.emit('action', { type: 'displaySetLayout', payload: layout })
+  if (socket) {
+    socket.emit('action', { type: 'displaySetLayout', payload: layout })
+  }
+  postDisplayLayoutLocal(layout)
+}
+
+/** Display: apply host layout changes relayed locally (demo / no server). Cleanup on unsubscribe. */
+export function subscribeDisplayLayoutLocal(
+  callback: (layout: DisplayLayoutPayload) => void
+): () => void {
+  if (typeof BroadcastChannel === 'undefined') return () => {}
+  let ch: BroadcastChannel
+  try {
+    ch = new BroadcastChannel(DISPLAY_LAYOUT_LOCAL_BROADCAST_CHANNEL)
+  } catch {
+    return () => {}
+  }
+  const onMessage = (ev: MessageEvent) => {
+    if (!isDisplayLayoutPayloadLocal(ev.data)) return
+    callback(ev.data)
+  }
+  ch.addEventListener('message', onMessage)
+  return () => {
+    ch.removeEventListener('message', onMessage)
+    ch.close()
+  }
 }
 
 /** Host-only: attach a pairing TV (shows on /display pairing screen) to this venue. Code is 4 characters. */

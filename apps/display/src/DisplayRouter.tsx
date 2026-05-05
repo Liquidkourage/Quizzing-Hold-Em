@@ -1,7 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { DisplayLayoutPayload, DisplayVenueWallSnapshot } from '@qhe/net'
-import { connect, onDisplayLayout, onDisplayVenueSnapshot } from '@qhe/net'
+import {
+  connect,
+  onDisplayLayout,
+  onDisplayVenueSnapshot,
+  subscribeDisplayLayoutLocal,
+} from '@qhe/net'
 import DisplayTableLive from './App.tsx'
 import { readDisplayTableIdFromUrl, readUrlLayoutBootstrap } from './displayUrlParams'
 import AudienceWelcomeWall from './AudienceWelcomeWall.tsx'
@@ -240,8 +245,10 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     if (skipHeavyConnect) {
       pairingWarmBootstrapConsumedRef.current = true
       const offDisplay = onDisplayLayout(handleDisplayLayout)
+      const offLocal = subscribeDisplayLayoutLocal(handleDisplayLayout)
       return () => {
         offDisplay()
+        offLocal()
         pairingWarmBootstrapConsumedRef.current = false
       }
     }
@@ -267,9 +274,11 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     // Must subscribe AFTER connect(): onDisplayLayout is a noop when socket was null,
     // and connect() replaces the socket (pairing teardown), so attaching before loses broadcast updates.
     const offDisplay = onDisplayLayout(handleDisplayLayout)
+    const offLocal = subscribeDisplayLayoutLocal(handleDisplayLayout)
 
     return () => {
       offDisplay()
+      offLocal()
       disconnectSock()
     }
   }, [connectFingerprint, venueCode, pairingBootstrap])
