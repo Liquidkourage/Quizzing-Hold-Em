@@ -62,12 +62,12 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           </p>
         </header>
 
-        <div className="mt-3 grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,200px)_1fr] lg:gap-6 xl:grid-cols-[minmax(0,220px)_1fr]">
+        <div className="mt-3 grid min-h-0 flex-1 grid-cols-1 content-start items-start gap-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-6">
           <section
             aria-label="Scan QR to open player app"
-            className="flex flex-row items-center justify-center gap-3 rounded-2xl border border-emerald-400/35 bg-black/50 p-3 shadow-inner lg:flex-col lg:justify-start lg:p-4"
+            className="flex w-full max-w-full flex-row justify-center gap-3 rounded-2xl border border-emerald-400/35 bg-black/50 p-3 shadow-inner sm:mx-auto sm:max-w-md lg:w-auto lg:flex-col lg:self-start lg:justify-start lg:p-3.5"
           >
-            <span className="hidden text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200/90 lg:block lg:text-center">
+            <span className="hidden text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200/90 lg:block lg:w-full lg:text-center">
               Scan fastest
             </span>
             {qrOk ? (
@@ -85,12 +85,12 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 QR blocked — use URL →
               </div>
             )}
-            <span className="hidden text-[10px] uppercase tracking-wide text-white/50 lg:block lg:text-center">
+            <span className="hidden shrink-0 text-[10px] uppercase tracking-wide text-white/50 lg:block lg:w-full lg:text-center">
               Opens player
             </span>
           </section>
 
-          <section className="flex min-h-0 min-w-0 flex-col gap-2 lg:gap-3">
+          <section className="flex min-h-0 min-w-0 flex-col gap-2 self-stretch lg:gap-3">
             <div className="grid min-h-0 shrink gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start lg:gap-4">
               <div className="rounded-2xl border border-white/10 bg-black/40 p-3 backdrop-blur-sm sm:p-4">
                 <p className="text-center font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
