@@ -29,6 +29,8 @@ npm run dev
 6. Players arrange their cards to get closest to the answer
 7. Closest player wins the pot!
 
+Canonical **show phases, wagering waves, timers, and venue-wide host actions** live in **[docs/round-machine.md](./docs/round-machine.md)** (the README steps above oversimplify).
+
 ##  Tech Stack
 
 - **Frontend**: React + TypeScript + Vite
