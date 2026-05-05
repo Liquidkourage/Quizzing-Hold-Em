@@ -78,22 +78,28 @@ function layoutForSocketConnect(
   return venueLayout
 }
 
+type DisplayRouterProps = {
+  venueCode: string
+  /** Pairing already joined DISPLAY:{venue} on this tab's socket — first connect skips teardown */
+  pairingBootstrap?: boolean
+}
+
 /**
  * Host-driven layout from the Venue tab.
  * Venue wall (no spotlight): grid preview only — no felt `state`.
  * Spotlight or single-table: full `DisplayTableLive` subscribed to one felt session.
  */
-export default function DisplayRouter() {
-  const venueCode =
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase() || 'HOST01'
-      : 'HOST01'
+export default function DisplayRouter({ venueCode, pairingBootstrap = false }: DisplayRouterProps) {
+  const pairingWarmBootstrapConsumedRef = useRef(false)
 
-  const [layout, setLayout] = useState<DisplayLayoutPayload>(() =>
-    typeof window !== 'undefined'
+  const [layout, setLayout] = useState<DisplayLayoutPayload>(() => {
+    if (pairingBootstrap) {
+      return { layout: 'venueWall', focusTable: null }
+    }
+    return typeof window !== 'undefined'
       ? readUrlLayoutBootstrap()
       : ({ layout: 'venueWall', focusTable: 1 } satisfies DisplayLayoutPayload)
-  )
+  })
 
   const layoutRef = useRef(layout)
   layoutRef.current = layout
@@ -153,23 +159,7 @@ export default function DisplayRouter() {
   }, [wallOverview, shrinkingExit])
 
   useEffect(() => {
-    let disconnectSock: () => void
     const sl = socketLayout
-
-    if (venueOverview(sl)) {
-      disconnectSock = connect('display', 'DISPLAY01', venueCode, '1', {
-        displayVenueWall: true,
-        displayFocusTable: null,
-      })
-    } else if (sl.layout === 'venueWall' && sl.focusTable != null) {
-      const ft = sl.focusTable
-      disconnectSock = connect('display', 'DISPLAY01', venueCode, String(ft), {
-        displayVenueWall: true,
-        displayFocusTable: ft,
-      })
-    } else {
-      disconnectSock = connect('display', 'DISPLAY01', venueCode, watchedLiveTableId())
-    }
 
     const offDisplay = onDisplayLayout((next: DisplayLayoutPayload) => {
       const prev = layoutRef.current
@@ -205,11 +195,43 @@ export default function DisplayRouter() {
       setShrinkingExit(nextShrinkingExit)
     })
 
+    const wallFingerprint = `${venueCode}:wall`
+    const skipHeavyConnect =
+      pairingBootstrap &&
+      !pairingWarmBootstrapConsumedRef.current &&
+      connectFingerprint === wallFingerprint
+
+    if (skipHeavyConnect) {
+      pairingWarmBootstrapConsumedRef.current = true
+      return () => {
+        offDisplay()
+        pairingWarmBootstrapConsumedRef.current = false
+      }
+    }
+
+    pairingWarmBootstrapConsumedRef.current = true
+
+    let disconnectSock: () => void
+    if (venueOverview(sl)) {
+      disconnectSock = connect('display', 'DISPLAY01', venueCode, '1', {
+        displayVenueWall: true,
+        displayFocusTable: null,
+      })
+    } else if (sl.layout === 'venueWall' && sl.focusTable != null) {
+      const ft = sl.focusTable
+      disconnectSock = connect('display', 'DISPLAY01', venueCode, String(ft), {
+        displayVenueWall: true,
+        displayFocusTable: ft,
+      })
+    } else {
+      disconnectSock = connect('display', 'DISPLAY01', venueCode, watchedLiveTableId())
+    }
+
     return () => {
       offDisplay()
       disconnectSock()
     }
-  }, [connectFingerprint, venueCode])
+  }, [connectFingerprint, venueCode, pairingBootstrap])
 
   useEffect(() => {
     const unsub = onDisplayVenueSnapshot((tiles) => {

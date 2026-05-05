@@ -853,6 +853,110 @@ function resolveDisplayLayoutForHello(venueCode: string, data: ClientHello): Dis
   return { layout: 'singleTable', tableId: normalizeTableId(data.tableId) }
 }
 
+const DISPLAY_PAIRING_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+/** Short code ↔ waiting display socket until host claims pairing */
+type DisplayPairingPending = { socketId: string; created: number }
+const displayPairByCode = new Map<string, DisplayPairingPending>()
+const displayPairCodeBySocketId = new Map<string, string>()
+
+type DisplaySockData = {
+  sessionKey?: string
+  role?: string
+  hostAuthed?: boolean
+  displayAwaitPairing?: boolean
+  displayClientName?: string
+}
+
+function clearDisplayPairingForSocket(socketId: string) {
+  const code = displayPairCodeBySocketId.get(socketId)
+  if (!code) return
+  displayPairCodeBySocketId.delete(socketId)
+  displayPairByCode.delete(code)
+}
+
+function mintDisplayPairingCode(): string {
+  for (let attempts = 0; attempts < 120; attempts++) {
+    let s = ''
+    for (let i = 0; i < 4; i++) {
+      s += DISPLAY_PAIRING_ALPHABET[Math.floor(Math.random() * DISPLAY_PAIRING_ALPHABET.length)]!
+    }
+    if (!displayPairByCode.has(s)) return s
+  }
+  return `Z${(100 + Math.floor(Math.random() * 900)).toString()}`
+}
+
+function assignDisplayPairing(socket: Socket): string {
+  clearDisplayPairingForSocket(socket.id)
+  const code = mintDisplayPairingCode()
+  displayPairByCode.set(code, { socketId: socket.id, created: Date.now() })
+  displayPairCodeBySocketId.set(socket.id, code)
+  return code
+}
+
+/** Join DISPLAY:{venue}, route layouts & felt session — shared by hello + pairing attach */
+function wireDisplaySocketToVenue(socket: Socket, venueCodeRaw: string, data: ClientHello) {
+  const vn = normalizeVenueCode(venueCodeRaw)
+  const sockData = socket.data as DisplaySockData
+  sockData.displayAwaitPairing = false
+
+  socket.join(displayVenueRoom(vn))
+  const layout = resolveDisplayLayoutForHello(vn, data)
+  socket.emit('displayLayout', layout)
+
+  const spotlightWatchTableId =
+    layout.layout === 'venueWall' &&
+    layout.focusTable != null &&
+    Number.isInteger(layout.focusTable) &&
+    layout.focusTable >= 1 &&
+    layout.focusTable <= 8
+      ? String(layout.focusTable)
+      : null
+
+  let sessionTableIdRaw =
+    layout.layout === 'singleTable' ? layout.tableId : spotlightWatchTableId
+
+  if (
+    !sessionTableIdRaw &&
+    layout.layout === 'venueWall' &&
+    layout.focusTable == null &&
+    typeof data.displayFocusTable === 'number'
+  ) {
+    const ftJoin = normalizeDisplayFocusTable(data.displayFocusTable)
+    if (ftJoin != null) sessionTableIdRaw = String(ftJoin)
+  }
+
+  if (!sessionTableIdRaw) {
+    sockData.sessionKey = undefined
+    const ackWall: ServerAck = { ok: true, message: 'Connected successfully' }
+    socket.emit('ack', ackWall)
+    scheduleDisplayVenueSnapshot(vn)
+    return
+  }
+
+  const watchKey = tableSessionKey(vn, normalizeTableId(sessionTableIdRaw))
+  socket.join(watchKey)
+  sockData.sessionKey = watchKey
+  let gs = rooms.get(watchKey)
+  if (!gs) {
+    gs = createEmptyGame(vn, '', normalizeTableId(sessionTableIdRaw))
+    rooms.set(watchKey, gs)
+  }
+  const tid = normalizeTableId(sessionTableIdRaw)
+  if (gs.players.length === 0 && gs.phase === 'lobby') {
+    const tn = Number.parseInt(String(tid), 10)
+    if (Number.isInteger(tn) && tn >= 1 && tn <= 8) {
+      gs = buildDisplayPreviewGameState(normalizeVenueCode(vn), tid)
+      rooms.set(watchKey, gs)
+    }
+  }
+  gs = runVirtualPlayerSimulation(gs)
+  rooms.set(watchKey, gs)
+  const ackDs: ServerAck = { ok: true, message: 'Connected successfully' }
+  socket.emit('ack', ackDs)
+  emitVenueTableState(watchKey, gs)
+}
+
 function ensureVenueLibrary(venueCode: string): VenueLibraryData {
   const k = normalizeVenueCode(venueCode)
   if (!venueLibraries.has(k)) {
@@ -1059,82 +1163,35 @@ io.on('connection', (socket) => {
       }
     }
 
+    if (role === 'display' && data.displayAwaitPairing === true) {
+      const sd = socket.data as DisplaySockData
+      sd.role = 'display'
+      sd.displayAwaitPairing = true
+      sd.displayClientName = name
+      clearDisplayPairingForSocket(socket.id)
+      const code = assignDisplayPairing(socket)
+      socket.emit('displayPairingCode', { code })
+      socket.emit('ack', { ok: true, message: 'Await pairing from host.' })
+      return
+    }
+
     const venueCode = normalizeVenueCode(roomCode)
     const tableId = normalizeTableId(data.tableId)
     const helloSessionKey = tableSessionKey(venueCode, tableId)
 
-    const sockData = socket.data as {
-      sessionKey?: string
-      role?: string
-      hostAuthed?: boolean
-    }
+    const sockData = socket.data as DisplaySockData
     sockData.role = role
     if (role === 'host') {
       sockData.hostAuthed = true
     }
+
     if (role === 'host') {
       socket.join(hostVenueRoom(venueCode))
       socket.emit('hostLibrary', buildHostLibraryPayload(venueCode))
     }
 
     if (role === 'display') {
-      socket.join(displayVenueRoom(venueCode))
-      const layout = resolveDisplayLayoutForHello(venueCode, data)
-      socket.emit('displayLayout', layout)
-
-      const spotlightWatchTableId =
-        layout.layout === 'venueWall' &&
-        layout.focusTable != null &&
-        Number.isInteger(layout.focusTable) &&
-        layout.focusTable >= 1 &&
-        layout.focusTable <= 8
-          ? String(layout.focusTable)
-          : null
-
-      let sessionTableIdRaw =
-        layout.layout === 'singleTable' ? layout.tableId : spotlightWatchTableId
-
-      // Persisted layout can lag "overview" while the display client is reconnecting into spotlight mode (hello includes displayFocusTable).
-      // Using only the persisted map would strand the TV with no subscription and the felt would fall back to URL demo (often table 1).
-      if (
-        !sessionTableIdRaw &&
-        layout.layout === 'venueWall' &&
-        layout.focusTable == null &&
-        typeof data.displayFocusTable === 'number'
-      ) {
-        const ftJoin = normalizeDisplayFocusTable(data.displayFocusTable)
-        if (ftJoin != null) sessionTableIdRaw = String(ftJoin)
-      }
-
-      if (!sessionTableIdRaw) {
-        sockData.sessionKey = undefined
-        const ackWall: ServerAck = { ok: true, message: 'Connected successfully' }
-        socket.emit('ack', ackWall)
-        scheduleDisplayVenueSnapshot(venueCode)
-        return
-      }
-
-      const watchKey = tableSessionKey(venueCode, normalizeTableId(sessionTableIdRaw))
-      socket.join(watchKey)
-      sockData.sessionKey = watchKey
-      let gs = rooms.get(watchKey)
-      if (!gs) {
-        gs = createEmptyGame(venueCode, '', normalizeTableId(sessionTableIdRaw))
-        rooms.set(watchKey, gs)
-      }
-      const tid = normalizeTableId(sessionTableIdRaw)
-      if (gs.players.length === 0 && gs.phase === 'lobby') {
-        const tn = Number.parseInt(String(tid), 10)
-        if (Number.isInteger(tn) && tn >= 1 && tn <= 8) {
-          gs = buildDisplayPreviewGameState(normalizeVenueCode(venueCode), tid)
-          rooms.set(watchKey, gs)
-        }
-      }
-      gs = runVirtualPlayerSimulation(gs)
-      rooms.set(watchKey, gs)
-      const ackDs: ServerAck = { ok: true, message: 'Connected successfully' }
-      socket.emit('ack', ackDs)
-      emitVenueTableState(watchKey, gs)
+      wireDisplaySocketToVenue(socket, venueCode, data)
       return
     }
 
@@ -1190,6 +1247,72 @@ io.on('connection', (socket) => {
       io.to(displayVenueRoom(gsCtl.code)).emit('displayLayout', nextLayout)
       scheduleDisplayVenueSnapshot(gsCtl.code)
       socket.emit('toast', 'TV / display layout updated for the venue.')
+      return
+    }
+
+    if (type === 'pairDisplayWithHost') {
+      const sessionKey = getActiveSessionKey(socket)
+      if (!sessionKey) {
+        socket.emit('toast', 'No room found')
+        return
+      }
+      const gsCtl = rooms.get(sessionKey)
+      if (!gsCtl) {
+        socket.emit('toast', 'Game not found')
+        return
+      }
+      if (!assertVenueHost(socket, gsCtl)) {
+        return
+      }
+      const raw = typeof payload?.code === 'string' ? payload.code : ''
+      const code = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
+      if (code.length !== 4) {
+        socket.emit('toast', 'Enter the 4-character code from the TV.')
+        socket.emit('ack', { ok: false, message: 'Invalid code length' })
+        return
+      }
+      const pend = displayPairByCode.get(code)
+      if (!pend) {
+        socket.emit('toast', 'No display is waiting with that code.')
+        socket.emit('ack', { ok: false, message: 'Unknown code' })
+        return
+      }
+      const dSock = io.sockets.sockets.get(pend.socketId)
+      if (!dSock) {
+        displayPairByCode.delete(code)
+        displayPairCodeBySocketId.delete(pend.socketId)
+        socket.emit('toast', 'That display went offline. Refresh the TV to get a new code.')
+        socket.emit('ack', { ok: false, message: 'Display offline' })
+        return
+      }
+      const dsd = dSock.data as DisplaySockData
+      if (!dsd.displayAwaitPairing) {
+        socket.emit('toast', 'That code was already used.')
+        socket.emit('ack', { ok: false, message: 'Code consumed' })
+        return
+      }
+
+      clearDisplayPairingForSocket(pend.socketId)
+
+      const vn = normalizeVenueCode(gsCtl.code)
+      const displayName = typeof dsd.displayClientName === 'string' && dsd.displayClientName.trim() !== ''
+        ? dsd.displayClientName.trim()
+        : "Quizz'em TV"
+
+      const bindHello: ClientHello = {
+        role: 'display',
+        name: displayName,
+        roomCode: vn,
+        tableId: '1',
+        displayVenueWall: true,
+        displayFocusTable: null,
+      }
+
+      wireDisplaySocketToVenue(dSock, vn, bindHello)
+      dSock.emit('displayVenueAssigned', { venueCode: vn })
+
+      socket.emit('ack', { ok: true, message: 'Display paired.' })
+      socket.emit('toast', 'TV paired — it should join this venue now.')
       return
     }
 
@@ -1922,6 +2045,8 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id)
+
+    clearDisplayPairingForSocket(socket.id)
     
     // Remove player from all rooms they were in
     socket.rooms.forEach(joinedRoom => {

@@ -1,5 +1,12 @@
 import type { DisplayLayoutPayload } from '@qhe/net'
 
+/** `room=` present — bypass pairing; omit or blank → pairing screen unless already handed off */
+export function readDisplayRoomFromUrl(): string | null {
+  if (typeof window === 'undefined') return null
+  const r = new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase()
+  return r && r.length > 0 ? r : null
+}
+
 /** Shared URL parsing for display bootstrap (router + offline demo parity). */
 export function readDisplayVenueCode(): string {
   if (typeof window === 'undefined') return 'HOST01'

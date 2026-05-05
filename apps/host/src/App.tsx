@@ -15,6 +15,7 @@ import {
   clearVirtualPlayers,
   assignTablesFromLobby,
   displaySetLayout,
+  pairDisplayWithHost,
   setQuestion as pushQuestionToVenue,
   questionBankAdd,
   questionBankUpdate,
@@ -72,6 +73,7 @@ function HostApp() {
   const [secretDraft, setSecretDraft] = useState('')
   const importFileRef = useRef<HTMLInputElement>(null)
   const importReplaceRef = useRef(false)
+  const [tvPairCode, setTvPairCode] = useState('')
 
   const viteHostSecret =
     typeof import.meta.env.VITE_HOST_SECRET === 'string' ? import.meta.env.VITE_HOST_SECRET.trim() : ''
@@ -1208,12 +1210,55 @@ function HostApp() {
         <Card variant="glass" className="p-6 mb-8 border border-white/15">
           <h2 className="text-2xl font-bold text-casino-emerald mb-3 text-center">Public TVs ({gameState.code})</h2>
           <p className="mx-auto mb-6 max-w-3xl text-center text-sm leading-relaxed text-white/65">
-            Read-only browsers on{' '}
+            Read-only TVs on <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display</code>{' '}
+            show a short pairing code unless you bookmark{' '}
             <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display?room={gameState.code}</code>.
-            Buttons here steer every display on this venue to the{' '}
+            Buttons here steer every paired display on this venue to the{' '}
             <strong className="text-white/80">venue wall preview</strong> (eight mock felts){' '}
             or <strong className="text-white/80">full live felt</strong> for one table — nothing is tapped at the TV.
           </p>
+          <div className="mx-auto mb-8 max-w-md rounded-xl border border-white/10 bg-black/25 p-5">
+            <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">
+              Pair a TV by code
+            </div>
+            <p className="mb-4 text-center text-xs leading-relaxed text-white/55">
+              On the venue screen, note the four characters in the glowing box &mdash; then enter them here (same venue you are hosting).
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <input
+                id="tv-pair-code"
+                type="text"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="AAAA"
+                maxLength={4}
+                value={tvPairCode}
+                aria-label="Display pairing code from TV"
+                onChange={(e) =>
+                  setTvPairCode(
+                    e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z2-9]/g, '')
+                      .slice(0, 4)
+                  )
+                }
+                className="w-44 rounded-lg border border-white/15 bg-black/35 px-3 py-2.5 text-center font-mono text-2xl tracking-[0.15em] text-white outline-none ring-sky-500/40 placeholder:text-white/25 focus:border-sky-500/55 focus:ring-2"
+              />
+              <NeonButton
+                variant="gold"
+                className="!px-5"
+                disabled={tvPairCode.length !== 4}
+                onClick={() => {
+                  if (tvPairCode.length !== 4) return
+                  pairDisplayWithHost(tvPairCode, (ack) => {
+                    if (ack.ok) setTvPairCode('')
+                  })
+                }}
+              >
+                Attach TV
+              </NeonButton>
+            </div>
+          </div>
           <div className="mx-auto mb-8 max-w-5xl rounded-xl bg-black/30 p-5">
             <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Venue wall</div>
             <div className="flex flex-wrap items-center justify-center gap-2">

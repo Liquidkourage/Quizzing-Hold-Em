@@ -37,6 +37,8 @@ export const ClientHello = z.object({
   displayVenueWall: z.boolean().optional(),
   /** Display: spotlight felt 1–8 for venue wall */
   displayFocusTable: z.number().int().min(1).max(8).nullable().optional(),
+  /** Display: pairing mode — no venue yet; server shows a short code for the host */
+  displayAwaitPairing: z.boolean().optional(),
 })
 export type ClientHello = z.infer<typeof ClientHello>
 
@@ -134,6 +136,10 @@ export interface ServerToClientEvents {
   displayLayout: (layout: DisplayLayoutPayload) => void
   /** Venue wall mosaic — summaries for tables 1–8 */
   displayVenueSnapshot: (tiles: DisplayVenueTileSnapshot[]) => void
+  /** Display pairing: TV shows this 4-character code until the host claims it */
+  displayPairingCode: (payload: { code: string }) => void
+  /** Pairing succeeded — UI should reconnect / promote as this venue display */
+  displayVenueAssigned: (payload: { venueCode: string }) => void
 }
 
 export interface ClientToServerEvents {

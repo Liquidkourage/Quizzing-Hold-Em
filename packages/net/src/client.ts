@@ -31,6 +31,8 @@ export type ConnectOptions = {
   /** Role display: bootstrap when server has no persisted layout */
   displayVenueWall?: boolean
   displayFocusTable?: number | null
+  /** Role display only: pairing flow — omit venue until host enters code */
+  displayAwaitPairing?: boolean
 }
 
 export function connect(
@@ -65,6 +67,7 @@ export function connect(
             ...(options?.displayFocusTable !== undefined
               ? { displayFocusTable: options.displayFocusTable }
               : {}),
+            ...(options?.displayAwaitPairing === true ? { displayAwaitPairing: true } : {}),
           }
         : {}),
     }
@@ -163,6 +166,56 @@ export function onDisplayVenueSnapshot(callback: (tiles: DisplayVenueTileSnapsho
   socket.on('displayVenueSnapshot', callback)
   return () => {
     if (socket) socket.off('displayVenueSnapshot', callback)
+  }
+}
+
+/** When `keepConnected`, drop pairing listeners only (venue handoff reuse). */
+export type DisplayPairingTeardown = (opts?: { keepConnected?: boolean }) => void
+
+export function connectDisplayAwaitingPairing(
+  displayName: string,
+  handlers: {
+    onPairingCode: (code: string) => void
+    onVenueAssigned: (venueCode: string) => void
+  }
+): DisplayPairingTeardown {
+  if (socket) {
+    socket.disconnect()
+    socket = null
+  }
+  socket = io(socketOrigin())
+
+  const onPairing = (p: { code: string }) => handlers.onPairingCode(p.code)
+  const onAssigned = (p: { venueCode: string }) => handlers.onVenueAssigned(p.venueCode)
+
+  socket.on('displayPairingCode', onPairing)
+  socket.on('displayVenueAssigned', onAssigned)
+
+  socket.on('connect', () => {
+    socket!.emit(
+      'hello',
+      {
+        role: 'display',
+        name: displayName,
+        roomCode: 'PAIRING',
+        tableId: '1',
+        displayAwaitPairing: true,
+      } as ClientHello
+    )
+  })
+
+  socket.on('disconnect', () => {
+    console.log('Disconnected from server')
+  })
+
+  return (opts?: { keepConnected?: boolean }) => {
+    if (!socket) return
+    socket.off('displayPairingCode', onPairing)
+    socket.off('displayVenueAssigned', onAssigned)
+    if (!opts?.keepConnected) {
+      socket.disconnect()
+      socket = null
+    }
   }
 }
 
@@ -415,4 +468,12 @@ export function clearVirtualPlayers() {
 export function displaySetLayout(layout: DisplayLayoutPayload) {
   if (!socket) return
   socket.emit('action', { type: 'displaySetLayout', payload: layout })
+}
+
+/** Host-only: attach a pairing TV (shows on /display pairing screen) to this venue. Code is 4 characters. */
+export function pairDisplayWithHost(code: string, callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  const normalized = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4)
+  socket.emit('action', { type: 'pairDisplayWithHost', payload: { code: normalized } })
+  if (callback) socket.once('ack', callback)
 }
