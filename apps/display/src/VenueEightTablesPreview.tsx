@@ -2,12 +2,10 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import {
-  DISPLAY_PREVIEW_DEMO_QUESTION_TEXT,
   DISPLAY_PREVIEW_SYNCED_PHASE,
-  DISPLAY_PREVIEW_SYNCED_SUBTITLE,
   DISPLAY_PREVIEW_TABLES,
 } from '@qhe/core'
-import type { DisplayVenueTileSnapshot } from '@qhe/net'
+import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
 
 function SeatDots({
   seatedCount,
@@ -77,20 +75,35 @@ function phaseAccent(ph: string) {
 }
 
 type VenueEightTablesPreviewProps = {
-  /** Live summaries from Socket.IO (`displayVenueSnapshot`); fallback to DISPLAY_PREVIEW_* until arrive. */
-  tiles: DisplayVenueTileSnapshot[] | null
+  /** null until first `displayVenueSnapshot` from socket */
+  wall: DisplayVenueWallSnapshot | null
 }
 
 /**
- * Mosaic rows mirror each table session on the server; spotlight shows the matching full felt.
- * See repo rule: display-readonly.
+ * Mosaic rows mirror each table session on the server; spotlight opens the matching full felt.
+ * Headline shows only live question text + countdown from the server snapshot.
  */
-export default function VenueEightTablesPreview({ tiles }: VenueEightTablesPreviewProps) {
-  const [bannerSecondsLeft, setBannerSecondsLeft] = useState<number | null>(null)
+export default function VenueEightTablesPreview({ wall }: VenueEightTablesPreviewProps) {
+  const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
+
+  const headlineQuestionText = wall?.headlineQuestionText ?? null
+  const answerDeadlineMs = wall?.answerDeadlineMs ?? null
+
+  useEffect(() => {
+    if (answerDeadlineMs == null) {
+      setTimerSeconds(null)
+      return
+    }
+    const tick = () =>
+      setTimerSeconds(Math.max(0, Math.ceil((answerDeadlineMs - Date.now()) / 1000)))
+    tick()
+    const id = window.setInterval(tick, 250)
+    return () => window.clearInterval(id)
+  }, [answerDeadlineMs])
 
   const tileRows: DisplayVenueTileSnapshot[] =
-    tiles && tiles.length === 8
-      ? [...tiles].sort((a, b) => a.tableNum - b.tableNum)
+    wall?.tiles != null && wall.tiles.length === 8
+      ? [...wall.tiles].sort((a, b) => a.tableNum - b.tableNum)
       : DISPLAY_PREVIEW_TABLES.map((snap, i) => ({
           tableNum: i + 1,
           seated: snap.seated,
@@ -98,14 +111,9 @@ export default function VenueEightTablesPreview({ tiles }: VenueEightTablesPrevi
           phase: DISPLAY_PREVIEW_SYNCED_PHASE,
         }))
 
-  useEffect(() => {
-    const deadline = Date.now() + 43_000
-    const tick = () =>
-      setBannerSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)))
-    tick()
-    const id = window.setInterval(tick, 250)
-    return () => window.clearInterval(id)
-  }, [])
+  const hasLiveWall = wall != null && wall.tiles.length === 8
+  const showHeadline =
+    hasLiveWall && (headlineQuestionText != null || answerDeadlineMs != null)
 
   return (
     <div className="relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
@@ -140,95 +148,81 @@ export default function VenueEightTablesPreview({ tiles }: VenueEightTablesPrevi
       </header>
 
       <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-5 sm:px-6 sm:pt-6">
-        <motion.section
-          className="mb-8 rounded-2xl border-2 border-casino-emerald/40 bg-black/65 p-6 shadow-[0_0_40px_rgba(0,255,180,0.08)] backdrop-blur-md"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="mb-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center sm:justify-between sm:text-left">
-            <div>
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                <div className="text-xs font-bold uppercase tracking-[0.2em] text-casino-emerald/85">
-                  Venue-wide (tables 1–8)
+        {showHeadline ? (
+          <motion.section
+            className="mb-8 rounded-2xl border-2 border-casino-emerald/40 bg-black/65 p-6 shadow-[0_0_40px_rgba(0,255,180,0.08)] backdrop-blur-md sm:p-8"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start lg:gap-10">
+              {headlineQuestionText ? (
+                <p className="flex-1 text-balance text-center text-2xl font-bold leading-snug text-yellow-400 sm:text-left md:text-3xl lg:text-4xl">
+                  {headlineQuestionText}
+                </p>
+              ) : (
+                <div className="hidden flex-1 lg:block" aria-hidden />
+              )}
+              {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
+                <div
+                  className={`flex min-w-[8.5rem] shrink-0 flex-col items-center justify-center self-center rounded-xl border px-6 py-5 lg:self-stretch lg:justify-center ${
+                    timerSeconds <= 10
+                      ? 'border-amber-400/60 bg-amber-950/40 shadow-[0_0_28px_rgba(251,191,36,0.12)]'
+                      : 'border-amber-500/35 bg-amber-950/30'
+                  }`}
+                >
+                  <div className="font-mono text-5xl font-black tabular-nums tracking-tight text-amber-200 sm:text-6xl lg:text-[4.25rem]">
+                    {timerSeconds}s
+                  </div>
                 </div>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <span className={`rounded-lg px-3 py-1 text-sm font-black uppercase ${phaseAccent(DISPLAY_PREVIEW_SYNCED_PHASE)}`}>
-                  {phaseLabel(DISPLAY_PREVIEW_SYNCED_PHASE)}
-                </span>
-                <span className="text-sm text-white/65">{DISPLAY_PREVIEW_SYNCED_SUBTITLE}</span>
-              </div>
+              ) : null}
             </div>
-            {DISPLAY_PREVIEW_SYNCED_PHASE === 'answering' && bannerSecondsLeft != null && (
-              <div className="rounded-xl border border-amber-500/35 bg-amber-950/30 px-5 py-2 text-center">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-white/55">
-                  Same deadline everywhere
-                </div>
-                <div className="font-mono text-3xl font-black tabular-nums text-amber-200">{bannerSecondsLeft}s</div>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-white/10 pt-4">
-            <div className="text-xs font-semibold uppercase tracking-widest text-white/45">Synced trivia</div>
-            <p className="mt-2 text-xl font-semibold leading-snug text-yellow-400 sm:text-2xl">{DISPLAY_PREVIEW_DEMO_QUESTION_TEXT}</p>
-            <p className="mt-3 text-[11px] text-white/50 sm:text-xs">
-              Same phase and question everywhere on this venue; stacks and pots stay local to each table.
-            </p>
-          </div>
-        </motion.section>
+          </motion.section>
+        ) : null}
       </div>
 
       <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 sm:px-6">
-        <h2 className="mb-6 text-center text-xs font-bold uppercase tracking-[0.2em] text-white/40">
-          Tables 1–8 · local pot &amp; seats
-        </h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {tileRows.map((row, idx) => {
-                const tn = row.tableNum
-                const seats = row.seated
-                const pot = row.pot
-                const ph = row.phase
-                return (
-                  <motion.article
-                    key={tn}
-                    data-spotlight-tile={tn}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.045, duration: 0.35 }}
-                    className="flex flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
-                        <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
-                      </div>
-                      <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(ph)}`}>
-                        {phaseLabel(ph)}
-                      </span>
-                    </div>
+            const tn = row.tableNum
+            const seats = row.seated
+            const pot = row.pot
+            const ph = row.phase
+            return (
+              <motion.article
+                key={tn}
+                data-spotlight-tile={tn}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.045, duration: 0.35 }}
+                className="flex flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
+                    <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
+                  </div>
+                  <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(ph)}`}>
+                    {phaseLabel(ph)}
+                  </span>
+                </div>
 
-                    <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-casino-emerald/85">
-                      {tiles ? 'Matched to felt ✓' : 'Venue rehearsal'}
-                    </div>
+                <div className="mt-3 flex-shrink-0">
+                  <SeatDots seatedCount={seats} />
+                </div>
 
-                    <div className="mt-3 flex-shrink-0">
-                      <SeatDots seatedCount={seats} />
-                    </div>
-
-                    <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm leading-snug">
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-white/55">Occupied seats</dt>
-                        <dd className="font-mono font-bold tabular-nums text-casino-emerald">{seats} / 8</dd>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-white/55">Pot (local)</dt>
-                        <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
-                      </div>
-                    </dl>
-                  </motion.article>
-                )
-              })}
+                <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm leading-snug">
+                  <div className="flex justify-between gap-2">
+                    <dt className="text-white/55">Occupied seats</dt>
+                    <dd className="font-mono font-bold tabular-nums text-casino-emerald">{seats} / 8</dd>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <dt className="text-white/55">Pot (local)</dt>
+                    <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
+                  </div>
+                </dl>
+              </motion.article>
+            )
+          })}
         </div>
       </main>
     </div>

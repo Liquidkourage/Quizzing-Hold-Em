@@ -26,6 +26,14 @@ export type DisplayVenueTileSnapshot = {
   phase: string
 }
 
+/** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */
+export type DisplayVenueWallSnapshot = {
+  tiles: DisplayVenueTileSnapshot[]
+  headlineQuestionText: string | null
+  /** Server epoch ms; present only while a table in this venue is in `answering` with a deadline. */
+  answerDeadlineMs: number | null
+}
+
 export const ClientHello = z.object({
   role: ClientRole,
   name: z.string(),
@@ -134,8 +142,8 @@ export interface ServerToClientEvents {
   hostLibrary: (snapshot: HostLibrarySnapshot) => void
   /** Venue displays (DISPLAY:{venue}); host drives via displaySetLayout */
   displayLayout: (layout: DisplayLayoutPayload) => void
-  /** Venue wall mosaic — summaries for tables 1–8 */
-  displayVenueSnapshot: (tiles: DisplayVenueTileSnapshot[]) => void
+  /** Venue wall mosaic + current question / answer timer */
+  displayVenueSnapshot: (payload: DisplayVenueWallSnapshot) => void
   /** Display pairing: TV shows this 4-character code until the host claims it */
   displayPairingCode: (payload: { code: string }) => void
   /** Pairing succeeded — UI should reconnect / promote as this venue display */

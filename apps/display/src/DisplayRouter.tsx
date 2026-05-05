@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { DisplayLayoutPayload, DisplayVenueTileSnapshot } from '@qhe/net'
+import type { DisplayLayoutPayload, DisplayVenueWallSnapshot } from '@qhe/net'
 import { connect, onDisplayLayout, onDisplayVenueSnapshot } from '@qhe/net'
 import DisplayTableLive from './App.tsx'
 import { readDisplayTableIdFromUrl, readUrlLayoutBootstrap } from './displayUrlParams'
@@ -113,8 +113,8 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const [feltEntranceIdle, setFeltEntranceIdle] = useState(false)
   /** Fullscreen feels shrinks onto this tile until complete; sockets stay spotlight until cleared. */
   const [shrinkingExit, setShrinkingExit] = useState<ShrinkingExit | null>(null)
-  /** Live summaries for tables 1–8 from server; null until first `displayVenueSnapshot`. */
-  const [venueWallTiles, setVenueWallTiles] = useState<DisplayVenueTileSnapshot[] | null>(null)
+  /** Venue wall mosaic + headline from server */
+  const [venueWall, setVenueWall] = useState<DisplayVenueWallSnapshot | null>(null)
 
   const wallOverview = venueOverview(layout)
   const spotlightN = venueSpotlightTable(layout)
@@ -234,8 +234,9 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   }, [connectFingerprint, venueCode, pairingBootstrap])
 
   useEffect(() => {
-    const unsub = onDisplayVenueSnapshot((tiles) => {
-      if (Array.isArray(tiles) && tiles.length === 8) setVenueWallTiles(tiles)
+    setVenueWall(null)
+    const unsub = onDisplayVenueSnapshot((payload) => {
+      if (payload?.tiles?.length === 8) setVenueWall(payload)
     })
     return () => unsub()
   }, [connectFingerprint])
@@ -283,7 +284,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
           exit={{ opacity: 0 }}
           transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
-          <VenueEightTablesPreview tiles={venueWallTiles} />
+          <VenueEightTablesPreview wall={venueWall} />
         </motion.div>
       )}
       {showPrimaryFullscreenLayer && (

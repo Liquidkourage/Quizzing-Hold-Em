@@ -7,7 +7,7 @@ import type {
   ServerAck,
   HostLibrarySnapshot,
   DisplayLayoutPayload,
-  DisplayVenueTileSnapshot,
+  DisplayVenueWallSnapshot,
 } from './index'
 
 let socket: Socket | null = null
@@ -161,7 +161,7 @@ export function onDisplayLayout(callback: (layout: DisplayLayoutPayload) => void
   }
 }
 
-export function onDisplayVenueSnapshot(callback: (tiles: DisplayVenueTileSnapshot[]) => void) {
+export function onDisplayVenueSnapshot(callback: (payload: DisplayVenueWallSnapshot) => void) {
   if (!socket) return () => {}
   socket.on('displayVenueSnapshot', callback)
   return () => {

@@ -41,6 +41,7 @@ import type {
   ClientHello,
   DisplayLayoutPayload,
   DisplayVenueTileSnapshot,
+  DisplayVenueWallSnapshot,
   ServerAck, 
   DealCardsAction,
   BetAction,
@@ -1065,6 +1066,17 @@ function tableNumFromSessionKey(venueCode: string, sessionKey: string): number |
   return n
 }
 
+/** First numbered felt with seated players — venue-synced trivia uses the same round on all tables. */
+function pickHeadlineGameState(venueCode: string): GameState | null {
+  const vn = normalizeVenueCode(venueCode)
+  for (let n = 1; n <= 8; n++) {
+    const key = tableSessionKey(vn, String(n))
+    const gs = rooms.get(key)
+    if (gs != null && gs.players.length > 0) return gs
+  }
+  return null
+}
+
 function emitDisplayVenueSnapshotNow(vnRaw: string) {
   const vn = normalizeVenueCode(vnRaw)
   const tiles: DisplayVenueTileSnapshot[] = []
@@ -1088,7 +1100,25 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       })
     }
   }
-  io.to(displayVenueRoom(vn)).emit('displayVenueSnapshot', tiles)
+
+  const headlineGs = pickHeadlineGameState(vn)
+  const headlineQuestionText =
+    headlineGs?.round?.question != null &&
+    typeof headlineGs.round.question.text === 'string' &&
+    headlineGs.round.question.text.trim() !== ''
+      ? headlineGs.round.question.text.trim()
+      : null
+  const answerDeadlineMs =
+    headlineGs?.phase === 'answering' && headlineGs.round?.answerDeadline != null
+      ? headlineGs.round.answerDeadline
+      : null
+
+  const payload: DisplayVenueWallSnapshot = {
+    tiles,
+    headlineQuestionText,
+    answerDeadlineMs,
+  }
+  io.to(displayVenueRoom(vn)).emit('displayVenueSnapshot', payload)
 }
 
 function scheduleDisplayVenueSnapshot(venueCode: string) {
