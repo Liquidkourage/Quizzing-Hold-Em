@@ -7,6 +7,36 @@ import { readDisplayTableIdFromUrl, readUrlLayoutBootstrap } from './displayUrlP
 import AudienceWelcomeWall from './AudienceWelcomeWall.tsx'
 import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
 
+function normalizeVenueWallTiles(
+  tiles: DisplayVenueWallSnapshot['tiles'] | undefined
+): DisplayVenueWallSnapshot['tiles'] | null {
+  if (!Array.isArray(tiles) || tiles.length === 0) return null
+  const byNum = new Map<number, DisplayVenueWallSnapshot['tiles'][number]>()
+  for (const t of tiles) {
+    if (
+      t != null &&
+      typeof t.tableNum === 'number' &&
+      Number.isInteger(t.tableNum) &&
+      t.tableNum >= 1 &&
+      t.tableNum <= 8
+    ) {
+      byNum.set(t.tableNum, t)
+    }
+  }
+  const out: DisplayVenueWallSnapshot['tiles'] = []
+  for (let n = 1; n <= 8; n++) {
+    out.push(
+      byNum.get(n) ?? {
+        tableNum: n,
+        seated: 0,
+        pot: 0,
+        phase: 'lobby',
+      }
+    )
+  }
+  return out
+}
+
 /** Tile rect in viewport used to “iris” open the full felt from the grid. */
 type IrisRect = { top: number; left: number; width: number; height: number }
 
@@ -120,9 +150,9 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const venueMosaicWasShownRef = useRef(false)
 
   const wallOverview = venueOverview(layout)
-  /** Lobby / join briefing from server (`showAudienceWelcome`); hides after first venue Start Game until New Game. */
+  /** Lobby / join briefing — only after we have wall payload; avoids hiding the mosaic forever when snapshot never applies. */
   const audienceBriefing =
-    wallOverview && (venueWall == null ? true : venueWall.showAudienceWelcome !== false)
+    wallOverview && venueWall != null && venueWall.showAudienceWelcome !== false
   const spotlightN = venueSpotlightTable(layout)
   const fullscreenLive = showFullscreenLiveFelt(layout)
 
@@ -246,12 +276,11 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
 
   useEffect(() => {
     const unsub = onDisplayVenueSnapshot((payload) => {
-      if (!payload?.tiles || payload.tiles.length !== 8) return
-      const p = payload as Partial<DisplayVenueWallSnapshot> & {
-        tiles: DisplayVenueWallSnapshot['tiles']
-      }
+      const tiles = normalizeVenueWallTiles(payload?.tiles)
+      if (tiles == null) return
+      const p = payload as Partial<DisplayVenueWallSnapshot>
       const next: DisplayVenueWallSnapshot = {
-        tiles: p.tiles,
+        tiles,
         headlineQuestionText: p.headlineQuestionText ?? null,
         answerDeadlineMs: p.answerDeadlineMs ?? null,
         lobbyPlayerCount:
@@ -266,10 +295,12 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     return () => unsub()
   }, [connectFingerprint])
 
-  /** After mosaic has been the primary wall view at least once, skip intro animations if it remounts. */
+  /** After mosaic has shown with real snapshot (not transient pre-snapshot glow), suppress re-entry fades. */
   useEffect(() => {
-    if (wallOverview && !audienceBriefing) venueMosaicWasShownRef.current = true
-  }, [wallOverview, audienceBriefing])
+    if (wallOverview && !audienceBriefing && venueWall != null) {
+      venueMosaicWasShownRef.current = true
+    }
+  }, [wallOverview, audienceBriefing, venueWall])
 
   /** Full-screen join hero (until host starts the show); excludes mosaic table grid underneath. */
   const showBriefingHero = wallOverview && audienceBriefing && shrinkingExit === null
