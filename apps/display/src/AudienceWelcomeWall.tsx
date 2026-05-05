@@ -86,39 +86,41 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           </p>
         </header>
 
-        {/* Row 2: QR + join info — xl splits code/URL row to avoid metre-wide bordered boxes */}
-        <div className="min-h-0 min-w-0 overflow-y-auto overflow-x-hidden [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable] lg:overscroll-contain">
-          <div className="grid min-w-0 grid-cols-1 gap-x-[clamp(16px,_3vw,_56px)] gap-y-[clamp(12px,_1.85vmin,_20px)] lg:grid-cols-[minmax(240px,_min(32vw,_40vh))_minmax(0,1fr)] lg:items-start">
+        {/* Row 2: QR fills column height without clipping; only the instructions column scrolls if needed */}
+        <div className="min-h-0 min-w-0">
+          <div className="grid h-full min-h-0 grid-cols-1 gap-x-[clamp(16px,_3vw,_56px)] gap-y-[clamp(12px,_1.85vmin,_20px)] lg:grid-cols-[minmax(240px,_min(32vw,_40vh))_minmax(0,1fr)] lg:items-stretch">
             <section
               aria-label="Scan QR to open player app"
-              className={`flex w-full flex-col items-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_20px)] shadow-[0_0_60px_rgba(34,211,153,0.11)] lg:sticky lg:top-0 lg:justify-self-start`}
+              className={`flex h-full min-h-0 w-full flex-col items-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_20px)] shadow-[0_0_60px_rgba(34,211,153,0.11)]`}
             >
-              <span className={`${sectionRibbon} mb-[clamp(8px,_1.35vmin,_16px)] text-center leading-snug`}>
+              <span className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug`}>
                 Aim camera here
               </span>
               {qrOk ? (
-                <div className="w-full rounded-2xl border-2 border-white bg-white p-[clamp(8px,_1.45vmin,_14px)] shadow-xl">
-                  <img
-                    src={qrImgSrc(joinUrl)}
-                    alt=""
-                    width={520}
-                    height={520}
-                    className="block h-auto w-full rounded-md"
-                    referrerPolicy="no-referrer"
-                    onError={() => setQrOk(false)}
-                  />
+                <div className="flex min-h-0 w-full flex-1 justify-center px-px">
+                  <div className="box-border flex h-full min-h-0 w-full max-w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-white p-[clamp(6px,_1.2vmin,_12px)] shadow-xl">
+                    <img
+                      src={qrImgSrc(joinUrl)}
+                      alt=""
+                      width={520}
+                      height={520}
+                      className="block h-auto max-h-full w-auto max-w-full rounded-md object-contain"
+                      referrerPolicy="no-referrer"
+                      onError={() => setQrOk(false)}
+                    />
+                  </div>
                 </div>
               ) : (
-                <div className="rounded-xl border-2 border-dashed border-white/35 bg-white/[0.04] px-6 py-10 text-center text-[clamp(1rem,2.6vmin,1.35rem)] font-semibold leading-snug text-amber-200">
+                <div className="flex min-h-0 flex-1 items-center rounded-xl border-2 border-dashed border-white/35 bg-white/[0.04] px-6 py-10 text-center text-[clamp(1rem,2.6vmin,1.35rem)] font-semibold leading-snug text-amber-200">
                   QR blocked — use the URL beside this scan box
                 </div>
               )}
-              <span className={`${sectionRibbon} mt-[clamp(8px,_1.35vmin,_16px)] text-center opacity-90`}>
+              <span className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90`}>
                 Opens Player
               </span>
             </section>
 
-            <div className="flex min-h-0 min-w-0 flex-col gap-[clamp(8px,_1.35vmin,_14px)]">
+            <div className="flex min-h-0 min-w-0 flex-col gap-[clamp(8px,_1.35vmin,_14px)] overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] lg:overscroll-contain lg:pb-px lg:pr-1">
               <div className="grid min-w-0 grid-cols-1 gap-[clamp(10px,_1.5vw,_20px)] lg:grid-cols-2 lg:items-start">
                 <div className="min-w-0">
                   <p className={`text-left ${sectionRibbon} mb-[clamp(6px,_1vmin,_10px)]`}>Venue / room code</p>
