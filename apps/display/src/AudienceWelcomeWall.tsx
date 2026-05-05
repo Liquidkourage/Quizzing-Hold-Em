@@ -14,10 +14,14 @@ function playerJoinHref(): string {
 }
 
 function qrImgSrc(joinUrl: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(joinUrl)}`
+  return `https://api.qrserver.com/v1/create-qr-code/?size=440x440&margin=10&data=${encodeURIComponent(joinUrl)}`
 }
 
-/** Fits a typical 1080p wall display in one viewport (no scrolling). */
+/**
+ * Bar / banquet-hall TVs: vmin-based typography and full-viewport spacing so QR,
+ * venue code, URL, counts, and copy read from ~10–20 ft on a typical 1080p 40"+
+ * flat panel.
+ */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
   const syncingCounts = wall == null
@@ -26,153 +30,164 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const enrolled = syncingCounts ? null : (lobby ?? 0) + (atTables ?? 0)
   const [qrOk, setQrOk] = useState(true)
 
+  const caption = `text-[clamp(0.8rem,2.2vmin,1.375rem)] font-bold uppercase tracking-[0.2em] text-emerald-200/95`
+
+  const stepCircle =
+    `flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.35)] ` +
+    ` h-[clamp(2.65rem,7.5vmin,4.25rem)] min-w-[clamp(2.65rem,7.5vmin,4.25rem)] text-[clamp(1.1rem,3.6vmin,1.85rem)]`
+
+  const stepText =
+    'text-[clamp(1.03rem,3.05vmin,1.95rem)] font-bold leading-snug text-white'
+
   return (
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#04201c] text-white"
+      className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-[#031a17] antialiased text-white selection:bg-yellow-400/35"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-[#0a1628] to-slate-950" />
-        <div
-          className="absolute -left-1/4 top-0 h-[140%] w-[150%] opacity-[0.1]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 30% 20%, rgba(52,211,153,0.5) 0%, transparent 45%),
-              radial-gradient(circle at 70% 60%, rgba(251,191,36,0.22) 0%, transparent 40%)`,
-          }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)] bg-[size:56px_56px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/90 via-[#061c24] to-black" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] bg-[size:clamp(44px,6vmin,80px)_clamp(44px,6vmin,80px)]" />
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto flex h-full min-h-0 max-w-[1400px] flex-col px-4 py-3 sm:px-6 sm:py-4 lg:px-8"
+        className="relative z-10 flex h-full min-h-0 w-full flex-1 flex-col justify-between px-[clamp(12px,4vmin,52px)] py-[clamp(10px,1.8vh,28px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.45 }}
+        transition={{ duration: 0.4 }}
       >
-        <header className="flex shrink-0 flex-col items-center gap-1 sm:gap-1.5">
+        {/* Brand — deliberately compact so hero join legibility wins */}
+        <header className="flex shrink-0 flex-col items-center">
           <div
-            className="w-[min(52vw,320px)] shrink-0 sm:w-[min(44vw,380px)]"
+            className="h-[clamp(52px,min(11vh,120px))] shrink-0 w-auto max-w-[min(72vw,640px)]"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
           </div>
-          <p className="text-center text-xs font-bold uppercase tracking-[0.28em] text-emerald-300/95 sm:text-sm">
-            Join tonight&apos;s game
-          </p>
+          <p className={`${caption} mt-[0.75vmin] opacity-95`}>Join tonight&apos;s game</p>
         </header>
 
-        <div className="mt-3 grid min-h-0 flex-1 grid-cols-1 content-start items-start gap-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-6">
+        {/* Hero band: dominates screen — QR + oversized room / URL / steps */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 items-center gap-[clamp(14px,3.8vmin,40px)] py-[clamp(8px,1.8vmin,28px)] lg:grid-cols-[minmax(0,auto)_minmax(0,1.15fr)] lg:justify-items-start">
           <section
             aria-label="Scan QR to open player app"
-            className="flex w-full max-w-full flex-row justify-center gap-3 rounded-2xl border border-emerald-400/35 bg-black/50 p-3 shadow-inner sm:mx-auto sm:max-w-md lg:w-auto lg:flex-col lg:self-start lg:justify-start lg:p-3.5"
+            className={`mx-auto flex w-[min(min(54vmin,_48vh),520px)] max-w-[95vw] flex-col items-center justify-center rounded-[clamp(14px,2.5vmin,28px)] border-[3px] border-emerald-400/55 bg-black/65 p-[clamp(12px,2.8vmin,32px)] shadow-[0_0_80px_rgba(34,211,153,0.12)]`}
           >
-            <span className="hidden text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200/90 lg:block lg:w-full lg:text-center">
-              Scan fastest
+            <span className={`${caption} mb-[clamp(10px,1.8vmin,20px)] text-center leading-tight`}>
+              Aim camera here
             </span>
             {qrOk ? (
-              <img
-                src={qrImgSrc(joinUrl)}
-                alt=""
-                width={168}
-                height={168}
-                className="shrink-0 rounded-xl border border-white/20 bg-white p-2 shadow-lg lg:mx-auto lg:mt-1"
-                referrerPolicy="no-referrer"
-                onError={() => setQrOk(false)}
-              />
+              <div className="w-full rounded-2xl border-[3px] border-white bg-white p-[clamp(10px,1.8vmin,18px)] shadow-2xl">
+                <img
+                  src={qrImgSrc(joinUrl)}
+                  alt=""
+                  width={440}
+                  height={440}
+                  className="block h-auto w-full"
+                  referrerPolicy="no-referrer"
+                  onError={() => setQrOk(false)}
+                />
+              </div>
             ) : (
-              <div className="flex aspect-square h-[136px] w-[136px] shrink-0 flex-col items-center justify-center rounded-xl border border-dashed border-white/25 bg-white/5 p-2 text-center text-[11px] leading-tight text-white/65 lg:mx-auto">
-                QR blocked — use URL →
+              <div className={`rounded-2xl border-2 border-dashed border-white/35 bg-white/[0.04] px-8 py-14 text-center text-[clamp(1rem,2.8vmin,1.4rem)] font-semibold leading-snug text-amber-200/90`}>
+                QR blocked — use the huge URL beside this box
               </div>
             )}
-            <span className="hidden shrink-0 text-[10px] uppercase tracking-wide text-white/50 lg:block lg:w-full lg:text-center">
-              Opens player
-            </span>
+            <span className={`${caption} mt-[clamp(10px,1.8vmin,20px)] text-center opacity-85`}>Opens Player</span>
           </section>
 
-          <section className="flex min-h-0 min-w-0 flex-col gap-2 self-stretch lg:gap-3">
-            <div className="grid min-h-0 shrink gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start lg:gap-4">
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-3 backdrop-blur-sm sm:p-4">
-                <p className="text-center font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
-                  Venue code
-                </p>
-                <div className="mt-2 bg-gradient-to-r from-transparent via-yellow-400/65 to-transparent py-px">
-                  <div className="bg-[#08221c] px-3 py-2 text-center font-mono text-[clamp(1.85rem,4.8vw,3.25rem)] font-black leading-none tracking-[0.1em] text-yellow-400">
-                    {venueCode}
-                  </div>
-                </div>
-                <p className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-white/55">
-                  Player URL
-                </p>
-                <div className="mt-1.5 break-all rounded-lg border border-amber-500/30 bg-emerald-950/35 px-3 py-2 text-center font-mono text-[clamp(0.7rem,1.35vw,0.95rem)] font-semibold leading-snug text-amber-200">
-                  {joinUrl}
+          <section className="flex min-h-0 w-full flex-col justify-center gap-[clamp(12px,3.6vmin,40px)]">
+            <div>
+              <p className={`text-center lg:text-left ${caption} mb-[clamp(10px,1.6vmin,16px)]`}>
+                Venue / room code
+              </p>
+              <div className="rounded-[clamp(12px,2vmin,28px)] border-4 border-yellow-400/85 bg-black/70 px-[clamp(10px,2.6vmin,32px)] py-[clamp(14px,2.8vmin,28px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.2)]">
+                <div className="text-center font-mono text-[clamp(3rem,_16vmin,_9.5rem)] font-black leading-none tracking-[0.08em] text-yellow-400 lg:text-left">
+                  {venueCode}
                 </div>
               </div>
-
-              <ol className="flex min-h-0 flex-col justify-center gap-2 rounded-2xl border border-white/10 bg-black/30 p-3 text-[clamp(0.8rem,1.5vw,1.05rem)] font-semibold leading-snug text-white/95 sm:p-3.5">
-                <li className="flex gap-2.5">
-                  <span className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-sm font-black text-emerald-950">
-                    1
-                  </span>
-                  <span className="pt-0.5">
-                    Open <strong className="text-amber-200">Player</strong> (scan or URL).
-                  </span>
-                </li>
-                <li className="flex gap-2.5">
-                  <span className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-sm font-black text-emerald-950">
-                    2
-                  </span>
-                  <span className="pt-0.5">
-                    Code <strong className="font-mono text-yellow-400">{venueCode}</strong> →{' '}
-                    <strong className="text-emerald-200">Join Game</strong>.
-                  </span>
-                </li>
-                <li className="flex gap-2.5">
-                  <span className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-sm font-black text-emerald-950">
-                    3
-                  </span>
-                  <span className="pt-0.5">
-                    Keep <strong className="text-emerald-200">Lobby</strong> on unless the host seats you at a table.
-                  </span>
-                </li>
-              </ol>
             </div>
 
-            <section
-              aria-label="Attendance"
-              className="grid shrink-0 grid-cols-3 gap-2 sm:gap-3"
-            >
-              {[
-                { label: 'Lobby', hint: 'Pre-assign', v: syncingCounts ? '—' : String(lobby ?? 0) },
-                { label: 'Tables', hint: 'Seated', v: syncingCounts ? '—' : String(atTables ?? 0) },
-                {
-                  label: 'Total in',
-                  hint: 'Humans',
-                  v: syncingCounts ? '—' : String(enrolled ?? 0),
-                  accent: 'text-yellow-300',
-                },
-              ].map(({ label, hint, v, accent }) => (
-                <div
-                  key={label}
-                  className="rounded-xl border border-white/10 bg-black/45 px-2 py-2 text-center sm:px-3 sm:py-2.5"
-                >
-                  <div className="text-[9px] font-black uppercase tracking-wider text-white/50 sm:text-[10px]">
-                    {label}
-                  </div>
-                  <div className={`font-mono text-[clamp(1.5rem,4vw,2.25rem)] font-black leading-none tabular-nums ${accent ?? 'text-white'}`}>
-                    {v}
-                  </div>
-                  <div className="mt-0.5 text-[9px] text-white/45 sm:text-[10px]">{hint}</div>
-                </div>
-              ))}
-            </section>
+            <div className="rounded-[clamp(12px,2vmin,24px)] border-4 border-emerald-500/40 bg-emerald-950/40 px-[clamp(10px,2.4vmin,28px)] py-[clamp(14px,2.2vmin,24px)]">
+              <p className={`${caption} mb-[clamp(8px,1.6vmin,14px)] text-center lg:text-left`}>Player URL</p>
+              <p className="break-words font-mono text-[clamp(1rem,4.05vmin,2.65rem)] font-bold leading-snug tracking-tight text-amber-200">
+                {joinUrl}
+              </p>
+            </div>
 
-            <p className="shrink-0 text-center text-[10px] leading-snug text-emerald-200/75 sm:text-[11px] lg:text-xs">
-              Digit-card trivia + Hold&apos;em-style betting — host drives the show. This wall switches to the table
-              mosaic when they tap <strong className="text-white/90">Start Game</strong>.
-            </p>
+            <ol className="grid gap-[clamp(10px,2.8vmin,24px)]">
+              <li className="flex items-start gap-[clamp(14px,2.8vmin,24px)]">
+                <span className={stepCircle}>1</span>
+                <span className={`${stepText} pt-[0.4vmin]`}>
+                  Open <strong className="text-amber-200">Player</strong> — scan the QR{' '}
+                  <span className="text-white/80">or type the URL</span>.
+                </span>
+              </li>
+              <li className="flex items-start gap-[clamp(14px,2.8vmin,24px)]">
+                <span className={stepCircle}>2</span>
+                <span className={`${stepText} pt-[0.4vmin]`}>
+                  Enter code{' '}
+                  <strong className="rounded-md bg-yellow-400/25 px-[0.35em] font-mono text-yellow-300">{venueCode}</strong>
+                  {' — then '}
+                  <strong className="text-emerald-300">Join Game</strong>.
+                </span>
+              </li>
+              <li className="flex items-start gap-[clamp(14px,2.8vmin,24px)]">
+                <span className={stepCircle}>3</span>
+                <span className={`${stepText} pt-[0.4vmin]`}>
+                  Leave <strong className="text-emerald-300">Lobby</strong> checked unless your host assigns a table
+                  number.
+                </span>
+              </li>
+            </ol>
           </section>
         </div>
+
+        {/* Head-count strip — billboard scale */}
+        <section
+          aria-label="Attendance"
+          className="grid shrink-0 grid-cols-3 gap-[clamp(8px,2.2vmin,22px)]"
+        >
+          {[
+            { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
+            { label: 'At tables', hint: 'Seated now', v: syncingCounts ? '—' : String(atTables ?? 0) },
+            {
+              label: 'Total in',
+              hint: 'Humans (no CPUs)',
+              v: syncingCounts ? '—' : String(enrolled ?? 0),
+              accent: true,
+            },
+          ].map(({ label, hint, v, accent }) => (
+            <div
+              key={label}
+              className={`rounded-[clamp(10px,1.8vmin,22px)] border-[3px] px-[clamp(6px,1.8vmin,16px)] py-[clamp(12px,2.4vmin,22px)] text-center backdrop-blur-sm ${
+                accent
+                  ? 'border-yellow-500/45 bg-yellow-950/35'
+                  : 'border-white/15 bg-black/55'
+              }`}
+            >
+              <div className="text-[clamp(0.7rem,2.05vmin,1.15rem)] font-black uppercase tracking-[0.12em] text-white/78">
+                {label}
+              </div>
+              <div
+                className={`py-[clamp(8px,1.8vmin,16px)] font-mono tabular-nums tracking-tight ${
+                  accent
+                    ? 'text-[clamp(2.85rem,12.5vmin,7.75rem)] font-black text-yellow-300'
+                    : 'text-[clamp(2.85rem,12.5vmin,7.75rem)] font-black text-white'
+                }`}
+              >
+                {v}
+              </div>
+              <div className="text-[clamp(0.7rem,1.85vmin,1.05rem)] font-semibold text-white/62">{hint}</div>
+            </div>
+          ))}
+        </section>
+
+        <p className="shrink-0 pt-[clamp(12px,2.2vmin,22px)] text-center text-[clamp(0.875rem,2.55vmin,1.6rem)] font-semibold leading-snug text-emerald-200/90">
+          Digit-card trivia with Hold&apos;em-style wagering —{' '}
+          <span className="text-white">host runs the pace</span>. Wall shows all tables once they tap{' '}
+          <strong className="text-white">Start Game</strong>.
+        </p>
       </motion.div>
     </div>
   )
