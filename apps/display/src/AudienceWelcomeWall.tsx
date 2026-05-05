@@ -17,6 +17,10 @@ function qrImgSrc(joinUrl: string): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=9&data=${encodeURIComponent(joinUrl)}`
 }
 
+/** Effective UI scale (~match “90% zoom” legibility/spacing while browser is at 100%). */
+const WALL_VIEWPORT_SCALE = 0.9
+const INV_WALL_SCALE = 1 / WALL_VIEWPORT_SCALE
+
 /**
  * Venue lobby wall · ~10 ft reads: large section titles + bounded hero row (no overlaps).
  */
@@ -62,7 +66,13 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-[1580px] grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(6px,_1vmin,_14px)] px-[clamp(12px,3.6vmin,48px)] py-[clamp(8px,_1.35vh,20px)]"
+        style={{
+          width: `min(calc(100vw * ${INV_WALL_SCALE}), calc(1580px * ${INV_WALL_SCALE}))`,
+          height: `calc(100dvh * ${INV_WALL_SCALE})`,
+          transformOrigin: 'top center',
+          transform: `translateX(-50%) scale(${WALL_VIEWPORT_SCALE})`,
+        }}
+        className="absolute left-1/2 top-0 z-10 mx-0 grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(6px,_1vmin,_14px)] px-[clamp(12px,3.6vmin,48px)] py-[clamp(8px,_1.35vh,20px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
