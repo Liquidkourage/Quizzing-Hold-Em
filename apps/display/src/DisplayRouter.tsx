@@ -4,7 +4,7 @@ import type { DisplayLayoutPayload, DisplayVenueWallSnapshot } from '@qhe/net'
 import { connect, onDisplayLayout, onDisplayVenueSnapshot } from '@qhe/net'
 import DisplayTableLive from './App.tsx'
 import { readDisplayTableIdFromUrl, readUrlLayoutBootstrap } from './displayUrlParams'
-import AudienceWelcomeOverlay from './AudienceWelcomeOverlay.tsx'
+import AudienceWelcomeWall from './AudienceWelcomeWall.tsx'
 import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
 
 /** Tile rect in viewport used to “iris” open the full felt from the grid. */
@@ -266,12 +266,15 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     return () => unsub()
   }, [connectFingerprint])
 
-  /** Show the 8-panel grid under fullscreen felt exits and while overview. */
-  const showGridBehind = wallOverview || shrinkingExit !== null
-
+  /** After mosaic has been the primary wall view at least once, skip intro animations if it remounts. */
   useEffect(() => {
-    if (showGridBehind) venueMosaicWasShownRef.current = true
-  }, [showGridBehind])
+    if (wallOverview && !audienceBriefing) venueMosaicWasShownRef.current = true
+  }, [wallOverview, audienceBriefing])
+
+  /** Full-screen join hero (until host starts the show); excludes mosaic table grid underneath. */
+  const showBriefingHero = wallOverview && audienceBriefing && shrinkingExit === null
+  /** Numbered-table mosaic visible after briefing ends — or peeking beneath spotlight exit iris. */
+  const showVenueMosaic = (!audienceBriefing && wallOverview) || shrinkingExit !== null
 
   const spotTable = spotlightN
 
@@ -303,7 +306,20 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
 
   return (
     <AnimatePresence mode="sync">
-      {showGridBehind && (
+      {showBriefingHero && (
+        <motion.div
+          key="venue-join-hero"
+          className="relative z-10 min-h-screen w-full"
+          role="presentation"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <AudienceWelcomeWall venueCode={venueCode} wall={venueWall} />
+        </motion.div>
+      )}
+      {showVenueMosaic && (
         <motion.div
           key="venue-wall-grid"
           className="relative z-10 min-h-screen w-full bg-slate-950"
@@ -314,9 +330,6 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
           transition={{ duration: venueMosaicWasShownRef.current ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
         >
           <VenueEightTablesPreview wall={venueWall} skipMountIntro={venueMosaicWasShownRef.current} />
-          {audienceBriefing && (
-            <AudienceWelcomeOverlay venueCode={venueCode} wall={venueWall} />
-          )}
         </motion.div>
       )}
       {showPrimaryFullscreenLayer && (
