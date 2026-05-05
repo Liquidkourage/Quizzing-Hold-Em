@@ -112,7 +112,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 </div>
               ) : (
                 <div className="flex min-h-0 flex-1 items-center rounded-xl border-2 border-dashed border-white/35 bg-white/[0.04] px-6 py-10 text-center text-[clamp(1rem,2.6vmin,1.35rem)] font-semibold leading-snug text-amber-200">
-                  QR blocked — use the URL beside this scan box
+                  QR blocked — use the join card beside this scan box for the URL
                 </div>
               )}
               <span className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90`}>
@@ -121,33 +121,39 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
             </section>
 
             <div className="flex min-h-0 min-w-0 flex-col gap-[clamp(8px,_1.35vmin,_14px)] overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] lg:overscroll-contain lg:pb-px lg:pr-1">
-              <div className="grid min-w-0 grid-cols-1 gap-[clamp(10px,_1.5vw,_20px)] lg:grid-cols-2 lg:items-start">
-                <div className="min-w-0">
-                  <p className={`text-left ${sectionRibbon} mb-[clamp(6px,_1vmin,_10px)]`}>Venue / room code</p>
-                  <div className="inline-block w-max max-w-full rounded-[clamp(10px,_1.6vmin,_18px)] border-[3px] border-yellow-400/85 bg-black/72 px-[clamp(8px,_1.6vmin,_20px)] py-[clamp(8px,_1.6vmin,_16px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.18)]">
-                    <div className={venueMono}>{venueCode}</div>
-                  </div>
-                </div>
-
-                <div className="min-w-0 rounded-[clamp(10px,_1.6vmin,_18px)] border-[3px] border-emerald-500/42 bg-emerald-950/38 px-[clamp(8px,_1.5vmin,_20px)] py-[clamp(8px,_1.5vmin,_16px)]">
+              <section
+                aria-label="Player URL then venue room code"
+                className="min-w-0 rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-emerald-500/45 bg-black/72 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.12)]"
+              >
+                <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)]">
                   <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-left`}>Player URL</p>
                   <p className="break-all font-mono text-[clamp(0.88rem,_min(2.15vw,_2.6vh),_1.55rem)] font-bold leading-snug tracking-tight text-amber-200">
                     {joinUrl}
                   </p>
                 </div>
-              </div>
+                <div
+                  aria-hidden
+                  className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/18"
+                />
+                <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(10px,_1.8vmin,_18px)] pt-[clamp(8px,_1.35vmin,_14px)]">
+                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-left opacity-95`}>Venue / room code</p>
+                  <div className="inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-yellow-400/85 bg-black/80 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(6px,_1.35vmin,_14px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.16)]">
+                    <div className={venueMono}>{venueCode}</div>
+                  </div>
+                </div>
+              </section>
 
               <ol className="grid shrink-0 gap-[clamp(6px,_1.35vmin,_12px)]">
                 <li className="flex items-start gap-[clamp(10px,_1.75vw,_18px)]">
                   <span className={stepCircleClasses}>1</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
-                    Open <strong className="text-amber-200">Player</strong> — scan the QR or type the URL.
+                    Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL above</strong> or scan the QR.
                   </span>
                 </li>
                 <li className="flex items-start gap-[clamp(10px,_1.75vw,_18px)]">
                   <span className={stepCircleClasses}>2</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
-                    Code{' '}
+                    Enter <strong className="text-yellow-300">venue code</strong>{' '}
                     <strong className="rounded-md bg-yellow-400/25 px-[0.35em] font-mono text-yellow-200">{venueCode}</strong>
                     {' — then '}
                     <strong className="text-emerald-300">Join Game</strong>.
