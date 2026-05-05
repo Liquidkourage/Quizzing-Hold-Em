@@ -33,29 +33,33 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
    *  Prefer vw over vmin for headline sizes so zooming the browser scales more predictably
    *  (vmin balloons when the window is tall and crowded the vertical rhythm). */
   const sectionRibbon =
-    'font-black uppercase tracking-[0.22em] text-amber-100/95 text-[clamp(1.05rem,_2.85vw,_1.65rem)] [text-shadow:0_2px_18px_rgba(0,0,0,.45)]'
+    'font-black uppercase tracking-[0.2em] text-amber-100/95 text-[clamp(1.45rem,_3.95vw,_2.5rem)] [text-shadow:0_3px_22px_rgba(0,0,0,.5)]'
 
   const taglineBrand =
-    'font-semibold uppercase tracking-[0.16em] text-emerald-200/95 text-[clamp(1rem,_2.35vw,_1.5rem)]'
+    'font-semibold uppercase tracking-[0.16em] text-emerald-200/95 text-[clamp(1.35rem,_3.55vw,_2.2rem)]'
 
   const statRibbon =
-    'font-black uppercase tracking-[0.14em] text-white/82 text-[clamp(0.85rem,_1.95vw,_1.22rem)]'
+    'font-black uppercase tracking-[0.13em] text-white/82 text-[clamp(1.12rem,_2.85vw,_1.92rem)]'
 
   const statHint =
-    'font-semibold text-white/68 text-[clamp(0.8rem,_1.65vw,_1.1rem)]'
+    'font-semibold text-white/68 text-[clamp(1.02rem,_2.35vw,_1.65rem)]'
 
   const stepCircleClasses =
-    'flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_22px_rgba(52,211,153,0.32)] h-[clamp(2.1rem,4.25vw,3.2rem)] min-w-[clamp(2.1rem,4.25vw,3.2rem)] text-[clamp(0.95rem,_2.4vw,_1.35rem)]'
+    'flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.36)] h-[clamp(2.95rem,_6.85vw,_4.95rem)] min-w-[clamp(2.95rem,_6.85vw,_4.95rem)] text-[clamp(1.3rem,_3.55vw,_1.98rem)]'
 
   const stepLine =
-    'text-[clamp(1rem,_2.05vw,_1.65rem)] font-bold leading-snug text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]'
+    'text-[clamp(1.42rem,_3.05vw,_2.45rem)] font-bold leading-snug text-white [text-shadow:0_2px_14px_rgba(0,0,0,.45)]'
 
   const footnote =
-    'font-semibold leading-snug text-emerald-200/93 text-[clamp(0.82rem,_1.65vw,_1.15rem)]'
+    'font-semibold leading-snug text-emerald-200/93 text-[clamp(1.05rem,_2.35vw,_1.72rem)]'
 
   /** Room code — vw + capped vh so short codes stay compact in the box without ultra-wide bars. */
   const venueMono =
     'text-center font-mono font-black leading-none tracking-[0.08em] text-yellow-400 text-[clamp(2.25rem,_min(11vw,_12vh),_5.5rem)]'
+
+  /** Venue code in steps row — same optical size as main chip, not step-line scale. */
+  const venueCodeInline =
+    'rounded-md bg-yellow-400/25 px-[0.35em] font-mono font-black text-yellow-200 text-[clamp(2.25rem,_min(11vw,_12vh),_5.5rem)]'
 
   /** Join card URL line — larger than body mono for wall distance reading. */
   const joinUrlText =
@@ -115,7 +119,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   </div>
                 </div>
               ) : (
-                <div className="flex min-h-0 flex-1 items-center rounded-xl border-2 border-dashed border-white/35 bg-white/[0.04] px-6 py-10 text-center text-[clamp(1rem,2.6vmin,1.35rem)] font-semibold leading-snug text-amber-200">
+                <div className="flex min-h-0 flex-1 items-center rounded-xl border-2 border-dashed border-white/35 bg-white/[0.04] px-6 py-10 text-center text-[clamp(1.38rem,_3.85vmin,_1.92rem)] font-semibold leading-snug text-amber-200">
                   QR blocked — check the centered join card for the URL and code.
                 </div>
               )}
@@ -149,22 +153,22 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 How to join
               </h2>
               <ol className="grid shrink-0 gap-[clamp(6px,_1.35vmin,_12px)]" aria-labelledby="join-steps-title">
-                <li className="flex items-start gap-[clamp(10px,_1.75vw,_18px)]">
+                <li className="flex items-start gap-[clamp(12px,_2.2vw,_24px)]">
                   <span className={stepCircleClasses}>1</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
                     Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL on this screen</strong>, or scan the QR.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(10px,_1.75vw,_18px)]">
+                <li className="flex items-start gap-[clamp(12px,_2.2vw,_24px)]">
                   <span className={stepCircleClasses}>2</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
                     Enter <strong className="text-yellow-300">venue code</strong>{' '}
-                    <strong className="rounded-md bg-yellow-400/25 px-[0.35em] font-mono text-yellow-200">{venueCode}</strong>
+                    <strong className={venueCodeInline}>{venueCode}</strong>
                     {' — then '}
                     <strong className="text-emerald-300">Join Game</strong>.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(10px,_1.75vw,_18px)]">
+                <li className="flex items-start gap-[clamp(12px,_2.2vw,_24px)]">
                   <span className={stepCircleClasses}>3</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
                     Keep <strong className="text-emerald-300">Lobby</strong> on unless your host assigns a table number.
@@ -199,8 +203,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <div
                 className={`py-[clamp(4px,_1.1vmin,_10px)] font-mono tabular-nums tracking-tight ${
                   accent
-                    ? 'text-[clamp(1.55rem,_min(7vw,_8vh),_4.15rem)] font-black text-yellow-300'
-                    : 'text-[clamp(1.55rem,_min(7vw,_8vh),_4.15rem)] font-black text-white'
+                    ? 'text-[clamp(2.05rem,_min(9.5vw,_11.5vh),_5.85rem)] font-black text-yellow-300'
+                    : 'text-[clamp(2.05rem,_min(9.5vw,_11.5vh),_5.85rem)] font-black text-white'
                 }`}
               >
                 {v}
