@@ -45,15 +45,15 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'font-semibold text-white/68 text-[clamp(1.18rem,_2.72vw,_1.92rem)]'
 
   const stepCircleClasses =
-    'flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.36)] h-[clamp(2.82rem,_6.45vw,_4.72rem)] min-w-[clamp(2.82rem,_6.45vw,_4.72rem)] text-[clamp(1.18rem,_3.35vw,_1.92rem)]'
+    'flex shrink-0 items-center justify-center rounded-lg bg-emerald-400 font-black text-emerald-950 shadow-[0_0_20px_rgba(52,211,153,0.32)] h-[clamp(2.28rem,_5.35vw,_3.92rem)] min-w-[clamp(2.28rem,_5.35vw,_3.92rem)] text-[clamp(0.98rem,_2.75vw,_1.52rem)]'
 
-  /** Rules column — step body copy. */
+  /** Rules column — compact so three steps (+ optional scrollbar) avoid clipping the hero row */
   const stepLine =
-    'text-[clamp(1.28rem,_2.78vw,_2.12rem)] font-bold leading-snug text-white [text-shadow:0_2px_14px_rgba(0,0,0,.45)]'
+    'text-[clamp(1.03rem,_2.35vw,_1.82rem)] font-bold leading-tight text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]'
 
-  /** “How to join” heading. */
+  /** “How to join” heading — keep below QR/join ribbon scale so the column packs */
   const stepsHeading =
-    'font-black uppercase tracking-[0.19em] text-amber-100/95 text-[clamp(1.38rem,_3.85vw,_2.38rem)] [text-shadow:0_3px_22px_rgba(0,0,0,.5)]'
+    'font-black uppercase tracking-[0.19em] text-amber-100/95 text-[clamp(1.12rem,_2.92vw,_1.92rem)] [text-shadow:0_3px_18px_rgba(0,0,0,.48)]'
 
   const footnote =
     'font-semibold leading-snug text-emerald-200/93 text-[clamp(1.2rem,_2.72vw,_2.02rem)]'
@@ -62,9 +62,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const venueMono =
     'text-center font-mono font-black leading-none tracking-[0.08em] text-yellow-400 text-[clamp(2.25rem,_min(11vw,_12vh),_5.5rem)]'
 
-  /** Venue code in steps row — same optical size as main chip, not step-line scale. */
+  /** Venue code repeated in rules — bounded to step line scale so column height doesn’t blow out. */
   const venueCodeInline =
-    'rounded-md bg-yellow-400/25 px-[0.35em] font-mono font-black text-yellow-200 text-[clamp(2.25rem,_min(11vw,_12vh),_5.5rem)]'
+    'rounded bg-yellow-400/28 px-[0.3em] py-[0.05em] font-mono font-bold text-yellow-200 text-[clamp(1rem,_min(2.95vw,_3.75vh),_1.82rem)]'
 
   /** Join card URL line — larger than body mono for wall distance reading. */
   const joinUrlText =
@@ -153,29 +153,29 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               </div>
             </section>
 
-            <div className="flex min-h-0 min-w-0 w-full flex-col justify-self-center overflow-y-auto overflow-x-hidden [scrollbar-gutter:stable] [-webkit-overflow-scrolling:touch] lg:max-w-[min(100%,42rem)] lg:justify-self-start lg:overscroll-contain lg:pb-px lg:pl-px lg:pr-1">
-              <h2 id="join-steps-title" className={`${stepsHeading} mb-[clamp(6px,_0.95vmin,_10px)] text-left`}>
+            <div className="flex min-h-0 min-w-0 w-full flex-col justify-self-center overflow-x-hidden overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] lg:max-w-[min(100%,42rem)] lg:justify-self-start lg:pr-0.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25">
+              <h2 id="join-steps-title" className={`${stepsHeading} mb-[clamp(3px,_0.65vmin,_7px)] text-left leading-tight`}>
                 How to join
               </h2>
-              <ol className="grid shrink-0 gap-[clamp(6px,_1.35vmin,_12px)]" aria-labelledby="join-steps-title">
-                <li className="flex items-start gap-[clamp(11px,_2vw,_21px)]">
+              <ol className="grid shrink-0 gap-[clamp(4px,_1.05vmin,_9px)]" aria-labelledby="join-steps-title">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)]">
                   <span className={stepCircleClasses}>1</span>
-                  <span className={`${stepLine} pt-[0.2em]`}>
+                  <span className={`${stepLine} pt-[0.06em]`}>
                     Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL on this screen</strong>, or scan the QR.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(11px,_2vw,_21px)]">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)]">
                   <span className={stepCircleClasses}>2</span>
-                  <span className={`${stepLine} pt-[0.2em]`}>
+                  <span className={`${stepLine} pt-[0.06em]`}>
                     Enter <strong className="text-yellow-300">venue code</strong>{' '}
                     <strong className={venueCodeInline}>{venueCode}</strong>
                     {' — then '}
                     <strong className="text-emerald-300">Join Game</strong>.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(11px,_2vw,_21px)]">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)]">
                   <span className={stepCircleClasses}>3</span>
-                  <span className={`${stepLine} pt-[0.2em]`}>
+                  <span className={`${stepLine} pt-[0.06em]`}>
                     Keep <strong className="text-emerald-300">Lobby</strong> on unless your host assigns a table number.
                   </span>
                 </li>
