@@ -123,14 +123,25 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
         />
       </div>
 
-      <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-1.5 sm:px-6 sm:py-2">
+      <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
         <motion.div
-          className="mx-auto flex max-w-[1600px] flex-row items-center justify-between gap-4"
+          className="mx-auto grid w-full max-w-[1600px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 sm:gap-x-6"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">Venue wall</p>
-          <div className="text-center sm:text-right">
+
+          {/* Transparent sizing only — no panel; marquee asset already has alpha */}
+          <div className="flex min-w-0 justify-center justify-self-center">
+            <div
+              className="max-w-full w-[min(86vw,calc((min(1600px,100vw)-2rem)*0.92))] sm:w-[calc((min(1600px,100vw)-2rem-1.25rem)/2)] lg:w-[calc((min(1600px,100vw)-2rem-3.75rem)/4)]"
+              style={{ aspectRatio: '1024 / 655' }}
+            >
+              <QuizzEmWordmark layout="fill" />
+            </div>
+          </div>
+
+          <div className="text-right sm:min-w-[8.5rem]">
             <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
               Room / event code
             </div>
@@ -141,23 +152,7 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
         </motion.div>
       </header>
 
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pt-1 sm:px-6 sm:pt-2">
-        <motion.section
-          className="flex w-full justify-center pb-3 sm:pb-4"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-        >
-          {/* Width matches table grid (`gap-5`); height follows logo raster 1024:655 */}
-          <div className="w-full overflow-hidden rounded-2xl border border-yellow-700/35 bg-black/55 p-2.5 shadow-xl backdrop-blur-md sm:w-[calc((100%-1.25rem)/2)] sm:p-3 lg:w-[calc((100%-3.75rem)/4)]">
-            <div className="w-full" style={{ aspectRatio: '1024 / 655' }}>
-              <QuizzEmWordmark layout="fill" />
-            </div>
-          </div>
-        </motion.section>
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-4 sm:px-6 sm:pt-5">
+      <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-5 sm:px-6 sm:pt-6">
         <motion.section
           className="mb-8 rounded-2xl border-2 border-casino-emerald/40 bg-black/65 p-6 shadow-[0_0_40px_rgba(0,255,180,0.08)] backdrop-blur-md"
           initial={{ opacity: 0, y: 8 }}
