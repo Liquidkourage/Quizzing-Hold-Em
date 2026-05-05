@@ -45,15 +45,15 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'font-semibold text-white/68 text-[clamp(1.18rem,_2.72vw,_1.92rem)]'
 
   const stepCircleClasses =
-    'flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.36)] h-[clamp(3.08rem,_7.05vw,_5.22rem)] min-w-[clamp(3.08rem,_7.05vw,_5.22rem)] text-[clamp(1.38rem,_3.72vw,_2.12rem)]'
+    'flex shrink-0 items-center justify-center rounded-xl bg-emerald-400 font-black text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.36)] h-[clamp(2.82rem,_6.45vw,_4.72rem)] min-w-[clamp(2.82rem,_6.45vw,_4.72rem)] text-[clamp(1.18rem,_3.35vw,_1.92rem)]'
 
-  /** Rules column — step body copy (slightly larger than joining info ribbons). */
+  /** Rules column — step body copy. */
   const stepLine =
-    'text-[clamp(1.58rem,_3.35vw,_2.72rem)] font-bold leading-snug text-white [text-shadow:0_2px_14px_rgba(0,0,0,.45)]'
+    'text-[clamp(1.28rem,_2.78vw,_2.12rem)] font-bold leading-snug text-white [text-shadow:0_2px_14px_rgba(0,0,0,.45)]'
 
-  /** “How to join” heading matches rules emphasis without inflating QR / join ribbons. */
+  /** “How to join” heading. */
   const stepsHeading =
-    'font-black uppercase tracking-[0.19em] text-amber-100/95 text-[clamp(1.62rem,_4.35vw,_2.72rem)] [text-shadow:0_3px_22px_rgba(0,0,0,.5)]'
+    'font-black uppercase tracking-[0.19em] text-amber-100/95 text-[clamp(1.38rem,_3.85vw,_2.38rem)] [text-shadow:0_3px_22px_rgba(0,0,0,.5)]'
 
   const footnote =
     'font-semibold leading-snug text-emerald-200/93 text-[clamp(1.2rem,_2.72vw,_2.02rem)]'
@@ -158,13 +158,13 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 How to join
               </h2>
               <ol className="grid shrink-0 gap-[clamp(6px,_1.35vmin,_12px)]" aria-labelledby="join-steps-title">
-                <li className="flex items-start gap-[clamp(12px,_2.2vw,_24px)]">
+                <li className="flex items-start gap-[clamp(11px,_2vw,_21px)]">
                   <span className={stepCircleClasses}>1</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
                     Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL on this screen</strong>, or scan the QR.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(12px,_2.2vw,_24px)]">
+                <li className="flex items-start gap-[clamp(11px,_2vw,_21px)]">
                   <span className={stepCircleClasses}>2</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
                     Enter <strong className="text-yellow-300">venue code</strong>{' '}
@@ -173,7 +173,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                     <strong className="text-emerald-300">Join Game</strong>.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(12px,_2.2vw,_24px)]">
+                <li className="flex items-start gap-[clamp(11px,_2vw,_21px)]">
                   <span className={stepCircleClasses}>3</span>
                   <span className={`${stepLine} pt-[0.2em]`}>
                     Keep <strong className="text-emerald-300">Lobby</strong> on unless your host assigns a table number.
