@@ -13,16 +13,13 @@ function playerJoinHref(): string {
   return `${window.location.origin}/player/`
 }
 
+/** Request a larger QR raster so it stays sharp when the column scales up on wide TVs. */
 function qrImgSrc(joinUrl: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=9&data=${encodeURIComponent(joinUrl)}`
+  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=9&data=${encodeURIComponent(joinUrl)}`
 }
 
-/** Effective UI scale (~match “90% zoom” legibility/spacing while browser is at 100%). */
-const WALL_VIEWPORT_SCALE = 0.9
-const INV_WALL_SCALE = 1 / WALL_VIEWPORT_SCALE
-
 /**
- * Venue lobby wall (widescreen-only): full-bleed usable width, ~10 ft typography.
+ * Venue lobby wall (widescreen-only): full-bleed width; content scales with vw/vmin for bar visibility.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -58,7 +55,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#031a17] antialiased text-white selection:bg-yellow-400/35"
+      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-hidden bg-[#031a17] antialiased text-white selection:bg-yellow-400/35"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/90 via-[#061c24] to-black" />
@@ -66,20 +63,14 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        style={{
-          width: `calc(100vw * ${INV_WALL_SCALE})`,
-          height: `calc(100dvh * ${INV_WALL_SCALE})`,
-          transformOrigin: 'top center',
-          transform: `translateX(-50%) scale(${WALL_VIEWPORT_SCALE})`,
-        }}
-        className="absolute left-1/2 top-0 z-10 mx-0 grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(6px,_1vmin,_14px)] px-[clamp(20px,_2.75vw,_72px)] py-[clamp(8px,_1.35vh,20px)]"
+        className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(6px,_1vmin,_14px)] px-[clamp(16px,_3.5vw,_96px)] py-[clamp(8px,_1.35vh,20px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
         <header className="flex shrink-0 flex-col items-center">
           <div
-            className="h-[clamp(46px,min(9.5vh,104px))] w-auto max-w-[min(920px,_48vw)] shrink-0"
+            className="h-[clamp(46px,min(9.5vh,104px))] w-auto max-w-[min(1100px,_58vw)] shrink-0"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
@@ -93,7 +84,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         <div className="flex min-h-0 flex-row items-start justify-between gap-[clamp(12px,_2.5vmin,_42px)]">
             <section
               aria-label="Scan QR to open player app"
-              className={`flex w-[clamp(260px,_28vw,_560px)] shrink-0 flex-col items-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_22px)] shadow-[0_0_60px_rgba(34,211,153,0.11)]`}
+              className={`flex w-[clamp(280px,_min(34vw,42vh),720px)] shrink-0 flex-col items-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_22px)] shadow-[0_0_60px_rgba(34,211,153,0.11)]`}
             >
               <span className={`${sectionRibbon} mb-[clamp(8px,_1.35vmin,_16px)] text-center leading-snug`}>
                 Aim camera here
@@ -103,8 +94,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   <img
                     src={qrImgSrc(joinUrl)}
                     alt=""
-                    width={400}
-                    height={400}
+                    width={520}
+                    height={520}
                     className="block h-auto w-full rounded-md"
                     referrerPolicy="no-referrer"
                     onError={() => setQrOk(false)}
@@ -126,7 +117,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   Venue / room code
                 </p>
                 <div className="rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-yellow-400/85 bg-black/72 px-[clamp(8px,_2vmin,_26px)] py-[clamp(10px,_2.1vmin,_20px)] shadow-[inset_0_0_0_1px_rgba(251,191,36,0.18)]">
-                  <div className="text-left font-mono text-[clamp(2.65rem,_13vmin,_7.85rem)] font-black leading-none tracking-[0.08em] text-yellow-400">
+                  <div className="text-left font-mono text-[clamp(2.85rem,_min(13vmin,15vw),9rem)] font-black leading-none tracking-[0.08em] text-yellow-400">
                     {venueCode}
                   </div>
                 </div>
