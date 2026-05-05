@@ -125,12 +125,11 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
 
       <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
         <motion.div
-          className="mx-auto grid w-full max-w-[1600px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 sm:gap-x-6"
+          className="mx-auto grid w-full max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-1 sm:gap-x-6"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">Venue wall</p>
-
+          <div className="min-w-0" aria-hidden />
           {/* Transparent sizing only — no panel; marquee asset already has alpha */}
           <div className="flex min-w-0 justify-center justify-self-center">
             <div
@@ -141,7 +140,7 @@ export default function VenueEightTablesPreview({ venueCode, tiles }: VenueEight
             </div>
           </div>
 
-          <div className="text-right sm:min-w-[8.5rem]">
+          <div className="justify-self-end text-right sm:min-w-[8.5rem]">
             <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
               Room / event code
             </div>
