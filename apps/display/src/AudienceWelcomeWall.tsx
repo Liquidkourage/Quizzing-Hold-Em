@@ -13,9 +13,9 @@ function playerJoinHref(): string {
   return `${window.location.origin}/player/`
 }
 
-/** Request a larger QR raster so it stays sharp when the column scales up on wide TVs. */
+/** Request a larger QR raster for sharp scaling; margin=5 keeps a valid quiet zone with less empty border than the API default. */
 function qrImgSrc(joinUrl: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=9&data=${encodeURIComponent(joinUrl)}`
+  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=5&data=${encodeURIComponent(joinUrl)}`
 }
 
 /** Gold rail strokes at corners — long “┌” segments, not bordered squares (avoids checkbox look). */
@@ -182,10 +182,10 @@ function VegasAttentionPanel({
  * Venue lobby / join wall: stacks below ~1280px width; three-column hero on xl+.
  * Intended for landscape wall displays; portrait host previews are unsupported.
  *
- * QR sizing: base max-h/max-w must not fight arbitrary media variants (Tailwind can sort base after
- * @media(...), erasing shorter-viewport tuning). Taller desktops use `min-width:1280px` +
- * `min-height:1081px` instead of bare `xl` for max caps. Landscape full HD uses stronger `!` sizing and
- * an absolute-pinned QR tile so growth is visibly obvious and may overlap sibling columns until dialed.
+ * QR sizing: base max-h/max-w can sort after @media(...) in Tailwind output and erase short-viewport
+ * tuning. Taller layouts use `min-width:1280px` + `min-height:1081px` instead of bare `xl` for caps.
+ * Landscape full HD uses `!` dimensions and an absolute-pinned white tile; keep caps modest so neighbors
+ * stay readable (dial with host feedback).
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -432,7 +432,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible"
+                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)]"
               >
                 <span
                   className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46]`}
@@ -440,15 +440,15 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   Aim camera here
                 </span>
                 {qrOk ? (
-                  <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:min-h-[min(36dvh,340px)]">
-                    {/* Full-HD landscape: fixed tile beats collapsed flex + Tailwind max-h sort order; may overlap neighbor columns by design. */}
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[min(78vmin,82dvh)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!w-[min(78vmin,82dvh)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-1 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_12px_80px_-8px_rgba(0,0,0,0.75),inset_0_0_0_2px_rgba(254,249,231,1),0_0_60px_rgba(234,179,8,0.45)]">
+                  <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:min-h-[min(26dvh,260px)]">
+                    {/* Landscape full HD: absolute + ! dimensions avoid Tailwind max-h merge ordering; size is intentionally sub-max to limit overlap. */}
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[min(52vmin,58dvh,540px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!w-[min(52vmin,58dvh,540px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
                         width={520}
                         height={520}
-                        className="block h-auto max-h-full w-auto max-w-full rounded-md object-contain"
+                        className="block h-auto min-h-0 min-w-0 max-h-[calc(100%-2px)] w-auto max-w-[calc(100%-2px)] rounded-sm object-contain [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-full"
                         referrerPolicy="no-referrer"
                         onError={() => setQrOk(false)}
                       />
