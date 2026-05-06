@@ -13,6 +13,11 @@ function playerJoinHref(): string {
   return `${window.location.origin}/player/`
 }
 
+/** Shown on the join card only; QR still embeds the full HTTPS URL. */
+function joinUrlForDisplay(url: string): string {
+  return url.replace(/^https:\/\//i, '').replace(/^http:\/\//i, '')
+}
+
 /** Request a larger QR raster for sharp scaling; margin=5 keeps a valid quiet zone with less empty border than the API default. */
 function qrImgSrc(joinUrl: string): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=640x640&margin=5&data=${encodeURIComponent(joinUrl)}`
@@ -201,8 +206,8 @@ function WelcomeQrColumn({
     'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[3px] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
   const whiteClass = stack
-    ? `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(96vw,min(70dvh,680px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(94vw,min(64dvh,620px)))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-w-[min(100%,min(92vw,min(72dvh,720px)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(44vmin,44dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(44vmin,44dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
-    : `${whiteTileBase} aspect-square max-h-[min(100%,min(64dvh,58vw))] max-w-[min(100%,min(64dvh,58vw))] xl:!max-h-[min(min(60dvh,52vw),800px)] xl:!max-w-[min(min(60dvh,52vw),800px)] xl:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:none] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-[min(46vmin,46dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-[min(46vmin,46dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+    ? `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(96vw,min(62dvh,620px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(94vw,min(56dvh,560px)))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-w-[min(100%,min(92vw,min(66dvh,660px)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+    : `${whiteTileBase} aspect-square max-h-[min(100%,min(56dvh,52vw))] max-w-[min(100%,min(56dvh,52vw))] xl:!max-h-[min(min(52dvh,46vw),720px)] xl:!max-w-[min(min(52dvh,46vw),720px)] xl:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:none] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-[min(42vmin,42dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-[min(42vmin,42dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
 
   const opensClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pt-0 px-[clamp(10px,min(2vmin,_22px),_28px)] opacity-90 [text-wrap:balance] xl:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
@@ -281,7 +286,7 @@ function AttendanceSection({
   const tileShared =
     `${statTile1080} min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(8px,min(1.35vmin,_14px),_14px)] py-[clamp(8px,min(1.25vmin,_14px),_16px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]`
 
-  const stripTileClass = `${tileShared} w-full max-w-[min(100%,clamp(280px,42vw,480px))]`
+  const stripTileClass = `${tileShared} w-full max-w-[min(100%,clamp(260px,38vw,440px))]`
   const underJoinTileClass = `${tileShared} w-full`
 
   return (
@@ -331,17 +336,19 @@ function WelcomeJoinCard({
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:flex-1 xl:min-h-0 xl:overflow-hidden [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:-mt-[min(8.5dvh,108px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[calc(100%+min(8.5dvh,108px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!min-h-[calc(100%+min(8.5dvh,108px))]"
+        className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:flex-1 xl:min-h-0 xl:overflow-hidden"
       >
-        <div className="relative z-[1] flex flex-col items-center px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center xl:pb-[clamp(12px,min(1.35vmin,_18px),_20px)] xl:pt-[clamp(10px,_1.35vmin,_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(18px,min(2.2vmin,_28px),_30px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(12px,_1.85vmin,_22px)]">
+        <div className="relative z-[1] flex flex-col items-center px-[clamp(8px,_1.5vmin,_20px)] pb-[clamp(10px,min(1.45vmin,_18px),_20px)] pt-[clamp(8px,_1.5vmin,_14px)] text-center xl:pb-[clamp(10px,min(1.2vmin,_14px),_18px)] xl:pt-[clamp(8px,_1.2vmin,_13px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(12px,min(1.75vmin,_22px),_24px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(10px,_1.45vmin,_18px)]">
           <div className="mx-auto inline-block max-w-full">
-            <p className={`${joinLeadClass} mb-[clamp(8px,_1vmin,_12px)]`}>Or go to</p>
-            <p className={`${joinUrlText} mx-auto mb-[clamp(10px,_1.35vmin,_16px)] max-w-[min(100%,100vw-2rem)] break-words hyphens-none`}>{joinUrl}</p>
+            <p className={`${joinLeadClass} mb-[clamp(6px,_0.85vmin,_10px)]`}>Or go to</p>
+            <p className={`${joinUrlText} mx-auto mb-[clamp(8px,_1.15vmin,_13px)] max-w-[min(100%,100vw-2rem)] break-words hyphens-none`} aria-label={joinUrl}>
+              {joinUrlForDisplay(joinUrl)}
+            </p>
           </div>
-          <div className="mx-auto mt-[clamp(2px,min(0.35vmin,_4px),_6px)] inline-block max-w-full">
-            <p className={`${joinLeadClass} mb-[clamp(8px,_1.05vmin,_12px)]`}>and enter room code</p>
+          <div className="mx-auto mt-0 inline-block max-w-full">
+            <p className={`${joinLeadClass} mb-[clamp(6px,_0.92vmin,_11px)]`}>and enter room code</p>
             <motion.div
-              className="isolate mx-auto inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
+              className="isolate mx-auto inline-block w-max max-w-full rounded-[clamp(8px,_1.25vmin,_12px)] border-[2px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(4px,_1vmin,_10px)]"
               animate={
                 reducedMotion
                   ? undefined
@@ -364,20 +371,22 @@ function WelcomeJoinCard({
   )
 }
 
-function WelcomeWallHeader({ reducedMotion, taglineBrand }: { reducedMotion: boolean; taglineBrand: string }) {
+function WelcomeWallHeader({
+  reducedMotion,
+  taglineClass,
+}: {
+  reducedMotion: boolean
+  taglineClass: string
+}) {
   return (
     <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
       <div
-        className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))] xl:[height:min(max(38vh,_168px),min(680px,_58vh))]"
+        className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(26vh,_118px),min(500px,_48vh))] max-[height:720px]:[height:min(max(22vh,_92px),min(300px,_40vh))] xl:[height:min(max(34vh,_152px),min(600px,_52vh))]"
         style={{ aspectRatio: '1024 / 655' }}
       >
         <QuizzEmWordmark layout="fill" />
       </div>
-      <p
-        className={`mt-[clamp(6px,_0.8vmin,_14px)] max-[height:900px]:mt-1 text-center ${taglineBrand}${!reducedMotion ? ' motion-safe:animate-vegas-gold-drip motion-safe:delay-150' : ''}`}
-      >
-        Join on your phone
-      </p>
+      <p className={`mt-[clamp(5px,_0.65vmin,_12px)] max-[height:900px]:mt-1 text-center normal-case ${taglineClass}`}>By Liquid Kourage Entertainment</p>
       <VegasPulseDivider active={!reducedMotion} />
     </header>
   )
@@ -397,18 +406,19 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const sectionRibbon =
     'min-w-0 font-black uppercase tracking-[0.22em] text-amber-50/98 break-words text-balance whitespace-normal text-[clamp(1.05rem,min(3.95vw,_3vh),_2.5rem)] [text-shadow:0_0_32px_rgba(251,191,36,0.45),0_0_72px_rgba(239,68,68,0.14),0_2px_4px_rgba(0,0,0,_0.95)]'
 
-  const taglineBrand =
-    'min-w-0 break-words text-balance font-semibold uppercase tracking-[0.26em] text-amber-50 text-[clamp(1.06rem,min(3.85vw,_2.95vh),_2.35rem)] [text-shadow:0_0_28px_rgba(253,224,138,0.58),0_0_88px_rgba(234,179,8,0.28),0_2px_8px_rgba(0,0,0,_0.95),0_-1px_0_rgba(127,29,29,0.32)]'
+  /** Credit under the wordmark — readable title case, subtler than headline chrome. */
+  const taglineCredit =
+    'min-w-0 break-words text-balance font-semibold tracking-[0.04em] text-amber-50/92 text-[clamp(0.82rem,min(2.45vw,_1.85vh),_1.28rem)] [text-shadow:0_0_14px_rgba(253,224,138,0.38),0_2px_8px_rgba(0,0,0,_0.88)]'
 
   /** “Players” label above the total count tile */
   const playerCountLabelClass =
-    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)] uppercase text-emerald-50/94 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.11em] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.9rem,min(2.72vw,_2.15vh),_1.72rem)] [text-shadow:0_0_18px_rgba(167,243,208,0.28),0_2px_8px_rgba(0,0,0,.58)] mb-[clamp(4px,min(0.65vmin,_6px),_8px)]'
+    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(0.95rem,min(3.05vw,_2.55vh),_1.95rem)] uppercase text-emerald-50/94 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.11em] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.85rem,min(2.5vw,_1.95vh),_1.58rem)] [text-shadow:0_0_18px_rgba(167,243,208,0.28),0_2px_8px_rgba(0,0,0,.58)] mb-[clamp(3px,min(0.55vmin,_5px),_6px)]'
   const venueMono =
-    'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-[clamp(1.75rem,min(9vw,min(10vh,_3.75rem)),_5.25rem)] uppercase text-transparent bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 bg-clip-text [-webkit-background-clip:text] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,.9))]'
+    'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-[clamp(1.45rem,min(7.5vw,min(8.5vh,_3.2rem)),_4.25rem)] uppercase text-transparent bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 bg-clip-text [-webkit-background-clip:text] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,.9))]'
 
   /** Join card URL — Orbitron matches display chrome; avoids cold system monospace. */
   const joinUrlText =
-    'hyphens-none break-words text-center font-orbitron font-black leading-snug tracking-[0.05em] text-amber-50 text-[clamp(1.06rem,min(3.08vw,_3.55vh),_2.72rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.98rem,min(2.68vw,_3.05vh),_2.28rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
+    'hyphens-none break-words text-center font-orbitron font-black leading-snug tracking-[0.05em] text-amber-50 text-[clamp(0.92rem,min(2.65vw,_2.95vh),_2.2rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.35vw,_2.68vh),_1.95rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
 
   /** Tighter attendance strip on landscape 1080p-class TVs (≥1024 wide, ≤1080 tall); skips narrow/portrait. */
   const statTile1080 =
@@ -416,7 +426,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
   /** Slightly taller digits limited on short viewports; default keeps large-TV punch. */
   const statDigitBase =
-    'py-[clamp(4px,min(1.1vmin,_10px),_10px)] font-mono tabular-nums tracking-tight leading-none text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(2px,min(0.65vmin,_6px),_6px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(1.38rem,min(6.2vw,min(7.25vmin,_6.75dvh)),_4.45rem)]'
+    'py-[clamp(3px,min(0.95vmin,_8px),_8px)] font-mono tabular-nums tracking-tight leading-none text-[clamp(1.55rem,min(8.5vw,min(10vmin,_8.5dvh)),_5.5rem)] font-black [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(2px,min(0.55vmin,_5px),_5px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(1.25rem,min(5.5vw,min(6.5vmin,_6dvh)),_3.85rem)]'
 
   const statDigitAccentShadow =
     '[text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:[text-shadow:0_0_22px_rgba(253,224,138,0.55),0_0_54px_rgba(234,179,8,0.28),0_2px_3px_rgba(0,0,0,0.92)]'
@@ -548,7 +558,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto flex min-h-0 h-full max-h-full w-full max-w-none flex-col gap-y-[clamp(4px,_0.85vmin,_10px)] max-[height:920px]:gap-y-[clamp(6px,_1.2vmin,_12px)] px-[clamp(8px,_1.65vw,_56px)] py-[clamp(4px,_0.75vh,_12px)] max-[height:920px]:py-[clamp(5px,_0.7vh,_10px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-2 overflow-hidden"
+        className="relative z-10 mx-auto flex min-h-0 h-full max-h-full w-full max-w-none flex-col gap-y-[clamp(3px,_0.65vmin,_8px)] max-[height:920px]:gap-y-[clamp(5px,_1vmin,_10px)] px-[clamp(8px,_1.65vw,_56px)] py-[clamp(3px,_0.55vh,_10px)] max-[height:920px]:py-[clamp(4px,_0.58vh,_9px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-2 overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -578,11 +588,11 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ))}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(4px,_0.85vmin,_10px)] max-[height:920px]:gap-y-[clamp(6px,_1.2vmin,_12px)] overflow-hidden">
-          <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineBrand={taglineBrand} />
+        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(3px,_0.65vmin,_8px)] max-[height:920px]:gap-y-[clamp(5px,_1vmin,_10px)] overflow-hidden">
+          <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineClass={taglineCredit} />
 
           <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)]">
-            <div className="flex min-h-0 flex-1 flex-col gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] overflow-hidden xl:hidden">
+            <div className="flex min-h-0 flex-1 flex-col gap-x-[clamp(10px,min(2vmin,_24px),_32px)] gap-y-[clamp(6px,min(1.1vmin,_13px),_14px)] max-[height:920px]:gap-y-[clamp(6px,min(1.05vmin,_12px),_13px)] overflow-hidden xl:hidden">
               <WelcomeQrColumn
                 mode="stack"
                 sectionRibbon={sectionRibbon}
@@ -611,7 +621,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               />
             </div>
 
-            <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(12px,min(2.25vw,_40px),_48px)] gap-y-[clamp(8px,min(1.25vmin,_14px),_16px)] overflow-hidden xl:grid xl:grid-cols-2 xl:items-stretch">
+            <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(10px,min(2vw,_36px),_40px)] gap-y-[clamp(6px,min(1.05vmin,_12px),_14px)] overflow-hidden xl:grid xl:grid-cols-2 xl:items-stretch">
               <div className="flex min-h-0 min-w-0 flex-col overflow-hidden xl:h-full">
                 <WelcomeQrColumn
                   mode="wide"
@@ -622,7 +632,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   reducedMotion={Boolean(reducedMotion)}
                 />
               </div>
-              <div className="flex min-h-0 flex-col gap-y-[clamp(8px,min(1.15vmin,_14px),_16px)]">
+              <div className="flex min-h-0 flex-col gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
                 <WelcomeJoinCard
                   className="mx-auto flex h-full min-h-0 w-full max-w-[min(100%,38rem)] flex-1 flex-col justify-self-center"
                   venueCode={venueCode}
