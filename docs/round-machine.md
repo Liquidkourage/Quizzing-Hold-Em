@@ -62,7 +62,7 @@ stateDiagram-v2
 | **lobby** | Between trivia rounds or after **`endRound`**. Fresh hands off; **`round.question` usually null** until **start / setQuestion** again. Rosters unchanged unless assign / join / disconnect. |
 | **question** | Set up for the upcoming hand: **host may attach** `round.question` via bank / random / venue push / setlist. **Initial hole-card deal only allowed here** (`dealInitialCards`). |
 | **betting** | Active wagering on **round 1 (pre-board)** or **round 2 (post-board)**. Turn order **`currentPlayerIndex`**; **`isBettingOpen`** gates player actions unless host uses **adminCloseBetting / adminAdvanceTurn**. |
-| **answering** | Board is complete (**≥5 community cards** implied by server precondition), wagering closed on that table; players submit **`submittedAnswer`** before **`answerDeadline`**. |
+| **answering** | Board is complete (**≥5 community cards** implied by server precondition), wagering closed on that table; players compose **`submittedAnswer`** by choosing **exactly five digit cards** from their holes + board (order + optional decimal), then submit before **`answerDeadline`**. |
 | **showdown** | **Reveal** moment: core **`revealAnswer`** puts phase here; UI treats as “answers visible / trivia resolution prelude”. **`endRound`** performs payout + resets to **`lobby`**. |
 | **reveal / payout / intermission** | **Not on the canonical path today** — avoid teaching host flows that depend on them until implemented end-to-end. |
 

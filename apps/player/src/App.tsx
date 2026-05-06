@@ -5,6 +5,9 @@ import { Card, NeonButton, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
 import { LOBBY_TABLE_ID } from '@qhe/core'
 
+/** Hands are built from exactly five digit cards (holes + community); optional decimal in the player UI. */
+const ANSWER_CARD_COUNT = 5
+
 // Types for answer composition
 interface ComposedAnswer {
   digits: (number | 'decimal')[]
@@ -124,6 +127,11 @@ function PlayerApp() {
     }
 
     // Add the card to the answer
+    if (selectedCards.length >= ANSWER_CARD_COUNT) {
+      setToastMessage(`Your answer uses exactly ${ANSWER_CARD_COUNT} cards — tap a selected card to remove it, or clear.`)
+      setTimeout(() => setToastMessage(null), 4000)
+      return
+    }
     if (type === 'hand' && currentPlayer?.hand[index]) {
       const digit = currentPlayer.hand[index].digit
       setComposedAnswer(prev => ({
@@ -171,17 +179,24 @@ function PlayerApp() {
   }
 
   const handleSubmitAnswer = () => {
-    if (composedAnswer.value > 0) {
-      submitAnswer(composedAnswer.value, (ack: { ok: boolean; message: string }) => {
-        if (ack.ok) {
-          setToastMessage(`Answer submitted: ${composedAnswer.display}`)
-        } else {
-          setToastMessage(`Error submitting answer: ${ack.message}`)
-        }
-      })
-    } else {
-      setToastMessage('Please compose an answer before submitting')
+    if (selectedCards.length !== ANSWER_CARD_COUNT) {
+      setToastMessage(`Select exactly ${ANSWER_CARD_COUNT} digit cards to build your answer.`)
+      setTimeout(() => setToastMessage(null), 4000)
+      return
     }
+    const display = composedAnswer.display.trim()
+    if (!display || !Number.isFinite(composedAnswer.value)) {
+      setToastMessage('Compose a valid number from your five cards before submitting.')
+      setTimeout(() => setToastMessage(null), 4000)
+      return
+    }
+    submitAnswer(composedAnswer.value, (ack: { ok: boolean; message: string }) => {
+      if (ack.ok) {
+        setToastMessage(`Answer submitted: ${composedAnswer.display}`)
+      } else {
+        setToastMessage(`Error submitting answer: ${ack.message}`)
+      }
+    })
   }
 
   if (!isJoined) {
@@ -404,9 +419,15 @@ function PlayerApp() {
             
             {/* Composed Answer Display */}
             <div className="text-center mb-8">
-              <div className="text-lg text-white/80 mb-2">Your Answer</div>
+              <div className="text-lg text-white/80 mb-1">Your Answer</div>
+              <div className="text-sm text-casino-emerald/95 mb-3">
+                Tap exactly {ANSWER_CARD_COUNT} digit cards in order (holes and/or board); add a decimal if you need one.
+              </div>
+              <div className="text-sm text-white/70 mb-2">
+                Cards in hand: {selectedCards.length}/{ANSWER_CARD_COUNT}
+              </div>
               <div className="text-6xl font-bold text-casino-gold bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-6 min-h-[120px] flex items-center justify-center">
-                {composedAnswer.display || '0'}
+                {composedAnswer.display || '—'}
               </div>
             </div>
 
@@ -567,7 +588,11 @@ function PlayerApp() {
                 variant="emerald"
                 size="large"
                 onClick={handleSubmitAnswer}
-                disabled={composedAnswer.value === 0 || gameState.phase !== 'answering'}
+                disabled={
+                  gameState.phase !== 'answering' ||
+                  selectedCards.length !== ANSWER_CARD_COUNT ||
+                  !composedAnswer.display.trim()
+                }
               >
                 Submit Answer
               </NeonButton>
