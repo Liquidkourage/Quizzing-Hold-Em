@@ -330,41 +330,42 @@ function WelcomeJoinCard({
   const joinLeadClass =
     'min-w-0 text-balance whitespace-normal font-black uppercase tracking-[0.14em] text-amber-50/95 opacity-92 text-[clamp(0.88rem,min(2.52vw,_2.15vh),_1.55rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_2px_4px_rgba(0,0,0,_0.9)]'
 
+  const joinInnerFlex =
+    'relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-center gap-y-[clamp(10px,min(1.35vmin,_16px),_18px)] px-[clamp(8px,_1.5vmin,_20px)] py-[clamp(12px,min(1.5vmin,_22px),_26px)] text-center xl:px-[clamp(10px,_1.55vmin,_22px)] xl:py-[clamp(14px,min(1.5vmin,_24px),_28px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:py-[clamp(12px,min(1.55vmin,_22px),_24px)]'
+
   return (
     <section aria-label="Alternative join instructions: URL and room code" className={className}>
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:flex-1 xl:min-h-0 xl:overflow-hidden"
+        innerFlexClassName={joinInnerFlex}
+        className="flex min-h-0 min-w-0 h-full w-full flex-col rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:min-h-0 xl:flex-1 xl:overflow-hidden"
       >
-        <div className="relative z-[1] flex flex-col items-center px-[clamp(8px,_1.5vmin,_20px)] pb-[clamp(10px,min(1.45vmin,_18px),_20px)] pt-[clamp(8px,_1.5vmin,_14px)] text-center xl:pb-[clamp(10px,min(1.2vmin,_14px),_18px)] xl:pt-[clamp(8px,_1.2vmin,_13px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(12px,min(1.75vmin,_22px),_24px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(10px,_1.45vmin,_18px)]">
-          <div className="mx-auto inline-block max-w-full">
-            <p className={`${joinLeadClass} mb-[clamp(6px,_0.85vmin,_10px)]`}>Or go to</p>
-            <p className={`${joinUrlText} mx-auto mb-[clamp(8px,_1.15vmin,_13px)] max-w-[min(100%,100vw-2rem)] break-words hyphens-none`} aria-label={joinUrl}>
-              {joinUrlForDisplay(joinUrl)}
-            </p>
-          </div>
-          <div className="mx-auto mt-0 inline-block max-w-full">
-            <p className={`${joinLeadClass} mb-[clamp(6px,_0.92vmin,_11px)]`}>and enter room code</p>
-            <motion.div
-              className="isolate mx-auto inline-block w-max max-w-full rounded-[clamp(8px,_1.25vmin,_12px)] border-[2px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(4px,_1vmin,_10px)]"
-              animate={
-                reducedMotion
-                  ? undefined
-                  : {
-                      boxShadow: [
-                        '0 0 8px rgba(234,179,8,0.2), inset 0 0 0 1px rgba(251,211,141,0.16)',
-                        '0 0 18px rgba(234,179,8,0.38), inset 0 0 0 1px rgba(253,246,178,0.22)',
-                        '0 0 8px rgba(234,179,8,0.2), inset 0 0 0 1px rgba(251,211,141,0.16)',
-                      ],
-                    }
-              }
-              transition={{ duration: 2.85, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <div className={venueMono}>{venueCode}</div>
-            </motion.div>
-          </div>
-        </div>
+        <p className={`${joinLeadClass} shrink-0`}>Or go to</p>
+        <p
+          className={`${joinUrlText} mx-auto w-full max-w-full shrink-0 px-[2px]`}
+          aria-label={joinUrl}
+        >
+          {joinUrlForDisplay(joinUrl)}
+        </p>
+        <p className={`${joinLeadClass} shrink-0`}>and enter room code</p>
+        <motion.div
+          className="isolate mx-auto inline-block w-max max-w-full shrink-0 rounded-[clamp(8px,_1.25vmin,_12px)] border-[2px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(4px,_1vmin,_10px)]"
+          animate={
+            reducedMotion
+              ? undefined
+              : {
+                  boxShadow: [
+                    '0 0 8px rgba(234,179,8,0.2), inset 0 0 0 1px rgba(251,211,141,0.16)',
+                    '0 0 18px rgba(234,179,8,0.38), inset 0 0 0 1px rgba(253,246,178,0.22)',
+                    '0 0 8px rgba(234,179,8,0.2), inset 0 0 0 1px rgba(251,211,141,0.16)',
+                  ],
+                }
+          }
+          transition={{ duration: 2.85, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <div className={venueMono}>{venueCode}</div>
+        </motion.div>
       </VegasAttentionPanel>
     </section>
   )
@@ -378,13 +379,12 @@ function WelcomeNewPlayerTipsPanel({
   reducedMotion: boolean
 }) {
   const bulletClass =
-    'min-w-0 flex-1 text-balance leading-snug text-amber-50/94 [text-shadow:0_1px_10px_rgba(0,0,0,_0.78)] text-[clamp(0.78rem,min(2.05vw,_1.65vh),_1.05rem)]'
+    'min-w-0 flex-1 text-balance font-semibold leading-[1.38] text-amber-50/96 [text-shadow:0_2px_14px_rgba(0,0,0,_0.82)] text-[clamp(1rem,min(3.15vw,_2.75vh),_1.52rem)] xl:leading-[1.42] xl:text-[clamp(1.05rem,min(3.35vw,_2.9vh),_1.58rem)]'
 
   const tips = [
-    'Quizz’em pairs Hold’em-style betting with a numeric trivia question — you act from your phone while the host drives the hand for the room.',
-    'Expect two betting waves: first on your hole cards, then again after all five community cards are on the board.',
-    'When answering opens, lock in your number before the timer ends — closest to the correct answer wins the pot among players still in the hand.',
-    'Folding is a real out: you drop from that showdown and cannot win the trivia pot on that hand.',
+    'Bet from your phone—host runs the deals for everyone.',
+    'Two bet rounds: hole cards, then again after the five board cards.',
+    "Enter your number before time runs out—closest wins the pot. Fold and you're out for that hand.",
   ] as const
 
   return (
@@ -392,14 +392,15 @@ function WelcomeNewPlayerTipsPanel({
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        className="h-full min-h-0 min-w-0 w-full flex-1 overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90"
+        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center"
+        className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90"
       >
-        <div className="relative z-[1] flex h-full min-h-0 flex-col gap-y-[clamp(8px,min(1.1vmin,_12px),_14px)] px-[clamp(10px,_1.55vmin,_18px)] py-[clamp(10px,_1.55vmin,_18px)]">
+        <div className="relative z-[1] flex h-full min-h-0 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] px-[clamp(12px,_1.75vmin,_22px)] py-[clamp(12px,_1.65vmin,_22px)] xl:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
           <p className={`${hintsTitleClass} shrink-0 text-center`}>How to play</p>
-          <ul className="m-0 flex min-h-0 list-none flex-col justify-center gap-y-[clamp(7px,min(1vmin,_11px),_12px)] p-0">
+          <ul className="m-0 flex min-h-0 list-none flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 xl:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
             {tips.map((t) => (
-              <li key={t} className="flex items-start gap-x-[clamp(6px,_0.9vmin,_10px)]">
-                <span className="mt-[0.4em] shrink-0 text-[0.65em] font-bold leading-none text-emerald-300/90" aria-hidden>
+              <li key={t} className="flex items-start gap-x-[clamp(8px,_1.1vmin,_12px)]">
+                <span className="mt-[0.42em] shrink-0 text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
                   ●
                 </span>
                 <span className={bulletClass}>{t}</span>
@@ -448,7 +449,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'min-w-0 font-black uppercase tracking-[0.22em] text-amber-50/98 break-words text-balance whitespace-normal text-[clamp(1.05rem,min(3.95vw,_3vh),_2.5rem)] [text-shadow:0_0_32px_rgba(251,191,36,0.45),0_0_72px_rgba(239,68,68,0.14),0_2px_4px_rgba(0,0,0,_0.95)]'
 
   const hintsTitleClass =
-    'min-w-0 font-black uppercase tracking-[0.17em] text-amber-50/97 break-words text-balance whitespace-normal text-[clamp(0.92rem,min(2.72vw,_2.05vh),_1.38rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.4),0_2px_6px_rgba(0,0,0,_0.9)]'
+    'min-w-0 font-black uppercase tracking-[0.17em] text-amber-50/97 break-words text-balance whitespace-normal text-[clamp(1.12rem,min(3.85vw,_3.1vh),_1.92rem)] [text-shadow:0_0_24px_rgba(251,191,36,0.45),0_2px_8px_rgba(0,0,0,_0.92)]'
 
   /** Credit under the wordmark — readable title case, subtler than headline chrome. */
   const taglineCredit =
@@ -460,9 +461,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const venueMono =
     'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-[clamp(1.45rem,min(7.5vw,min(8.5vh,_3.2rem)),_4.25rem)] uppercase text-transparent bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 bg-clip-text [-webkit-background-clip:text] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,.9))]'
 
-  /** Join card URL — Orbitron matches display chrome; avoids cold system monospace. */
+  /** Join card URL — Orbitron; break-all so long hosts wrap inside the middle column. */
   const joinUrlText =
-    'hyphens-none break-words text-center font-orbitron font-black leading-snug tracking-[0.05em] text-amber-50 text-[clamp(0.92rem,min(2.65vw,_2.95vh),_2.2rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.35vw,_2.68vh),_1.95rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
+    'hyphens-none break-all text-center font-orbitron font-black leading-[1.35] tracking-[0.04em] text-amber-50 text-[clamp(0.92rem,min(2.65vw,_2.95vh),_2.2rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.35vw,_2.68vh),_1.95rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
 
   /** Tighter attendance strip on landscape 1080p-class TVs (≥1024 wide, ≤1080 tall); skips narrow/portrait. */
   const statTile1080 =
