@@ -294,67 +294,67 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           aria-hidden
           className={`pointer-events-none absolute inset-0 mix-blend-overlay ${reducedMotion ? 'bg-white/[0.03]' : 'motion-safe:animate-vegas-twinkle-field bg-white/[0.055]'}`}
         />
-        {/* Cinema vignette — lighter on the playable field so felt reads */}
+        {/* Cinema vignette — leave center open so felt reads */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 82% 68% at 50% 44%, transparent 38%, rgba(0, 0, 0, 0.42) 72%, rgba(0, 0, 0, 0.82) 100%)',
+              'radial-gradient(ellipse 84% 70% at 50% 44%, transparent 44%, rgba(0, 0, 0, 0.38) 72%, rgba(0, 0, 0, 0.78) 100%)',
           }}
         />
         {/* Felt texture AFTER vignette (otherwise grain/rail disappears) */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.26] mix-blend-overlay md:opacity-[0.34]"
+          className="pointer-events-none absolute inset-0 opacity-[0.52] mix-blend-soft-light md:opacity-[0.62]"
           style={{
             backgroundImage:
-              'radial-gradient(circle at 50% 50%, rgba(24, 106, 82, 0.92) 1.1px, transparent 1.65px)',
-            backgroundSize: '5px 5px',
+              'radial-gradient(circle at 40% 35%, rgba(214, 245, 225, 0.55) 1.4px, transparent 2.1px), radial-gradient(circle at 50% 50%, rgba(15, 78, 58, 0.55) 1.1px, transparent 1.75px)',
+            backgroundSize: '6px 6px, 5px 5px',
           }}
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.42] mix-blend-soft-light md:opacity-[0.5]"
+          className="pointer-events-none absolute inset-0 opacity-[0.72] mix-blend-soft-light md:opacity-[0.82]"
           style={{
             backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(
-              "<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch' result='n'/><feColorMatrix type='saturate' values='0' in='n'/></filter><rect width='100%' height='100%' filter='url(#f)' fill='%23033d30'/></svg>"
+              "<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='5' stitchTiles='stitch' result='n'/><feColorMatrix type='saturate' values='0' in='n'/></filter><rect width='100%' height='100%' filter='url(#f)' fill='%23042f28'/></svg>"
             )}")`,
-            backgroundSize: 'min(148px, 22vmin) min(148px, 22vmin)',
+            backgroundSize: 'min(120px, 18vmin) min(120px, 18vmin)',
           }}
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.48] mix-blend-overlay md:opacity-[0.56]"
+          className="pointer-events-none absolute inset-0 opacity-[0.62] mix-blend-overlay md:opacity-[0.72]"
           style={{
             backgroundImage: `
               repeating-linear-gradient(45deg,
                 transparent 0px,
+                transparent 24px,
+                rgba(253,246,226,0.16) 25px,
+                rgba(253,246,226,0.16) 27px,
                 transparent 28px,
-                rgba(253,246,226,0.09) 29px,
-                rgba(253,246,226,0.09) 30px,
-                transparent 31px,
-                transparent 68px),
+                transparent 60px),
               repeating-linear-gradient(-45deg,
                 transparent 0px,
+                transparent 24px,
+                rgba(3, 44, 36, 0.38) 25px,
+                rgba(3, 44, 36, 0.38) 27px,
                 transparent 28px,
-                rgba(4,52,41,0.22) 29px,
-                rgba(4,52,41,0.22) 30px,
-                transparent 31px,
-                transparent 68px),
-              radial-gradient(ellipse 90% 78% at 50% 40%,rgba(224,246,229,0.18)_0%,transparent 55%),
-              linear-gradient(108deg,rgba(255,255,255,0.14)_0%,transparent 36%,transparent 64%,rgba(0,0,0,0.12)_100%)
+                transparent 60px),
+              radial-gradient(ellipse 92% 80% at 50% 40%, rgba(224, 246, 229, 0.28) 0%, transparent 58%),
+              linear-gradient(108deg, rgba(255, 255, 255, 0.2) 0%, transparent 34%, transparent 66%, rgba(0, 0, 0, 0.14) 100%)
             `,
           }}
         />
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-[0.082] md:opacity-[0.11]"
+          className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-[0.14] md:opacity-[0.18]"
           style={{
             backgroundImage:
-              'repeating-linear-gradient(173deg,rgba(255,255,255,0)_0px,rgba(255,255,255,0)_6px,rgba(255,255,255,.08)_7px,rgba(255,255,255,.08)_8px,rgba(255,255,255,0)_9px,rgba(255,255,255,0)_16px)',
+              'repeating-linear-gradient(173deg,rgba(255,255,255,0)_0px,rgba(255,255,255,0)_5px,rgba(255,255,255,.14)_6px,rgba(255,255,255,.14)_8px,rgba(255,255,255,0)_9px,rgba(255,255,255,0)_15px)',
             backgroundSize: '100% 100%',
           }}
-          animate={reducedMotion ? undefined : { opacity: [0.07, 0.14, 0.075] }}
+          animate={reducedMotion ? undefined : { opacity: [0.12, 0.26, 0.13] }}
           transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
@@ -392,7 +392,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
           <div
-            className="h-[clamp(32px,_7vmin,_82px)] w-auto max-w-[min(885px,_92vw)] shrink-0 drop-shadow-[0_0_40px_rgba(251,191,36,0.18)] [@media(max-height:720px)]:max-h-[9vh]"
+            className="relative w-auto max-w-[96vw] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))]"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
