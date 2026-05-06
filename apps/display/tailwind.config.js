@@ -7,6 +7,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        orbitron: ['Orbitron', 'ui-sans-serif', 'sans-serif'],
+      },
       colors: {
         casino: {
           dark: '#0a0a0a',

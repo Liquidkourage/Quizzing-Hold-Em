@@ -211,15 +211,15 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'min-w-0 break-words text-balance font-semibold text-white/72 text-[clamp(1.05rem,min(2.72vw,_2.4vh),_1.92rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.38vw,_2.05vh),_1.65rem)]'
 
   const stepCircleClasses =
-    'flex shrink-0 items-center justify-center rounded-lg border-2 border-amber-400/55 bg-emerald-500 font-black text-emerald-950 shadow-[0_0_22px_rgba(234,179,8,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] ring-2 ring-yellow-600/35 h-[clamp(2.28rem,_5.35vw,_3.92rem)] min-w-[clamp(2.28rem,_5.35vw,_3.92rem)] text-[clamp(0.98rem,_2.75vw,_1.52rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:h-[clamp(2.42rem,_5.55vw,_4.08rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:min-w-[clamp(2.42rem,_5.55vw,_4.08rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.02rem,_2.88vw,_1.6rem)]'
+    'flex shrink-0 items-center justify-center rounded-lg border-2 border-amber-400/55 bg-emerald-500 font-black text-emerald-950 shadow-[0_0_22px_rgba(234,179,8,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] ring-2 ring-yellow-600/35 h-[clamp(2.28rem,_5.35vw,_3.92rem)] min-w-[clamp(2.28rem,_5.35vw,_3.92rem)] text-[clamp(0.98rem,_2.75vw,_1.52rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:h-[clamp(2.72rem,_6.05vw,_4.92rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:min-w-[clamp(2.72rem,_6.05vw,_4.92rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.1rem,_3.05vw,_1.88rem)]'
 
   /** Rules column — compact so three steps (+ optional scrollbar) avoid clipping the hero row */
   const stepLine =
-    'min-w-0 break-words hyphens-auto text-[clamp(0.98rem,min(2.35vw,_2.1vh),_1.82rem)] font-bold leading-snug text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.05rem,min(2.62vw,_2.38vh),_2.1rem)]'
+    'min-w-0 break-words hyphens-auto text-[clamp(0.98rem,min(2.35vw,_2.1vh),_1.82rem)] font-bold leading-snug text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.1rem,min(2.95vw,_2.72vh),_2.92rem)]'
 
   /** “How to join” heading — keep below QR/join ribbon scale so the column packs */
   const stepsHeading =
-    'min-w-0 break-words text-balance font-black uppercase tracking-[0.19em] text-amber-50/96 text-[clamp(1.05rem,min(2.92vw,_2.6vh),_1.92rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_3px_18px_rgba(0,0,0,.55)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.14rem,min(3.12vw,_2.85vh),_2.18rem)]'
+    'min-w-0 break-words text-balance font-black uppercase tracking-[0.19em] text-amber-50/96 text-[clamp(1.05rem,min(2.92vw,_2.6vh),_1.92rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_3px_18px_rgba(0,0,0,.55)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.22rem,min(3.45vw,_3.12vh),_3.18rem)]'
 
   const footnote =
     'font-semibold leading-snug text-emerald-100/88 text-[clamp(0.92rem,min(2.72vw,_2.35vh),_2.02rem)] [text-shadow:0_2px_12px_rgba(0,0,0,.55)]'
@@ -230,11 +230,11 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
   /** Venue code repeated in rules — bounded to step line scale so column height doesn’t blow out. */
   const venueCodeInline =
-    'rounded bg-yellow-400/28 px-[0.3em] py-[0.05em] font-mono font-bold text-yellow-200 text-[clamp(1rem,_min(2.95vw,_3.75vh),_1.82rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.06rem,_min(3.1vw,_3.92vh),_1.96rem)]'
+    'rounded bg-yellow-400/28 px-[0.3em] py-[0.05em] font-mono font-bold text-yellow-200 text-[clamp(1rem,_min(2.95vw,_3.75vh),_1.82rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.14rem,_min(3.35vw,_4.15vh),_2.42rem)]'
 
-  /** Join card URL line — marquee-bright neon for TV distance */
+  /** Join card URL — Orbitron matches display chrome; avoids cold system monospace. */
   const joinUrlText =
-    'break-words text-center font-mono font-black leading-snug tracking-tight text-amber-50 text-[clamp(1.12rem,min(3.28vw,_3.75vh),_2.68rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(1.02rem,min(2.82vw,_3.12vh),_2.32rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
+    'hyphens-none break-words text-center font-orbitron font-black leading-snug tracking-[0.05em] text-amber-50 text-[clamp(1.06rem,min(3.08vw,_3.55vh),_2.72rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.98rem,min(2.68vw,_3.05vh),_2.28rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
 
   /** Tighter attendance strip on landscape 1080p-class TVs (≥1024 wide, ≤1080 tall); skips narrow/portrait. */
   const statTile1080 =
@@ -434,7 +434,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 </span>
                 {qrOk ? (
                   <div className="flex min-h-0 min-w-0 w-full flex-1 justify-center px-px">
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(6px,min(1.2vmin,_12px),_12px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] xl:max-h-[min(48dvh,min(560px,_50vw))]">
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(6px,min(1.2vmin,_12px),_12px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] xl:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-[min(61dvh,min(700px,min(66dvh,_62vmin)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-[min(100%,min(58vw,min(700px,_66dvh)))]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
@@ -494,20 +494,20 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
             </section>
 
             <div className="flex min-h-0 min-w-0 w-full max-w-full flex-col justify-self-center overflow-x-hidden overflow-y-auto rounded-[clamp(12px,_1.6vmin,_18px)] border border-yellow-900/55 bg-black/45 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(8px,_1.2vmin,_14px)] shadow-[inset_0_0_32px_-12px_rgba(251,191,36,0.07)] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] xl:max-w-[min(100%,42rem)] xl:justify-self-start xl:rounded-none xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:pr-0.5 xl:shadow-none [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25">
-              <h2 id="join-steps-title" className={`${stepsHeading} mb-[clamp(3px,_0.65vmin,_7px)] text-left leading-tight`}>
+              <h2 id="join-steps-title" className={`${stepsHeading} mb-[clamp(3px,_0.65vmin,_7px)] [@media(min-width:2200px)_and_(min-height:1000px)]:mb-[clamp(8px,min(1.1vmin,_12px),_14px)] text-left leading-tight`}>
                 How to join
               </h2>
               <ol
-                className="grid shrink-0 gap-[clamp(4px,_1.05vmin,_9px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(6px,min(1.15vmin,_10px),_11px)]"
+                className="grid shrink-0 gap-[clamp(4px,_1.05vmin,_9px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(8px,min(1.38vmin,_12px),_15px)]"
                 aria-labelledby="join-steps-title"
               >
-                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(10px,_1.75vw,_18px)]">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(11px,min(2vw,_22px),_24px)]">
                   <span className={stepCircleClasses}>1</span>
                   <span className={`${stepLine} pt-[0.06em]`}>
                     Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL on this screen</strong>, or scan the QR.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(10px,_1.75vw,_18px)]">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(11px,min(2vw,_22px),_24px)]">
                   <span className={stepCircleClasses}>2</span>
                   <span className={`${stepLine} pt-[0.06em]`}>
                     Enter <strong className="text-yellow-300">venue code</strong>{' '}
@@ -516,7 +516,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                     <strong className="text-emerald-300">Join Game</strong>.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(10px,_1.75vw,_18px)]">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(11px,min(2vw,_22px),_24px)]">
                   <span className={stepCircleClasses}>3</span>
                   <span className={`${stepLine} pt-[0.06em]`}>
                     Keep <strong className="text-emerald-300">Lobby</strong> on unless your host assigns a table number.
