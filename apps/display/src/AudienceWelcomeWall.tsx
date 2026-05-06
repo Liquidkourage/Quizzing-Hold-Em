@@ -15,7 +15,7 @@ function playerJoinHref(): string {
 
 /** Request a larger QR raster for sharp scaling; margin=5 keeps a valid quiet zone with less empty border than the API default. */
 function qrImgSrc(joinUrl: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=5&data=${encodeURIComponent(joinUrl)}`
+  return `https://api.qrserver.com/v1/create-qr-code/?size=640x640&margin=5&data=${encodeURIComponent(joinUrl)}`
 }
 
 /** Gold rail strokes at corners — long “┌” segments, not bordered squares (avoids checkbox look). */
@@ -77,7 +77,7 @@ function VegasPulseDivider({ active }: { active: boolean }) {
   return (
     <div
       aria-hidden
-      className="relative mt-[clamp(4px,_0.65vmin,_10px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:w-[min(92%,min(38vw,400px))] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:shadow-[0_0_18px_rgba(251,191,36,0.22),inset_0_1px_0_rgba(255,255,255,0.12)]"
+      className="relative mt-[clamp(4px,_0.65vmin,_10px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:w-[min(92%,min(38vw,400px))] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:shadow-[0_0_18px_rgba(251,191,36,0.22),inset_0_1px_0_rgba(255,255,255,0.12)]"
     >
       <div
         className="absolute inset-0 opacity-95"
@@ -205,37 +205,37 @@ function WelcomeQrColumn({
   const sectionClass =
     mode === 'wallLeft'
       ? 'relative flex h-full min-h-0 min-w-0 w-full max-w-full shrink-0 overflow-visible isolate z-50 flex-col'
-      : 'relative h-full min-h-0 min-w-0 w-full max-w-full justify-self-center overflow-visible xl:justify-self-end [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:isolate [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:z-50 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:min-h-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex-col'
+      : 'relative h-full min-h-0 min-w-0 w-full max-w-full justify-self-center overflow-visible xl:justify-self-end [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:isolate [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:z-50 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:min-h-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex-col'
 
   const panelInnerFlex =
     mode === 'wallLeft'
       ? 'relative z-[5] flex h-full min-h-0 min-w-0 flex-col justify-between'
-      : 'relative z-[5] flex h-full min-h-0 min-w-0 flex-col [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:justify-between'
+      : 'relative z-[5] flex h-full min-h-0 min-w-0 flex-col [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:justify-between'
 
   const panelClass =
     mode === 'wallLeft'
       ? 'h-full min-h-0 min-w-0 w-full max-w-full flex-1 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(10px,min(2.1vmin,_24px),_24px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55'
-      : `h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex-1 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:h-full [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:min-h-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:overflow-hidden [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:p-[clamp(12px,min(2vmin,_22px),_22px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(12px,_1.65vmin,_20px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:-mt-[min(13dvh,156px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[calc(100%+min(13dvh,156px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!min-h-[calc(100%+min(13dvh,156px))]`
+      : `h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:h-full [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:min-h-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:overflow-hidden [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:p-[clamp(12px,min(2vmin,_22px),_22px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(12px,_1.65vmin,_20px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:-mt-[min(13dvh,156px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[calc(100%+min(13dvh,156px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!min-h-[calc(100%+min(13dvh,156px))]`
 
   const aimClass =
     mode === 'wallLeft'
       ? `${sectionRibbon} mb-0 shrink-0 text-center leading-snug`
-      : `${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mb-[clamp(14px,_1.75vmin,_24px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mb-0`
+      : `${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mb-[clamp(14px,_1.75vmin,_24px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mb-0`
 
   const midClass =
     mode === 'wallLeft'
       ? 'relative flex min-h-0 w-full flex-1 flex-col items-center justify-center py-[clamp(8px,_1.2vmin,_16px)]'
-      : 'relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(24dvh,240px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex-1 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:min-h-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:justify-center [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:gap-y-[clamp(14px,_1.85vmin,_24px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:py-[clamp(10px,_1.35vmin,_18px)]'
+      : 'relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(24dvh,240px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:min-h-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:justify-center [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:gap-y-[clamp(14px,_1.85vmin,_24px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:py-[clamp(10px,_1.35vmin,_18px)]'
 
   const whiteClass =
     mode === 'wallLeft'
-      ? 'box-border flex aspect-square min-h-0 min-w-0 h-full max-h-full w-full max-w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]'
-      : 'box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!w-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!relative [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!mx-auto [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!shrink-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!h-[min(31vmin,36dvh,318px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!w-[min(31vmin,36dvh,318px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]'
+      ? 'box-border flex aspect-square min-h-0 min-w-0 h-auto w-full max-h-[min(100%,min(76dvh,48vw))] max-w-[min(100%,min(76dvh,48vw))] flex-col items-center justify-center self-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]'
+      : 'box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!w-[min(36vmin,41dvh,378px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!relative [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!mx-auto [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!shrink-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!h-[min(31vmin,36dvh,318px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!w-[min(31vmin,36dvh,318px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!max-h-none [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!max-w-none [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]'
 
   const opensClass =
     mode === 'wallLeft'
       ? `${sectionRibbon} mt-0 shrink-0 text-center opacity-90`
-      : `${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mt-0`
+      : `${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mt-0`
 
   return (
     <section aria-label="Scan QR to open player app" className={sectionClass}>
@@ -252,8 +252,8 @@ function WelcomeQrColumn({
               <img
                 src={qrImgSrc(joinUrl)}
                 alt=""
-                width={520}
-                height={520}
+                width={640}
+                height={640}
                 className="block h-auto min-h-0 min-w-0 max-h-[calc(100%-2px)] w-auto max-w-[calc(100%-2px)] rounded-sm object-contain [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-full"
                 referrerPolicy="no-referrer"
                 onError={() => setQrOk(false)}
@@ -278,13 +278,11 @@ function WelcomeQrColumn({
  * QR sizing: base max-h/max-w can sort after @media(...) in Tailwind output and erase short-viewport
  * tuning. Taller layouts use `min-width:1280px` + `min-height:1081px` instead of bare `xl` for caps.
  *
- * 1080p wall constraint: root grid row 2 is `minmax(0, 1fr)` (flexible middle). Intrinsic height of
- * the hero must fit that track; taller content overflows visibly. A separate attendance row used to sit
- * in a higher z-index layer (`z-18`) than the hero (`z-10`), so overflow could read as pills “covering”
- * the QR. On Full HD landscape wall we tuck attendance under the join card and drop the extra grid row.
+ * 1080p-class wall uses `min-width:1280px` + `max-height:1200px` + landscape (not bare `max-height:1080px`)
+ * so browser chrome / `dvh` / fractional scaling cannot miss the breakpoint by a few pixels.
  *
- * Landscape Full HD XL (≥1280 wide, ≤1080 tall): two-column hero — QR uses the full left track height;
- * join + “How to join” share the right track; attendance pills sit in a tight row under the join card only.
+ * On that breakpoint, two-column hero — QR fills the left track; join + steps on the right; stats tuck
+ * under the join card (same max width as the URL/code card).
  */
 type AttendanceSectionProps = {
   syncingCounts: boolean
@@ -324,10 +322,10 @@ function AttendanceSection({
   ]
 
   const stripSectionClass =
-    'relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(18px,min(2.85vw,_40px),_48px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(12px,min(2.4vw,_48px),_56px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mt-[clamp(10px,_1.2vmin,_18px)] xl:grid-cols-3'
+    'relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(18px,min(2.85vw,_40px),_48px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(12px,min(2.4vw,_48px),_56px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mt-[clamp(10px,_1.2vmin,_18px)] xl:grid-cols-3'
 
   const underJoinSectionClass =
-    'relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-3 gap-x-[clamp(4px,min(0.95vw,_10px),_12px)] gap-y-[clamp(4px,min(0.75vmin,_7px),_8px)] w-full max-w-[min(100%,38rem)] justify-self-center'
+    'relative z-[18] isolate grid min-h-0 min-w-0 w-full shrink-0 grid-cols-3 gap-x-[clamp(3px,min(0.85vw,_8px),_10px)] gap-y-[clamp(3px,min(0.65vmin,_6px),_7px)] max-w-[min(100%,38rem)] mx-auto'
 
   const tileCompact =
     'min-h-0 min-w-0 justify-self-stretch rounded-[clamp(8px,min(1.25vmin,_14px),_14px)] border-2 px-[clamp(4px,min(1vmin,_10px),_10px)] py-[clamp(3px,min(0.85vmin,_9px),_10px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto max-w-none'
@@ -366,7 +364,7 @@ function AttendanceSection({
           <div
             className={
               layout === 'underJoin'
-                ? `${statRibbon} [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:text-[clamp(0.78rem,min(2.05vw,_1.55vh),_1.35rem)]`
+                ? `${statRibbon} [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:text-[clamp(0.78rem,min(2.05vw,_1.55vh),_1.35rem)]`
                 : statRibbon
             }
           >
@@ -375,7 +373,7 @@ function AttendanceSection({
           <div
             className={`${statDigitBase} ${accent ? `text-yellow-200 ${statDigitAccentShadow}` : 'text-white'} ${
               layout === 'underJoin'
-                ? '[@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:text-[clamp(1.15rem,min(5.25vw,min(5.5vmin,_5.4dvh)),_3.25rem)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:py-[clamp(2px,min(0.5vmin,_5px),_6px)]'
+                ? '[@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:text-[clamp(1.15rem,min(5.25vw,min(5.5vmin,_5.4dvh)),_3.25rem)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:py-[clamp(2px,min(0.5vmin,_5px),_6px)]'
                 : ''
             }`}
           >
@@ -384,7 +382,7 @@ function AttendanceSection({
           <div
             className={
               layout === 'underJoin'
-                ? `${statHint} [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:text-[clamp(0.72rem,min(2.05vw,_1.42vh),_1.42rem)]`
+                ? `${statHint} [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:text-[clamp(0.72rem,min(2.05vw,_1.42vh),_1.42rem)]`
                 : statHint
             }
           >
@@ -418,23 +416,23 @@ function WelcomeJoinCard({
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:-mt-[min(8.5dvh,108px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[calc(100%+min(8.5dvh,108px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!min-h-[calc(100%+min(8.5dvh,108px))] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex-1 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:h-full [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:min-h-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:overflow-hidden"
+        className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:-mt-[min(8.5dvh,108px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[calc(100%+min(8.5dvh,108px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!min-h-[calc(100%+min(8.5dvh,108px))] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:h-full [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:min-h-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:overflow-hidden"
       >
-        <div className="relative z-[1] px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:pb-[clamp(8px,_1.05vmin,_12px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:pt-[clamp(10px,_1.35vmin,_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(14px,_1.55vmin,_22px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(12px,_1.85vmin,_22px)]">
+        <div className="relative z-[1] px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:pb-[clamp(8px,_1.05vmin,_12px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:pt-[clamp(10px,_1.35vmin,_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(14px,_1.55vmin,_22px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(12px,_1.85vmin,_22px)]">
           <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
           <p className={joinUrlText}>{joinUrl}</p>
         </div>
         <div
           aria-hidden
-          className="mx-[clamp(8px,_1.5vmin,_18px)] mt-[clamp(6px,_0.85vmin,_12px)] border-t border-dashed border-white/22 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mt-[clamp(12px,_1.35vmin,_20px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mt-[clamp(8px,_1vmin,_14px)]"
+          className="mx-[clamp(8px,_1.5vmin,_18px)] mt-[clamp(6px,_0.85vmin,_12px)] border-t border-dashed border-white/22 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mt-[clamp(12px,_1.35vmin,_20px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mt-[clamp(8px,_1vmin,_14px)]"
         />
-        <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:pb-[clamp(12px,min(1.35vmin,_18px),_20px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:pt-[clamp(8px,_1vmin,_12px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(22px,min(2.65vmin,_34px),_36px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(14px,_1.65vmin,_22px)]">
+        <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:pb-[clamp(12px,min(1.35vmin,_18px),_20px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:pt-[clamp(8px,_1vmin,_12px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(22px,min(2.65vmin,_34px),_36px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(14px,_1.65vmin,_22px)]">
           <p
-            className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mb-[clamp(8px,_1.05vmin,_12px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mb-[clamp(14px,_1.55vmin,_20px)]`}
+            className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mb-[clamp(8px,_1.05vmin,_12px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mb-[clamp(14px,_1.55vmin,_20px)]`}
           >
             Venue / room code
           </p>
-          <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:pb-[clamp(6px,min(0.72vmin,_8px),_10px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(12px,min(1.2vmin,_14px),_16px)]">
+          <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:pb-[clamp(6px,min(0.72vmin,_8px),_10px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(12px,min(1.2vmin,_14px),_16px)]">
             <motion.div
               className="isolate inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
               animate={
@@ -700,7 +698,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto grid min-h-0 min-w-0 h-full max-h-none w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(5px,_0.95vmin,_12px)] max-[height:920px]:gap-y-[clamp(8px,_1.35vmin,_15px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(5px,_0.9vh,_14px)] max-[height:920px]:py-[clamp(6px,_0.85vh,_12px)] [@media(max-height:720px)]:gap-y-1.5 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3 [@media(min-width:1920px)]:px-[clamp(96px,_5vw,_160px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:grid-rows-[auto_minmax(0,1fr)_auto] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:gap-y-[clamp(9px,_1.08vmin,_15px)]"
+        className="relative z-10 mx-auto grid min-h-0 min-w-0 h-full max-h-none w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(5px,_0.95vmin,_12px)] max-[height:920px]:gap-y-[clamp(8px,_1.35vmin,_15px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(5px,_0.9vh,_14px)] max-[height:920px]:py-[clamp(6px,_0.85vh,_12px)] [@media(max-height:720px)]:gap-y-1.5 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3 [@media(min-width:1920px)]:px-[clamp(96px,_5vw,_160px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:grid-rows-[auto_minmax(0,1fr)_auto] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:gap-y-[clamp(9px,_1.08vmin,_15px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:px-[clamp(10px,min(1.55vw,_64px),_80px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -732,7 +730,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
           <div
-            className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))]"
+            className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:[height:min(max(38vh,_168px),min(680px,_58vh))]"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
@@ -747,7 +745,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         </header>
 
         {/* Row 2: stacked (< xl); xl 3-col (taller / non-wall); Full HD landscape wall = QR | (join + stats) + steps */}
-        <div className="relative z-10 min-h-0 min-w-0 overflow-x-clip pb-[clamp(4px,min(0.85vmin,_10px),_11px)] max-[height:920px]:pb-[clamp(6px,min(1.05vmin,_12px),_14px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:pb-[clamp(10px,min(1.15vmin,_16px),_18px)]">
+        <div className="relative z-10 h-full min-h-0 min-w-0 overflow-x-clip pb-[clamp(4px,min(0.85vmin,_10px),_11px)] max-[height:920px]:pb-[clamp(6px,min(1.05vmin,_12px),_14px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:pb-[clamp(10px,min(1.15vmin,_16px),_18px)]">
           <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:hidden">
             <WelcomeQrColumn
               mode="stack"
@@ -777,7 +775,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
             />
           </div>
 
-          <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!hidden">
+          <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!hidden">
             <WelcomeQrColumn
               mode="xl3"
               sectionRibbon={sectionRibbon}
@@ -787,7 +785,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               reducedMotion={Boolean(reducedMotion)}
             />
             <WelcomeJoinCard
-              className="mx-auto h-full min-h-0 w-full max-w-full justify-self-center xl:mx-0 xl:max-w-[min(100%,38rem)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:min-h-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex-col [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:overflow-hidden [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:rounded-[clamp(10px,min(1.6vmin,_20px),_20px)]"
+              className="mx-auto h-full min-h-0 w-full max-w-full justify-self-center xl:mx-0 xl:max-w-[min(100%,38rem)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:min-h-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex-col [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:overflow-hidden [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:rounded-[clamp(10px,min(1.6vmin,_20px),_20px)]"
               venueCode={venueCode}
               joinUrl={joinUrl}
               sectionRibbon={sectionRibbon}
@@ -796,7 +794,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               reducedMotion={Boolean(reducedMotion)}
             />
             <WelcomeHowToJoin
-              className="flex min-h-0 min-w-0 w-full max-w-full flex-col justify-self-center overflow-x-hidden overflow-y-auto rounded-[clamp(12px,_1.6vmin,_18px)] border border-yellow-900/55 bg-black/45 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(8px,_1.2vmin,_14px)] shadow-[inset_0_0_32px_-12px_rgba(251,191,36,0.07)] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] xl:max-w-[min(100%,42rem)] xl:justify-self-start [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:h-full [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:min-h-0 xl:rounded-none xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:pr-0.5 xl:shadow-none [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25"
+              className="flex min-h-0 min-w-0 w-full max-w-full flex-col justify-self-center overflow-x-hidden overflow-y-auto rounded-[clamp(12px,_1.6vmin,_18px)] border border-yellow-900/55 bg-black/45 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(8px,_1.2vmin,_14px)] shadow-[inset_0_0_32px_-12px_rgba(251,191,36,0.07)] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] xl:max-w-[min(100%,42rem)] xl:justify-self-start [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:h-full [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:min-h-0 xl:rounded-none xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:pr-0.5 xl:shadow-none [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25"
               venueCode={venueCode}
               stepsHeading={stepsHeading}
               stepCircleClasses={stepCircleClasses}
@@ -806,7 +804,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
             />
           </div>
 
-          <div className="hidden h-full min-h-0 min-w-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-[clamp(16px,min(2.65vw,_40px),_48px)] gap-y-[clamp(8px,min(1.35vmin,_16px),_18px)] items-stretch">
+          <div className="hidden h-full min-h-0 min-w-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-[clamp(16px,min(2.65vw,_40px),_48px)] gap-y-[clamp(8px,min(1.35vmin,_16px),_18px)] items-stretch">
             <WelcomeQrColumn
               mode="wallLeft"
               sectionRibbon={sectionRibbon}
@@ -816,10 +814,10 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               reducedMotion={Boolean(reducedMotion)}
             />
             <div className="flex min-h-0 min-w-0 flex-col gap-y-[clamp(8px,min(1.15vmin,_14px),_16px)]">
-              <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-x-[clamp(10px,min(2vw,_24px),_28px)] gap-y-[clamp(8px,min(1.35vmin,_16px),_18px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.05vmin,_12px),_14px)]">
-                <div className="flex min-h-0 min-w-0 flex-col [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:justify-between">
+              <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-x-[clamp(10px,min(2vw,_24px),_28px)] gap-y-[clamp(8px,min(1.35vmin,_16px),_18px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.05vmin,_12px),_14px)]">
+                <div className="flex min-h-0 min-w-0 w-full max-w-[min(100%,38rem)] flex-col gap-y-[clamp(8px,min(1vmin,_12px),_14px)] mx-auto [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mx-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:w-full [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:max-w-[min(100%,38rem)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:justify-between">
                   <WelcomeJoinCard
-                    className="mx-auto flex h-full min-h-0 w-full max-w-[min(100%,38rem)] flex-1 flex-col [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mx-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:rounded-[clamp(10px,min(1.6vmin,_20px),_20px)]"
+                    className="mx-auto flex h-full min-h-0 w-full max-w-[min(100%,38rem)] flex-1 flex-col [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mx-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:rounded-[clamp(10px,min(1.6vmin,_20px),_20px)]"
                     venueCode={venueCode}
                     joinUrl={joinUrl}
                     sectionRibbon={sectionRibbon}
@@ -842,7 +840,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   />
                 </div>
                 <WelcomeHowToJoin
-                  className="flex min-h-0 min-w-0 w-full max-w-full flex-col overflow-x-hidden overflow-y-auto rounded-[clamp(12px,_1.6vmin,_18px)] border border-yellow-900/55 bg-black/45 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(8px,_1.2vmin,_14px)] shadow-[inset_0_0_32px_-12px_rgba(251,191,36,0.07)] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:h-full [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:max-w-[min(100%,42rem)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:justify-self-stretch xl:rounded-none xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:pr-0.5 xl:shadow-none [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25"
+                  className="flex min-h-0 min-w-0 w-full max-w-full flex-col overflow-x-hidden overflow-y-auto rounded-[clamp(12px,_1.6vmin,_18px)] border border-yellow-900/55 bg-black/45 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(8px,_1.2vmin,_14px)] shadow-[inset_0_0_32px_-12px_rgba(251,191,36,0.07)] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:h-full [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:max-w-[min(100%,42rem)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:justify-self-stretch xl:rounded-none xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:pr-0.5 xl:shadow-none [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25"
                   venueCode={venueCode}
                   stepsHeading={stepsHeading}
                   stepCircleClasses={stepCircleClasses}
@@ -867,7 +865,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           statTile1080={statTile1080}
           statDigitBase={statDigitBase}
           statDigitAccentShadow={statDigitAccentShadow}
-          className="[@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:hidden"
+          className="[@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:hidden"
         />
 
         <p className={`shrink-0 min-w-0 text-center hyphens-auto break-words px-1 ${footnote}`}>
