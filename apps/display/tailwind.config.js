@@ -70,8 +70,32 @@ export default {
         'card-deal': 'cardDeal 0.6s ease-out',
         'chip-spin': 'chipSpin 0.8s ease-out',
         'jackpot': 'jackpot 0.8s ease-out',
+        /** Display welcome wall — high-stakes Vegas polish */
+        'vegas-twinkle-field': 'vegasTwinkleField 5s ease-in-out infinite',
+        'vegas-shimmer-cards': 'vegasShimmerCards 4.2s ease-in-out infinite',
+        'vegas-gold-drip': 'vegasGoldDrip 3s ease-in-out infinite',
       },
       keyframes: {
+        vegasTwinkleField: {
+          '0%, 100%': { opacity: '0.035' },
+          '50%': { opacity: '0.098' },
+        },
+        /** Soft “moving lights” illusion on bordered panels */
+        vegasShimmerCards: {
+          '0%, 100%': { opacity: '0.55', filter: 'hue-rotate(0deg)' },
+          '33%': { opacity: '0.85', filter: 'hue-rotate(-12deg)' },
+          '66%': { opacity: '0.7', filter: 'hue-rotate(12deg)' },
+        },
+        vegasGoldDrip: {
+          '0%, 100%': {
+            transform: 'scale(1)',
+            filter: 'brightness(1)',
+          },
+          '50%': {
+            transform: 'scale(1.016)',
+            filter: 'brightness(1.12)',
+          },
+        },
         glow: {
           '0%': { 
             boxShadow: '0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor',
