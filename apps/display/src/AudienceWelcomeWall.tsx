@@ -18,33 +18,54 @@ function qrImgSrc(joinUrl: string): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=9&data=${encodeURIComponent(joinUrl)}`
 }
 
-/** Gold L-brackets — evokes felt table rails + Vegas marquees. */
+/** Gold rail strokes at corners — long “┌” segments, not bordered squares (avoids checkbox look). */
 function VegasCornerBrackets() {
-  const hw =
-    'pointer-events-none absolute z-[2] border-amber-200 [box-shadow:0_0_18px_rgba(251,191,36,0.5),0_0_36px_rgba(251,146,120,0.12)]'
-  const sq =
-    'h-[clamp(1.65rem,_3.4vmin,_2.95rem)] w-[clamp(1.65rem,_3.4vmin,_2.95rem)] border-[clamp(2px,_0.45vmin,_4px)]'
-  const inset = 'clamp(10px,_1.95vmin,_16px)'
+  const inset = 'clamp(12px, 2vmin, 20px)'
+  const arm = 'clamp(3.85rem, min(34vw, 26vh), 8.25rem)'
+  const thickness = 'clamp(4px, 0.65vmin, 7px)'
+  const common =
+    'pointer-events-none absolute z-[2] rounded-full shadow-[0_0_20px_rgba(251,211,141,0.55),0_0_44px_rgba(234,179,8,0.2)]'
+
   return (
     <>
       <span
-        className={`${hw} ${sq} rounded-tl-md border-b-0 border-r-0`}
-        style={{ top: inset, left: inset }}
+        className={`${common} bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ top: inset, left: inset, width: arm, height: thickness }}
         aria-hidden
       />
       <span
-        className={`${hw} ${sq} rounded-tr-md border-b-0 border-l-0`}
-        style={{ top: inset, right: inset }}
+        className={`${common} bg-gradient-to-b from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ top: inset, left: inset, width: thickness, height: arm }}
         aria-hidden
       />
       <span
-        className={`${hw} ${sq} rounded-bl-md border-t-0 border-r-0`}
-        style={{ bottom: inset, left: inset }}
+        className={`${common} bg-gradient-to-l from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ top: inset, right: inset, width: arm, height: thickness }}
         aria-hidden
       />
       <span
-        className={`${hw} ${sq} rounded-br-md border-t-0 border-l-0`}
-        style={{ bottom: inset, right: inset }}
+        className={`${common} bg-gradient-to-b from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ top: inset, right: inset, width: thickness, height: arm }}
+        aria-hidden
+      />
+      <span
+        className={`${common} bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ bottom: inset, left: inset, width: arm, height: thickness }}
+        aria-hidden
+      />
+      <span
+        className={`${common} bg-gradient-to-t from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ bottom: inset, left: inset, width: thickness, height: arm }}
+        aria-hidden
+      />
+      <span
+        className={`${common} bg-gradient-to-l from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ bottom: inset, right: inset, width: arm, height: thickness }}
+        aria-hidden
+      />
+      <span
+        className={`${common} bg-gradient-to-t from-amber-200 via-yellow-300 to-amber-700/95`}
+        style={{ bottom: inset, right: inset, width: thickness, height: arm }}
         aria-hidden
       />
     </>
@@ -241,52 +262,6 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           animate={reducedMotion ? undefined : { opacity: [0.1, 0.22, 0.1] }}
           transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
         />
-        {/* Classic casino baize — noise + diamond rail + nap sheen (no flat checkerboard) */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.14] mix-blend-soft-light"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(
-              "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='f' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(#f)' fill='%23023c2f'/></svg>"
-            )}")`,
-            backgroundSize: 'min(220px, 28vmin) min(220px, 28vmin)',
-          }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.38] mix-blend-overlay"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(45deg,
-                transparent 0px,
-                transparent 31px,
-                rgba(253,246,226,0.055) 32px,
-                rgba(253,246,226,0.055) 33px,
-                transparent 34px,
-                transparent 76px),
-              repeating-linear-gradient(-45deg,
-                transparent 0px,
-                transparent 31px,
-                rgba(6,54,43,0.14) 32px,
-                rgba(6,54,43,0.14) 33px,
-                transparent 34px,
-                transparent 76px),
-              radial-gradient(ellipse 85% 70% at 50% 38%,rgba(217,246,212,0.12)_0%,transparent 52%),
-              linear-gradient(112deg,rgba(255,255,255,0.11)_0%,transparent 38%,transparent 62%,rgba(0,0,0,0.14)_100%)
-            `,
-          }}
-        />
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-[0.055] md:opacity-[0.078]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(174deg,rgba(255,255,255,0)_0px,rgba(255,255,255,0)_5px,rgba(255,255,255,.05)_6px,rgba(255,255,255,.05)_7px,rgba(255,255,255,0)_8px,rgba(255,255,255,0)_14px)',
-            backgroundSize: '100% 100%',
-          }}
-          animate={reducedMotion ? undefined : { opacity: [0.042, 0.095, 0.052] }}
-          transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut' }}
-        />
         {/* Red ramp light (subtle stakes) */}
         <div
           className="absolute inset-0 opacity-[0.12]"
@@ -319,12 +294,68 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           aria-hidden
           className={`pointer-events-none absolute inset-0 mix-blend-overlay ${reducedMotion ? 'bg-white/[0.03]' : 'motion-safe:animate-vegas-twinkle-field bg-white/[0.055]'}`}
         />
-        {/* Cinema vignette */}
+        {/* Cinema vignette — lighter on the playable field so felt reads */}
         <div
-          className="absolute inset-0"
+          className="pointer-events-none absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 78% 70% at 50% 45%,transparent 25%,rgba(0,0,0,0.55)_76%,rgba(0,0,0,0.92)_100%)',
+            background:
+              'radial-gradient(ellipse 82% 68% at 50% 44%, transparent 38%, rgba(0, 0, 0, 0.42) 72%, rgba(0, 0, 0, 0.82) 100%)',
           }}
+        />
+        {/* Felt texture AFTER vignette (otherwise grain/rail disappears) */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.26] mix-blend-overlay md:opacity-[0.34]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 50% 50%, rgba(24, 106, 82, 0.92) 1.1px, transparent 1.65px)',
+            backgroundSize: '5px 5px',
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.42] mix-blend-soft-light md:opacity-[0.5]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(
+              "<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch' result='n'/><feColorMatrix type='saturate' values='0' in='n'/></filter><rect width='100%' height='100%' filter='url(#f)' fill='%23033d30'/></svg>"
+            )}")`,
+            backgroundSize: 'min(148px, 22vmin) min(148px, 22vmin)',
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.48] mix-blend-overlay md:opacity-[0.56]"
+          style={{
+            backgroundImage: `
+              repeating-linear-gradient(45deg,
+                transparent 0px,
+                transparent 28px,
+                rgba(253,246,226,0.09) 29px,
+                rgba(253,246,226,0.09) 30px,
+                transparent 31px,
+                transparent 68px),
+              repeating-linear-gradient(-45deg,
+                transparent 0px,
+                transparent 28px,
+                rgba(4,52,41,0.22) 29px,
+                rgba(4,52,41,0.22) 30px,
+                transparent 31px,
+                transparent 68px),
+              radial-gradient(ellipse 90% 78% at 50% 40%,rgba(224,246,229,0.18)_0%,transparent 55%),
+              linear-gradient(108deg,rgba(255,255,255,0.14)_0%,transparent 36%,transparent 64%,rgba(0,0,0,0.12)_100%)
+            `,
+          }}
+        />
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-[0.082] md:opacity-[0.11]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(173deg,rgba(255,255,255,0)_0px,rgba(255,255,255,0)_6px,rgba(255,255,255,.08)_7px,rgba(255,255,255,.08)_8px,rgba(255,255,255,0)_9px,rgba(255,255,255,0)_16px)',
+            backgroundSize: '100% 100%',
+          }}
+          animate={reducedMotion ? undefined : { opacity: [0.07, 0.14, 0.075] }}
+          transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
 
