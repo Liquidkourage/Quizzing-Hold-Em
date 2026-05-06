@@ -247,7 +247,7 @@ function WelcomeQrColumn({
 }
 
 /**
- * Venue join wall: single header; below `xl` stacks QR → join → player count; `xl+` uses two columns (QR | join + count).
+ * Venue join wall: single header; below `xl` stacks QR then a 3-col row (join | players | spacer); `xl+` uses two columns (QR | same 3-col row).
  * Intended for landscape wall displays; portrait host previews are unsupported.
  */
 type AttendanceSectionProps = {
@@ -259,8 +259,8 @@ type AttendanceSectionProps = {
   statTile1080: string
   statDigitBase: string
   statDigitAccentShadow: string
-  /** Full-width centered (default) vs same column width as join card when `xl` uses two columns */
-  layout: 'strip' | 'underJoin'
+  /** Strip (centered solo) | stacked under join (xl legacy) | one third of bottom row grid */
+  layout: 'strip' | 'underJoin' | 'gridThird'
   className?: string
 }
 
@@ -283,19 +283,27 @@ function AttendanceSection({
   const underJoinWrapClass =
     'relative z-[18] isolate w-full max-w-[min(100%,38rem)] mx-auto min-h-0 shrink-0'
 
+  const gridThirdWrapClass = 'relative z-[18] isolate flex h-full min-h-0 min-w-0 w-full flex-1 flex-col'
+
   const tileShared =
     `${statTile1080} min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(8px,min(1.35vmin,_14px),_14px)] py-[clamp(8px,min(1.25vmin,_14px),_16px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]`
 
   const stripTileClass = `${tileShared} w-full max-w-[min(100%,clamp(260px,38vw,440px))]`
   const underJoinTileClass = `${tileShared} w-full`
+  const gridThirdTileClass = `${tileShared} flex w-full max-w-none min-h-0 flex-1 flex-col justify-center`
+
+  const wrapClass =
+    layout === 'strip' ? stripWrapClass : layout === 'underJoin' ? underJoinWrapClass : gridThirdWrapClass
+  const tileClass =
+    layout === 'strip' ? stripTileClass : layout === 'underJoin' ? underJoinTileClass : gridThirdTileClass
 
   return (
     <section
       aria-label="Players in this venue"
-      className={`${layout === 'strip' ? stripWrapClass : underJoinWrapClass}${className ? ` ${className}` : ''}`}
+      className={`${wrapClass}${className ? ` ${className}` : ''}`}
     >
       <motion.div
-        className={layout === 'strip' ? stripTileClass : underJoinTileClass}
+        className={tileClass}
         animate={
           reducedMotion
             ? undefined
@@ -601,24 +609,34 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 setQrOk={setQrOk}
                 reducedMotion={Boolean(reducedMotion)}
               />
-              <WelcomeJoinCard
-                className="mx-auto min-h-0 w-full max-w-full shrink-0 justify-self-center"
-                venueCode={venueCode}
-                joinUrl={joinUrl}
-                joinUrlText={joinUrlText}
-                venueMono={venueMono}
-                reducedMotion={Boolean(reducedMotion)}
-              />
-              <AttendanceSection
-                layout="strip"
-                syncingCounts={syncingCounts}
-                enrolled={enrolled}
-                reducedMotion={Boolean(reducedMotion)}
-                playerCountLabelClass={playerCountLabelClass}
-                statTile1080={statTile1080}
-                statDigitBase={statDigitBase}
-                statDigitAccentShadow={statDigitAccentShadow}
-              />
+              <div
+                className="grid min-h-0 w-full shrink-0 grid-cols-3 items-stretch gap-x-[clamp(8px,min(1.5vmin,_18px),_22px)] gap-y-[clamp(6px,min(1.05vmin,_12px),_13px)]"
+                aria-label="Join instructions and attendance"
+              >
+                <div className="flex min-h-0 min-w-0 flex-col">
+                  <WelcomeJoinCard
+                    className="flex min-h-0 min-w-0 w-full flex-1 flex-col"
+                    venueCode={venueCode}
+                    joinUrl={joinUrl}
+                    joinUrlText={joinUrlText}
+                    venueMono={venueMono}
+                    reducedMotion={Boolean(reducedMotion)}
+                  />
+                </div>
+                <div className="flex min-h-0 min-w-0 flex-col">
+                  <AttendanceSection
+                    layout="gridThird"
+                    syncingCounts={syncingCounts}
+                    enrolled={enrolled}
+                    reducedMotion={Boolean(reducedMotion)}
+                    playerCountLabelClass={playerCountLabelClass}
+                    statTile1080={statTile1080}
+                    statDigitBase={statDigitBase}
+                    statDigitAccentShadow={statDigitAccentShadow}
+                  />
+                </div>
+                <div className="min-h-8 min-w-0" aria-hidden />
+              </div>
             </div>
 
             <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(10px,min(2vw,_36px),_40px)] gap-y-[clamp(6px,min(1.05vmin,_12px),_14px)] overflow-hidden xl:grid xl:grid-cols-2 xl:items-stretch">
@@ -632,25 +650,30 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   reducedMotion={Boolean(reducedMotion)}
                 />
               </div>
-              <div className="flex min-h-0 flex-col gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
-                <WelcomeJoinCard
-                  className="mx-auto flex h-full min-h-0 w-full max-w-[min(100%,38rem)] flex-1 flex-col justify-self-center"
-                  venueCode={venueCode}
-                  joinUrl={joinUrl}
-                  joinUrlText={joinUrlText}
-                  venueMono={venueMono}
-                  reducedMotion={Boolean(reducedMotion)}
-                />
-                <AttendanceSection
-                  layout="underJoin"
-                  syncingCounts={syncingCounts}
-                  enrolled={enrolled}
-                  reducedMotion={Boolean(reducedMotion)}
-                  playerCountLabelClass={playerCountLabelClass}
-                  statTile1080={statTile1080}
-                  statDigitBase={statDigitBase}
-                  statDigitAccentShadow={statDigitAccentShadow}
-                />
+              <div className="grid min-h-0 min-w-0 h-full grid-cols-3 items-stretch gap-x-[clamp(8px,min(1.65vmin,_20px),_24px)]">
+                <div className="flex min-h-0 min-w-0 flex-col">
+                  <WelcomeJoinCard
+                    className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col"
+                    venueCode={venueCode}
+                    joinUrl={joinUrl}
+                    joinUrlText={joinUrlText}
+                    venueMono={venueMono}
+                    reducedMotion={Boolean(reducedMotion)}
+                  />
+                </div>
+                <div className="flex min-h-0 min-w-0 flex-col">
+                  <AttendanceSection
+                    layout="gridThird"
+                    syncingCounts={syncingCounts}
+                    enrolled={enrolled}
+                    reducedMotion={Boolean(reducedMotion)}
+                    playerCountLabelClass={playerCountLabelClass}
+                    statTile1080={statTile1080}
+                    statDigitBase={statDigitBase}
+                    statDigitAccentShadow={statDigitAccentShadow}
+                  />
+                </div>
+                <div className="min-h-0 min-w-0 shrink-0" aria-hidden />
               </div>
             </div>
           </div>
