@@ -184,8 +184,8 @@ function VegasAttentionPanel({
  *
  * QR sizing: base max-h/max-w can sort after @media(...) in Tailwind output and erase short-viewport
  * tuning. Taller layouts use `min-width:1280px` + `min-height:1081px` instead of bare `xl` for caps.
- * Landscape full HD uses strong `!` caps on max height/width (Tailwind ordering) plus an overflow clip
- * on the flex band between ribbons so the white tile stays inside the gold panel.
+ * Landscape full HD uses `!` dimensions and an absolute-pinned white tile (~378px class) so caps win
+ * reliably; overlap with neighbors may occur — clip experiments were rolled back after host feedback.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -427,28 +427,28 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch">
             <section
               aria-label="Scan QR to open player app"
-              className="relative h-full min-h-0 min-w-0 w-full max-w-full justify-self-center overflow-visible xl:justify-self-end"
+              className="relative h-full min-h-0 min-w-0 w-full max-w-full justify-self-center overflow-visible xl:justify-self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[34]"
             >
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)]"
+                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)]"
               >
                 <span
-                  className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug`}
+                  className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46]`}
                 >
                   Aim camera here
                 </span>
                 {qrOk ? (
-                  <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end overflow-hidden rounded-[clamp(10px,_1.35vmin,_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:justify-center">
-                    {/* Full HD landscape: clip to this band so the QR never paints past the gold panel; keep ! caps so base max-h merge does not shrink the tile silently. */}
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 shrink-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!w-[min(100%,min(36vmin,41dvh,378px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-h-[min(100%,min(36vmin,41dvh,378px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-w-[min(100%,min(36vmin,41dvh,378px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:aspect-square [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]">
+                  <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:min-h-[min(18dvh,180px)]">
+                    {/* Landscape full HD: absolute + ! dimensions beat Tailwind max-h merge ordering. */}
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!w-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
                         width={520}
                         height={520}
-                        className="block h-auto min-h-0 min-w-0 max-h-[calc(100%-2px)] w-auto max-w-[calc(100%-2px)] rounded-sm object-contain [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:object-contain"
+                        className="block h-auto min-h-0 min-w-0 max-h-[calc(100%-2px)] w-auto max-w-[calc(100%-2px)] rounded-sm object-contain [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-full"
                         referrerPolicy="no-referrer"
                         onError={() => setQrOk(false)}
                       />
@@ -459,7 +459,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                     QR blocked — check the centered join card for the URL and code.
                   </div>
                 )}
-                <span className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90`}>
+                <span
+                  className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46]`}
+                >
                   Opens Player
                 </span>
               </VegasAttentionPanel>
