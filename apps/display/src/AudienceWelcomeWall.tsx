@@ -433,15 +433,15 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:-mt-[min(12dvh,140px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[calc(100%+min(12dvh,140px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[calc(100%+min(12dvh,140px))]"
+                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pt-[clamp(12px,_1.65vmin,_20px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:-mt-[min(13dvh,156px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[calc(100%+min(13dvh,156px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[calc(100%+min(13dvh,156px))]"
               >
                 <span
-                  className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46]`}
+                  className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:mb-[clamp(14px,_1.75vmin,_24px)]`}
                 >
                   Aim camera here
                 </span>
                 {qrOk ? (
-                  <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:min-h-[min(22dvh,220px)]">
+                  <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:min-h-[min(24dvh,240px)]">
                     {/* Landscape full HD: absolute + ! dimensions beat Tailwind max-h merge ordering. */}
                     <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!w-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]">
                       <img
@@ -472,20 +472,23 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:-mt-[min(7dvh,92px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[calc(100%+min(7dvh,92px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[calc(100%+min(7dvh,92px))]"
+                className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:-mt-[min(8.5dvh,108px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[calc(100%+min(8.5dvh,108px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[calc(100%+min(8.5dvh,108px))]"
               >
-                <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center">
+                <div className="relative z-[1] px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(14px,_1.55vmin,_22px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pt-[clamp(12px,_1.85vmin,_22px)]">
                   <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
                   <p className={joinUrlText}>{joinUrl}</p>
                 </div>
-                <div aria-hidden className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/22" />
-                <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(18px,min(2.25vmin,_28px),_30px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pt-[clamp(11px,_1.42vmin,_18px)]">
+                <div
+                  aria-hidden
+                  className="mx-[clamp(8px,_1.5vmin,_18px)] mt-[clamp(6px,_0.85vmin,_12px)] border-t border-dashed border-white/22 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:mt-[clamp(12px,_1.35vmin,_20px)]"
+                />
+                <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(22px,min(2.65vmin,_34px),_36px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pt-[clamp(14px,_1.65vmin,_22px)]">
                   <p
-                    className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:mb-[clamp(11px,_1.25vmin,_16px)]`}
+                    className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:mb-[clamp(14px,_1.55vmin,_20px)]`}
                   >
                     Venue / room code
                   </p>
-                  <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(10px,min(1.05vmin,_12px),_14px)]">
+                  <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(12px,min(1.2vmin,_14px),_16px)]">
                     <motion.div
                       className="isolate inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
                       animate={
@@ -544,7 +547,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <section
           aria-label="Attendance"
-          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] xl:grid-cols-3"
+          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(18px,min(2.85vw,_40px),_48px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(12px,min(2.4vw,_48px),_56px)] xl:grid-cols-3"
         >
           {[
             { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
@@ -558,7 +561,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ].map(({ label, hint, v, accent }) => (
             <motion.div
               key={label}
-              className={`min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(5px,min(1.35vmin,_13px),_14px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto ${statTile1080} ${
+              className={`min-h-0 min-w-0 justify-self-center rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(5px,min(1.35vmin,_13px),_14px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto xl:max-w-[min(100%,clamp(260px,30vw,400px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:xl:max-w-[min(100%,clamp(248px,27vw,360px))] ${statTile1080} ${
                 accent
                   ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]'
                   : 'border-white/22 bg-black/62 shadow-[inset_0_0_34px_-12px_rgba(251,191,36,0.1),0_8px_32px_-10px_rgba(0,0,0,0.55)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[inset_0_0_28px_-14px_rgba(251,191,36,0.09),0_6px_24px_-12px_rgba(0,0,0,0.5)]'
