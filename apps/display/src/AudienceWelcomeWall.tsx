@@ -19,7 +19,8 @@ function qrImgSrc(joinUrl: string): string {
 }
 
 /**
- * Venue lobby wall (widescreen-only): full-bleed width; content scales with vw/vmin for bar visibility.
+ * Venue lobby / join wall: stacks below ~1280px width; three-column hero on xl+.
+ * Uses grid `min-w-0`, fluid type, and capped QR height so 720p-class and 4K TVs stay readable.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -32,35 +33,36 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   /** Single literal strings — tailwind JIT must see full arbitrary class sequences.
    *  Prefer vw over vmin for headline sizes so zooming the browser scales more predictably
    *  (vmin balloons when the window is tall and crowded the vertical rhythm). */
+  /** `min-w-0` + wrapping so wide tracking / long words cannot blow past grid tracks */
   const sectionRibbon =
-    'font-black uppercase tracking-[0.2em] text-amber-100/95 text-[clamp(1.45rem,_3.95vw,_2.5rem)] [text-shadow:0_3px_22px_rgba(0,0,0,.5)]'
+    'min-w-0 font-black uppercase tracking-[0.2em] text-amber-100/95 break-words text-balance whitespace-normal text-[clamp(1.05rem,min(3.95vw,_3vh),_2.5rem)] [text-shadow:0_3px_22px_rgba(0,0,0,.5)]'
 
   const taglineBrand =
-    'font-semibold uppercase tracking-[0.16em] text-emerald-200/95 text-[clamp(1.35rem,_3.55vw,_2.2rem)]'
+    'min-w-0 break-words text-balance font-semibold uppercase tracking-[0.16em] text-emerald-200/95 text-[clamp(1rem,min(3.55vw,_2.85vh),_2.2rem)]'
 
   const statRibbon =
-    'font-black uppercase tracking-[0.13em] text-white/82 text-[clamp(1.28rem,_3.35vw,_2.22rem)]'
+    'min-w-0 break-words text-balance font-black uppercase tracking-[0.13em] text-white/82 text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)]'
 
   const statHint =
-    'font-semibold text-white/68 text-[clamp(1.18rem,_2.72vw,_1.92rem)]'
+    'min-w-0 break-words text-balance font-semibold text-white/68 text-[clamp(1.05rem,min(2.72vw,_2.4vh),_1.92rem)]'
 
   const stepCircleClasses =
     'flex shrink-0 items-center justify-center rounded-lg bg-emerald-400 font-black text-emerald-950 shadow-[0_0_20px_rgba(52,211,153,0.32)] h-[clamp(2.28rem,_5.35vw,_3.92rem)] min-w-[clamp(2.28rem,_5.35vw,_3.92rem)] text-[clamp(0.98rem,_2.75vw,_1.52rem)]'
 
   /** Rules column — compact so three steps (+ optional scrollbar) avoid clipping the hero row */
   const stepLine =
-    'text-[clamp(1.03rem,_2.35vw,_1.82rem)] font-bold leading-tight text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]'
+    'min-w-0 break-words hyphens-auto text-[clamp(0.98rem,min(2.35vw,_2.1vh),_1.82rem)] font-bold leading-snug text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]'
 
   /** “How to join” heading — keep below QR/join ribbon scale so the column packs */
   const stepsHeading =
-    'font-black uppercase tracking-[0.19em] text-amber-100/95 text-[clamp(1.12rem,_2.92vw,_1.92rem)] [text-shadow:0_3px_18px_rgba(0,0,0,.48)]'
+    'min-w-0 break-words text-balance font-black uppercase tracking-[0.19em] text-amber-100/95 text-[clamp(1.05rem,min(2.92vw,_2.6vh),_1.92rem)] [text-shadow:0_3px_18px_rgba(0,0,0,.48)]'
 
   const footnote =
-    'font-semibold leading-snug text-emerald-200/93 text-[clamp(1.2rem,_2.72vw,_2.02rem)]'
+    'font-semibold leading-snug text-emerald-200/93 text-[clamp(0.92rem,min(2.72vw,_2.35vh),_2.02rem)]'
 
   /** Room code — vw + capped vh so short codes stay compact in the box without ultra-wide bars. */
   const venueMono =
-    'text-center font-mono font-black leading-none tracking-[0.08em] text-yellow-400 text-[clamp(2.25rem,_min(11vw,_12vh),_5.5rem)]'
+    'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-yellow-400 text-[clamp(1.75rem,min(9vw,min(10vh,_3.75rem)),_5.25rem)]'
 
   /** Venue code repeated in rules — bounded to step line scale so column height doesn’t blow out. */
   const venueCodeInline =
@@ -74,7 +76,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-hidden bg-[#031a17] antialiased text-white selection:bg-yellow-400/35"
+      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#031a17] antialiased text-white selection:bg-yellow-400/35"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/90 via-[#061c24] to-black" />
@@ -82,14 +84,14 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(4px,_0.85vmin,_10px)] px-[clamp(18px,_3.35vw,_96px)] py-[clamp(6px,_1vh,_16px)]"
+        className="relative z-10 mx-auto grid min-h-0 min-w-0 h-full max-h-none w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(4px,_0.85vmin,_10px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(6px,_1vh,_16px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3 [@media(min-width:1920px)]:px-[clamp(96px,_5vw,_160px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
-        <header className="flex w-full max-w-full shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
+        <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
           <div
-            className="h-[clamp(36px,min(7.6vh,82px))] w-auto max-w-[min(885px,_46vw)] shrink-0"
+            className="h-[clamp(32px,_7vmin,_82px)] w-auto max-w-[min(885px,_92vw)] shrink-0 [@media(max-height:720px)]:max-h-[9vh]"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
@@ -99,19 +101,19 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           </p>
         </header>
 
-        {/* Row 2: [QR · join card centered under logo · rules] */}
+        {/* Row 2: [QR · join · rules]; wide 3-column only from xl (~1280px) so 720-class widths stack */}
         <div className="min-h-0 min-w-0">
-          <div className="grid h-full min-h-0 grid-cols-1 gap-x-[clamp(12px,_2.25vw,_40px)] gap-y-[clamp(12px,_1.85vmin,_20px)] lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-stretch">
+          <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(12px,min(1.85vmin,_20px),_22px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch">
             <section
               aria-label="Scan QR to open player app"
-              className={`flex h-full min-h-0 w-full max-w-[min(100%,_min(34vw,_40vh))] flex-col justify-self-center rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,_1.95vmin,_20px)] shadow-[0_0_60px_rgba(34,211,153,0.11)] lg:justify-self-end`}
+              className={`flex h-full min-h-0 min-w-0 w-full max-w-full flex-col justify-self-center xl:justify-self-end rounded-[clamp(12px,_2vmin,_22px)] border-2 border-emerald-400/55 bg-black/65 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[0_0_60px_rgba(34,211,153,0.11)]`}
             >
               <span className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug`}>
                 Aim camera here
               </span>
               {qrOk ? (
-                <div className="flex min-h-0 w-full flex-1 justify-center px-px">
-                  <div className="box-border flex h-full min-h-0 w-full max-w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-white p-[clamp(6px,_1.2vmin,_12px)] shadow-xl">
+                <div className="flex min-h-0 min-w-0 w-full flex-1 justify-center px-px">
+                  <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-white p-[clamp(6px,min(1.2vmin,_12px),_12px)] shadow-xl xl:max-h-[min(48dvh,min(560px,_50vw))]">
                     <img
                       src={qrImgSrc(joinUrl)}
                       alt=""
@@ -135,7 +137,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
             <section
               aria-label="Player URL then venue room code"
-              className="mx-auto w-full min-w-0 max-w-[min(100%,38rem)] justify-self-center rounded-[clamp(10px,_1.6vmin,_20px)] border-[3px] border-emerald-500/45 bg-black/72 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.12)] lg:mx-0"
+              className="mx-auto w-full min-w-0 max-w-full justify-self-center rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-emerald-500/45 bg-black/72 shadow-[inset_0_0_0_1px_rgba(52,211,153,0.12)] xl:mx-0 xl:max-w-[min(100%,38rem)]"
             >
               <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center">
                 <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
@@ -153,7 +155,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               </div>
             </section>
 
-            <div className="flex min-h-0 min-w-0 w-full flex-col justify-self-center overflow-x-hidden overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] lg:max-w-[min(100%,42rem)] lg:justify-self-start lg:pr-0.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25">
+            <div className="flex min-h-0 min-w-0 w-full max-w-full flex-col justify-self-center overflow-x-hidden overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] xl:max-w-[min(100%,42rem)] xl:justify-self-start xl:pr-0.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/25">
               <h2 id="join-steps-title" className={`${stepsHeading} mb-[clamp(3px,_0.65vmin,_7px)] text-left leading-tight`}>
                 How to join
               </h2>
@@ -186,7 +188,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <section
           aria-label="Attendance"
-          className="grid shrink-0 grid-cols-3 gap-[clamp(6px,_1.5vw,_16px)]"
+          className="grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(8px,min(1.5vw,_18px),_20px)] xl:grid-cols-3"
         >
           {[
             { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
@@ -200,16 +202,16 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ].map(({ label, hint, v, accent }) => (
             <div
               key={label}
-              className={`rounded-[clamp(10px,_1.5vmin,_18px)] border-2 px-[clamp(8px,_1.35vmin,_14px)] py-[clamp(8px,_1.65vmin,_16px)] text-center backdrop-blur-sm ${
+              className={`min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(6px,min(1.65vmin,_16px),_16px)] text-center backdrop-blur-sm ${
                 accent ? 'border-yellow-500/50 bg-yellow-950/34' : 'border-white/16 bg-black/56'
               }`}
             >
               <div className={statRibbon}>{label}</div>
               <div
-                className={`py-[clamp(4px,_1.1vmin,_10px)] font-mono tabular-nums tracking-tight ${
+                className={`py-[clamp(4px,min(1.1vmin,_10px),_10px)] font-mono tabular-nums tracking-tight leading-none ${
                   accent
-                    ? 'text-[clamp(2.42rem,_min(11vw,_13.25vh),_6.95rem)] font-black text-yellow-300'
-                    : 'text-[clamp(2.42rem,_min(11vw,_13.25vh),_6.95rem)] font-black text-white'
+                    ? 'text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black text-yellow-300'
+                    : 'text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black text-white'
                 }`}
               >
                 {v}
@@ -219,7 +221,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ))}
         </section>
 
-        <p className={`shrink-0 text-center ${footnote}`}>
+        <p className={`shrink-0 min-w-0 text-center hyphens-auto break-words px-1 ${footnote}`}>
           Digit-card trivia with Hold&apos;em-style wagering — <span className="text-white">host runs the pace</span>. Wall
           shows all tables when they tap <strong className="text-white">Start Game</strong>.
         </p>
