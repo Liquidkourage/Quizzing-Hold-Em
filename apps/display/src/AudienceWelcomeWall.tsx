@@ -187,11 +187,11 @@ function WelcomeQrColumn({
     : 'relative z-[5] flex h-fit min-h-0 min-w-0 w-full flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch'
 
   const panelClass = stack
-    ? `box-border w-fit max-w-full min-h-0 min-w-0 overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(5px,min(1.05vmin,_9px),_11px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(4px,min(0.95vmin,_8px),_10px)]`
-    : `box-border h-fit w-fit max-h-[min(100%,92dvh)] max-w-[min(100%,min(94vw,_52rem))] min-h-0 min-w-0 overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(5px,min(1.05vmin,_9px),_11px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 xl:self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(4px,min(0.95vmin,_8px),_10px)]`
+    ? `box-border w-fit max-w-full min-h-0 min-w-0 overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
+    : `box-border h-fit w-fit max-h-[min(100%,92dvh)] max-w-[min(100%,min(94vw,_52rem))] min-h-0 min-w-0 overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 xl:self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
 
   const aimClass =
-    `${sectionRibbon} shrink-0 w-[calc(100%+6px)] -mx-[3px] max-w-none block text-left leading-[1.05] pb-0 px-0 [text-wrap:balance] xl:mb-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
+    `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pb-0 px-[clamp(10px,min(2vmin,_22px),_28px)] [text-wrap:balance] xl:mb-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
 
   const midClass = stack
     ? 'relative flex min-h-[min(26dvh,220px)] w-full flex-1 flex-col items-center justify-center min-w-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(22dvh,200px)]'
@@ -205,17 +205,17 @@ function WelcomeQrColumn({
     : `${whiteTileBase} aspect-square max-h-[min(100%,min(62dvh,54vw))] max-w-[min(100%,min(62dvh,54vw))] xl:!max-h-[min(min(58dvh,44vw),720px)] xl:!max-w-[min(min(58dvh,44vw),720px)] xl:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:none] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-[min(44vmin,44dvh,420px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-[min(44vmin,44dvh,420px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
 
   const opensClass =
-    `${sectionRibbon} shrink-0 w-[calc(100%+6px)] -mx-[3px] max-w-none block text-right leading-[1.05] pt-0 px-0 opacity-90 [text-wrap:balance] xl:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
+    `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pt-0 px-[clamp(10px,min(2vmin,_22px),_28px)] opacity-90 [text-wrap:balance] xl:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
 
   return (
-    <section aria-label="Scan QR to open player app" className={sectionClass}>
+    <section aria-label="Scan QR code: scan here to play" className={sectionClass}>
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
         innerFlexClassName={panelInnerFlex}
         className={panelClass}
       >
-        <span className={aimClass}>Aim camera here</span>
+        <span className={aimClass}>Scan here</span>
         {qrOk ? (
           <div className={midClass}>
             <div className={whiteClass}>
@@ -235,7 +235,7 @@ function WelcomeQrColumn({
             QR blocked — check the centered join card for the URL and code.
           </div>
         )}
-        <span className={opensClass}>Opens Player</span>
+        <span className={opensClass}>to play</span>
       </VegasAttentionPanel>
     </section>
   )
