@@ -132,7 +132,7 @@ function VegasAttentionPanel({
     innerFlexClassName ??
     'relative z-[5] flex h-full min-h-0 min-w-0 flex-col'
   return (
-    <div className={`relative isolate overflow-visible rounded-[inherit] ${className}`}>
+    <div className={`relative isolate overflow-hidden rounded-[inherit] ${className}`}>
       {showCorners ? <VegasCornerBrackets /> : null}
       {animateShimmer ? (
         <div
@@ -179,30 +179,30 @@ function WelcomeQrColumn({
   const stack = mode === 'stack'
 
   const sectionClass = stack
-    ? 'relative h-auto min-h-0 min-w-0 w-fit max-w-full justify-self-center overflow-visible mx-auto'
-    : 'relative flex h-full min-h-0 w-full flex-1 flex-col items-end justify-center overflow-visible'
+    ? 'relative flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col items-center overflow-hidden justify-self-center'
+    : 'relative flex h-full min-h-0 w-full flex-1 flex-col items-end justify-center overflow-hidden'
 
   const panelInnerFlex = stack
-    ? 'relative z-[5] flex min-h-0 min-w-0 flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch'
-    : 'relative z-[5] flex h-fit min-h-0 min-w-0 w-full flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch'
+    ? 'relative z-[5] flex min-h-0 min-w-0 max-h-full flex-1 flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch overflow-hidden'
+    : 'relative z-[5] flex h-fit min-h-0 min-w-0 max-h-full w-full flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch overflow-hidden'
 
   const panelClass = stack
-    ? `box-border w-fit max-w-full min-h-0 min-w-0 overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
-    : `box-border h-fit w-fit max-h-[min(100%,92dvh)] max-w-[min(100%,min(94vw,_52rem))] min-h-0 min-w-0 overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 xl:self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
+    ? `box-border w-fit max-w-full max-h-full min-h-0 min-w-0 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
+    : `box-border h-fit w-fit max-h-[min(100%,92dvh)] max-w-[min(100%,min(98vw,_58rem))] min-h-0 min-w-0 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 xl:self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
 
   const aimClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pb-0 px-[clamp(10px,min(2vmin,_22px),_28px)] [text-wrap:balance] xl:mb-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
 
   const midClass = stack
-    ? 'relative flex min-h-[min(26dvh,220px)] w-full flex-1 flex-col items-center justify-center min-w-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(22dvh,200px)]'
-    : 'relative flex min-h-[min(20dvh,160px)] w-full flex-1 flex-col items-center justify-center min-w-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(18dvh,140px)] xl:min-h-0 xl:flex-1 xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
+    ? 'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0'
+    : 'relative flex min-h-[min(20dvh,160px)] w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(18dvh,140px)] xl:min-h-0 xl:flex-1 xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
 
   const whiteTileBase =
     'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[3px] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
   const whiteClass = stack
-    ? `${whiteTileBase} max-h-[min(52dvh,min(520px,_62vw))] max-[height:880px]:max-h-[min(46dvh,min(480px,_58vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(54dvh,min(560px,_56vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-[min(42vmin,43dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-[min(42vmin,43dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
-    : `${whiteTileBase} aspect-square max-h-[min(100%,min(62dvh,54vw))] max-w-[min(100%,min(62dvh,54vw))] xl:!max-h-[min(min(58dvh,44vw),720px)] xl:!max-w-[min(min(58dvh,44vw),720px)] xl:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:none] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-[min(44vmin,44dvh,420px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-[min(44vmin,44dvh,420px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+    ? `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(96vw,min(70dvh,680px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(94vw,min(64dvh,620px)))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-w-[min(100%,min(92vw,min(72dvh,720px)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(44vmin,44dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(44vmin,44dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+    : `${whiteTileBase} aspect-square max-h-[min(100%,min(64dvh,58vw))] max-w-[min(100%,min(64dvh,58vw))] xl:!max-h-[min(min(60dvh,52vw),800px)] xl:!max-w-[min(min(60dvh,52vw),800px)] xl:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:none] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-[min(46vmin,46dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-[min(46vmin,46dvh,440px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
 
   const opensClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pt-0 px-[clamp(10px,min(2vmin,_22px),_28px)] opacity-90 [text-wrap:balance] xl:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
@@ -432,7 +432,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-auto overscroll-y-contain bg-[#05030c] antialiased text-white selection:bg-yellow-400/35"
+      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Base felt + velvet house lights */}
@@ -555,7 +555,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto flex min-h-0 h-full max-h-none w-full max-w-none flex-col gap-y-[clamp(5px,_0.95vmin,_12px)] max-[height:920px]:gap-y-[clamp(8px,_1.35vmin,_15px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(5px,_0.9vh,_14px)] max-[height:920px]:py-[clamp(6px,_0.85vh,_12px)] [@media(max-height:720px)]:gap-y-1.5 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3"
+        className="relative z-10 mx-auto flex min-h-0 h-full max-h-full w-full max-w-none flex-col gap-y-[clamp(4px,_0.85vmin,_10px)] max-[height:920px]:gap-y-[clamp(6px,_1.2vmin,_12px)] px-[clamp(8px,_1.65vw,_56px)] py-[clamp(4px,_0.75vh,_12px)] max-[height:920px]:py-[clamp(5px,_0.7vh,_10px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-2 overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -585,11 +585,11 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ))}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(5px,_0.95vmin,_12px)] max-[height:920px]:gap-y-[clamp(8px,_1.35vmin,_15px)]">
+        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(4px,_0.85vmin,_10px)] max-[height:920px]:gap-y-[clamp(6px,_1.2vmin,_12px)] overflow-hidden">
           <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineBrand={taglineBrand} />
 
-          <div className="relative z-10 min-h-0 flex-1 w-full overflow-x-clip pb-[clamp(4px,min(0.85vmin,_10px),_11px)] max-[height:920px]:pb-[clamp(6px,min(1.05vmin,_12px),_14px)]">
-            <div className="flex h-full min-h-0 min-w-0 flex-col gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:hidden">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)]">
+            <div className="flex min-h-0 flex-1 flex-col gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] overflow-hidden xl:hidden">
               <WelcomeQrColumn
                 mode="stack"
                 sectionRibbon={sectionRibbon}
@@ -599,7 +599,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 reducedMotion={Boolean(reducedMotion)}
               />
               <WelcomeJoinCard
-                className="mx-auto h-full min-h-0 w-full max-w-full justify-self-center"
+                className="mx-auto min-h-0 w-full max-w-full shrink-0 justify-self-center"
                 venueCode={venueCode}
                 joinUrl={joinUrl}
                 sectionRibbon={sectionRibbon}
@@ -619,8 +619,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               />
             </div>
 
-            <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(12px,min(2.25vw,_40px),_48px)] gap-y-[clamp(8px,min(1.25vmin,_14px),_16px)] xl:grid xl:grid-cols-2 xl:items-stretch">
-              <div className="flex min-h-0 min-w-0 flex-col xl:h-full">
+            <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(12px,min(2.25vw,_40px),_48px)] gap-y-[clamp(8px,min(1.25vmin,_14px),_16px)] overflow-hidden xl:grid xl:grid-cols-2 xl:items-stretch">
+              <div className="flex min-h-0 min-w-0 flex-col overflow-hidden xl:h-full">
                 <WelcomeQrColumn
                   mode="wide"
                   sectionRibbon={sectionRibbon}
