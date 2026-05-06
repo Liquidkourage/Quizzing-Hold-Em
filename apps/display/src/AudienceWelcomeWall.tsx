@@ -381,20 +381,21 @@ function WelcomeNewPlayerTipsPanel({
     'min-w-0 flex-1 text-balance leading-snug text-amber-50/94 [text-shadow:0_1px_10px_rgba(0,0,0,_0.78)] text-[clamp(0.78rem,min(2.05vw,_1.65vh),_1.05rem)]'
 
   const tips = [
-    'Scan the QR or open the player link and enter the room code.',
-    'Stay on your phone in the lobby until the host starts a round.',
-    'This screen shows the room; questions and taps happen on your device.',
+    'Quizz’em pairs Hold’em-style betting with a numeric trivia question — you act from your phone while the host drives the hand for the room.',
+    'Expect two betting waves: first on your hole cards, then again after all five community cards are on the board.',
+    'When answering opens, lock in your number before the timer ends — closest to the correct answer wins the pot among players still in the hand.',
+    'Folding is a real out: you drop from that showdown and cannot win the trivia pot on that hand.',
   ] as const
 
   return (
-    <section aria-label="Quick tips for new players" className="flex h-full min-h-0 min-w-0 w-full flex-col">
+    <section aria-label="How Quizz'em Hold'em is played" className="flex h-full min-h-0 min-w-0 w-full flex-col">
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
         className="h-full min-h-0 min-w-0 w-full flex-1 overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90"
       >
         <div className="relative z-[1] flex h-full min-h-0 flex-col gap-y-[clamp(8px,min(1.1vmin,_12px),_14px)] px-[clamp(10px,_1.55vmin,_18px)] py-[clamp(10px,_1.55vmin,_18px)]">
-          <p className={`${hintsTitleClass} shrink-0 text-center`}>New here?</p>
+          <p className={`${hintsTitleClass} shrink-0 text-center`}>How to play</p>
           <ul className="m-0 flex min-h-0 list-none flex-col justify-center gap-y-[clamp(7px,min(1vmin,_11px),_12px)] p-0">
             {tips.map((t) => (
               <li key={t} className="flex items-start gap-x-[clamp(6px,_0.9vmin,_10px)]">
