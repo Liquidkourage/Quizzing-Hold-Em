@@ -72,12 +72,12 @@ function VegasCornerBrackets() {
   )
 }
 
-/** Swept marquee light along the divider under the title. */
+/** Swept marquee light along the divider under the title — width stays under the hero on wall TVs so glow does not read across the QR lane. */
 function VegasPulseDivider({ active }: { active: boolean }) {
   return (
     <div
       aria-hidden
-      className="relative mt-[clamp(4px,_0.65vmin,_10px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)]"
+      className="relative mt-[clamp(4px,_0.65vmin,_10px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:w-[min(92%,min(38vw,400px))] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:shadow-[0_0_18px_rgba(251,191,36,0.22),inset_0_1px_0_rgba(255,255,255,0.12)]"
     >
       <div
         className="absolute inset-0 opacity-95"
