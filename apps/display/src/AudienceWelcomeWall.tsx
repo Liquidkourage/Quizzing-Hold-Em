@@ -186,6 +186,7 @@ function VegasAttentionPanel({
  * tuning. Taller layouts use `min-width:1280px` + `min-height:1081px` instead of bare `xl` for caps.
  * Landscape full HD uses `!` dimensions and an absolute-pinned white tile (~378px class) so caps win
  * reliably; overlap with neighbors may occur — clip experiments were rolled back after host feedback.
+ * Full HD TVs: `-mt` + `calc(100%+Δ)` grows the QR gold panel upward so bottom alignment with join column is preserved.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -427,12 +428,12 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch">
             <section
               aria-label="Scan QR to open player app"
-              className="relative h-full min-h-0 min-w-0 w-full max-w-full justify-self-center overflow-visible xl:justify-self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[34] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[min(61dvh,638px)]"
+              className="relative h-full min-h-0 min-w-0 w-full max-w-full justify-self-center overflow-visible xl:justify-self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[34]"
             >
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[min(61dvh,638px)]"
+                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-[clamp(6px,min(1.35vmin,_14px),_14px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:-mt-[min(12dvh,140px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[calc(100%+min(12dvh,140px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[calc(100%+min(12dvh,140px))]"
               >
                 <span
                   className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46]`}
