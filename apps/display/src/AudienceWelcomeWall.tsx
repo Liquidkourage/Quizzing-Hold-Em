@@ -220,7 +220,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Base felt + velvet house lights */}
-        <div className="absolute inset-0 bg-gradient-to-b from-violet-950/80 via-[#061914] to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-950/75 via-[#06483c] to-black" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-purple-950/45" />
         {/* Gold chandeliers — twin pools */}
         <motion.div
@@ -241,8 +241,52 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           animate={reducedMotion ? undefined : { opacity: [0.1, 0.22, 0.1] }}
           transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
         />
-        {/* Felt weave */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:clamp(44px,5.5vmin,72px)_clamp(44px,5.5vmin,72px)] opacity-95" />
+        {/* Classic casino baize — noise + diamond rail + nap sheen (no flat checkerboard) */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.14] mix-blend-soft-light"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(
+              "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='f' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(#f)' fill='%23023c2f'/></svg>"
+            )}")`,
+            backgroundSize: 'min(220px, 28vmin) min(220px, 28vmin)',
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.38] mix-blend-overlay"
+          style={{
+            backgroundImage: `
+              repeating-linear-gradient(45deg,
+                transparent 0px,
+                transparent 31px,
+                rgba(253,246,226,0.055) 32px,
+                rgba(253,246,226,0.055) 33px,
+                transparent 34px,
+                transparent 76px),
+              repeating-linear-gradient(-45deg,
+                transparent 0px,
+                transparent 31px,
+                rgba(6,54,43,0.14) 32px,
+                rgba(6,54,43,0.14) 33px,
+                transparent 34px,
+                transparent 76px),
+              radial-gradient(ellipse 85% 70% at 50% 38%,rgba(217,246,212,0.12)_0%,transparent 52%),
+              linear-gradient(112deg,rgba(255,255,255,0.11)_0%,transparent 38%,transparent 62%,rgba(0,0,0,0.14)_100%)
+            `,
+          }}
+        />
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-[0.055] md:opacity-[0.078]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(174deg,rgba(255,255,255,0)_0px,rgba(255,255,255,0)_5px,rgba(255,255,255,.05)_6px,rgba(255,255,255,.05)_7px,rgba(255,255,255,0)_8px,rgba(255,255,255,0)_14px)',
+            backgroundSize: '100% 100%',
+          }}
+          animate={reducedMotion ? undefined : { opacity: [0.042, 0.095, 0.052] }}
+          transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
         {/* Red ramp light (subtle stakes) */}
         <div
           className="absolute inset-0 opacity-[0.12]"
