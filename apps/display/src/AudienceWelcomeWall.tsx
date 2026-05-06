@@ -406,8 +406,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
           <div
-            className="relative w-auto max-w-[96vw] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))]"
-            style={{ aspectRatio: '1024 / 655' }}
+            className="relative mx-auto shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] [width:calc(min(max(30vh,_128px),min(580px,_54vh))*1024/655+12px)] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))] max-[height:720px]:[width:calc(min(max(26vh,_96px),min(340px,_44vh))*1024/655+12px)] max-w-[min(calc(96vw+14px),100%)]"
           >
             <QuizzEmWordmark layout="fill" />
           </div>
@@ -433,8 +432,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   Aim camera here
                 </span>
                 {qrOk ? (
-                  <div className="flex min-h-0 min-w-0 w-full flex-1 justify-center px-px">
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(6px,min(1.2vmin,_12px),_12px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] xl:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-[min(61dvh,min(700px,min(66dvh,_62vmin)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-[min(100%,min(58vw,min(700px,_66dvh)))]">
+                  <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end">
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] xl:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-[min(74dvh,min(840px,min(78dvh,_74vmin)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-[min(100%,min(66vw,min(800px,_78dvh)))]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
@@ -468,9 +467,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   <p className={joinUrlText}>{joinUrl}</p>
                 </div>
                 <div aria-hidden className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/22" />
-                <div className="flex flex-col items-center overflow-hidden px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(9px,min(1.35vmin,_16px),_18px)] pt-[clamp(6px,_1.05vmin,_12px)] text-center">
-                  <p className={`${sectionRibbon} mb-[clamp(5px,_0.8vmin,_9px)] text-center opacity-95`}>Venue / room code</p>
-                  <div className="mx-auto inline-block max-w-full overflow-hidden px-[2px] pb-[clamp(2px,min(0.55vmin,_5px),_6px)]">
+                <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(16px,min(2vmin,_24px),_28px)]">
+                  <p className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95`}>Venue / room code</p>
+                  <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px]">
                     <motion.div
                       className="isolate inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
                       animate={
