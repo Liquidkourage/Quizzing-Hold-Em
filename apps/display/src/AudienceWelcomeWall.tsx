@@ -77,7 +77,7 @@ function VegasPulseDivider({ active }: { active: boolean }) {
   return (
     <div
       aria-hidden
-      className="relative mt-[clamp(6px,_0.75vmin,_12px)] h-[clamp(8px,_1.05vmin,_11px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)]"
+      className="relative mt-[clamp(4px,_0.65vmin,_10px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)]"
     >
       <div
         className="absolute inset-0 opacity-95"
@@ -114,9 +114,9 @@ function VegasPulseDivider({ active }: { active: boolean }) {
 function VegasLoungeStrip({ reducedMotion }: { reducedMotion: boolean }) {
   const flash = reducedMotion ? '' : 'motion-safe:animate-vegas-gold-drip'
   const chip =
-    'rounded-full px-[clamp(11px,_1.95vmin,_20px)] py-[clamp(5px,_0.85vmin,_8px)] text-[clamp(0.62rem,min(2.15vw,_0.92rem))] font-black uppercase shadow-lg'
+    'rounded-full px-[clamp(11px,_1.95vmin,_20px)] py-[clamp(5px,_0.85vmin,_8px)] text-[clamp(0.62rem,min(2.15vw,_0.92rem))] max-[height:880px]:px-[clamp(9px,_1.6vmin,_16px)] max-[height:880px]:py-[clamp(4px,_0.7vmin,_7px)] max-[height:880px]:text-[clamp(0.58rem,min(2vw,_0.84rem))] font-black uppercase shadow-lg'
   return (
-    <div className="mt-[clamp(6px,_0.65vmin,_12px)] flex min-w-0 flex-wrap justify-center gap-x-[clamp(8px,_1.85vmin,_22px)] gap-y-[6px] px-1">
+    <div className="mt-[clamp(4px,_0.55vmin,_10px)] max-[height:900px]:mt-1 flex min-w-0 flex-wrap justify-center gap-x-[clamp(8px,_1.85vmin,_22px)] max-[height:880px]:gap-x-2 gap-y-[6px] max-[height:880px]:gap-y-1 px-1">
       <span
         className={`${chip} border border-rose-500/70 bg-gradient-to-br from-black/92 via-black/82 to-red-950/75 tracking-[0.32em] text-rose-100 shadow-[inset_0_1px_0_rgba(255,228,228,0.22),0_0_40px_-4px_rgba(239,68,68,0.45)] motion-reduce:border-rose-600/85 ${flash}`}
       >
@@ -152,7 +152,7 @@ function VegasAttentionPanel({
   const overlayLive =
     'animate-vegas-shimmer-cards mix-blend-soft-light opacity-[0.06] md:opacity-[0.098]'
   return (
-    <div className={`relative isolate overflow-visible ${className}`}>
+    <div className={`relative isolate overflow-visible rounded-[inherit] ${className}`}>
       {showCorners ? <VegasCornerBrackets /> : null}
       {animateShimmer ? (
         <div
@@ -360,7 +360,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto grid min-h-0 min-w-0 h-full max-h-none w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(4px,_0.85vmin,_10px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(6px,_1vh,_16px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3 [@media(min-width:1920px)]:px-[clamp(96px,_5vw,_160px)]"
+        className="relative z-10 mx-auto grid min-h-0 min-w-0 h-full max-h-none w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(5px,_0.95vmin,_12px)] max-[height:920px]:gap-y-[clamp(8px,_1.35vmin,_15px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(5px,_0.9vh,_14px)] max-[height:920px]:py-[clamp(6px,_0.85vh,_12px)] [@media(max-height:720px)]:gap-y-1.5 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3 [@media(min-width:1920px)]:px-[clamp(96px,_5vw,_160px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -398,7 +398,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
             <QuizzEmWordmark layout="fill" />
           </div>
           <p
-            className={`mt-[clamp(6px,_0.8vmin,_14px)] text-center ${taglineBrand}${!reducedMotion ? ' motion-safe:animate-vegas-gold-drip motion-safe:delay-150' : ''}`}
+            className={`mt-[clamp(6px,_0.8vmin,_14px)] max-[height:900px]:mt-1 text-center ${taglineBrand}${!reducedMotion ? ' motion-safe:animate-vegas-gold-drip motion-safe:delay-150' : ''}`}
           >
             Join tonight&apos;s game
           </p>
@@ -407,8 +407,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         </header>
 
         {/* Row 2: [QR · join · rules]; wide 3-column only from xl (~1280px) so 720-class widths stack */}
-        <div className="min-h-0 min-w-0">
-          <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(12px,min(1.85vmin,_20px),_22px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch">
+        <div className="relative z-10 min-h-0 min-w-0 pb-[clamp(4px,min(0.85vmin,_10px),_11px)] max-[height:920px]:pb-[clamp(6px,min(1.05vmin,_12px),_14px)]">
+          <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch">
             <section aria-label="Scan QR to open player app" className="h-full min-h-0 min-w-0 w-full max-w-full justify-self-center xl:justify-self-end">
               <VegasAttentionPanel
                 showCorners
@@ -420,7 +420,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 </span>
                 {qrOk ? (
                   <div className="flex min-h-0 min-w-0 w-full flex-1 justify-center px-px">
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(6px,min(1.2vmin,_12px),_12px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] xl:max-h-[min(48dvh,min(560px,_50vw))]">
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(6px,min(1.2vmin,_12px),_12px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] xl:max-h-[min(48dvh,min(560px,_50vw))]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
@@ -447,32 +447,34 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_30px_-6px_rgba(234,179,8,0.16),0_0_64px_-8px_rgba(52,211,153,0.22),0_0_90px_-10px_rgba(124,58,237,0.12)] ring-2 ring-purple-950/90"
+                className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90"
               >
                 <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center">
                   <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
                   <p className={joinUrlText}>{joinUrl}</p>
                 </div>
                 <div aria-hidden className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/22" />
-                <div className="flex flex-col items-center px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(10px,_1.8vmin,_18px)] pt-[clamp(8px,_1.35vmin,_14px)] text-center">
-                  <p className={`${sectionRibbon} mb-[clamp(6px,_0.95vmin,_10px)] text-center opacity-95`}>Venue / room code</p>
-                  <motion.div
-                    className="inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(6px,_1.35vmin,_14px)]"
-                    animate={
-                      reducedMotion
-                        ? undefined
-                        : {
-                            boxShadow: [
-                              '0 0 16px rgba(234,179,8,0.28), inset 0 0 0 1px rgba(251,211,141,0.18)',
-                              '0 0 34px rgba(234,179,8,0.58), inset 0 0 0 1px rgba(253,246,178,0.28)',
-                              '0 0 16px rgba(234,179,8,0.28), inset 0 0 0 1px rgba(251,211,141,0.18)',
-                            ],
-                          }
-                    }
-                    transition={{ duration: 2.85, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <div className={venueMono}>{venueCode}</div>
-                  </motion.div>
+                <div className="flex flex-col items-center overflow-hidden px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(9px,min(1.35vmin,_16px),_18px)] pt-[clamp(6px,_1.05vmin,_12px)] text-center">
+                  <p className={`${sectionRibbon} mb-[clamp(5px,_0.8vmin,_9px)] text-center opacity-95`}>Venue / room code</p>
+                  <div className="mx-auto inline-block max-w-full overflow-hidden px-[2px] pb-[clamp(2px,min(0.55vmin,_5px),_6px)]">
+                    <motion.div
+                      className="isolate inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
+                      animate={
+                        reducedMotion
+                          ? undefined
+                          : {
+                              boxShadow: [
+                                '0 0 8px rgba(234,179,8,0.2), inset 0 0 0 1px rgba(251,211,141,0.16)',
+                                '0 0 18px rgba(234,179,8,0.38), inset 0 0 0 1px rgba(253,246,178,0.22)',
+                                '0 0 8px rgba(234,179,8,0.2), inset 0 0 0 1px rgba(251,211,141,0.16)',
+                              ],
+                            }
+                      }
+                      transition={{ duration: 2.85, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      <div className={venueMono}>{venueCode}</div>
+                    </motion.div>
+                  </div>
                 </div>
               </VegasAttentionPanel>
             </section>
@@ -510,7 +512,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <section
           aria-label="Attendance"
-          className="grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(8px,min(1.5vw,_18px),_20px)] xl:grid-cols-3"
+          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] xl:grid-cols-3"
         >
           {[
             { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
@@ -524,15 +526,15 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ].map(({ label, hint, v, accent }) => (
             <motion.div
               key={label}
-              className={`min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(6px,min(1.65vmin,_16px),_16px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto ${
+              className={`min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(5px,min(1.35vmin,_13px),_14px)] max-[height:920px]:py-[clamp(5px,min(1.2vmin,_12px),_12px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto ${
                 accent
-                  ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_58px_-2px_rgba(234,179,8,0.58),inset_0_1px_0_rgba(254,249,231,0.18),inset_0_-20px_50px_-30px_rgba(239,68,68,0.12)] ring-2 ring-amber-500/65'
+                  ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65'
                   : 'border-white/22 bg-black/62 shadow-[inset_0_0_34px_-12px_rgba(251,191,36,0.1),0_8px_32px_-10px_rgba(0,0,0,0.55)]'
               }`}
               animate={
                 accent && !reducedMotion
                   ? {
-                      scale: [1, 1.036, 1],
+                      scale: [1, 1.014, 1],
                       filter: ['brightness(1)', 'brightness(1.09) saturate(1.08)', 'brightness(1)'],
                     }
                   : undefined
