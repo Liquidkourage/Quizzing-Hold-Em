@@ -202,21 +202,21 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'min-w-0 break-words text-balance font-semibold uppercase tracking-[0.26em] text-amber-50 text-[clamp(1.06rem,min(3.85vw,_2.95vh),_2.35rem)] [text-shadow:0_0_28px_rgba(253,224,138,0.58),0_0_88px_rgba(234,179,8,0.28),0_2px_8px_rgba(0,0,0,_0.95),0_-1px_0_rgba(127,29,29,0.32)]'
 
   const statRibbon =
-    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)] uppercase text-rose-50/92 [text-shadow:0_0_18px_rgba(251,113,133,0.18),0_2px_8px_rgba(0,0,0,.6)]'
+    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)] uppercase text-rose-50/92 max-[height:1080px]:tracking-[0.11em] max-[height:1080px]:text-[clamp(0.9rem,min(2.72vw,_2.15vh),_1.72rem)] [text-shadow:0_0_18px_rgba(251,113,133,0.18),0_2px_8px_rgba(0,0,0,.6)]'
 
   const statHint =
-    'min-w-0 break-words text-balance font-semibold text-white/72 text-[clamp(1.05rem,min(2.72vw,_2.4vh),_1.92rem)]'
+    'min-w-0 break-words text-balance font-semibold text-white/72 text-[clamp(1.05rem,min(2.72vw,_2.4vh),_1.92rem)] max-[height:1080px]:text-[clamp(0.88rem,min(2.38vw,_2.05vh),_1.65rem)]'
 
   const stepCircleClasses =
-    'flex shrink-0 items-center justify-center rounded-lg border-2 border-amber-400/55 bg-emerald-500 font-black text-emerald-950 shadow-[0_0_22px_rgba(234,179,8,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] ring-2 ring-yellow-600/35 h-[clamp(2.28rem,_5.35vw,_3.92rem)] min-w-[clamp(2.28rem,_5.35vw,_3.92rem)] text-[clamp(0.98rem,_2.75vw,_1.52rem)]'
+    'flex shrink-0 items-center justify-center rounded-lg border-2 border-amber-400/55 bg-emerald-500 font-black text-emerald-950 shadow-[0_0_22px_rgba(234,179,8,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] ring-2 ring-yellow-600/35 h-[clamp(2.28rem,_5.35vw,_3.92rem)] min-w-[clamp(2.28rem,_5.35vw,_3.92rem)] text-[clamp(0.98rem,_2.75vw,_1.52rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:h-[clamp(2.42rem,_5.55vw,_4.08rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:min-w-[clamp(2.42rem,_5.55vw,_4.08rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.02rem,_2.88vw,_1.6rem)]'
 
   /** Rules column — compact so three steps (+ optional scrollbar) avoid clipping the hero row */
   const stepLine =
-    'min-w-0 break-words hyphens-auto text-[clamp(0.98rem,min(2.35vw,_2.1vh),_1.82rem)] font-bold leading-snug text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)]'
+    'min-w-0 break-words hyphens-auto text-[clamp(0.98rem,min(2.35vw,_2.1vh),_1.82rem)] font-bold leading-snug text-white [text-shadow:0_2px_12px_rgba(0,0,0,.4)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.05rem,min(2.62vw,_2.38vh),_2.1rem)]'
 
   /** “How to join” heading — keep below QR/join ribbon scale so the column packs */
   const stepsHeading =
-    'min-w-0 break-words text-balance font-black uppercase tracking-[0.19em] text-amber-50/96 text-[clamp(1.05rem,min(2.92vw,_2.6vh),_1.92rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_3px_18px_rgba(0,0,0,.55)]'
+    'min-w-0 break-words text-balance font-black uppercase tracking-[0.19em] text-amber-50/96 text-[clamp(1.05rem,min(2.92vw,_2.6vh),_1.92rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_3px_18px_rgba(0,0,0,.55)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.14rem,min(3.12vw,_2.85vh),_2.18rem)]'
 
   const footnote =
     'font-semibold leading-snug text-emerald-100/88 text-[clamp(0.92rem,min(2.72vw,_2.35vh),_2.02rem)] [text-shadow:0_2px_12px_rgba(0,0,0,.55)]'
@@ -227,11 +227,22 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
   /** Venue code repeated in rules — bounded to step line scale so column height doesn’t blow out. */
   const venueCodeInline =
-    'rounded bg-yellow-400/28 px-[0.3em] py-[0.05em] font-mono font-bold text-yellow-200 text-[clamp(1rem,_min(2.95vw,_3.75vh),_1.82rem)]'
+    'rounded bg-yellow-400/28 px-[0.3em] py-[0.05em] font-mono font-bold text-yellow-200 text-[clamp(1rem,_min(2.95vw,_3.75vh),_1.82rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.06rem,_min(3.1vw,_3.92vh),_1.96rem)]'
 
   /** Join card URL line — marquee-bright neon for TV distance */
   const joinUrlText =
-    'break-words text-center font-mono font-black leading-snug tracking-tight text-amber-50 text-[clamp(1.12rem,min(3.28vw,_3.75vh),_2.68rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
+    'break-words text-center font-mono font-black leading-snug tracking-tight text-amber-50 text-[clamp(1.12rem,min(3.28vw,_3.75vh),_2.68rem)] max-[height:1080px]:text-[clamp(1.02rem,min(2.82vw,_3.12vh),_2.32rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
+
+  /** Tighter attendance tiles at 1080p-class heights so hero/QR dominates over the strip. */
+  const statTile1080 =
+    'max-[height:1080px]:rounded-[clamp(8px,min(1.25vmin,_15px),_15px)] max-[height:1080px]:px-[clamp(5px,min(1.05vmin,_10px),_11px)] max-[height:1080px]:py-[clamp(3px,min(0.95vmin,_8px),_9px)]'
+
+  /** Slightly taller digits limited on short viewports; default keeps large-TV punch. */
+  const statDigitBase =
+    'py-[clamp(4px,min(1.1vmin,_10px),_10px)] font-mono tabular-nums tracking-tight leading-none text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black max-[height:1080px]:py-[clamp(2px,min(0.65vmin,_6px),_6px)] max-[height:1080px]:text-[clamp(1.38rem,min(6.2vw,min(7.25vmin,_6.75dvh)),_4.45rem)]'
+
+  const statDigitAccentShadow =
+    '[text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)] max-[height:1080px]:[text-shadow:0_0_22px_rgba(253,224,138,0.55),0_0_54px_rgba(234,179,8,0.28),0_2px_3px_rgba(0,0,0,0.92)]'
 
   return (
     <div
@@ -483,14 +494,17 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <h2 id="join-steps-title" className={`${stepsHeading} mb-[clamp(3px,_0.65vmin,_7px)] text-left leading-tight`}>
                 How to join
               </h2>
-              <ol className="grid shrink-0 gap-[clamp(4px,_1.05vmin,_9px)]" aria-labelledby="join-steps-title">
-                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)]">
+              <ol
+                className="grid shrink-0 gap-[clamp(4px,_1.05vmin,_9px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(6px,min(1.15vmin,_10px),_11px)]"
+                aria-labelledby="join-steps-title"
+              >
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(10px,_1.75vw,_18px)]">
                   <span className={stepCircleClasses}>1</span>
                   <span className={`${stepLine} pt-[0.06em]`}>
                     Open <strong className="text-amber-200">Player</strong> — use the <strong className="text-amber-200">URL on this screen</strong>, or scan the QR.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)]">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(10px,_1.75vw,_18px)]">
                   <span className={stepCircleClasses}>2</span>
                   <span className={`${stepLine} pt-[0.06em]`}>
                     Enter <strong className="text-yellow-300">venue code</strong>{' '}
@@ -499,7 +513,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                     <strong className="text-emerald-300">Join Game</strong>.
                   </span>
                 </li>
-                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)]">
+                <li className="flex items-start gap-[clamp(9px,_1.68vw,_16px)] [@media(min-width:2200px)_and_(min-height:1000px)]:gap-[clamp(10px,_1.75vw,_18px)]">
                   <span className={stepCircleClasses}>3</span>
                   <span className={`${stepLine} pt-[0.06em]`}>
                     Keep <strong className="text-emerald-300">Lobby</strong> on unless your host assigns a table number.
@@ -512,7 +526,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <section
           aria-label="Attendance"
-          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] xl:grid-cols-3"
+          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] max-[height:1080px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] xl:grid-cols-3"
         >
           {[
             { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
@@ -526,10 +540,10 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ].map(({ label, hint, v, accent }) => (
             <motion.div
               key={label}
-              className={`min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(5px,min(1.35vmin,_13px),_14px)] max-[height:920px]:py-[clamp(5px,min(1.2vmin,_12px),_12px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto ${
+              className={`min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(5px,min(1.35vmin,_13px),_14px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto ${statTile1080} ${
                 accent
-                  ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65'
-                  : 'border-white/22 bg-black/62 shadow-[inset_0_0_34px_-12px_rgba(251,191,36,0.1),0_8px_32px_-10px_rgba(0,0,0,0.55)]'
+                  ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 max-[height:1080px]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]'
+                  : 'border-white/22 bg-black/62 shadow-[inset_0_0_34px_-12px_rgba(251,191,36,0.1),0_8px_32px_-10px_rgba(0,0,0,0.55)] max-[height:1080px]:shadow-[inset_0_0_28px_-14px_rgba(251,191,36,0.09),0_6px_24px_-12px_rgba(0,0,0,0.5)]'
               }`}
               animate={
                 accent && !reducedMotion
@@ -550,13 +564,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               }
             >
               <div className={statRibbon}>{label}</div>
-              <div
-                className={`py-[clamp(4px,min(1.1vmin,_10px),_10px)] font-mono tabular-nums tracking-tight leading-none ${
-                  accent
-                    ? 'text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black text-yellow-200 [text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)]'
-                    : 'text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black text-white'
-                }`}
-              >
+              <div className={`${statDigitBase} ${accent ? `text-yellow-200 ${statDigitAccentShadow}` : 'text-white'}`}>
                 {v}
               </div>
               <div className={statHint}>{hint}</div>
