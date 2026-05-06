@@ -209,7 +209,7 @@ function WelcomeQrColumn({
 
   const panelInnerFlex =
     mode === 'wallLeft'
-      ? 'relative z-[5] flex h-full min-h-0 min-w-0 flex-col justify-between'
+      ? 'relative z-[5] flex h-full min-h-0 min-w-0 flex-col justify-center gap-y-[clamp(6px,min(1.1vmin,_14px),_18px)]'
       : 'relative z-[5] flex h-full min-h-0 min-w-0 flex-col [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:justify-between'
 
   const panelClass =
@@ -219,22 +219,22 @@ function WelcomeQrColumn({
 
   const aimClass =
     mode === 'wallLeft'
-      ? `${sectionRibbon} mb-0 shrink-0 text-center leading-snug`
+      ? `${sectionRibbon} shrink-0 text-center leading-snug`
       : `${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mb-[clamp(14px,_1.75vmin,_24px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mb-0`
 
   const midClass =
     mode === 'wallLeft'
-      ? 'relative flex min-h-0 w-full flex-1 flex-col items-center justify-center py-[clamp(8px,_1.2vmin,_16px)]'
+      ? 'relative flex min-h-0 w-full shrink-0 flex-col items-center justify-center py-[clamp(4px,min(1vmin,_10px),_14px)]'
       : 'relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(24dvh,240px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:min-h-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:justify-center [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:gap-y-[clamp(14px,_1.85vmin,_24px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:py-[clamp(10px,_1.35vmin,_18px)]'
 
   const whiteClass =
     mode === 'wallLeft'
-      ? 'box-border flex aspect-square min-h-0 min-w-0 h-auto w-full max-h-[min(100%,min(88dvh,48vw))] max-w-[min(100%,min(88dvh,48vw))] flex-col items-center justify-center self-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]'
+      ? 'box-border flex aspect-square min-h-0 min-w-0 h-auto w-full max-h-[min(100%,min(52dvh,44vw))] max-w-[min(100%,min(52dvh,44vw))] flex-col items-center justify-center self-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]'
       : 'box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!w-[min(36vmin,41dvh,378px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!relative [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!mx-auto [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!shrink-0 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!h-[min(31vmin,36dvh,318px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!w-[min(31vmin,36dvh,318px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!max-h-none [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!max-w-none [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]'
 
   const opensClass =
     mode === 'wallLeft'
-      ? `${sectionRibbon} mt-0 shrink-0 text-center opacity-90`
+      ? `${sectionRibbon} shrink-0 text-center opacity-90`
       : `${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:mt-0`
 
   return (
@@ -828,8 +828,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           />
         </div>
 
-        {/* Landscape wall: QR column occupies the left grid track from viewport top-of-main through row 1 — header/logo lives only above the right track */}
-        <div className="relative z-10 hidden min-h-0 h-full min-w-0 flex-col overflow-hidden [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:col-start-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:row-start-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex">
+        {/* Landscape wall: QR in col 1 — ~40dvh top band + bottom inset so the gold frame doesn’t eat the full grid row */}
+        <div className="relative z-10 hidden min-h-0 h-full min-w-0 flex-col justify-start overflow-hidden pt-[clamp(64px,min(40dvh,_400px),_440px)] pb-[clamp(16px,min(10dvh,_104px),_120px)] [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:col-start-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:row-start-1 [@media(min-width:1280px)_and_(max-height:1200px)_and_(orientation:landscape)]:flex">
           <WelcomeQrColumn
             mode="wallLeft"
             sectionRibbon={sectionRibbon}
