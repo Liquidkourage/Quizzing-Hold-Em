@@ -184,11 +184,15 @@ function VegasAttentionPanel({
  *
  * QR sizing: base max-h/max-w can sort after @media(...) in Tailwind output and erase short-viewport
  * tuning. Taller layouts use `min-width:1280px` + `min-height:1081px` instead of bare `xl` for caps.
- * Landscape full HD uses `!` dimensions and an absolute-pinned white tile (~378px class) so caps win
- * reliably; overlap with neighbors may occur — clip experiments were rolled back after host feedback.
- * Landscape Full HD XL: QR column uses its own intrinsic height (`items-start`, in-flow tile) so it
- * is not stretched to peers; join card drops the `-mt`/`calc(100%+…)` coupling and clips overflow so
- * interior rules cannot paint across neighboring columns.
+ *
+ * 1080p wall constraint: root grid row 2 is `minmax(0, 1fr)` (flexible middle). Intrinsic height of
+ * the hero (logo + ribbons + QR column) must fit that track; taller content overflows visibly. The
+ * attendance row sits in a higher z-index stacking layer (`z-18`) than the hero wrapper (`z-10`), so
+ * overflow is painted UNDER the Lobby/Tables/Total pills — looks like pills “cover” the QR even when
+ * the pills are logically in row 3. Mitigation on Full HD XL: smaller logo/tile budgets, tighter
+ * vertical rhythm, gap before attendance.
+ *
+ * Landscape Full HD XL: QR column `items-start` + in-flow tile; join card avoids `-mt`/height hacks.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -379,7 +383,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto grid min-h-0 min-w-0 h-full max-h-none w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(5px,_0.95vmin,_12px)] max-[height:920px]:gap-y-[clamp(8px,_1.35vmin,_15px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(5px,_0.9vh,_14px)] max-[height:920px]:py-[clamp(6px,_0.85vh,_12px)] [@media(max-height:720px)]:gap-y-1.5 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3 [@media(min-width:1920px)]:px-[clamp(96px,_5vw,_160px)]"
+        className="relative z-10 mx-auto grid min-h-0 min-w-0 h-full max-h-none w-full max-w-none grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-y-[clamp(5px,_0.95vmin,_12px)] max-[height:920px]:gap-y-[clamp(8px,_1.35vmin,_15px)] px-[clamp(14px,_2.85vw,_96px)] py-[clamp(5px,_0.9vh,_14px)] max-[height:920px]:py-[clamp(6px,_0.85vh,_12px)] [@media(max-height:720px)]:gap-y-1.5 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-3 [@media(min-width:1920px)]:px-[clamp(96px,_5vw,_160px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:gap-y-[clamp(9px,_1.08vmin,_15px)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -411,7 +415,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
           <div
-            className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))]"
+            className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:[height:min(max(22vh,_112px),min(420px,_44vh))]"
             style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
@@ -426,7 +430,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         </header>
 
         {/* Row 2: [QR · join · rules]; wide 3-column only from xl (~1280px) so 720-class widths stack */}
-        <div className="relative z-10 min-h-0 min-w-0 pb-[clamp(4px,min(0.85vmin,_10px),_11px)] max-[height:920px]:pb-[clamp(6px,min(1.05vmin,_12px),_14px)]">
+        <div className="relative z-10 min-h-0 min-w-0 overflow-x-clip pb-[clamp(4px,min(0.85vmin,_10px),_11px)] max-[height:920px]:pb-[clamp(6px,min(1.05vmin,_12px),_14px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:pb-[clamp(10px,min(1.15vmin,_16px),_18px)]">
           <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:items-start">
             <section
               aria-label="Scan QR to open player app"
@@ -445,7 +449,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 {qrOk ? (
                   <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(24dvh,240px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:flex-none [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:justify-center [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:gap-y-[clamp(8px,_1.1vmin,_14px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:py-1">
                     {/* Landscape full HD: absolute + ! dimensions beat Tailwind max-h merge ordering. */}
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!w-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!relative [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!mx-auto [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!shrink-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!w-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]">
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!w-[min(36vmin,41dvh,378px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!relative [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!mx-auto [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!shrink-0 [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!h-[min(30vmin,36dvh,304px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!w-[min(30vmin,36dvh,304px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
@@ -463,7 +467,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   </div>
                 )}
                 <span
-                  className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`}
+                  className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mt-[clamp(4px,_0.72vmin,_10px)]`}
                 >
                   Opens Player
                 </span>
@@ -552,7 +556,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <section
           aria-label="Attendance"
-          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(18px,min(2.85vw,_40px),_48px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(12px,min(2.4vw,_48px),_56px)] xl:grid-cols-3"
+          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(18px,min(2.85vw,_40px),_48px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(12px,min(2.4vw,_48px),_56px)] [@media(max-height:1080px)_and_(min-width:1280px)_and_(orientation:landscape)]:mt-[clamp(10px,_1.2vmin,_18px)] xl:grid-cols-3"
         >
           {[
             { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
