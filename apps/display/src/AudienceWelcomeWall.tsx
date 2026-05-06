@@ -382,10 +382,10 @@ function WelcomeNewPlayerTipsPanel({
     'min-w-0 flex-1 text-balance font-semibold leading-[1.38] text-amber-50/96 [text-shadow:0_2px_14px_rgba(0,0,0,_0.82)] text-[clamp(1rem,min(3.15vw,_2.75vh),_1.52rem)] xl:leading-[1.42] xl:text-[clamp(1.05rem,min(3.35vw,_2.9vh),_1.58rem)]'
 
   const tips = [
-    'Each question has a numeric answer—like 99, 1492, or 90210.',
-    'You get two digit hole cards and bet; then five digit community cards land and you bet again—call, raise, or fold from your phone.',
-    'When betting closes: 45 seconds to pick exactly five cards (yours + board), order them, add a decimal if you want, and lock in your hand.',
-    'The player whose hand is closest to the correct answer wins the pot for the round.',
+    "It's number trivia staged like Hold'em—answers are numeric (99, 1492, 90210 …), not A–D. The host asks each clue aloud; you play your hand on your phone.",
+    'You get two private digit cards—a.k.a. hole cards—and everyone bets once on their phones (call, raise, fold). Then five digit community cards land; everyone bets again.',
+    'When betting closes you have 45 seconds: tap exactly five digit cards total (from your hole cards plus the board), arrange them into a number, add a decimal if you want, and lock in—that is your trivia answer.',
+    'Whoever is closest to the correct number wins this round’s pot.',
   ] as const
 
   return (
