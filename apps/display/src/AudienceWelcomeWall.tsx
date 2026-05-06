@@ -190,10 +190,10 @@ function WelcomeQrColumn({
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pb-0 px-[clamp(10px,min(2vmin,_22px),_28px)] [text-wrap:balance] xl:mb-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
 
   const midClass =
-    'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 xl:min-h-[min(20dvh,140px)] xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
+    'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 px-[clamp(4px,min(0.85vmin,_8px),_10px)] xl:min-h-[min(20dvh,140px)] xl:px-[clamp(10px,min(2.2vmin,_16px),_20px)] xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
 
   const whiteTileBase =
-    'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[3px] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
+    'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(4px,min(0.85vmin,_8px),_10px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
   const whiteClass =
     `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(96vw,min(62dvh,620px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(94vw,min(56dvh,560px)))] xl:mx-auto xl:aspect-square xl:h-auto xl:max-h-[min(100%,52dvh)] xl:w-full xl:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
@@ -218,7 +218,7 @@ function WelcomeQrColumn({
                 alt=""
                 width={640}
                 height={640}
-                className="block h-auto w-auto max-h-full max-w-full min-h-0 min-w-0 rounded-sm object-contain"
+                className="block h-auto w-auto max-h-[min(92%,46dvh)] max-w-[92%] min-h-0 min-w-0 rounded-sm object-contain xl:max-h-[min(90%,48dvh)] xl:max-w-[90%]"
                 referrerPolicy="no-referrer"
                 onError={() => setQrOk(false)}
               />
@@ -236,7 +236,7 @@ function WelcomeQrColumn({
 }
 
 /**
- * Venue join wall: header, then QR / join URL & players / empty slot as three horizontal bands (~30% + ~5% gutters) on `xl+`; stacks on smaller widths.
+ * Venue join wall: header, then three horizontal bands (~30% + gutters) on `xl+` — QR, join & players, newcomer tips.
  */
 type AttendanceSectionProps = {
   syncingCounts: boolean
@@ -370,6 +370,47 @@ function WelcomeJoinCard({
   )
 }
 
+function WelcomeNewPlayerTipsPanel({
+  hintsTitleClass,
+  reducedMotion,
+}: {
+  hintsTitleClass: string
+  reducedMotion: boolean
+}) {
+  const bulletClass =
+    'min-w-0 flex-1 text-balance leading-snug text-amber-50/94 [text-shadow:0_1px_10px_rgba(0,0,0,_0.78)] text-[clamp(0.78rem,min(2.05vw,_1.65vh),_1.05rem)]'
+
+  const tips = [
+    'Scan the QR or open the player link and enter the room code.',
+    'Stay on your phone in the lobby until the host starts a round.',
+    'This screen shows the room; questions and taps happen on your device.',
+  ] as const
+
+  return (
+    <section aria-label="Quick tips for new players" className="flex h-full min-h-0 min-w-0 w-full flex-col">
+      <VegasAttentionPanel
+        showCorners
+        animateShimmer={!reducedMotion}
+        className="h-full min-h-0 min-w-0 w-full flex-1 overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90"
+      >
+        <div className="relative z-[1] flex h-full min-h-0 flex-col gap-y-[clamp(8px,min(1.1vmin,_12px),_14px)] px-[clamp(10px,_1.55vmin,_18px)] py-[clamp(10px,_1.55vmin,_18px)]">
+          <p className={`${hintsTitleClass} shrink-0 text-center`}>New here?</p>
+          <ul className="m-0 flex min-h-0 list-none flex-col justify-center gap-y-[clamp(7px,min(1vmin,_11px),_12px)] p-0">
+            {tips.map((t) => (
+              <li key={t} className="flex items-start gap-x-[clamp(6px,_0.9vmin,_10px)]">
+                <span className="mt-[0.4em] shrink-0 text-[0.65em] font-bold leading-none text-emerald-300/90" aria-hidden>
+                  ●
+                </span>
+                <span className={bulletClass}>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </VegasAttentionPanel>
+    </section>
+  )
+}
+
 function WelcomeWallHeader({
   reducedMotion,
   taglineClass,
@@ -404,6 +445,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   /** `min-w-0` + wrapping so wide tracking / long words cannot blow past grid tracks */
   const sectionRibbon =
     'min-w-0 font-black uppercase tracking-[0.22em] text-amber-50/98 break-words text-balance whitespace-normal text-[clamp(1.05rem,min(3.95vw,_3vh),_2.5rem)] [text-shadow:0_0_32px_rgba(251,191,36,0.45),0_0_72px_rgba(239,68,68,0.14),0_2px_4px_rgba(0,0,0,_0.95)]'
+
+  const hintsTitleClass =
+    'min-w-0 font-black uppercase tracking-[0.17em] text-amber-50/97 break-words text-balance whitespace-normal text-[clamp(0.92rem,min(2.72vw,_2.05vh),_1.38rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.4),0_2px_6px_rgba(0,0,0,_0.9)]'
 
   /** Credit under the wordmark — readable title case, subtler than headline chrome. */
   const taglineCredit =
@@ -624,7 +668,12 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   statDigitAccentShadow={statDigitAccentShadow}
                 />
               </div>
-              <div className="hidden min-h-12 min-w-0 shrink-0 xl:block" aria-hidden />
+              <div className="hidden min-h-0 min-w-0 shrink-0 xl:flex xl:h-full xl:flex-col">
+                <WelcomeNewPlayerTipsPanel
+                  hintsTitleClass={hintsTitleClass}
+                  reducedMotion={Boolean(reducedMotion)}
+                />
+              </div>
             </div>
           </div>
         </div>
