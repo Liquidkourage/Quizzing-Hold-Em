@@ -114,21 +114,21 @@ function VegasPulseDivider({ active }: { active: boolean }) {
 function VegasLoungeStrip({ reducedMotion }: { reducedMotion: boolean }) {
   const flash = reducedMotion ? '' : 'motion-safe:animate-vegas-gold-drip'
   const chip =
-    'rounded-full px-[clamp(11px,_1.95vmin,_20px)] py-[clamp(5px,_0.85vmin,_8px)] text-[clamp(0.62rem,min(2.15vw,_0.92rem))] max-[height:880px]:px-[clamp(9px,_1.6vmin,_16px)] max-[height:880px]:py-[clamp(4px,_0.7vmin,_7px)] max-[height:880px]:text-[clamp(0.58rem,min(2vw,_0.84rem))] font-black uppercase shadow-lg'
+    'rounded-full px-[clamp(11px,_1.95vmin,_20px)] py-[clamp(5px,_0.85vmin,_8px)] text-[clamp(0.62rem,min(2.15vw,_0.92rem))] max-[height:880px]:px-[clamp(9px,_1.6vmin,_16px)] max-[height:880px]:py-[clamp(4px,_0.7vmin,_7px)] max-[height:880px]:text-[clamp(0.58rem,min(2vw,_0.84rem))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(8px,_1.32vmin,_15px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(4px,_0.62vmin,_6px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.56rem,min(1.92vw,_0.78rem),_0.86rem)] font-black uppercase shadow-lg'
   return (
-    <div className="mt-[clamp(4px,_0.55vmin,_10px)] max-[height:900px]:mt-1 flex min-w-0 flex-wrap justify-center gap-x-[clamp(8px,_1.85vmin,_22px)] max-[height:880px]:gap-x-2 gap-y-[6px] max-[height:880px]:gap-y-1 px-1">
+    <div className="mt-[clamp(4px,_0.55vmin,_10px)] max-[height:900px]:mt-1 flex min-w-0 flex-wrap justify-center gap-x-[clamp(8px,_1.85vmin,_22px)] max-[height:880px]:gap-x-2 gap-y-[6px] max-[height:880px]:gap-y-1 px-1 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(5px,_1.05vmin,_14px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-1 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-0">
       <span
-        className={`${chip} border border-rose-500/70 bg-gradient-to-br from-black/92 via-black/82 to-red-950/75 tracking-[0.32em] text-rose-100 shadow-[inset_0_1px_0_rgba(255,228,228,0.22),0_0_40px_-4px_rgba(239,68,68,0.45)] motion-reduce:border-rose-600/85 ${flash}`}
+        className={`${chip} border border-rose-500/70 bg-gradient-to-br from-black/92 via-black/82 to-red-950/75 tracking-[0.32em] text-rose-100 shadow-[inset_0_1px_0_rgba(255,228,228,0.22),0_0_40px_-4px_rgba(239,68,68,0.45)] motion-reduce:border-rose-600/85 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.28em] ${flash}`}
       >
         ♠ LIVE FLOOR ♦
       </span>
       <span
-        className={`${chip} border border-yellow-400/80 bg-black/88 tracking-[0.28em] text-amber-100 shadow-[inset_0_1px_0_rgba(254,249,231,0.2),0_0_48px_-4px_rgba(234,179,8,0.55)] motion-reduce:border-amber-500/95 motion-safe:delay-300 ${flash}`}
+        className={`${chip} border border-yellow-400/80 bg-black/88 tracking-[0.28em] text-amber-100 shadow-[inset_0_1px_0_rgba(254,249,231,0.2),0_0_48px_-4px_rgba(234,179,8,0.55)] motion-reduce:border-amber-500/95 motion-safe:delay-300 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.24em] ${flash}`}
       >
         HIGH STAKES TRIVIA
       </span>
       <span
-        className={`${chip} border border-emerald-500/65 bg-black/88 tracking-[0.26em] text-emerald-100 shadow-[inset_0_1px_0_rgba(209,250,229,0.16),0_0_40px_-4px_rgba(52,211,153,0.35)] motion-reduce:border-emerald-500/90 motion-safe:delay-700 ${flash}`}
+        className={`${chip} border border-emerald-500/65 bg-black/88 tracking-[0.26em] text-emerald-100 shadow-[inset_0_1px_0_rgba(209,250,229,0.16),0_0_40px_-4px_rgba(52,211,153,0.35)] motion-reduce:border-emerald-500/90 motion-safe:delay-700 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.22em] ${flash}`}
       >
         ★ SCAN TO PLAY ★
       </span>
@@ -186,7 +186,7 @@ function VegasAttentionPanel({
  * tuning. Taller layouts use `min-width:1280px` + `min-height:1081px` instead of bare `xl` for caps.
  * Landscape full HD uses `!` dimensions and an absolute-pinned white tile (~378px class) so caps win
  * reliably; overlap with neighbors may occur — clip experiments were rolled back after host feedback.
- * Full HD TVs: `-mt` + `calc(100%+Δ)` grows the QR gold panel upward so bottom alignment with join column is preserved.
+ * Full HD TVs: `-mt` + `calc(100%+Δ)` grows the QR/join gold panels upward so bottom alignment across columns stays put.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -472,16 +472,20 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90"
+                className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:-mt-[min(7dvh,92px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[calc(100%+min(7dvh,92px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!min-h-[calc(100%+min(7dvh,92px))]"
               >
                 <div className="px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center">
                   <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
                   <p className={joinUrlText}>{joinUrl}</p>
                 </div>
                 <div aria-hidden className="mx-[clamp(8px,_1.5vmin,_18px)] border-t border-dashed border-white/22" />
-                <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(16px,min(2vmin,_24px),_28px)]">
-                  <p className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95`}>Venue / room code</p>
-                  <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px]">
+                <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(18px,min(2.25vmin,_28px),_30px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pt-[clamp(11px,_1.42vmin,_18px)]">
+                  <p
+                    className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:mb-[clamp(11px,_1.25vmin,_16px)]`}
+                  >
+                    Venue / room code
+                  </p>
+                  <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:pb-[clamp(10px,min(1.05vmin,_12px),_14px)]">
                     <motion.div
                       className="isolate inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
                       animate={
