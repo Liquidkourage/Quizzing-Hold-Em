@@ -163,51 +163,40 @@ function VegasAttentionPanel({
   )
 }
 
-type WelcomeQrMode = 'stack' | 'wide'
-
-/** Scan-to-join column: `stack` for narrow layouts, `wide` for the `xl` two-column hero. */
+/** Scan-to-join column — narrow viewports stack full-width; `xl` fits the left ~30% band of the wall row (see parent grid). */
 function WelcomeQrColumn({
-  mode,
   sectionRibbon,
   joinUrl,
   qrOk,
   setQrOk,
   reducedMotion,
 }: {
-  mode: WelcomeQrMode
   sectionRibbon: string
   joinUrl: string
   qrOk: boolean
   setQrOk: (ok: boolean) => void
   reducedMotion: boolean
 }) {
-  const stack = mode === 'stack'
+  const sectionClass =
+    'relative flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col items-center overflow-hidden justify-self-center xl:h-full xl:max-h-full xl:flex-1 xl:justify-center'
 
-  const sectionClass = stack
-    ? 'relative flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col items-center overflow-hidden justify-self-center'
-    : 'relative flex h-full min-h-0 w-full flex-1 flex-col items-end justify-center overflow-hidden'
+  const panelInnerFlex =
+    'relative z-[5] flex min-h-0 min-w-0 max-h-full flex-1 flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch overflow-hidden'
 
-  const panelInnerFlex = stack
-    ? 'relative z-[5] flex min-h-0 min-w-0 max-h-full flex-1 flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch overflow-hidden'
-    : 'relative z-[5] flex h-fit min-h-0 min-w-0 max-h-full w-full flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch overflow-hidden'
-
-  const panelClass = stack
-    ? `box-border w-fit max-w-full max-h-full min-h-0 min-w-0 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
-    : `box-border h-fit w-fit max-h-[min(100%,92dvh)] max-w-[min(100%,min(98vw,_58rem))] min-h-0 min-w-0 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 xl:self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
+  const panelClass =
+    `box-border w-fit max-w-full max-h-full min-h-0 min-w-0 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 xl:w-full xl:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
 
   const aimClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pb-0 px-[clamp(10px,min(2vmin,_22px),_28px)] [text-wrap:balance] xl:mb-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
 
-  const midClass = stack
-    ? 'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0'
-    : 'relative flex min-h-[min(20dvh,160px)] w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:min-h-[min(18dvh,140px)] xl:min-h-0 xl:flex-1 xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
+  const midClass =
+    'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 xl:min-h-[min(20dvh,140px)] xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
 
   const whiteTileBase =
     'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[3px] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
-  const whiteClass = stack
-    ? `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(96vw,min(62dvh,620px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(94vw,min(56dvh,560px)))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-w-[min(100%,min(92vw,min(66dvh,660px)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
-    : `${whiteTileBase} aspect-square max-h-[min(100%,min(56dvh,52vw))] max-w-[min(100%,min(56dvh,52vw))] xl:!max-h-[min(min(52dvh,46vw),720px)] xl:!max-w-[min(min(52dvh,46vw),720px)] xl:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!left-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:![transform:none] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-h-[min(42vmin,42dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!max-w-[min(42vmin,42dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+  const whiteClass =
+    `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(96vw,min(62dvh,620px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(94vw,min(56dvh,560px)))] xl:mx-auto xl:aspect-square xl:h-auto xl:max-h-[min(100%,52dvh)] xl:w-full xl:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
 
   const opensClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pt-0 px-[clamp(10px,min(2vmin,_22px),_28px)] opacity-90 [text-wrap:balance] xl:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
@@ -247,8 +236,7 @@ function WelcomeQrColumn({
 }
 
 /**
- * Venue join wall: single header; below `xl` stacks QR then a 3-col row (join | players | spacer); `xl+` uses two columns (QR | same 3-col row).
- * Intended for landscape wall displays; portrait host previews are unsupported.
+ * Venue join wall: header, then QR / join URL & players / empty slot as three horizontal bands (~30% + ~5% gutters) on `xl+`; stacks on smaller widths.
  */
 type AttendanceSectionProps = {
   syncingCounts: boolean
@@ -259,8 +247,8 @@ type AttendanceSectionProps = {
   statTile1080: string
   statDigitBase: string
   statDigitAccentShadow: string
-  /** Strip (centered solo) | stacked under join (xl legacy) | one third of bottom row grid */
-  layout: 'strip' | 'underJoin' | 'gridThird'
+  /** Strip | under join legacy | stacked inside middle band with join card */
+  layout: 'strip' | 'underJoin' | 'middle'
   className?: string
 }
 
@@ -283,19 +271,22 @@ function AttendanceSection({
   const underJoinWrapClass =
     'relative z-[18] isolate w-full max-w-[min(100%,38rem)] mx-auto min-h-0 shrink-0'
 
-  const gridThirdWrapClass = 'relative z-[18] isolate flex h-full min-h-0 min-w-0 w-full flex-1 flex-col'
+  const gridMiddleWrapClass = 'relative z-[18] isolate w-full min-h-0 shrink-0 mx-auto max-w-none'
 
   const tileShared =
     `${statTile1080} min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(8px,min(1.35vmin,_14px),_14px)] py-[clamp(8px,min(1.25vmin,_14px),_16px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]`
 
   const stripTileClass = `${tileShared} w-full max-w-[min(100%,clamp(260px,38vw,440px))]`
   const underJoinTileClass = `${tileShared} w-full`
-  const gridThirdTileClass = `${tileShared} flex w-full max-w-none min-h-0 flex-1 flex-col justify-center`
+  const gridMiddleTileClass = `${tileShared} flex w-full min-h-0 flex-col justify-center`
 
-  const wrapClass =
-    layout === 'strip' ? stripWrapClass : layout === 'underJoin' ? underJoinWrapClass : gridThirdWrapClass
-  const tileClass =
-    layout === 'strip' ? stripTileClass : layout === 'underJoin' ? underJoinTileClass : gridThirdTileClass
+  function wrapTileFor(layout: AttendanceSectionProps['layout']) {
+    if (layout === 'strip') return { wrap: stripWrapClass, tile: stripTileClass }
+    if (layout === 'underJoin') return { wrap: underJoinWrapClass, tile: underJoinTileClass }
+    return { wrap: gridMiddleWrapClass, tile: gridMiddleTileClass }
+  }
+
+  const { wrap: wrapClass, tile: tileClass } = wrapTileFor(layout)
 
   return (
     <section
@@ -600,49 +591,12 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineClass={taglineCredit} />
 
           <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)]">
-            <div className="flex min-h-0 flex-1 flex-col gap-x-[clamp(10px,min(2vmin,_24px),_32px)] gap-y-[clamp(6px,min(1.1vmin,_13px),_14px)] max-[height:920px]:gap-y-[clamp(6px,min(1.05vmin,_12px),_13px)] overflow-hidden xl:hidden">
-              <WelcomeQrColumn
-                mode="stack"
-                sectionRibbon={sectionRibbon}
-                joinUrl={joinUrl}
-                qrOk={qrOk}
-                setQrOk={setQrOk}
-                reducedMotion={Boolean(reducedMotion)}
-              />
-              <div
-                className="grid min-h-0 w-full shrink-0 grid-cols-3 items-stretch gap-x-[clamp(8px,min(1.5vmin,_18px),_22px)] gap-y-[clamp(6px,min(1.05vmin,_12px),_13px)]"
-                aria-label="Join instructions and attendance"
-              >
-                <div className="flex min-h-0 min-w-0 flex-col">
-                  <WelcomeJoinCard
-                    className="flex min-h-0 min-w-0 w-full flex-1 flex-col"
-                    venueCode={venueCode}
-                    joinUrl={joinUrl}
-                    joinUrlText={joinUrlText}
-                    venueMono={venueMono}
-                    reducedMotion={Boolean(reducedMotion)}
-                  />
-                </div>
-                <div className="flex min-h-0 min-w-0 flex-col">
-                  <AttendanceSection
-                    layout="gridThird"
-                    syncingCounts={syncingCounts}
-                    enrolled={enrolled}
-                    reducedMotion={Boolean(reducedMotion)}
-                    playerCountLabelClass={playerCountLabelClass}
-                    statTile1080={statTile1080}
-                    statDigitBase={statDigitBase}
-                    statDigitAccentShadow={statDigitAccentShadow}
-                  />
-                </div>
-                <div className="min-h-8 min-w-0" aria-hidden />
-              </div>
-            </div>
-
-            <div className="hidden h-full min-h-0 min-w-0 gap-x-[clamp(10px,min(2vw,_36px),_40px)] gap-y-[clamp(6px,min(1.05vmin,_12px),_14px)] overflow-hidden xl:grid xl:grid-cols-2 xl:items-stretch">
-              <div className="flex min-h-0 min-w-0 flex-col overflow-hidden xl:h-full">
+            <div
+              aria-label="Join the game: scan, URL and room code, attendance"
+              className="flex min-h-0 flex-1 flex-col gap-y-[clamp(6px,min(1.1vmin,_13px),_14px)] max-[height:920px]:gap-y-[clamp(6px,min(1.05vmin,_12px),_13px)] overflow-hidden xl:grid xl:grid-cols-[minmax(0,30%)_minmax(0,30%)_minmax(0,30%)] xl:gap-x-[5%] xl:gap-y-0 xl:items-stretch"
+            >
+              <div className="flex min-h-0 min-w-0 flex-col overflow-hidden xl:h-full xl:max-h-full">
                 <WelcomeQrColumn
-                  mode="wide"
                   sectionRibbon={sectionRibbon}
                   joinUrl={joinUrl}
                   qrOk={qrOk}
@@ -650,31 +604,27 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   reducedMotion={Boolean(reducedMotion)}
                 />
               </div>
-              <div className="grid min-h-0 min-w-0 h-full grid-cols-3 items-stretch gap-x-[clamp(8px,min(1.65vmin,_20px),_24px)]">
-                <div className="flex min-h-0 min-w-0 flex-col">
-                  <WelcomeJoinCard
-                    className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col"
-                    venueCode={venueCode}
-                    joinUrl={joinUrl}
-                    joinUrlText={joinUrlText}
-                    venueMono={venueMono}
-                    reducedMotion={Boolean(reducedMotion)}
-                  />
-                </div>
-                <div className="flex min-h-0 min-w-0 flex-col">
-                  <AttendanceSection
-                    layout="gridThird"
-                    syncingCounts={syncingCounts}
-                    enrolled={enrolled}
-                    reducedMotion={Boolean(reducedMotion)}
-                    playerCountLabelClass={playerCountLabelClass}
-                    statTile1080={statTile1080}
-                    statDigitBase={statDigitBase}
-                    statDigitAccentShadow={statDigitAccentShadow}
-                  />
-                </div>
-                <div className="min-h-0 min-w-0 shrink-0" aria-hidden />
+              <div className="flex min-h-0 min-w-0 flex-col justify-center gap-y-[clamp(8px,min(1.15vmin,_14px),_16px)] overflow-hidden xl:h-full xl:flex-1 xl:justify-between xl:gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
+                <WelcomeJoinCard
+                  className="flex min-h-0 min-w-0 w-full shrink-0 flex-col xl:min-h-0 xl:flex-1"
+                  venueCode={venueCode}
+                  joinUrl={joinUrl}
+                  joinUrlText={joinUrlText}
+                  venueMono={venueMono}
+                  reducedMotion={Boolean(reducedMotion)}
+                />
+                <AttendanceSection
+                  layout="middle"
+                  syncingCounts={syncingCounts}
+                  enrolled={enrolled}
+                  reducedMotion={Boolean(reducedMotion)}
+                  playerCountLabelClass={playerCountLabelClass}
+                  statTile1080={statTile1080}
+                  statDigitBase={statDigitBase}
+                  statDigitAccentShadow={statDigitAccentShadow}
+                />
               </div>
+              <div className="hidden min-h-12 min-w-0 shrink-0 xl:block" aria-hidden />
             </div>
           </div>
         </div>
