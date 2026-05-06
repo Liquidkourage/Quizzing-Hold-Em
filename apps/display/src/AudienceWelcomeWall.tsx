@@ -181,6 +181,9 @@ function VegasAttentionPanel({
 /**
  * Venue lobby / join wall: stacks below ~1280px width; three-column hero on xl+.
  * Uses grid `min-w-0`, fluid type, and capped QR height so 720p-class and 4K TVs stay readable.
+ *
+ * Intended for landscape wall/projector displays only. Narrow portrait previews are unsupported;
+ * typography tuned for TVs is gated behind min-width + landscape + max-height queries.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -202,10 +205,10 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'min-w-0 break-words text-balance font-semibold uppercase tracking-[0.26em] text-amber-50 text-[clamp(1.06rem,min(3.85vw,_2.95vh),_2.35rem)] [text-shadow:0_0_28px_rgba(253,224,138,0.58),0_0_88px_rgba(234,179,8,0.28),0_2px_8px_rgba(0,0,0,_0.95),0_-1px_0_rgba(127,29,29,0.32)]'
 
   const statRibbon =
-    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)] uppercase text-rose-50/92 max-[height:1080px]:tracking-[0.11em] max-[height:1080px]:text-[clamp(0.9rem,min(2.72vw,_2.15vh),_1.72rem)] [text-shadow:0_0_18px_rgba(251,113,133,0.18),0_2px_8px_rgba(0,0,0,.6)]'
+    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)] uppercase text-rose-50/92 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.11em] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.9rem,min(2.72vw,_2.15vh),_1.72rem)] [text-shadow:0_0_18px_rgba(251,113,133,0.18),0_2px_8px_rgba(0,0,0,.6)]'
 
   const statHint =
-    'min-w-0 break-words text-balance font-semibold text-white/72 text-[clamp(1.05rem,min(2.72vw,_2.4vh),_1.92rem)] max-[height:1080px]:text-[clamp(0.88rem,min(2.38vw,_2.05vh),_1.65rem)]'
+    'min-w-0 break-words text-balance font-semibold text-white/72 text-[clamp(1.05rem,min(2.72vw,_2.4vh),_1.92rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.38vw,_2.05vh),_1.65rem)]'
 
   const stepCircleClasses =
     'flex shrink-0 items-center justify-center rounded-lg border-2 border-amber-400/55 bg-emerald-500 font-black text-emerald-950 shadow-[0_0_22px_rgba(234,179,8,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] ring-2 ring-yellow-600/35 h-[clamp(2.28rem,_5.35vw,_3.92rem)] min-w-[clamp(2.28rem,_5.35vw,_3.92rem)] text-[clamp(0.98rem,_2.75vw,_1.52rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:h-[clamp(2.42rem,_5.55vw,_4.08rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:min-w-[clamp(2.42rem,_5.55vw,_4.08rem)] [@media(min-width:2200px)_and_(min-height:1000px)]:text-[clamp(1.02rem,_2.88vw,_1.6rem)]'
@@ -231,18 +234,18 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
   /** Join card URL line — marquee-bright neon for TV distance */
   const joinUrlText =
-    'break-words text-center font-mono font-black leading-snug tracking-tight text-amber-50 text-[clamp(1.12rem,min(3.28vw,_3.75vh),_2.68rem)] max-[height:1080px]:text-[clamp(1.02rem,min(2.82vw,_3.12vh),_2.32rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
+    'break-words text-center font-mono font-black leading-snug tracking-tight text-amber-50 text-[clamp(1.12rem,min(3.28vw,_3.75vh),_2.68rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(1.02rem,min(2.82vw,_3.12vh),_2.32rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
 
-  /** Tighter attendance tiles at 1080p-class heights so hero/QR dominates over the strip. */
+  /** Tighter attendance strip on landscape 1080p-class TVs (≥1024 wide, ≤1080 tall); skips narrow/portrait. */
   const statTile1080 =
-    'max-[height:1080px]:rounded-[clamp(8px,min(1.25vmin,_15px),_15px)] max-[height:1080px]:px-[clamp(5px,min(1.05vmin,_10px),_11px)] max-[height:1080px]:py-[clamp(3px,min(0.95vmin,_8px),_9px)]'
+    '[@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:rounded-[clamp(8px,min(1.25vmin,_15px),_15px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(5px,min(1.05vmin,_10px),_11px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(3px,min(0.95vmin,_8px),_9px)]'
 
   /** Slightly taller digits limited on short viewports; default keeps large-TV punch. */
   const statDigitBase =
-    'py-[clamp(4px,min(1.1vmin,_10px),_10px)] font-mono tabular-nums tracking-tight leading-none text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black max-[height:1080px]:py-[clamp(2px,min(0.65vmin,_6px),_6px)] max-[height:1080px]:text-[clamp(1.38rem,min(6.2vw,min(7.25vmin,_6.75dvh)),_4.45rem)]'
+    'py-[clamp(4px,min(1.1vmin,_10px),_10px)] font-mono tabular-nums tracking-tight leading-none text-[clamp(1.75rem,min(10vw,min(12vmin,_10dvh)),_6.5rem)] font-black [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(2px,min(0.65vmin,_6px),_6px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(1.38rem,min(6.2vw,min(7.25vmin,_6.75dvh)),_4.45rem)]'
 
   const statDigitAccentShadow =
-    '[text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)] max-[height:1080px]:[text-shadow:0_0_22px_rgba(253,224,138,0.55),0_0_54px_rgba(234,179,8,0.28),0_2px_3px_rgba(0,0,0,0.92)]'
+    '[text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:[text-shadow:0_0_22px_rgba(253,224,138,0.55),0_0_54px_rgba(234,179,8,0.28),0_2px_3px_rgba(0,0,0,0.92)]'
 
   return (
     <div
@@ -526,7 +529,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <section
           aria-label="Attendance"
-          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] max-[height:1080px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] xl:grid-cols-3"
+          className="relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] xl:grid-cols-3"
         >
           {[
             { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
@@ -542,8 +545,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               key={label}
               className={`min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(5px,min(1.35vmin,_13px),_14px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto ${statTile1080} ${
                 accent
-                  ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 max-[height:1080px]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]'
-                  : 'border-white/22 bg-black/62 shadow-[inset_0_0_34px_-12px_rgba(251,191,36,0.1),0_8px_32px_-10px_rgba(0,0,0,0.55)] max-[height:1080px]:shadow-[inset_0_0_28px_-14px_rgba(251,191,36,0.09),0_6px_24px_-12px_rgba(0,0,0,0.5)]'
+                  ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]'
+                  : 'border-white/22 bg-black/62 shadow-[inset_0_0_34px_-12px_rgba(251,191,36,0.1),0_8px_32px_-10px_rgba(0,0,0,0.55)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[inset_0_0_28px_-14px_rgba(251,191,36,0.09),0_6px_24px_-12px_rgba(0,0,0,0.5)]'
               }`}
               animate={
                 accent && !reducedMotion
