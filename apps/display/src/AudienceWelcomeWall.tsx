@@ -180,11 +180,12 @@ function VegasAttentionPanel({
 
 /**
  * Venue lobby / join wall: stacks below ~1280px width; three-column hero on xl+.
- * Uses grid `min-w-0`, fluid type, and capped QR height so 720p–4K landscape TVs stay readable.
- * Narrow portrait host previews are unsupported.
+ * Intended for landscape wall displays; portrait host previews are unsupported.
  *
- * From 1280px wide, QR max-height uses `min-height: 1081px`, not bare `xl`, so full-HD layouts
- * (1080px tall or less with landscape tuning) keep the enlarged QR—the old `xl:max-h` hid that.
+ * QR sizing: base max-h/max-w must not fight arbitrary media variants (Tailwind can sort base after
+ * @media(...), erasing shorter-viewport tuning). Taller desktops use `min-width:1280px` +
+ * `min-height:1081px` instead of bare `xl` for max caps. Landscape full HD uses stronger `!` sizing and
+ * an absolute-pinned QR tile so growth is visibly obvious and may overlap sibling columns until dialed.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -424,19 +425,24 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         {/* Row 2: [QR · join · rules]; wide 3-column only from xl (~1280px) so 720-class widths stack */}
         <div className="relative z-10 min-h-0 min-w-0 pb-[clamp(4px,min(0.85vmin,_10px),_11px)] max-[height:920px]:pb-[clamp(6px,min(1.05vmin,_12px),_14px)]">
           <div className="grid h-full min-h-0 min-w-0 grid-cols-1 gap-x-[clamp(12px,min(2.25vw,_28px),_40px)] gap-y-[clamp(9px,min(1.45vmin,_16px),_18px)] max-[height:920px]:gap-y-[clamp(8px,min(1.25vmin,_14px),_15px)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] xl:items-stretch">
-            <section aria-label="Scan QR to open player app" className="h-full min-h-0 min-w-0 w-full max-w-full justify-self-center xl:justify-self-end">
+            <section
+              aria-label="Scan QR to open player app"
+              className="relative h-full min-h-0 min-w-0 w-full max-w-full justify-self-center overflow-visible xl:justify-self-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[34]"
+            >
               <VegasAttentionPanel
                 showCorners
                 animateShimmer={!reducedMotion}
-                className="h-full min-h-0 min-w-0 w-full max-w-full rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55"
+                className="h-full min-h-0 min-w-0 w-full max-w-full overflow-visible rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 p-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:overflow-visible"
               >
-                <span className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug`}>
+                <span
+                  className={`${sectionRibbon} mb-[clamp(6px,_1vmin,_14px)] shrink-0 text-center leading-snug [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46]`}
+                >
                   Aim camera here
                 </span>
                 {qrOk ? (
-                  <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end">
-                    {/* `xl:` applies from 1280px wide, so caps that must win on 1080p TVs need min-height≥1081 or they erase the shorter-viewport tuning. */}
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-[min(74dvh,min(840px,min(78dvh,_74vmin)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-[min(100%,min(66vw,min(800px,_78dvh)))]">
+                  <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:min-h-[min(36dvh,340px)]">
+                    {/* Full-HD landscape: fixed tile beats collapsed flex + Tailwind max-h sort order; may overlap neighbor columns by design. */}
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!absolute [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!bottom-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!left-1/2 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!right-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!top-auto [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:![transform:translateX(-50%)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!z-[44] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!h-[min(78vmin,82dvh)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!w-[min(78vmin,82dvh)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-h-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:!max-w-none [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:p-1 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_12px_80px_-8px_rgba(0,0,0,0.75),inset_0_0_0_2px_rgba(254,249,231,1),0_0_60px_rgba(234,179,8,0.45)]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
@@ -453,7 +459,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                     QR blocked — check the centered join card for the URL and code.
                   </div>
                 )}
-                <span className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90`}>
+                <span
+                  className={`${sectionRibbon} mt-[clamp(6px,_1vmin,_14px)] shrink-0 text-center opacity-90 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:z-[46]`}
+                >
                   Opens Player
                 </span>
               </VegasAttentionPanel>
