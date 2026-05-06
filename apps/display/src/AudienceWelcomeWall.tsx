@@ -312,7 +312,6 @@ function WelcomeJoinCard({
   className,
   venueCode,
   joinUrl,
-  sectionRibbon,
   joinUrlText,
   venueMono,
   reducedMotion,
@@ -320,35 +319,29 @@ function WelcomeJoinCard({
   className: string
   venueCode: string
   joinUrl: string
-  sectionRibbon: string
   joinUrlText: string
   venueMono: string
   reducedMotion: boolean
 }) {
+  const joinLeadClass =
+    'min-w-0 text-balance whitespace-normal font-black uppercase tracking-[0.14em] text-amber-50/95 opacity-92 text-[clamp(0.88rem,min(2.52vw,_2.15vh),_1.55rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_2px_4px_rgba(0,0,0,_0.9)]'
+
   return (
-    <section aria-label="Player URL then venue room code" className={className}>
+    <section aria-label="Alternative join instructions: URL and room code" className={className}>
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
         className="h-full min-h-0 min-w-0 w-full rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:flex-1 xl:min-h-0 xl:overflow-hidden [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:-mt-[min(8.5dvh,108px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!h-[calc(100%+min(8.5dvh,108px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!min-h-[calc(100%+min(8.5dvh,108px))]"
       >
-        <div className="relative z-[1] px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(8px,_1.25vmin,_14px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center xl:pb-[clamp(8px,_1.05vmin,_12px)] xl:pt-[clamp(10px,_1.35vmin,_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(14px,_1.55vmin,_22px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(12px,_1.85vmin,_22px)]">
-          <p className={`${sectionRibbon} mb-[clamp(6px,_0.9vmin,_10px)] text-center`}>Player URL</p>
-          <p className={joinUrlText}>{joinUrl}</p>
-        </div>
-        <div
-          aria-hidden
-          className="mx-[clamp(8px,_1.5vmin,_18px)] mt-[clamp(6px,_0.85vmin,_12px)] border-t border-dashed border-white/22 xl:mt-[clamp(8px,_1vmin,_14px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mt-[clamp(12px,_1.35vmin,_20px)]"
-        />
-        <div className="flex flex-col items-center overflow-visible px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(8px,_1.15vmin,_14px)] text-center xl:pb-[clamp(12px,min(1.35vmin,_18px),_20px)] xl:pt-[clamp(8px,_1vmin,_12px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(22px,min(2.65vmin,_34px),_36px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(14px,_1.65vmin,_22px)]">
-          <p
-            className={`${sectionRibbon} mb-[clamp(8px,_1.05vmin,_12px)] text-center opacity-95 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:mb-[clamp(14px,_1.55vmin,_20px)]`}
-          >
-            Venue / room code
-          </p>
-          <div className="mx-auto inline-block max-w-full px-[4px] pb-[clamp(6px,min(0.85vmin,_8px),_10px)] pt-[2px] xl:pb-[clamp(6px,min(0.72vmin,_8px),_10px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(12px,min(1.2vmin,_14px),_16px)]">
+        <div className="relative z-[1] flex flex-col items-center px-[clamp(8px,_1.6vmin,_22px)] pb-[clamp(14px,min(1.75vmin,_22px),_26px)] pt-[clamp(10px,_1.8vmin,_18px)] text-center xl:pb-[clamp(12px,min(1.35vmin,_18px),_20px)] xl:pt-[clamp(10px,_1.35vmin,_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pb-[clamp(18px,min(2.2vmin,_28px),_30px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:pt-[clamp(12px,_1.85vmin,_22px)]">
+          <div className="mx-auto inline-block max-w-full">
+            <p className={`${joinLeadClass} mb-[clamp(8px,_1vmin,_12px)]`}>Or go to</p>
+            <p className={`${joinUrlText} mx-auto mb-[clamp(10px,_1.35vmin,_16px)] max-w-[min(100%,100vw-2rem)] break-words hyphens-none`}>{joinUrl}</p>
+          </div>
+          <div className="mx-auto mt-[clamp(2px,min(0.35vmin,_4px),_6px)] inline-block max-w-full">
+            <p className={`${joinLeadClass} mb-[clamp(8px,_1.05vmin,_12px)]`}>and enter room code</p>
             <motion.div
-              className="isolate inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
+              className="isolate mx-auto inline-block w-max max-w-full rounded-[clamp(8px,_1.35vmin,_14px)] border-[3px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.5vmin,_18px)] py-[clamp(5px,_1.1vmin,_12px)]"
               animate={
                 reducedMotion
                   ? undefined
@@ -383,7 +376,7 @@ function WelcomeWallHeader({ reducedMotion, taglineBrand }: { reducedMotion: boo
       <p
         className={`mt-[clamp(6px,_0.8vmin,_14px)] max-[height:900px]:mt-1 text-center ${taglineBrand}${!reducedMotion ? ' motion-safe:animate-vegas-gold-drip motion-safe:delay-150' : ''}`}
       >
-        Join tonight&apos;s game
+        Join on your phone
       </p>
       <VegasPulseDivider active={!reducedMotion} />
     </header>
@@ -602,7 +595,6 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 className="mx-auto min-h-0 w-full max-w-full shrink-0 justify-self-center"
                 venueCode={venueCode}
                 joinUrl={joinUrl}
-                sectionRibbon={sectionRibbon}
                 joinUrlText={joinUrlText}
                 venueMono={venueMono}
                 reducedMotion={Boolean(reducedMotion)}
@@ -635,7 +627,6 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   className="mx-auto flex h-full min-h-0 w-full max-w-[min(100%,38rem)] flex-1 flex-col justify-self-center"
                   venueCode={venueCode}
                   joinUrl={joinUrl}
-                  sectionRibbon={sectionRibbon}
                   joinUrlText={joinUrlText}
                   venueMono={venueMono}
                   reducedMotion={Boolean(reducedMotion)}
