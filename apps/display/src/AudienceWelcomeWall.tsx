@@ -110,32 +110,6 @@ function VegasPulseDivider({ active }: { active: boolean }) {
   )
 }
 
-/** Small flashy trust / stakes strip — readable at TV distance; motion optional. */
-function VegasLoungeStrip({ reducedMotion }: { reducedMotion: boolean }) {
-  const flash = reducedMotion ? '' : 'motion-safe:animate-vegas-gold-drip'
-  const chip =
-    'rounded-full px-[clamp(11px,_1.95vmin,_20px)] py-[clamp(5px,_0.85vmin,_8px)] text-[clamp(0.62rem,min(2.15vw,_0.92rem))] max-[height:880px]:px-[clamp(9px,_1.6vmin,_16px)] max-[height:880px]:py-[clamp(4px,_0.7vmin,_7px)] max-[height:880px]:text-[clamp(0.58rem,min(2vw,_0.84rem))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(8px,_1.32vmin,_15px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(4px,_0.62vmin,_6px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.56rem,min(1.92vw,_0.78rem),_0.86rem)] font-black uppercase shadow-lg'
-  return (
-    <div className="mt-[clamp(4px,_0.55vmin,_10px)] max-[height:900px]:mt-1 flex min-w-0 flex-wrap justify-center gap-x-[clamp(8px,_1.85vmin,_22px)] max-[height:880px]:gap-x-2 gap-y-[6px] max-[height:880px]:gap-y-1 px-1 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(5px,_1.05vmin,_14px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-1 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-0">
-      <span
-        className={`${chip} border border-rose-500/70 bg-gradient-to-br from-black/92 via-black/82 to-red-950/75 tracking-[0.32em] text-rose-100 shadow-[inset_0_1px_0_rgba(255,228,228,0.22),0_0_40px_-4px_rgba(239,68,68,0.45)] motion-reduce:border-rose-600/85 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.28em] ${flash}`}
-      >
-        ♠ LIVE FLOOR ♦
-      </span>
-      <span
-        className={`${chip} border border-yellow-400/80 bg-black/88 tracking-[0.28em] text-amber-100 shadow-[inset_0_1px_0_rgba(254,249,231,0.2),0_0_48px_-4px_rgba(234,179,8,0.55)] motion-reduce:border-amber-500/95 motion-safe:delay-300 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.24em] ${flash}`}
-      >
-        HIGH STAKES TRIVIA
-      </span>
-      <span
-        className={`${chip} border border-emerald-500/65 bg-black/88 tracking-[0.26em] text-emerald-100 shadow-[inset_0_1px_0_rgba(209,250,229,0.16),0_0_40px_-4px_rgba(52,211,153,0.35)] motion-reduce:border-emerald-500/90 motion-safe:delay-700 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.22em] ${flash}`}
-      >
-        ★ SCAN TO PLAY ★
-      </span>
-    </div>
-  )
-}
-
 function VegasAttentionPanel({
   showCorners,
   animateShimmer,
@@ -268,95 +242,68 @@ function WelcomeQrColumn({
 }
 
 /**
- * Venue join wall: single header; below `xl` stacks QR → join → stats; `xl+` uses two columns (QR | join + compact stats).
+ * Venue join wall: single header; below `xl` stacks QR → join → player count; `xl+` uses two columns (QR | join + count).
  * Intended for landscape wall displays; portrait host previews are unsupported.
  */
 type AttendanceSectionProps = {
   syncingCounts: boolean
-  lobby: number | null
-  atTables: number | null
+  /** Total human players in the venue (lobby + seated). */
   enrolled: number | null
   reducedMotion: boolean
-  statRibbon: string
-  statHint: string
+  playerCountLabelClass: string
   statTile1080: string
   statDigitBase: string
   statDigitAccentShadow: string
-  /** Full-width strip (default) vs compact row under join card when `xl` uses two columns */
+  /** Full-width centered (default) vs same column width as join card when `xl` uses two columns */
   layout: 'strip' | 'underJoin'
-  /** Merged onto `<section>` */
   className?: string
 }
 
 function AttendanceSection({
   syncingCounts,
-  lobby,
-  atTables,
   enrolled,
   reducedMotion,
-  statRibbon,
-  statHint,
+  playerCountLabelClass,
   statTile1080,
   statDigitBase,
   statDigitAccentShadow,
   layout,
   className,
 }: AttendanceSectionProps) {
-  const entries: { label: string; hint: string; v: string; accent?: boolean }[] = [
-    { label: 'Lobby pool', hint: 'Waiting for seats', v: syncingCounts ? '—' : String(lobby ?? 0) },
-    { label: 'At tables', hint: 'Seated now', v: syncingCounts ? '—' : String(atTables ?? 0) },
-    { label: 'Total in', hint: 'Humans (no CPUs)', v: syncingCounts ? '—' : String(enrolled ?? 0), accent: true },
-  ]
+  const display = syncingCounts ? '—' : String(enrolled ?? 0)
 
-  const stripSectionClass =
-    'relative z-[18] isolate grid min-h-0 min-w-0 shrink-0 grid-cols-1 gap-[clamp(7px,min(1.35vw,_16px),_18px)] max-[height:920px]:gap-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-x-[clamp(18px,min(2.85vw,_40px),_48px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:gap-y-[clamp(6px,min(1.2vw,_14px),_16px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(12px,min(2.4vw,_48px),_56px)] xl:grid-cols-3'
+  const stripWrapClass =
+    'relative z-[18] flex w-full min-h-0 shrink-0 justify-center [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:px-[clamp(12px,min(2.4vw,_48px),_56px)]'
 
-  const underJoinSectionClass =
-    'relative z-[18] isolate grid min-h-0 min-w-0 w-full shrink-0 grid-cols-3 gap-x-[clamp(3px,min(0.85vw,_8px),_10px)] gap-y-[clamp(3px,min(0.65vmin,_6px),_7px)] max-w-[min(100%,38rem)] mx-auto'
+  const underJoinWrapClass =
+    'relative z-[18] isolate w-full max-w-[min(100%,38rem)] mx-auto min-h-0 shrink-0'
 
-  const tileCompact =
-    'min-h-0 min-w-0 justify-self-stretch rounded-[clamp(8px,min(1.25vmin,_14px),_14px)] border-2 px-[clamp(4px,min(1vmin,_10px),_10px)] py-[clamp(3px,min(0.85vmin,_9px),_10px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto max-w-none'
+  const tileShared =
+    `${statTile1080} min-h-0 min-w-0 rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(8px,min(1.35vmin,_14px),_14px)] py-[clamp(8px,min(1.25vmin,_14px),_16px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]`
+
+  const stripTileClass = `${tileShared} w-full max-w-[min(100%,clamp(280px,42vw,480px))]`
+  const underJoinTileClass = `${tileShared} w-full`
 
   return (
     <section
-      aria-label="Attendance"
-      className={`${layout === 'strip' ? stripSectionClass : underJoinSectionClass}${className ? ` ${className}` : ''}`}
+      aria-label="Players in this venue"
+      className={`${layout === 'strip' ? stripWrapClass : underJoinWrapClass}${className ? ` ${className}` : ''}`}
     >
-      {entries.map(({ label, hint, v, accent }) => (
-        <motion.div
-          key={label}
-          className={`${layout === 'underJoin' ? tileCompact : `min-h-0 min-w-0 justify-self-center rounded-[clamp(10px,min(1.5vmin,_18px),_18px)] border-2 px-[clamp(6px,min(1.35vmin,_14px),_14px)] py-[clamp(5px,min(1.35vmin,_13px),_14px)] text-center backdrop-blur-sm motion-reduce:!transform-none motion-reduce:!filter-none motion-reduce:animate-none will-change-transform motion-reduce:will-change-auto xl:max-w-[min(100%,clamp(260px,30vw,400px))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:xl:max-w-[min(100%,clamp(248px,27vw,360px))]`} ${statTile1080} ${
-            Boolean(accent)
-              ? 'border-yellow-300/95 bg-gradient-to-br from-yellow-950/65 via-red-950/48 to-purple-950/52 shadow-[0_0_40px_-4px_rgba(234,179,8,0.42),inset_0_1px_0_rgba(254,249,231,0.16),inset_0_-16px_40px_-26px_rgba(239,68,68,0.1)] ring-2 ring-amber-500/65 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[0_0_28px_-6px_rgba(234,179,8,0.34),inset_0_1px_0_rgba(254,249,231,0.14),inset_0_-12px_32px_-22px_rgba(239,68,68,0.08)]'
-              : 'border-white/22 bg-black/62 shadow-[inset_0_0_34px_-12px_rgba(251,191,36,0.1),0_8px_32px_-10px_rgba(0,0,0,0.55)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:shadow-[inset_0_0_28px_-14px_rgba(251,191,36,0.09),0_6px_24px_-12px_rgba(0,0,0,0.5)]'
-          }`}
-          animate={
-            accent && !reducedMotion
-              ? {
-                  scale: [1, 1.014, 1],
-                  filter: ['brightness(1)', 'brightness(1.09) saturate(1.08)', 'brightness(1)'],
-                }
-              : undefined
-          }
-          transition={
-            accent && !reducedMotion
-              ? {
-                  duration: 2.75,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }
-              : undefined
-          }
-        >
-          <div className={statRibbon}>{label}</div>
-          <div
-            className={`${statDigitBase} ${accent ? `text-yellow-200 ${statDigitAccentShadow}` : 'text-white'}`}
-          >
-            {v}
-          </div>
-          <div className={statHint}>{hint}</div>
-        </motion.div>
-      ))}
+      <motion.div
+        className={layout === 'strip' ? stripTileClass : underJoinTileClass}
+        animate={
+          reducedMotion
+            ? undefined
+            : {
+                scale: [1, 1.014, 1],
+                filter: ['brightness(1)', 'brightness(1.09) saturate(1.08)', 'brightness(1)'],
+              }
+        }
+        transition={reducedMotion ? undefined : { duration: 2.75, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <div className={playerCountLabelClass}>Players</div>
+        <div className={`${statDigitBase} text-yellow-200 ${statDigitAccentShadow}`}>{display}</div>
+      </motion.div>
     </section>
   )
 }
@@ -439,7 +386,6 @@ function WelcomeWallHeader({ reducedMotion, taglineBrand }: { reducedMotion: boo
         Join tonight&apos;s game
       </p>
       <VegasPulseDivider active={!reducedMotion} />
-      <VegasLoungeStrip reducedMotion={Boolean(reducedMotion)} />
     </header>
   )
 }
@@ -447,9 +393,7 @@ function WelcomeWallHeader({ reducedMotion, taglineBrand }: { reducedMotion: boo
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
   const syncingCounts = wall == null
-  const lobby = syncingCounts ? null : wall.lobbyPlayerCount
-  const atTables = syncingCounts ? null : wall.totalSeatedAtTables
-  const enrolled = syncingCounts ? null : (lobby ?? 0) + (atTables ?? 0)
+  const enrolled = syncingCounts ? null : (wall.lobbyPlayerCount ?? 0) + (wall.totalSeatedAtTables ?? 0)
   const [qrOk, setQrOk] = useState(true)
   const reducedMotion = useReducedMotion()
 
@@ -463,13 +407,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const taglineBrand =
     'min-w-0 break-words text-balance font-semibold uppercase tracking-[0.26em] text-amber-50 text-[clamp(1.06rem,min(3.85vw,_2.95vh),_2.35rem)] [text-shadow:0_0_28px_rgba(253,224,138,0.58),0_0_88px_rgba(234,179,8,0.28),0_2px_8px_rgba(0,0,0,_0.95),0_-1px_0_rgba(127,29,29,0.32)]'
 
-  const statRibbon =
-    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)] uppercase text-rose-50/92 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.11em] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.9rem,min(2.72vw,_2.15vh),_1.72rem)] [text-shadow:0_0_18px_rgba(251,113,133,0.18),0_2px_8px_rgba(0,0,0,.6)]'
-
-  const statHint =
-    'min-w-0 break-words text-balance font-semibold text-white/72 text-[clamp(1.05rem,min(2.72vw,_2.4vh),_1.92rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.38vw,_2.05vh),_1.65rem)]'
-
-  /** Room code — vw + capped vh so short codes stay compact in the box without ultra-wide bars. */
+  /** “Players” label above the total count tile */
+  const playerCountLabelClass =
+    'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(1.05rem,min(3.35vw,_2.85vh),_2.22rem)] uppercase text-emerald-50/94 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.11em] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.9rem,min(2.72vw,_2.15vh),_1.72rem)] [text-shadow:0_0_18px_rgba(167,243,208,0.28),0_2px_8px_rgba(0,0,0,.58)] mb-[clamp(4px,min(0.65vmin,_6px),_8px]'
   const venueMono =
     'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-[clamp(1.75rem,min(9vw,min(10vh,_3.75rem)),_5.25rem)] uppercase text-transparent bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 bg-clip-text [-webkit-background-clip:text] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,.9))]'
 
@@ -670,12 +610,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               <AttendanceSection
                 layout="strip"
                 syncingCounts={syncingCounts}
-                lobby={lobby}
-                atTables={atTables}
                 enrolled={enrolled}
                 reducedMotion={Boolean(reducedMotion)}
-                statRibbon={statRibbon}
-                statHint={statHint}
+                playerCountLabelClass={playerCountLabelClass}
                 statTile1080={statTile1080}
                 statDigitBase={statDigitBase}
                 statDigitAccentShadow={statDigitAccentShadow}
@@ -706,12 +643,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 <AttendanceSection
                   layout="underJoin"
                   syncingCounts={syncingCounts}
-                  lobby={lobby}
-                  atTables={atTables}
                   enrolled={enrolled}
                   reducedMotion={Boolean(reducedMotion)}
-                  statRibbon={statRibbon}
-                  statHint={statHint}
+                  playerCountLabelClass={playerCountLabelClass}
                   statTile1080={statTile1080}
                   statDigitBase={statDigitBase}
                   statDigitAccentShadow={statDigitAccentShadow}
