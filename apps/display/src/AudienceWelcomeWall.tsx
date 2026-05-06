@@ -180,10 +180,11 @@ function VegasAttentionPanel({
 
 /**
  * Venue lobby / join wall: stacks below ~1280px width; three-column hero on xl+.
- * Uses grid `min-w-0`, fluid type, and capped QR height so 720p-class and 4K TVs stay readable.
+ * Uses grid `min-w-0`, fluid type, and capped QR height so 720p–4K landscape TVs stay readable.
+ * Narrow portrait host previews are unsupported.
  *
- * Intended for landscape wall/projector displays only. Narrow portrait previews are unsupported;
- * typography tuned for TVs is gated behind min-width + landscape + max-height queries.
+ * From 1280px wide, QR max-height uses `min-height: 1081px`, not bare `xl`, so full-HD layouts
+ * (1080px tall or less with landscape tuning) keep the enlarged QR—the old `xl:max-h` hid that.
  */
 export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcomeWallProps) {
   const joinUrl = playerJoinHref()
@@ -406,7 +407,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
         <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
           <div
-            className="relative mx-auto shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] [width:calc(min(max(30vh,_128px),min(580px,_54vh))*1024/655+12px)] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))] max-[height:720px]:[width:calc(min(max(26vh,_96px),min(340px,_44vh))*1024/655+12px)] max-w-[min(calc(96vw+14px),100%)]"
+            className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(30vh,_128px),min(580px,_54vh))] max-[height:720px]:[height:min(max(26vh,_96px),min(340px,_44vh))]"
+            style={{ aspectRatio: '1024 / 655' }}
           >
             <QuizzEmWordmark layout="fill" />
           </div>
@@ -433,7 +435,8 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                 </span>
                 {qrOk ? (
                   <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-end">
-                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] xl:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-[min(74dvh,min(840px,min(78dvh,_74vmin)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-[min(100%,min(66vw,min(800px,_78dvh)))]">
+                    {/* `xl:` applies from 1280px wide, so caps that must win on 1080p TVs need min-height≥1081 or they erase the shorter-viewport tuning. */}
+                    <div className="box-border flex h-full max-h-[min(46dvh,min(520px,_55vw))] min-h-[120px] w-full max-w-[min(100%,min(48vw,_46dvh))] min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(5px,min(1.1vmin,_11px),_11px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:max-h-[min(41dvh,min(480px,_52vw))] [@media(min-width:1280px)_and_(min-height:1081px)]:max-h-[min(48dvh,min(560px,_50vw))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-h-[min(74dvh,min(840px,min(78dvh,_74vmin)))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:max-w-[min(100%,min(66vw,min(800px,_78dvh)))]">
                       <img
                         src={qrImgSrc(joinUrl)}
                         alt=""
