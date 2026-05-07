@@ -82,7 +82,7 @@ function VegasPulseDivider({ active }: { active: boolean }) {
   return (
     <div
       aria-hidden
-      className="relative mt-[clamp(4px,_0.65vmin,_10px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)]"
+      className="relative mt-[clamp(2px,_0.45vmin,_8px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)]"
     >
       <div
         className="absolute inset-0 opacity-95"
@@ -425,11 +425,11 @@ function WelcomeWallHeader({
     <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
       <div
         className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible [height:min(max(41.6vh,_189px),min(800px,_77vh))] max-[height:720px]:[height:min(max(35.2vh,_147px),min(480px,_64vh))] xl:[height:min(max(54.4vh,_243px),min(960px,_83vh))]"
-        style={{ aspectRatio: '1' }}
+        style={{ aspectRatio: '955 / 592' }}
       >
         <QuizzEmWordmark layout="fill" />
       </div>
-      <p className={`mt-[clamp(5px,_0.65vmin,_12px)] max-[height:900px]:mt-1 text-center normal-case ${taglineClass}`}>By Liquid Kourage Entertainment</p>
+      <p className={`mt-[clamp(2px,_0.38vmin,_7px)] max-[height:900px]:mt-0.5 text-center normal-case ${taglineClass}`}>By Liquid Kourage Entertainment</p>
       <VegasPulseDivider active={!reducedMotion} />
     </header>
   )
@@ -634,7 +634,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ))}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(3px,_0.65vmin,_8px)] max-[height:920px]:gap-y-[clamp(5px,_1vmin,_10px)] overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(2px,_0.5vmin,_6px)] max-[height:920px]:gap-y-[clamp(3px,_0.75vmin,_8px)] overflow-hidden">
           <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineClass={taglineCredit} />
 
           <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)]">
