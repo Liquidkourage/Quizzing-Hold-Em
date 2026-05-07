@@ -47,7 +47,9 @@ const imgFillContain: React.CSSProperties = {
   objectPosition: 'center',
   display: 'block',
   backgroundColor: 'transparent',
-  filter: 'drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5))',
+  // Drop-shadow belongs on this <img> only — parent `filter:` + transparent PNGs often rasterize as a black slab in Chrome.
+  filter:
+    'drop-shadow(0 0 42px rgba(251, 191, 36, 0.22)) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.42))',
 }
 
 /** Official Quizz'Em marquee logo (RGBA artwork). */
