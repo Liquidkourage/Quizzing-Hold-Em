@@ -143,7 +143,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
         >
           <div className="flex min-w-0 justify-center">
             <div
-              className="max-w-full w-[min(86vw,calc((min(1600px,100vw)-2rem)*0.92))] sm:w-[calc((min(1600px,100vw)-2rem-1.25rem)/2)] lg:w-[calc((min(1600px,100vw)-2rem-3.75rem)/4)]"
+              className="max-w-full w-[calc(min(86vw,(min(1600px,100vw)-2rem)*0.92)*1.6)] sm:w-[calc((min(1600px,100vw)-2rem-1.25rem)*0.8)] lg:w-[calc((min(1600px,100vw)-2rem-3.75rem)*0.4)]"
               style={{ aspectRatio: '1' }}
             >
               <QuizzEmWordmark layout="fill" />
