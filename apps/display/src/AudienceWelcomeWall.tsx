@@ -425,7 +425,7 @@ function WelcomeWallHeader({
     <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
       <div
         className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible drop-shadow-[0_0_48px_rgba(251,191,36,0.24)] [height:min(max(26vh,_118px),min(500px,_48vh))] max-[height:720px]:[height:min(max(22vh,_92px),min(300px,_40vh))] xl:[height:min(max(34vh,_152px),min(600px,_52vh))]"
-        style={{ aspectRatio: '1024 / 655' }}
+        style={{ aspectRatio: '1' }}
       >
         <QuizzEmWordmark layout="fill" />
       </div>
