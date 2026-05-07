@@ -56,10 +56,10 @@ export function QuizzEmWordmark({ size = 'md', layout = 'fixed', className }: Qu
   const rootClass =
     layout === 'fill'
       ? clsx(
-          'flex h-full min-h-0 w-full min-w-0 items-center justify-center bg-transparent leading-none',
+          'isolate flex h-full min-h-0 w-full min-w-0 items-center justify-center bg-transparent leading-none',
           className,
         )
-      : clsx('flex shrink-0 bg-transparent leading-none', className)
+      : clsx('isolate flex shrink-0 bg-transparent leading-none', className)
 
   return (
     <div className={rootClass} role="img" aria-label={"Quizz'Em"}>
