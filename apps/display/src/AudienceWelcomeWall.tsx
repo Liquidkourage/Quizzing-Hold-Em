@@ -18,9 +18,9 @@ function joinUrlForDisplay(url: string): string {
   return url.replace(/^https:\/\//i, '').replace(/^http:\/\//i, '')
 }
 
-/** Request a larger QR raster for sharp scaling; margin=5 keeps a valid quiet zone with less empty border than the API default. */
+/** Request a larger QR raster for sharp scaling; margin keeps a valid quiet zone inside the white tile. */
 function qrImgSrc(joinUrl: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=640x640&margin=5&data=${encodeURIComponent(joinUrl)}`
+  return `https://api.qrserver.com/v1/create-qr-code/?size=640x640&margin=6&data=${encodeURIComponent(joinUrl)}`
 }
 
 /** Gold rail strokes at corners — long “┌” segments, not bordered squares (avoids checkbox look). */
@@ -184,7 +184,7 @@ function WelcomeQrColumn({
     'relative z-[5] flex min-h-0 min-w-0 max-h-full flex-1 flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch overflow-hidden'
 
   const panelClass =
-    `box-border w-fit max-w-full max-h-full min-h-0 min-w-0 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(8px,min(1.35vmin,_14px),_16px)] py-[clamp(8px,min(1.95vmin,_20px),_20px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 lg:w-full lg:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(8px,min(1.2vmin,_13px),_15px)]`
+    `box-border w-fit max-w-full max-h-full min-h-0 min-w-0 overflow-hidden rounded-[clamp(12px,_2vmin,_22px)] border-2 border-amber-400/55 bg-black/72 px-[clamp(6px,min(1.15vmin,_12px),_14px)] py-[clamp(6px,min(1.55vmin,_16px),_18px)] shadow-[inset_0_0_0_1px_rgba(251,211,141,0.18),0_0_72px_-4px_rgba(34,197,94,0.2),0_0_100px_-6px_rgba(234,179,8,0.16)] ring-2 ring-yellow-900/55 lg:w-full lg:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(6px,min(1.05vmin,_11px),_13px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:py-[clamp(6px,min(1.35vmin,_14px),_16px)]`
 
   const aimClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pb-0 px-[clamp(10px,min(2vmin,_22px),_28px)] [text-wrap:balance] lg:mb-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
@@ -196,7 +196,7 @@ function WelcomeQrColumn({
     'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(4px,min(0.85vmin,_8px),_10px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
   const whiteClass =
-    `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(96vw,min(62dvh,620px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(94vw,min(56dvh,560px)))] lg:mx-auto lg:aspect-square lg:h-auto lg:max-h-[min(100%,52dvh)] lg:w-full lg:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(40vmin,40dvh,400px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+    `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(94vw,min(58dvh,580px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(92vw,min(52dvh,520px)))] lg:mx-auto lg:aspect-square lg:h-auto lg:max-h-[min(100%,46dvh)] lg:w-full lg:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(35vmin,35dvh,352px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(35vmin,35dvh,352px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
 
   const opensClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pt-0 px-[clamp(10px,min(2vmin,_22px),_28px)] opacity-90 [text-wrap:balance] lg:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
@@ -218,7 +218,7 @@ function WelcomeQrColumn({
                 alt=""
                 width={640}
                 height={640}
-                className="block h-auto w-auto max-h-[min(92%,46dvh)] max-w-[92%] min-h-0 min-w-0 rounded-sm object-contain lg:max-h-[min(90%,48dvh)] lg:max-w-[90%]"
+                className="block h-auto w-auto max-h-[min(88%,42dvh)] max-w-[88%] min-h-0 min-w-0 rounded-sm object-contain lg:max-h-[min(84%,42dvh)] lg:max-w-[84%]"
                 referrerPolicy="no-referrer"
                 onError={() => setQrOk(false)}
               />
@@ -422,9 +422,9 @@ function WelcomeWallHeader({
   taglineClass: string
 }) {
   return (
-    <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
+    <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-0 sm:px-[clamp(2px,_0.45vw,_10px)]">
       <div
-        className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible [height:min(max(41.6vh,_189px),min(800px,_77vh))] max-[height:720px]:[height:min(max(35.2vh,_147px),min(480px,_64vh))] lg:[height:min(max(34vh,_200px),min(560px,_44vh))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:[height:min(max(31vh,_190px),min(480px,_40vh))]"
+        className="relative mx-auto w-auto max-w-[min(calc(100vw_-_16px),100%)] shrink-0 overflow-visible px-0 sm:max-w-[min(calc(100vw_-_12px),100%)] [height:min(max(41.6vh,_189px),min(800px,_77vh))] max-[height:720px]:[height:min(max(35.2vh,_147px),min(480px,_64vh))] lg:max-w-[min(94vw,min(960px,_96%))] lg:[height:min(max(54.4vh,_243px),min(960px,_83vh))]"
         style={{ aspectRatio: '955 / 592' }}
       >
         <QuizzEmWordmark layout="fill" />
@@ -604,7 +604,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto flex min-h-0 h-full max-h-full w-full max-w-none flex-col gap-y-[clamp(3px,_0.65vmin,_8px)] max-[height:920px]:gap-y-[clamp(5px,_1vmin,_10px)] px-[clamp(8px,_1.65vw,_56px)] py-[clamp(3px,_0.55vh,_10px)] max-[height:920px]:py-[clamp(4px,_0.58vh,_9px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-2 lg:gap-y-[clamp(4px,_0.85vmin,_10px)] lg:pb-[max(12px,env(safe-area-inset-bottom))] lg:pt-[clamp(2px,min(1vh,_12px),_14px)] overflow-hidden"
+        className="relative z-10 mx-auto flex min-h-0 h-full max-h-full w-full max-w-none flex-col gap-y-[clamp(2px,_0.5vmin,_7px)] max-[height:920px]:gap-y-[clamp(4px,_0.85vmin,_9px)] px-[clamp(6px,_1.2vw,_40px)] py-[clamp(2px,_0.4vh,_8px)] max-[height:920px]:py-[clamp(3px,_0.48vh,_8px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-2 lg:gap-y-[clamp(2px,_0.55vmin,_8px)] lg:px-[clamp(10px,min(2.25vw,_48px),_48px)] lg:pb-[max(8px,env(safe-area-inset-bottom))] lg:pt-[max(4px,min(0.35vh,_6px))] overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -637,7 +637,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(1px,_0.35vmin,_4px)] max-[height:920px]:gap-y-[clamp(2px,_0.55vmin,_6px)] overflow-hidden lg:gap-y-[2px]">
           <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineClass={taglineCredit} />
 
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)]">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)] lg:pb-0">
             <div
               aria-label="Join the game: scan, URL and room code, attendance"
               className="flex min-h-0 flex-1 flex-col gap-y-[clamp(4px,min(0.85vmin,_10px),_12px)] max-[height:920px]:gap-y-[clamp(4px,min(0.95vmin,_11px),_12px)] overflow-hidden lg:grid lg:grid-cols-[minmax(0,30%)_minmax(0,30%)_minmax(0,30%)] lg:gap-x-[5%] lg:gap-y-0 lg:items-start"
