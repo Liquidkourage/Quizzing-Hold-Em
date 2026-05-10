@@ -22,7 +22,7 @@ function joinUrlForDisplay(url: string): string {
 
 /** Request a larger QR raster for sharp scaling. `margin` is module quiet zone in the PNG only (not the black pattern). */
 function qrImgSrc(joinUrl: string): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=640x640&margin=4&data=${encodeURIComponent(joinUrl)}`
+  return `https://api.qrserver.com/v1/create-qr-code/?size=640x640&margin=3&data=${encodeURIComponent(joinUrl)}`
 }
 
 /** Gold rail strokes at corners — long “┌” segments, not bordered squares (avoids checkbox look). */
@@ -195,10 +195,10 @@ function WelcomeQrColumn({
     'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 px-[clamp(2px,min(0.42vmin,_4px),_5px)] lg:px-[clamp(5px,min(1.1vmin,_8px),_10px)] lg:py-[clamp(2px,min(0.48vmin,_4px),_6px)]'
 
   const whiteTileBase =
-    'box-border grid min-h-[120px] min-w-0 w-max max-w-full place-items-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white px-[clamp(1px,min(0.28vmin,_3px),_4px)] py-[clamp(2px,min(0.42vmin,_4px),_5px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
+    'box-border grid min-h-[120px] min-w-0 w-max max-w-full place-items-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white px-[clamp(1px,min(0.22vmin,_2px),_3px)] py-[clamp(1px,min(0.38vmin,_3px),_4px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
   const whiteClass =
-    `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(80vw,min(49dvh,500px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(79vw,min(45dvh,450px)))] lg:mx-auto lg:aspect-square lg:h-auto lg:max-h-[min(100%,39dvh)] lg:w-full lg:max-w-[96%] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(30vmin,30dvh,304px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(30vmin,30dvh,304px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!py-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!px-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+    `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(72vw,min(44dvh,450px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(71vw,min(41dvh,405px)))] lg:mx-auto lg:aspect-square lg:h-auto lg:max-h-[min(100%,35dvh)] lg:w-full lg:max-w-[92%] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(27vmin,27dvh,274px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(27vmin,27dvh,274px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!py-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!px-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
 
   const opensClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pt-0 px-[clamp(10px,min(2vmin,_22px),_28px)] opacity-90 [text-wrap:balance] lg:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
