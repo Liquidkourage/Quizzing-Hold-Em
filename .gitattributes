@@ -1,0 +1,2 @@
+# Shell hooks for Linux CI (Railway); CRLF breaks `#!/bin/sh` shebang parsing.
+*.sh text eol=lf
