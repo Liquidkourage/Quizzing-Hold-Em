@@ -178,7 +178,7 @@ function WelcomeQrColumn({
   reducedMotion: boolean
 }) {
   const sectionClass =
-    'relative flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col items-center overflow-hidden justify-self-center xl:h-full xl:max-h-full xl:flex-1 xl:justify-center'
+    'relative flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col items-center overflow-hidden justify-self-center xl:h-full xl:max-h-full xl:flex-1 xl:justify-start'
 
   const panelInnerFlex =
     'relative z-[5] flex min-h-0 min-w-0 max-h-full flex-1 flex-col justify-between gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] items-stretch overflow-hidden'
@@ -190,7 +190,7 @@ function WelcomeQrColumn({
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pb-0 px-[clamp(10px,min(2vmin,_22px),_28px)] [text-wrap:balance] xl:mb-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
 
   const midClass =
-    'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 px-[clamp(4px,min(0.85vmin,_8px),_10px)] xl:min-h-[min(20dvh,140px)] xl:px-[clamp(10px,min(2.2vmin,_16px),_20px)] xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
+    'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 px-[clamp(4px,min(0.85vmin,_8px),_10px)] xl:min-h-[min(20dvh,140px)] xl:justify-start xl:px-[clamp(10px,min(2.2vmin,_16px),_20px)] xl:py-[clamp(4px,min(0.95vmin,_8px),_12px)]'
 
   const whiteTileBase =
     'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(4px,min(0.85vmin,_8px),_10px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
@@ -331,7 +331,7 @@ function WelcomeJoinCard({
     'min-w-0 text-balance whitespace-normal font-black uppercase tracking-[0.14em] text-amber-50/95 opacity-92 text-[clamp(0.88rem,min(2.52vw,_2.15vh),_1.55rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_2px_4px_rgba(0,0,0,_0.9)]'
 
   const joinInnerFlex =
-    'relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col items-center justify-center gap-y-[clamp(10px,min(1.35vmin,_16px),_18px)] px-[clamp(8px,_1.5vmin,_20px)] py-[clamp(12px,min(1.5vmin,_22px),_26px)] text-center xl:px-[clamp(10px,_1.55vmin,_22px)] xl:py-[clamp(14px,min(1.5vmin,_24px),_28px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:py-[clamp(12px,min(1.55vmin,_22px),_24px)]'
+    'relative z-[5] flex min-h-0 min-w-0 h-full w-full flex-1 flex-col items-center justify-center gap-y-[clamp(10px,min(1.35vmin,_16px),_18px)] px-[clamp(8px,_1.5vmin,_20px)] py-[clamp(12px,min(1.5vmin,_22px),_26px)] text-center xl:h-auto xl:flex-none xl:justify-start xl:px-[clamp(10px,_1.55vmin,_22px)] xl:py-[clamp(10px,min(1.25vmin,_18px),_22px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:py-[clamp(12px,min(1.55vmin,_22px),_24px)]'
 
   return (
     <section aria-label="Alternative join instructions: URL and room code" className={className}>
@@ -339,7 +339,7 @@ function WelcomeJoinCard({
         showCorners
         animateShimmer={!reducedMotion}
         innerFlexClassName={joinInnerFlex}
-        className="flex min-h-0 min-w-0 h-full w-full flex-col rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:min-h-0 xl:flex-1 xl:overflow-hidden"
+        className="flex h-full min-h-0 min-w-0 w-full flex-col rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:h-auto xl:overflow-hidden"
       >
         <p className={`${joinLeadClass} shrink-0`}>Or go to</p>
         <p
@@ -389,16 +389,16 @@ function WelcomeNewPlayerTipsPanel({
   ] as const
 
   return (
-    <section aria-label="How Quizz'em Hold'em is played" className="flex h-full min-h-0 min-w-0 w-full flex-col">
+    <section aria-label="How Quizz'em Hold'em is played" className="flex h-full min-h-0 min-w-0 w-full flex-col xl:h-auto xl:min-h-0">
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center"
-        className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90"
+        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center xl:h-auto xl:flex-none xl:justify-start"
+        className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 xl:h-auto xl:flex-none"
       >
-        <div className="relative z-[1] flex h-full min-h-0 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] px-[clamp(12px,_1.75vmin,_22px)] py-[clamp(12px,_1.65vmin,_22px)] xl:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
+        <div className="relative z-[1] flex h-full min-h-0 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] px-[clamp(12px,_1.75vmin,_22px)] py-[clamp(12px,_1.65vmin,_22px)] xl:justify-start xl:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
           <p className={`${hintsTitleClass} shrink-0 text-center`}>How to play</p>
-          <ul className="m-0 flex min-h-0 list-none flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 xl:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
+          <ul className="m-0 flex min-h-0 list-none flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 xl:justify-start xl:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
             {tips.map((t) => (
               <li key={t} className="flex items-start gap-x-[clamp(8px,_1.1vmin,_12px)]">
                 <span className="mt-[0.42em] shrink-0 text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
@@ -634,13 +634,13 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           ))}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(2px,_0.5vmin,_6px)] max-[height:920px]:gap-y-[clamp(3px,_0.75vmin,_8px)] overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(1px,_0.35vmin,_4px)] max-[height:920px]:gap-y-[clamp(2px,_0.55vmin,_6px)] overflow-hidden xl:gap-y-[2px]">
           <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineClass={taglineCredit} />
 
           <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)]">
             <div
               aria-label="Join the game: scan, URL and room code, attendance"
-              className="flex min-h-0 flex-1 flex-col gap-y-[clamp(6px,min(1.1vmin,_13px),_14px)] max-[height:920px]:gap-y-[clamp(6px,min(1.05vmin,_12px),_13px)] overflow-hidden xl:grid xl:grid-cols-[minmax(0,30%)_minmax(0,30%)_minmax(0,30%)] xl:gap-x-[5%] xl:gap-y-0 xl:items-stretch"
+              className="flex min-h-0 flex-1 flex-col gap-y-[clamp(4px,min(0.85vmin,_10px),_12px)] max-[height:920px]:gap-y-[clamp(4px,min(0.95vmin,_11px),_12px)] overflow-hidden xl:grid xl:grid-cols-[minmax(0,30%)_minmax(0,30%)_minmax(0,30%)] xl:gap-x-[5%] xl:gap-y-0 xl:items-start"
             >
               <div className="flex min-h-0 min-w-0 flex-col overflow-hidden xl:h-full xl:max-h-full">
                 <WelcomeQrColumn
@@ -651,9 +651,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   reducedMotion={Boolean(reducedMotion)}
                 />
               </div>
-              <div className="flex min-h-0 min-w-0 flex-col justify-center gap-y-[clamp(8px,min(1.15vmin,_14px),_16px)] overflow-hidden xl:h-full xl:flex-1 xl:justify-between xl:gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
+              <div className="flex min-h-0 min-w-0 flex-col justify-start gap-y-[clamp(6px,min(1vmin,_12px),_14px)] overflow-hidden xl:h-full xl:flex-1 xl:gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
                 <WelcomeJoinCard
-                  className="flex min-h-0 min-w-0 w-full shrink-0 flex-col xl:min-h-0 xl:flex-1"
+                  className="flex min-h-0 min-w-0 w-full shrink-0 flex-col xl:min-h-0"
                   venueCode={venueCode}
                   joinUrl={joinUrl}
                   joinUrlText={joinUrlText}
@@ -671,7 +671,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   statDigitAccentShadow={statDigitAccentShadow}
                 />
               </div>
-              <div className="hidden min-h-0 min-w-0 shrink-0 xl:flex xl:h-full xl:flex-col">
+              <div className="hidden min-h-0 min-w-0 shrink-0 xl:flex xl:h-auto xl:min-h-0 xl:w-full xl:flex-col">
                 <WelcomeNewPlayerTipsPanel
                   hintsTitleClass={hintsTitleClass}
                   reducedMotion={Boolean(reducedMotion)}
