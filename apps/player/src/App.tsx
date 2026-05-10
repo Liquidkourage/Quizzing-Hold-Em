@@ -25,8 +25,9 @@ function PlayerApp() {
   )
   const [tableId, setTableId] = useState(() =>
     typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('table') ?? '1'
-      : '1'
+      ? new URLSearchParams(window.location.search).get('table') ??
+          LOBBY_TABLE_ID
+      : LOBBY_TABLE_ID
   )
   const [isJoined, setIsJoined] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -37,7 +38,9 @@ function PlayerApp() {
   const [selectedCards, setSelectedCards] = useState<Array<{type: 'hand' | 'community', index: number}>>([])
   const socket = useSocket()
 
-  const joinTableId = autoSeat ? LOBBY_TABLE_ID : String(tableId || '').trim() || '1'
+  const joinTableId = autoSeat
+    ? LOBBY_TABLE_ID
+    : String(tableId || '').trim() || LOBBY_TABLE_ID
 
   const handleJoin = () => {
     if (!playerName || !roomCode) return

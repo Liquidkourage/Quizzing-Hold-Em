@@ -107,16 +107,19 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   }, [answerDeadlineMs])
 
   const tileRows: DisplayVenueTileSnapshot[] =
-    wall?.tiles != null && wall.tiles.length === 8
+    wall?.tiles != null && wall.tiles.length > 0
       ? [...wall.tiles].sort((a, b) => a.tableNum - b.tableNum)
-      : DISPLAY_PREVIEW_TABLES.map((snap, i) => ({
-          tableNum: i + 1,
-          seated: snap.seated,
-          pot: snap.pot,
-          phase: DISPLAY_PREVIEW_SYNCED_PHASE,
-        }))
+      : wall?.tiles != null && wall.tiles.length === 0
+        ? []
+        : DISPLAY_PREVIEW_TABLES.map((snap, i) => ({
+            tableNum: i + 1,
+            seated: snap.seated,
+            pot: snap.pot,
+            phase: DISPLAY_PREVIEW_SYNCED_PHASE,
+          }))
 
-  const hasLiveWall = wall != null && wall.tiles.length === 8
+  const hasLiveWall =
+    wall != null && wall.tiles != null && wall.tiles.length > 0
   const showHeadline =
     hasLiveWall && (headlineQuestionText != null || answerDeadlineMs != null)
 
@@ -186,7 +189,21 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
       </div>
 
       <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 sm:px-6">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {wall != null && tileRows.length === 0 ? (
+          <motion.div
+            className="rounded-2xl border border-yellow-700/35 bg-black/55 p-10 text-center shadow-xl backdrop-blur-md sm:p-14"
+            initial={skipMountIntro ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-xl font-semibold leading-snug text-white/92 sm:text-2xl">
+              Felts open here after the host assigns players from the lobby.
+            </p>
+            <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-white/55">
+              Guests can keep joining from the briefing screen until seating runs.
+            </p>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {tileRows.map((row, idx) => {
             const tn = row.tableNum
             const seats = row.seated
@@ -231,7 +248,8 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               </motion.article>
             )
           })}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   )

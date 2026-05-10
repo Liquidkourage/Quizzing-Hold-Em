@@ -15,7 +15,9 @@ import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
 function normalizeVenueWallTiles(
   tiles: DisplayVenueWallSnapshot['tiles'] | undefined
 ): DisplayVenueWallSnapshot['tiles'] | null {
-  if (!Array.isArray(tiles) || tiles.length === 0) return null
+  if (tiles === undefined) return null
+  if (!Array.isArray(tiles)) return null
+  if (tiles.length === 0) return []
   const byNum = new Map<number, DisplayVenueWallSnapshot['tiles'][number]>()
   for (const t of tiles) {
     if (
@@ -28,18 +30,7 @@ function normalizeVenueWallTiles(
       byNum.set(t.tableNum, t)
     }
   }
-  const out: DisplayVenueWallSnapshot['tiles'] = []
-  for (let n = 1; n <= 8; n++) {
-    out.push(
-      byNum.get(n) ?? {
-        tableNum: n,
-        seated: 0,
-        pot: 0,
-        phase: 'lobby',
-      }
-    )
-  }
-  return out
+  return [...byNum.keys()].sort((a, b) => a - b).map((n) => byNum.get(n)!)
 }
 
 /** Tile rect in viewport used to “iris” open the full felt from the grid. */

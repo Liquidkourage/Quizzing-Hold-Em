@@ -136,7 +136,7 @@ Implemented in **`@qhe/core`**: **`check`, `call`, `raise`, `allIn`, `fold`**, p
 `/display` in **venue overview** shows **either**:
 
 1. **`AudienceWelcomeWall`** (QR + URL + room code + “how to play”) — only while the server snapshot includes **`showAudienceWelcome: true`**. That flips to **`false`** after the venue-wide **Start Game** succeeds (`markVenueShowStarted` → `venueAudienceWelcomeExpired`). It becomes **`true`** again only after host runs **New Game**, which clears that set entry and re-emits the venue snapshot.
-2. **`VenueEightTablesPreview`** (numbered table mosaic + headline strip) — whenever briefing is off, **or** before the first snapshot arrives, **or** if this tab received a **local** layout relay (`BroadcastChannel`) from a host tab on the **same origin** (“mosaic forced”).
+2. **`VenueEightTablesPreview`** (numbered table mosaic + headline strip) — whenever briefing is off, **or** before the first snapshot arrives, **or** if this tab received a **local** layout relay (`BroadcastChannel`) from a host tab on the **same origin** (“mosaic forced”). Numbered felts on the mosaic only appear **after** the host runs **`Assign from lobby`**: wall snapshot **`tiles`** is empty until then; the idle mosaic shows copy instead of eight placeholder felts once a snapshot has arrived without rows (pre-snapshot still uses the cinematic preview grid until the first **`displayVenueSnapshot`** arrives).
 
 So: UI changes in **`AudienceWelcomeWall.tsx`** do not affect the mosaic; after **Start Game** you will **not** see that screen until **New Game** restores briefing.
 

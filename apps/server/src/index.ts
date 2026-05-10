@@ -959,24 +959,27 @@ function wireDisplaySocketToVenue(socket: Socket, venueCodeRaw: string, data: Cl
   const watchKey = tableSessionKey(vn, normalizeTableId(sessionTableIdRaw))
   socket.join(watchKey)
   sockData.sessionKey = watchKey
-  let gs = rooms.get(watchKey)
+  const gs = rooms.get(watchKey)
   if (!gs) {
-    gs = createEmptyGame(vn, '', normalizeTableId(sessionTableIdRaw))
-    rooms.set(watchKey, gs)
+    /** Spotlight / felt preview only — numbered sessions are created when the host seats the lobby */
+    const tid = normalizeTableId(sessionTableIdRaw)
+    const tidN = Number.parseInt(String(tid), 10)
+    const synthetic =
+      Number.isInteger(tidN) && tidN >= 1 && tidN <= 8
+        ? buildDisplayPreviewGameState(normalizeVenueCode(vn), tid)
+        : createEmptyGame(vn, '', tid)
+    socket.emit('ack', { ok: true, message: 'Connected successfully' } satisfies ServerAck)
+    socket.emit('state', runVirtualPlayerSimulation(synthetic))
+    scheduleDisplayVenueSnapshot(vn)
+    return
   }
-  const tid = normalizeTableId(sessionTableIdRaw)
-  if (gs.players.length === 0 && gs.phase === 'lobby') {
-    const tn = Number.parseInt(String(tid), 10)
-    if (Number.isInteger(tn) && tn >= 1 && tn <= 8) {
-      gs = buildDisplayPreviewGameState(normalizeVenueCode(vn), tid)
-      rooms.set(watchKey, gs)
-    }
-  }
-  gs = runVirtualPlayerSimulation(gs)
-  rooms.set(watchKey, gs)
+
+  let gsLive = gs
+  gsLive = runVirtualPlayerSimulation(gsLive)
+  rooms.set(watchKey, gsLive)
   const ackDs: ServerAck = { ok: true, message: 'Connected successfully' }
   socket.emit('ack', ackDs)
-  emitVenueTableState(watchKey, gs)
+  emitVenueTableState(watchKey, gsLive)
 }
 
 function ensureVenueLibrary(venueCode: string): VenueLibraryData {
@@ -1121,26 +1124,24 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
 
   const tiles: DisplayVenueTileSnapshot[] = []
   let totalSeatedAtTables = 0
-  for (let n = 1; n <= 8; n++) {
-    const key = tableSessionKey(vn, String(n))
+  const tableKeys = allTableSessionsInVenue(vn).sort((a, b) => {
+    const na = tableNumFromSessionKey(vn, a) ?? 99
+    const nb = tableNumFromSessionKey(vn, b) ?? 99
+    return na - nb
+  })
+  for (const key of tableKeys) {
+    const n = tableNumFromSessionKey(vn, key)
+    if (n == null) continue
     const gs = rooms.get(key)
-    if (gs != null) {
-      const seated = humanAudienceCount(gs)
-      totalSeatedAtTables += seated
-      tiles.push({
-        tableNum: n,
-        seated,
-        pot: gs.round.pot ?? 0,
-        phase: gs.phase,
-      })
-    } else {
-      tiles.push({
-        tableNum: n,
-        seated: 0,
-        pot: 0,
-        phase: 'lobby',
-      })
-    }
+    if (!gs) continue
+    const seated = humanAudienceCount(gs)
+    totalSeatedAtTables += seated
+    tiles.push({
+      tableNum: n,
+      seated,
+      pot: gs.round.pot ?? 0,
+      phase: gs.phase,
+    })
   }
 
   const headlineGs = pickHeadlineGameState(vn)
@@ -1250,6 +1251,30 @@ io.on('connection', (socket) => {
     const venueCode = normalizeVenueCode(roomCode)
     const tableId = normalizeTableId(data.tableId)
     const helloSessionKey = tableSessionKey(venueCode, tableId)
+
+    if (role !== 'display') {
+      const candidateExists = !!rooms.get(helloSessionKey)
+      if (
+        tableId !== LOBBY_TABLE_ID &&
+        role === 'player' &&
+        !candidateExists
+      ) {
+        socket.emit('ack', {
+          ok: false,
+          message:
+            'That table has not opened yet. Join via the lobby until the host seats everyone.',
+        })
+        return
+      }
+      if (tableId !== LOBBY_TABLE_ID && role === 'host' && !candidateExists) {
+        socket.emit('ack', {
+          ok: false,
+          message:
+            'Host from LOBBY until tables exist. Connect with ?table=LOBBY (default) until after Assign from lobby.',
+        })
+        return
+      }
+    }
 
     const sockData = socket.data as DisplaySockData
     sockData.role = role
@@ -1835,16 +1860,35 @@ io.on('connection', (socket) => {
 
         case 'newGame': {
           if (!assertVenueHost(socket, gameState)) break
-          for (const tk of allVenueSessionKeys(gameState.code)) {
-            const prev = rooms.get(tk)
-            const fresh = createEmptyGame(prev.code, prev.hostId, prev.tableId)
-            rooms.set(tk, fresh)
-            emitVenueTableState(tk, fresh)
+          const vn = normalizeVenueCode(gameState.code)
+          const hostIdSnap = gameState.hostId
+          const lobbyKey = tableSessionKey(vn, LOBBY_TABLE_ID)
+          for (const tk of allTableSessionsInVenue(vn)) {
+            io.to(tk).emit('toast', 'Venue reset — use the lobby link to rejoin.')
+            rooms.delete(tk)
           }
-          socket.emit('toast', 'New game — lobby and all tables reset.')
-          venueAudienceWelcomeExpired.delete(normalizeVenueCode(gameState.code))
+          const freshLobby = {
+            ...createEmptyGame(vn, hostIdSnap, LOBBY_TABLE_ID),
+            smallBlind: gameState.smallBlind,
+            bigBlind: gameState.bigBlind,
+          }
+          rooms.set(lobbyKey, freshLobby)
+          const hostSock = io.sockets.sockets.get(hostIdSnap)
+          if (hostSock) {
+            for (const r of [...hostSock.rooms]) {
+              if (r === hostSock.id) continue
+              if (typeof r === 'string' && r.startsWith(venueSessionKeyPrefix(vn))) {
+                hostSock.leave(r)
+              }
+            }
+            hostSock.join(lobbyKey)
+            ;(hostSock.data as { sessionKey?: string }).sessionKey = lobbyKey
+          }
+          emitVenueTableState(lobbyKey, freshLobby)
+          socket.emit('toast', 'New game — numbered tables cleared; lobby reset.')
+          venueAudienceWelcomeExpired.delete(vn)
           scheduleDisplayVenueSnapshot(gameState.code)
-          gameState = rooms.get(sessionKey)!
+          gameState = rooms.get(lobbyKey)!
           break
         }
 
