@@ -82,7 +82,7 @@ function VegasPulseDivider({ active }: { active: boolean }) {
   return (
     <div
       aria-hidden
-      className="relative mt-[clamp(2px,_0.45vmin,_8px)] max-[height:900px]:mt-1 h-[clamp(7px,_0.95vmin,_11px)] max-[height:900px]:h-[clamp(6px,_0.85vmin,_9px)] w-[min(94%,920px)] shrink-0 overflow-hidden rounded-full border border-amber-400/65 bg-black/75 shadow-[0_0_40px_rgba(251,191,36,0.35),inset_0_1px_0_rgba(255,255,255,0.12)]"
+      className="relative mt-0 max-[height:900px]:mt-px h-[clamp(3px,_0.52vmin,_6px)] max-[height:900px]:h-[clamp(3px,_0.48vmin,_5px)] w-full max-w-none shrink-0 overflow-hidden rounded-full border border-amber-400/55 bg-black/75 shadow-[0_0_28px_rgba(251,191,36,0.28),inset_0_1px_0_rgba(255,255,255,0.1)]"
     >
       <div
         className="absolute inset-0 opacity-95"
@@ -196,7 +196,7 @@ function WelcomeQrColumn({
     'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(4px,min(0.85vmin,_8px),_10px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
   const whiteClass =
-    `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(94vw,min(58dvh,580px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(92vw,min(52dvh,520px)))] lg:mx-auto lg:aspect-square lg:h-auto lg:max-h-[min(100%,46dvh)] lg:w-full lg:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(35vmin,35dvh,352px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(35vmin,35dvh,352px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
+    `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(85vw,min(52dvh,522px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(83vw,min(47dvh,468px)))] lg:mx-auto lg:aspect-square lg:h-auto lg:max-h-[min(100%,41dvh)] lg:w-full lg:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(31.5vmin,31.5dvh,317px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(31.5vmin,31.5dvh,317px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[3px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
 
   const opensClass =
     `${sectionRibbon} shrink-0 w-full block text-center leading-[1.08] pt-0 px-[clamp(10px,min(2vmin,_22px),_28px)] opacity-90 [text-wrap:balance] lg:mt-0 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:relative [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:z-[46]`
@@ -218,7 +218,7 @@ function WelcomeQrColumn({
                 alt=""
                 width={640}
                 height={640}
-                className="block h-auto w-auto max-h-[min(88%,42dvh)] max-w-[88%] min-h-0 min-w-0 rounded-sm object-contain lg:max-h-[min(84%,42dvh)] lg:max-w-[84%]"
+                className="block h-auto w-auto max-h-[min(79%,38dvh)] max-w-[79%] min-h-0 min-w-0 rounded-sm object-contain lg:max-h-[min(76%,38dvh)] lg:max-w-[76%]"
                 referrerPolicy="no-referrer"
                 onError={() => setQrOk(false)}
               />
@@ -379,7 +379,7 @@ function WelcomeNewPlayerTipsPanel({
   reducedMotion: boolean
 }) {
   const bulletClass =
-    'min-w-0 flex-1 text-balance font-semibold leading-[1.38] text-amber-50/96 [text-shadow:0_2px_14px_rgba(0,0,0,_0.82)] text-[clamp(1rem,min(3.15vw,_2.75vh),_1.52rem)] lg:leading-[1.42] lg:text-[clamp(1.05rem,min(3.35vw,_2.9vh),_1.58rem)]'
+    'min-w-0 flex-1 text-balance font-semibold leading-[1.38] text-amber-50/96 [text-shadow:0_2px_14px_rgba(0,0,0,_0.82)] text-[clamp(0.9rem,min(2.835vw,_2.475vh),_1.368rem)] lg:leading-[1.42] lg:text-[clamp(0.945rem,min(3.015vw,_2.61vh),_1.422rem)]'
 
   const tips = [
     "Quizz'em is a trivia game played exactly like Texas Hold'em—answers are numeric, cards are single digits (e.g. 99, 1492, 90210).",
@@ -422,7 +422,7 @@ function WelcomeWallHeader({
   taglineClass: string
 }) {
   return (
-    <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-0 sm:px-[clamp(2px,_0.45vw,_10px)]">
+    <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-stretch px-0 sm:px-[clamp(2px,_0.45vw,_10px)]">
       <div className="relative mx-auto aspect-[958/592] w-full max-w-[min(552px,calc(92vw_*_0.6),calc((100vw_-_28px)_*_0.6))] shrink-0 overflow-visible lg:w-auto lg:max-h-[min(33.6vh,432px)] lg:max-w-[min(576px,calc(96vw_*_0.6),calc((100vw_-_36px)_*_0.6))]">
         <QuizzEmWordmark layout="fill" />
       </div>
@@ -447,7 +447,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     'min-w-0 font-black uppercase tracking-[0.22em] text-amber-50/98 break-words text-balance whitespace-normal text-[clamp(1.05rem,min(3.95vw,_3vh),_2.5rem)] [text-shadow:0_0_32px_rgba(251,191,36,0.45),0_0_72px_rgba(239,68,68,0.14),0_2px_4px_rgba(0,0,0,_0.95)]'
 
   const hintsTitleClass =
-    'min-w-0 font-black uppercase tracking-[0.17em] text-amber-50/97 break-words text-balance whitespace-normal text-[clamp(1.12rem,min(3.85vw,_3.1vh),_1.92rem)] [text-shadow:0_0_24px_rgba(251,191,36,0.45),0_2px_8px_rgba(0,0,0,_0.92)]'
+    'min-w-0 font-black uppercase tracking-[0.17em] text-amber-50/97 break-words text-balance whitespace-normal text-[clamp(1.008rem,min(3.465vw,_2.79vh),_1.728rem)] [text-shadow:0_0_24px_rgba(251,191,36,0.45),0_2px_8px_rgba(0,0,0,_0.92)]'
 
   /** Credit under the wordmark — readable title case, subtler than headline chrome. */
   const taglineCredit =
@@ -474,12 +474,11 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const statDigitAccentShadow =
     '[text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:[text-shadow:0_0_22px_rgba(253,224,138,0.55),0_0_54px_rgba(234,179,8,0.28),0_2px_3px_rgba(0,0,0,0.92)]'
 
-  // TEMP: yellow border on root + every nested div — remove when layout debug done.
   return (
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative box-border border border-yellow-400 h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35 [&_div]:box-border [&_div]:border [&_div]:border-yellow-400"
+      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Base felt + velvet house lights */}
