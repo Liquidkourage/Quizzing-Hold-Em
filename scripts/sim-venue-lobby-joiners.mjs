@@ -8,7 +8,12 @@
  *   npm run sim:lobby -- --room HOST01
  *   npm run sim:lobby -- --room=HOST01 [--url=http://127.0.0.1:7777]
  *
- * Prereqs: game server listening (default http://127.0.0.1:7777); host opened that room code.
+ * Railway (or any HTTPS deploy): point at your public origin (no trailing slash). Socket.IO
+ * upgrades to WSS automatically.
+ *   npm run sim:lobby -- --room HOST01 --url=https://YOUR_APP.up.railway.app
+ * Quick check: https://YOUR_APP.up.railway.app/health should return `ok`.
+ *
+ * Prereqs: backend reachable at that URL; host opened that room code on this venue.
  */
 
 import { io } from 'socket.io-client'
