@@ -131,6 +131,19 @@ Implemented in **`@qhe/core`**: **`check`, `call`, `raise`, `allIn`, `fold`**, p
 
 ---
 
+## Display: join briefing vs 8-table wall
+
+`/display` in **venue overview** shows **either**:
+
+1. **`AudienceWelcomeWall`** (QR + URL + room code + “how to play”) — only while the server snapshot includes **`showAudienceWelcome: true`**. That flips to **`false`** after the venue-wide **Start Game** succeeds (`markVenueShowStarted` → `venueAudienceWelcomeExpired`). It becomes **`true`** again only after host runs **New Game**, which clears that set entry and re-emits the venue snapshot.
+2. **`VenueEightTablesPreview`** (numbered table mosaic + headline strip) — whenever briefing is off, **or** before the first snapshot arrives, **or** if this tab received a **local** layout relay (`BroadcastChannel`) from a host tab on the **same origin** (“mosaic forced”).
+
+So: UI changes in **`AudienceWelcomeWall.tsx`** do not affect the mosaic; after **Start Game** you will **not** see that screen until **New Game** restores briefing.
+
+**Production:** Express serves **`/display`** from **`apps/display/dist`**. Deploy must run **`npm run build`** at the **repo root** so the display bundle updates; building only **`apps/server`** leaves stale or missing TV assets.
+
+---
+
 ## Implementation map (where to enforce / document changes)
 
 | Layer | Files |

@@ -337,7 +337,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     }
   }, [wallOverview, audienceBriefing, venueWall])
 
-  /** Full-screen join hero (until host starts the show); excludes mosaic table grid underneath. */
+  /** Full join hero (`AudienceWelcomeWall`). Requires venue snapshot + server `showAudienceWelcome` — see server `venueAudienceWelcomeExpired`. Hidden after host **Start Game** until **New Game** clears the venue. Also suppressed while `mosaicForcedByHost` is true (e.g. same-browser host layout relay via `BroadcastChannel`). Otherwise viewers see **`VenueEightTablesPreview`** with different chrome — UI tweaks must touch both components if both should match. */
   const showBriefingHero = wallOverview && audienceBriefing && shrinkingExit === null
   /** Numbered-table mosaic visible after briefing ends — or peeking beneath spotlight exit iris. */
   const showVenueMosaic = (!audienceBriefing && wallOverview) || shrinkingExit !== null
