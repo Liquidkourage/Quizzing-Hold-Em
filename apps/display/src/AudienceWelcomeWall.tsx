@@ -242,7 +242,6 @@ type AttendanceSectionProps = {
   syncingCounts: boolean
   /** Total human players in the venue (lobby + seated). */
   enrolled: number | null
-  reducedMotion: boolean
   playerCountLabelClass: string
   statTile1080: string
   statDigitBase: string
@@ -255,7 +254,6 @@ type AttendanceSectionProps = {
 function AttendanceSection({
   syncingCounts,
   enrolled,
-  reducedMotion,
   playerCountLabelClass,
   statTile1080,
   statDigitBase,
@@ -626,7 +624,6 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                     layout="middle"
                     syncingCounts={syncingCounts}
                     enrolled={enrolled}
-                    reducedMotion={Boolean(reducedMotion)}
                     playerCountLabelClass={playerCountLabelClass}
                     statTile1080={statTile1080}
                     statDigitBase={statDigitBase}
