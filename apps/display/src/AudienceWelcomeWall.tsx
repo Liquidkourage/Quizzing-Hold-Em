@@ -389,18 +389,18 @@ function WelcomeNewPlayerTipsPanel({
   ] as const
 
   return (
-    <section aria-label="How Quizz'em Hold'em is played" className="flex h-full min-h-0 min-w-0 w-full flex-col lg:h-auto lg:min-h-0">
+    <section aria-label="How Quizz'em Hold'em is played" className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col lg:min-h-0 lg:h-full">
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center lg:h-auto lg:flex-none lg:justify-start"
-        className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 lg:h-auto lg:flex-none"
+        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center lg:h-full lg:justify-start"
+        className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 lg:min-h-0 lg:h-full lg:flex-1"
       >
-        <div className="relative z-[1] flex h-full min-h-0 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] px-[clamp(12px,_1.75vmin,_22px)] py-[clamp(12px,_1.65vmin,_22px)] lg:justify-start lg:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
+        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] pl-[clamp(20px,_2.35vmin,_32px)] pr-[clamp(18px,_2.1vmin,_30px)] py-[clamp(12px,_1.65vmin,_22px)] lg:justify-start lg:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
           <p className={`${hintsTitleClass} shrink-0 text-center`}>How to play</p>
-          <ul className="m-0 flex min-h-0 list-none flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 lg:justify-start lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
+          <ul className="m-0 flex min-h-0 flex-1 list-none flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 pl-[6px] lg:justify-start lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
             {tips.map((t) => (
-              <li key={t} className="flex items-start gap-x-[clamp(8px,_1.1vmin,_12px)]">
+              <li key={t} className="flex items-start gap-x-[clamp(12px,_1.35vmin,_16px)]">
                 <span className="mt-[0.42em] shrink-0 text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
                   ●
                 </span>
@@ -612,9 +612,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
           <div className="relative z-10 flex min-h-0 flex-1 flex-col w-full overflow-hidden pb-[clamp(2px,min(0.5vmin,_8px),_8px)] max-[height:920px]:pb-[clamp(4px,min(0.85vmin,_10px),_11px)] lg:pb-0">
             <div
               aria-label="Join the game: scan, URL and room code, attendance"
-              className="flex min-h-0 flex-1 flex-col gap-y-[clamp(4px,min(0.85vmin,_10px),_12px)] max-[height:920px]:gap-y-[clamp(4px,min(0.95vmin,_11px),_12px)] overflow-hidden lg:grid lg:grid-cols-[minmax(0,30%)_minmax(0,30%)_minmax(0,30%)] lg:gap-x-[5%] lg:gap-y-0 lg:items-start"
+              className="flex min-h-0 flex-1 flex-col gap-y-[clamp(4px,min(0.85vmin,_10px),_12px)] max-[height:920px]:gap-y-[clamp(4px,min(0.95vmin,_11px),_12px)] overflow-hidden lg:grid lg:grid-cols-[minmax(0,30%)_minmax(0,30%)_minmax(0,30%)] lg:gap-x-[5%] lg:gap-y-0 lg:items-stretch"
             >
-              <div className="flex min-h-0 min-w-0 flex-col overflow-hidden lg:h-full lg:max-h-full">
+              <div className="flex min-h-0 min-w-0 flex-col overflow-hidden lg:h-full lg:min-h-0 lg:max-h-full">
                 <WelcomeQrColumn
                   sectionRibbon={sectionRibbon}
                   joinUrl={joinUrl}
@@ -623,7 +623,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   reducedMotion={Boolean(reducedMotion)}
                 />
               </div>
-              <div className="flex min-h-0 min-w-0 flex-col justify-start gap-y-[clamp(6px,min(1vmin,_12px),_14px)] overflow-hidden lg:h-full lg:flex-1 lg:gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
+              <div className="flex min-h-0 min-w-0 flex-col justify-start gap-y-[clamp(6px,min(1vmin,_12px),_14px)] overflow-hidden lg:box-border lg:h-full lg:min-h-0 lg:flex-1 lg:gap-y-[clamp(6px,min(1vmin,_12px),_14px)] lg:pt-[20dvh]">
                 <WelcomeJoinCard
                   className="flex min-h-0 min-w-0 w-full shrink-0 flex-col lg:min-h-0"
                   venueCode={venueCode}
@@ -643,7 +643,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   statDigitAccentShadow={statDigitAccentShadow}
                 />
               </div>
-              <div className="hidden min-h-0 min-w-0 shrink-0 lg:flex lg:h-auto lg:min-h-0 lg:w-full lg:flex-col">
+              <div className="hidden min-h-0 min-w-0 shrink-0 lg:flex lg:h-full lg:min-h-0 lg:max-h-full lg:w-full lg:flex-col">
                 <WelcomeNewPlayerTipsPanel
                   hintsTitleClass={hintsTitleClass}
                   reducedMotion={Boolean(reducedMotion)}
