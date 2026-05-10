@@ -13,9 +13,11 @@ function playerJoinHref(): string {
   return `${window.location.origin}/player/`
 }
 
-/** Shown on the join card only; QR still embeds the full HTTPS URL. */
+/** Shown on the join card only; QR still embeds the full HTTPS URL.
+ *  Inserts zero-width spaces after slashes so the line can wrap cleanly at path segments. */
 function joinUrlForDisplay(url: string): string {
-  return url.replace(/^https:\/\//i, '').replace(/^http:\/\//i, '')
+  const hostAndPath = url.replace(/^https:\/\//i, '').replace(/^http:\/\//i, '')
+  return hostAndPath.replace(/\//g, '/\u200b')
 }
 
 /** Request a larger QR raster for sharp scaling; margin keeps a valid quiet zone inside the white tile. */
@@ -305,6 +307,7 @@ function WelcomeJoinCard({
   joinUrl,
   joinUrlText,
   venueMono,
+  joinRibbonClass,
   reducedMotion,
 }: {
   className: string
@@ -312,13 +315,12 @@ function WelcomeJoinCard({
   joinUrl: string
   joinUrlText: string
   venueMono: string
+  /** Same band style as “Scan here” / grid section ribbons. */
+  joinRibbonClass: string
   reducedMotion: boolean
 }) {
-  const joinLeadClass =
-    'min-w-0 text-balance whitespace-normal font-black uppercase tracking-[0.14em] text-amber-50/95 opacity-92 text-[clamp(0.88rem,min(2.52vw,_2.15vh),_1.55rem)] [text-shadow:0_0_20px_rgba(251,191,36,0.35),0_2px_4px_rgba(0,0,0,_0.9)]'
-
   const joinInnerFlex =
-    'relative z-[5] mx-auto flex h-full min-h-0 min-w-0 w-full max-w-[80%] flex-1 flex-col items-center justify-center gap-y-[clamp(10px,min(1.35vmin,_16px),_18px)] px-[clamp(8px,_1.5vmin,_20px)] py-[clamp(12px,min(1.5vmin,_22px),_26px)] text-center lg:h-auto lg:min-h-[min(30dvh,420px)] lg:flex-none lg:justify-center lg:px-[clamp(10px,_1.55vmin,_22px)] lg:py-[clamp(18px,min(2.1vmin,_32px),_40px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:py-[clamp(16px,min(1.85vmin,_28px),_32px)]'
+    'relative z-[5] mx-auto flex min-h-0 min-w-0 h-full w-full max-w-[80%] flex-1 flex-col items-center justify-center gap-y-[clamp(10px,min(1.35vmin,_16px),_18px)] px-[clamp(8px,_1.5vmin,_20px)] py-[clamp(12px,min(1.5vmin,_22px),_26px)] text-center lg:flex-1 lg:min-h-0 lg:justify-between lg:gap-y-[clamp(12px,min(1.5vmin,_22px),_28px)] lg:px-[clamp(10px,_1.55vmin,_22px)] lg:py-[clamp(14px,min(1.75vmin,_26px),_32px)]'
 
   return (
     <section aria-label="Alternative join instructions: URL and room code" className={className}>
@@ -326,16 +328,24 @@ function WelcomeJoinCard({
         showCorners
         animateShimmer={!reducedMotion}
         innerFlexClassName={joinInnerFlex}
-        className="flex h-full min-h-0 min-w-0 w-full flex-col rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 lg:h-auto lg:min-h-[min(30dvh,420px)] lg:overflow-hidden"
+        className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 lg:h-full lg:min-h-0 lg:flex-1 lg:overflow-hidden"
       >
-        <p className={`${joinLeadClass} shrink-0`}>Or go to</p>
-        <p
-          className={`${joinUrlText} mx-auto w-full max-w-full min-w-0 shrink-0 px-[2px]`}
-          aria-label={joinUrl}
-        >
-          {joinUrlForDisplay(joinUrl)}
-        </p>
-        <p className={`${joinLeadClass} shrink-0`}>and enter room code</p>
+        <div className="flex w-full shrink-0 flex-col items-center gap-y-[clamp(8px,min(1.2vmin,_14px),_16px)] px-[2px] lg:gap-y-[clamp(10px,min(1.35vmin,_18px),_20px)]">
+          <p className={`${joinRibbonClass} block w-full shrink-0 px-[clamp(8px,min(1.5vmin,_16px),_20px)] pb-0 text-center leading-[1.08]`}>
+            Or go to
+          </p>
+          <p
+            className={`${joinUrlText} mx-auto w-full max-w-full min-w-0 shrink-0 px-[2px]`}
+            aria-label={joinUrl}
+          >
+            {joinUrlForDisplay(joinUrl)}
+          </p>
+          <p
+            className={`${joinRibbonClass} block w-full shrink-0 px-[clamp(8px,min(1.5vmin,_16px),_20px)] pt-0 text-center leading-[1.08] opacity-90`}
+          >
+            and enter room code
+          </p>
+        </div>
         <motion.div
           className="isolate mx-auto inline-block w-max max-w-full shrink-0 rounded-[clamp(8px,_1.25vmin,_12px)] border-[2px] border-amber-300/98 bg-black/82 px-[clamp(8px,_1.35vmin,_16px)] py-[clamp(4px,_1vmin,_10px)]"
           animate={
@@ -446,9 +456,9 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const venueMono =
     'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-[clamp(1.45rem,min(7.5vw,min(8.5vh,_3.2rem)),_4.25rem)] uppercase text-transparent bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 bg-clip-text [-webkit-background-clip:text] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,.9))]'
 
-  /** Join card URL — Orbitron; break-words favors `/` boundaries over slicing words (e.g. “player”). */
+  /** Join card URL — Orbitron; slash-bridged display + break-words for readable wraps. */
   const joinUrlText =
-    'hyphens-none min-w-0 break-words text-center font-orbitron font-black leading-[1.35] tracking-[0.04em] text-amber-50 text-[clamp(0.92rem,min(2.65vw,_2.95vh),_2.2rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.35vw,_2.68vh),_1.95rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
+    'hyphens-none min-w-0 whitespace-normal break-words text-center font-orbitron font-black leading-relaxed tracking-[0.04em] text-amber-50 text-[clamp(0.92rem,min(2.65vw,_2.95vh),_2.2rem)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.88rem,min(2.35vw,_2.68vh),_1.95rem)] [text-shadow:0_0_22px_rgba(254,249,231,0.45),0_0_58px_rgba(251,191,36,0.42),0_0_112px_rgba(234,179,8,0.22),0_0_28px_rgba(239,68,68,0.12),0_1px_0_rgba(0,0,0,0.9)]'
 
   /** Tighter attendance strip on landscape 1080p-class TVs (≥1024 wide, ≤1080 tall); skips narrow/portrait. */
   const statTile1080 =
@@ -612,11 +622,12 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
               </div>
               <div className="flex min-h-0 min-w-0 flex-col justify-start gap-y-[clamp(6px,min(1vmin,_12px),_14px)] overflow-hidden lg:box-border lg:h-full lg:min-h-0 lg:flex-1 lg:gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
                 <WelcomeJoinCard
-                  className="flex min-h-0 min-w-0 w-full shrink-0 flex-col lg:min-h-0"
+                  className="flex min-h-0 min-w-0 w-full flex-col max-lg:shrink-0 lg:min-h-0 lg:flex-1"
                   venueCode={venueCode}
                   joinUrl={joinUrl}
                   joinUrlText={joinUrlText}
                   venueMono={venueMono}
+                  joinRibbonClass={sectionRibbon}
                   reducedMotion={Boolean(reducedMotion)}
                 />
                 <div className="mt-0 w-full min-w-0 shrink-0 lg:mt-auto">
