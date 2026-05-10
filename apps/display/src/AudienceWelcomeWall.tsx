@@ -398,7 +398,7 @@ function WelcomeNewPlayerTipsPanel({
       >
         <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col justify-start gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] px-[clamp(10px,min(2vmin,_22px),_28px)] py-[clamp(6px,min(1.55vmin,_16px),_18px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(6px,min(1.05vmin,_11px),_13px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:py-[clamp(6px,min(1.35vmin,_14px),_16px)]">
           <p className={`${hintsTitleClass} w-full shrink-0 text-center leading-[1.08] pb-0`}>How to play</p>
-          <ul className="m-0 flex min-h-0 w-full max-w-[min(100%,56ch)] list-none flex-1 flex-col justify-start gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] self-center p-0 lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
+          <ul className="m-0 flex min-h-0 w-full max-w-[min(100%,56ch)] list-none flex-1 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] self-center p-0 lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
             {tips.map((t) => (
               <li key={t} className="text-balance text-center">
                 <span className="mr-[0.35em] inline text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
@@ -478,7 +478,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative box-border border border-yellow-400 h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35 [&_div]:box-border [&_div]:border [&_div]:border-yellow-400"
+      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Base felt + velvet house lights */}
