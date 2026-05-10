@@ -625,7 +625,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   reducedMotion={Boolean(reducedMotion)}
                 />
               </div>
-              <div className="flex min-h-0 min-w-0 flex-col justify-start gap-y-[clamp(6px,min(1vmin,_12px),_14px)] overflow-hidden lg:box-border lg:h-full lg:min-h-0 lg:flex-1 lg:gap-y-[clamp(6px,min(1vmin,_12px),_14px)] lg:pt-[20dvh]">
+              <div className="flex min-h-0 min-w-0 flex-col justify-start gap-y-[clamp(6px,min(1vmin,_12px),_14px)] overflow-hidden lg:box-border lg:h-full lg:min-h-0 lg:flex-1 lg:gap-y-[clamp(6px,min(1vmin,_12px),_14px)]">
                 <WelcomeJoinCard
                   className="flex min-h-0 min-w-0 w-full shrink-0 flex-col lg:min-h-0"
                   venueCode={venueCode}
