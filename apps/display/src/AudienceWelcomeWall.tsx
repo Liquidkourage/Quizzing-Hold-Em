@@ -423,7 +423,7 @@ function WelcomeWallHeader({
 }) {
   return (
     <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-0 sm:px-[clamp(2px,_0.45vw,_10px)]">
-      <div className="relative mx-auto aspect-[958/592] w-full max-w-[min(920px,92vw,calc(100vw_-_28px))] shrink-0 overflow-visible lg:w-auto lg:max-h-[min(56vh,720px)] lg:max-w-[min(960px,96vw,calc(100vw_-_36px))]">
+      <div className="relative mx-auto aspect-[958/592] w-full max-w-[min(552px,calc(92vw_*_0.6),calc((100vw_-_28px)_*_0.6))] shrink-0 overflow-visible lg:w-auto lg:max-h-[min(33.6vh,432px)] lg:max-w-[min(576px,calc(96vw_*_0.6),calc((100vw_-_36px)_*_0.6))]">
         <QuizzEmWordmark layout="fill" />
       </div>
       <p className={`mt-[clamp(2px,_0.38vmin,_7px)] max-[height:900px]:mt-0.5 text-center normal-case ${taglineClass}`}>By Liquid Kourage Entertainment</p>
