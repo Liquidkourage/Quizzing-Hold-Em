@@ -393,23 +393,21 @@ function WelcomeNewPlayerTipsPanel({
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center lg:h-full"
+        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-start lg:h-full"
         className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 lg:min-h-0 lg:h-full lg:flex-1"
       >
-        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col items-center justify-center px-[clamp(18px,_2.35vmin,_32px)] py-[clamp(12px,_1.65vmin,_22px)]">
-          <div className="flex w-full max-w-[min(100%,56ch)] shrink-0 flex-col items-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] lg:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
-            <p className={`${hintsTitleClass} w-full shrink-0 text-center`}>How to play</p>
-            <ul className="m-0 flex w-full list-none flex-col gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
-              {tips.map((t) => (
-                <li key={t} className="text-balance text-center">
-                  <span className="mr-[0.35em] inline text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
-                    ●
-                  </span>
-                  <span className={`${bulletClass} inline`}>{t}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col justify-start gap-y-[clamp(4px,min(0.85vmin,_10px),_14px)] px-[clamp(10px,min(2vmin,_22px),_28px)] py-[clamp(6px,min(1.55vmin,_16px),_18px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:px-[clamp(6px,min(1.05vmin,_11px),_13px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:py-[clamp(6px,min(1.35vmin,_14px),_16px)]">
+          <p className={`${hintsTitleClass} w-full shrink-0 text-center leading-[1.08] pb-0`}>How to play</p>
+          <ul className="m-0 flex min-h-0 w-full max-w-[min(100%,56ch)] list-none flex-1 flex-col justify-start gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] self-center p-0 lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
+            {tips.map((t) => (
+              <li key={t} className="text-balance text-center">
+                <span className="mr-[0.35em] inline text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
+                  ●
+                </span>
+                <span className={`${bulletClass} inline`}>{t}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </VegasAttentionPanel>
     </section>
@@ -634,16 +632,18 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
                   venueMono={venueMono}
                   reducedMotion={Boolean(reducedMotion)}
                 />
-                <AttendanceSection
-                  layout="middle"
-                  syncingCounts={syncingCounts}
-                  enrolled={enrolled}
-                  reducedMotion={Boolean(reducedMotion)}
-                  playerCountLabelClass={playerCountLabelClass}
-                  statTile1080={statTile1080}
-                  statDigitBase={statDigitBase}
-                  statDigitAccentShadow={statDigitAccentShadow}
-                />
+                <div className="mt-0 w-full min-w-0 shrink-0 lg:mt-auto">
+                  <AttendanceSection
+                    layout="middle"
+                    syncingCounts={syncingCounts}
+                    enrolled={enrolled}
+                    reducedMotion={Boolean(reducedMotion)}
+                    playerCountLabelClass={playerCountLabelClass}
+                    statTile1080={statTile1080}
+                    statDigitBase={statDigitBase}
+                    statDigitAccentShadow={statDigitAccentShadow}
+                  />
+                </div>
               </div>
               <div className="hidden min-h-0 min-w-0 shrink-0 lg:flex lg:h-full lg:min-h-0 lg:max-h-full lg:w-full lg:flex-col">
                 <WelcomeNewPlayerTipsPanel
