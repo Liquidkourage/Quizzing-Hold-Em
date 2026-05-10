@@ -1,11 +1,11 @@
 ---
-description: After modifying project files, always commit AND push unless the user opts out that turn—never end with unpushed commits.
+description: Push changes always—after any commit, git push before ending the turn unless the user opted out that message.
 alwaysApply: true
 ---
 
-# Commit and push after edits (every time)
+# Push changes always (commit + push every time)
 
-Whenever you edit, add, move, remove, or format project source or config (anything that should live in git), **that turn is not finished** until changes are **committed and pushed**.
+**Push changes always.** Whenever you edit, add, move, remove, or format project source or config (anything that should live in git), **that turn is not finished** until changes are **committed and pushed**.
 
 If `git status` is clean **and** the current branch has **nothing to push** to its upstream tracking branch, you are done. **Do not leave the branch ahead of origin** after completing work—the default is **`git push` immediately after `git commit`**.
 

@@ -1,11 +1,11 @@
 ---
-description: After implementing code changes from a user request—commit and push so the repo stays the source of truth.
+description: Push changes always after implementation—local commits alone are incomplete; mirror to origin unless the user opts out.
 alwaysApply: true
 ---
 
 # Git closeout after implementation
 
-When you **edit tracked project files** (code, config, or rules) to satisfy **this user’s active request**, treating the task as “done” **without** updating the remote wastes their time on the next machine or deploy.
+**Push changes always.** When you **edit tracked project files** (code, config, or rules) to satisfy **this user’s active request**, treating the task as “done” **without** updating the remote wastes their time on the next machine or deploy.
 
 ## Required before you end your turn
 
