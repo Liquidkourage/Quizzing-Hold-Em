@@ -424,7 +424,7 @@ function WelcomeWallHeader({
   return (
     <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-[clamp(4px,_0.75vw,_14px)]">
       <div
-        className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible [height:min(max(41.6vh,_189px),min(800px,_77vh))] max-[height:720px]:[height:min(max(35.2vh,_147px),min(480px,_64vh))] lg:[height:min(max(54.4vh,_243px),min(960px,_83vh))]"
+        className="relative mx-auto w-auto max-w-[min(96vw,100%)] shrink-0 overflow-visible [height:min(max(41.6vh,_189px),min(800px,_77vh))] max-[height:720px]:[height:min(max(35.2vh,_147px),min(480px,_64vh))] lg:[height:min(max(34vh,_200px),min(560px,_44vh))] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:[height:min(max(31vh,_190px),min(480px,_40vh))]"
         style={{ aspectRatio: '955 / 592' }}
       >
         <QuizzEmWordmark layout="fill" />
@@ -604,7 +604,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto flex min-h-0 h-full max-h-full w-full max-w-none flex-col gap-y-[clamp(3px,_0.65vmin,_8px)] max-[height:920px]:gap-y-[clamp(5px,_1vmin,_10px)] px-[clamp(8px,_1.65vw,_56px)] py-[clamp(3px,_0.55vh,_10px)] max-[height:920px]:py-[clamp(4px,_0.58vh,_9px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-2 overflow-hidden"
+        className="relative z-10 mx-auto flex min-h-0 h-full max-h-full w-full max-w-none flex-col gap-y-[clamp(3px,_0.65vmin,_8px)] max-[height:920px]:gap-y-[clamp(5px,_1vmin,_10px)] px-[clamp(8px,_1.65vw,_56px)] py-[clamp(3px,_0.55vh,_10px)] max-[height:920px]:py-[clamp(4px,_0.58vh,_9px)] [@media(max-height:720px)]:gap-y-1 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:px-2 lg:gap-y-[clamp(4px,_0.85vmin,_10px)] lg:pb-[max(12px,env(safe-area-inset-bottom))] lg:pt-[clamp(2px,min(1vh,_12px),_14px)] overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
