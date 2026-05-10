@@ -7,6 +7,13 @@ export function readDisplayRoomFromUrl(): string | null {
   return r && r.length > 0 ? r : null
 }
 
+/** When true, show a fixed diagnostic panel (deploy / cache / bundle id). */
+export function readDisplayDiagFromUrl(): boolean {
+  if (typeof window === 'undefined') return false
+  const v = new URLSearchParams(window.location.search).get('diag')?.trim().toLowerCase()
+  return v === '1' || v === 'true' || v === 'yes'
+}
+
 /** Shared URL parsing for display bootstrap (router + offline demo parity). */
 export function readDisplayVenueCode(): string {
   if (typeof window === 'undefined') return 'HOST01'

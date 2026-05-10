@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import DisplayDiagPanel from './DisplayDiagPanel.tsx'
 import DisplayRouter from './DisplayRouter.tsx'
 import PairingScreen from './PairingScreen.tsx'
-import { readDisplayRoomFromUrl } from './displayUrlParams'
+import { readDisplayDiagFromUrl, readDisplayRoomFromUrl } from './displayUrlParams'
 
 type GateState = { venue: string | null; pairedViaHandshake: boolean }
 
@@ -18,11 +19,21 @@ export default function DisplayGate() {
     setGate({ venue: vc, pairedViaHandshake: true })
   }, [])
 
+  const showDiag = useMemo(() => readDisplayDiagFromUrl(), [])
+
   if (!venue) {
-    return <PairingScreen onPaired={onPairedFromTv} />
+    return (
+      <>
+        {showDiag ? <DisplayDiagPanel /> : null}
+        <PairingScreen onPaired={onPairedFromTv} />
+      </>
+    )
   }
 
   return (
-    <DisplayRouter key={venue} venueCode={venue} pairingBootstrap={pairedViaHandshake} />
+    <>
+      {showDiag ? <DisplayDiagPanel /> : null}
+      <DisplayRouter key={venue} venueCode={venue} pairingBootstrap={pairedViaHandshake} />
+    </>
   )
 }

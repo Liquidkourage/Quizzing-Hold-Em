@@ -144,6 +144,8 @@ So: UI changes in **`AudienceWelcomeWall.tsx`** do not affect the mosaic; after 
 
 After deploy, **`index.html`** is sent with **`Cache-Control: no-store`** so browsers pick up new hashed JS/CSS; long-term cache applies only to **`/display/assets/*`**. On the TV tab, open DevTools → Elements on **`#root`** and check **`data-display-build`** (7-char git SHA, or **`local`** when built without CI env vars)—it must match the latest commit on GitHub for that deploy.
 
+**Still looks unchanged?** Open the same display URL with **`&diag=1`** (e.g. `https://YOUR_HOST/display/?room=YOURCODE&diag=1`). A green diagnostic box shows **`data-display-build`**, the **`Cache-Control`** header from a fresh fetch to **`/display/index.html`**, and the real script URLs (hashed chunk names). Use that to prove whether the browser is running the latest bundle or serving a cached shell.
+
 ---
 
 ## Implementation map (where to enforce / document changes)
