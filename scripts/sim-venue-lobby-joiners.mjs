@@ -4,7 +4,9 @@
  * at random times within the first 60 seconds so you can watch host + display UIs tick.
  *
  * Usage:
- *   npm run sim:lobby -- --room=YOURCODE [--url=http://localhost:7777]
+ *   npm run sim:lobby -- HOST01
+ *   npm run sim:lobby -- --room HOST01
+ *   npm run sim:lobby -- --room=HOST01 [--url=http://localhost:7777]
  *
  * Prereqs: game server running; host has created the event with that room code.
  */
@@ -57,27 +59,60 @@ function shuffleInPlace(arr) {
 
 /** @returns {{ url: string, room: string }} */
 function parseArgs() {
+  const raw = process.argv.slice(2)
   const out = {
     url: (
       process.env.SOCKET_URL ||
       process.env.VITE_SOCKET_URL ||
       'http://localhost:7777'
     ).replace(/\/$/, ''),
-    room: (process.env.ROOM || '').trim().toUpperCase(),
+    room: String(process.env.ROOM || '').trim().toUpperCase(),
   }
-  for (const a of process.argv.slice(2)) {
-    if (a.startsWith('--room='))
+
+  /** First bare token (often how npm forwards args on Windows) */
+  const positionals = []
+
+  for (let i = 0; i < raw.length; i++) {
+    const a = raw[i]
+    if (a === '--room' || a === '-r') {
+      const next = raw[i + 1]
+      if (next != null && !next.startsWith('-')) {
+        out.room = next.trim().toUpperCase()
+        i++
+      }
+      continue
+    }
+    if (a.startsWith('--room=')) {
       out.room = a.slice(7).trim().toUpperCase()
-    else if (a.startsWith('--url='))
+      continue
+    }
+    if (a === '--url' || a === '-u') {
+      const next = raw[i + 1]
+      if (next != null && !next.startsWith('-')) {
+        out.url = next.trim().replace(/\/$/, '')
+        i++
+      }
+      continue
+    }
+    if (a.startsWith('--url=')) {
       out.url = a.slice(6).trim().replace(/\/$/, '')
+      continue
+    }
+    if (!a.startsWith('-')) positionals.push(a)
   }
+
+  if (!out.room && positionals.length > 0)
+    out.room = positionals[0].trim().toUpperCase()
+
   if (!out.room) {
     console.error(
       [
         'Missing room code.',
         '',
-        `  npm run sim:lobby -- --room=YOURCODE [--url=http://localhost:7777]`,
-        `  SOCKET_URL=http://localhost:7777 ROOM=YOURCODE npm run sim:lobby`,
+        `  npm run sim:lobby -- HOST01`,
+        `  npm run sim:lobby -- --room HOST01`,
+        `  npm run sim:lobby -- --room=HOST01 [--url=http://localhost:7777]`,
+        `  ROOM=HOST01 npm run sim:lobby`,
         '',
       ].join('\n')
     )
