@@ -8,8 +8,11 @@
  *   npm run sim:lobby -- --room HOST01
  *   npm run sim:lobby -- --room=HOST01 [--url=http://127.0.0.1:7777]
  *
- * Railway (or any HTTPS deploy): point at your public origin (no trailing slash). Socket.IO
- * upgrades to WSS automatically.
+ * PowerShell/npm: put a bare **`--`** before `--url`; otherwise npm may not forward it and this
+ * script stays on localhost. Bypass npm entirely like this (repo root):
+ *   node scripts/sim-venue-lobby-joiners.mjs --room HOST01 --url https://YOUR_DEPLOY_ORIGIN
+ *
+ * Railway deploy:
  *   npm run sim:lobby -- --room HOST01 --url=https://YOUR_APP.up.railway.app
  * Quick check: https://YOUR_APP.up.railway.app/health should return `ok`.
  *
@@ -181,6 +184,25 @@ async function probeHealth(baseUrl) {
       e?.name === 'AbortError'
         ? 'request timed out'
         : (e instanceof Error ? e.message : String(e))
+    const targetingLocalLoopback =
+      /127\.0\.0\.1|localhost/i.test(baseUrl.replace(/^\s+/, ''))
+    /** If user meant remote deploy, `--url` often failed to reach this process (npm omitting `--`) */
+    const remoteHint =
+      targetingLocalLoopback ?
+        [
+          '',
+          `This URL still looks LOCAL (${baseUrl}). If your backend is on Railway, `--url=https://…` did not reach the script.`,
+          '',
+          `Use npm’s argument separator (--), then flags:`,
+          `  npm run sim:lobby -- --room HOST01 --url=https://YOUR_APP.up.railway.app`,
+          `Or call node directly from the repo root (avoids npm):`,
+          `  node scripts/sim-venue-lobby-joiners.mjs --room HOST01 --url https://YOUR_APP.up.railway.app`,
+          `Or PowerShell:`,
+          `  $env:SOCKET_URL='https://YOUR_APP.up.railway.app'`,
+          `  npm run sim:lobby -- HOST01`,
+          '',
+        ].join('\n')
+      : ''
     console.error(
       [
         `Could not reach ${healthUrl} (${why}).`,
@@ -190,9 +212,10 @@ async function probeHealth(baseUrl) {
         '  npm run dev   # full stack; server defaults to PORT 7777',
         '',
         `Current socket base URL: ${baseUrl}`,
-        'Wrong port or host? Pass `--url=…` or set SOCKET_URL.',
+        'Wrong port or host? Pass `--url=…` AFTER `npm run sim:lobby --` or set SOCKET_URL.',
         '`localhost` vs `127.0.0.1`: this script defaults to 127.0.0.1 to avoid occasional Windows loopback quirks.',
         '',
+        ...(remoteHint ? remoteHint.split('\n') : []),
       ].join('\n')
     )
     process.exit(1)
