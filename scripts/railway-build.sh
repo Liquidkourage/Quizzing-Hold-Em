@@ -1,25 +1,13 @@
 #!/usr/bin/env sh
-# Railway / Docker: npm ci can hit EBUSY on apps/*/node_modules/.vite when Vite’s default
-# cache lives under node_modules and a prior layer or cache mount still holds the dir.
-# Vite cacheDir is set to tmp (see each app’s vite.config); this cleans hoisted workspaces.
+# Railway Railpack runs an “install” step before this “build” step. The build step mounts
+# read-only-ish BuildKit caches at each Vite workspace’s default path:
+#   /app/apps/<workspace>/node_modules/.vite
+# (see railwayapp/railpack core/providers/node/node.go addCachesToBuildStep).
+# Those paths MUST NOT be deleted here — removal always yields EBUSY.
+# Likewise, do not run `npm ci` in this step: npm tries to replace node_modules and hits the same mounts.
+# Our Vite configs set cacheDir under the OS temp dir, so pre-bundling does not need those mounts, but
+# the empty cache directories are still managed by Railpack.
 set -eu
 export NPM_CONFIG_PRODUCTION=false
 
-for _ in 1 2 3 4 5 6 7 8; do
-  chmod -Rf u+w node_modules apps packages 2>/dev/null || true
-  rm -rf node_modules apps/*/node_modules packages/*/node_modules \
-    apps/*/node_modules/.vite \
-    packages/*/node_modules/.vite 2>/dev/null || true
-  if ! [ -e apps/display/node_modules/.vite ]; then
-    break
-  fi
-  sleep 1
-done
-
-if [ -e apps/display/node_modules/.vite ]; then
-  echo "railway-build.sh: stale apps/display/node_modules/.vite could not be removed (EBUSY). Try clearing Railway build cache." >&2
-  exit 1
-fi
-
-npm ci
 npm run build
