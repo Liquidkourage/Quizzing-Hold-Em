@@ -423,10 +423,7 @@ function WelcomeWallHeader({
 }) {
   return (
     <header className="flex w-full max-w-full min-w-0 shrink-0 flex-col items-center px-0 sm:px-[clamp(2px,_0.45vw,_10px)]">
-      <div
-        className="relative mx-auto w-auto max-w-[min(calc(100vw_-_16px),100%)] shrink-0 overflow-visible px-0 sm:max-w-[min(calc(100vw_-_12px),100%)] [height:min(max(41.6vh,_189px),min(800px,_77vh))] max-[height:720px]:[height:min(max(35.2vh,_147px),min(480px,_64vh))] lg:max-w-[min(94vw,min(960px,_96%))] lg:[height:min(max(54.4vh,_243px),min(960px,_83vh))]"
-        style={{ aspectRatio: '955 / 592' }}
-      >
+      <div className="relative mx-auto aspect-[955/592] w-full max-w-[min(920px,92vw,calc(100vw_-_28px))] shrink-0 overflow-visible lg:w-auto lg:max-h-[min(56vh,720px)] lg:max-w-[min(960px,96vw,calc(100vw_-_36px))]">
         <QuizzEmWordmark layout="fill" />
       </div>
       <p className={`mt-[clamp(2px,_0.38vmin,_7px)] max-[height:900px]:mt-0.5 text-center normal-case ${taglineClass}`}>By Liquid Kourage Entertainment</p>
@@ -477,12 +474,11 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const statDigitAccentShadow =
     '[text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:[text-shadow:0_0_22px_rgba(253,224,138,0.55),0_0_54px_rgba(234,179,8,0.28),0_2px_3px_rgba(0,0,0,0.92)]'
 
-  // TEMP: yellow border on root + every nested div — remove border classes on root when done debugging.
   return (
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative box-border border border-yellow-400 h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35 [&_div]:box-border [&_div]:border [&_div]:border-yellow-400"
+      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Base felt + velvet house lights */}
@@ -610,31 +606,6 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-[3%] top-[clamp(72px,_12vh,_200px)] z-[11] hidden select-none justify-between px-[clamp(12px,_2vw,_72px)] sm:flex md:opacity-100"
-        >
-          {(['♠', '♥', '♦', '♣'] as const).map((s, i) => (
-            <motion.span
-              key={s}
-              className="relative -top-[2vh] origin-center select-none text-[clamp(2.85rem,min(18vmin,_13vw),_15rem)] font-black leading-none text-amber-500/[0.075] blur-[3px]"
-              aria-hidden
-              style={{ textShadow: '0 0 80px rgba(234,179,8,0.12)' }}
-              animate={
-                reducedMotion ? undefined : { y: ['-1%', '3%', '-1%'], opacity: [0.065, 0.11, 0.065], rotate: [-1.25, 1.75, -1.25] }
-              }
-              transition={{
-                duration: 8.2 + i * 2.5,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: i * 0.6,
-              }}
-            >
-              {s}
-            </motion.span>
-          ))}
-        </div>
-
         <div className="flex min-h-0 flex-1 flex-col gap-y-[clamp(1px,_0.35vmin,_4px)] max-[height:920px]:gap-y-[clamp(2px,_0.55vmin,_6px)] overflow-hidden lg:gap-y-[2px]">
           <WelcomeWallHeader reducedMotion={Boolean(reducedMotion)} taglineClass={taglineCredit} />
 
