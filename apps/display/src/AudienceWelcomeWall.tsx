@@ -480,7 +480,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
     <div
       role="main"
       aria-label="Join this Quizz'em game"
-      className="relative h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35"
+      className="relative box-border border border-yellow-400 h-[100dvh] max-h-[100dvh] w-full max-w-none overflow-x-hidden overflow-y-hidden overscroll-y-none bg-[#05030c] antialiased text-white selection:bg-yellow-400/35 [&_div]:box-border [&_div]:border [&_div]:border-yellow-400"
     >
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Base felt + velvet house lights */}
