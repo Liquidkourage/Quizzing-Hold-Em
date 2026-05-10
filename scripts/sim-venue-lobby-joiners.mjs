@@ -6,9 +6,9 @@
  * Usage:
  *   npm run sim:lobby -- HOST01
  *   npm run sim:lobby -- --room HOST01
- *   npm run sim:lobby -- --room=HOST01 [--url=http://localhost:7777]
+ *   npm run sim:lobby -- --room=HOST01 [--url=http://127.0.0.1:7777]
  *
- * Prereqs: game server running; host has created the event with that room code.
+ * Prereqs: game server listening (default http://127.0.0.1:7777); host opened that room code.
  */
 
 import { io } from 'socket.io-client'
@@ -64,7 +64,7 @@ function parseArgs() {
     url: (
       process.env.SOCKET_URL ||
       process.env.VITE_SOCKET_URL ||
-      'http://localhost:7777'
+      'http://127.0.0.1:7777'
     ).replace(/\/$/, ''),
     room: String(process.env.ROOM || '').trim().toUpperCase(),
   }
@@ -111,7 +111,7 @@ function parseArgs() {
         '',
         `  npm run sim:lobby -- HOST01`,
         `  npm run sim:lobby -- --room HOST01`,
-        `  npm run sim:lobby -- --room=HOST01 [--url=http://localhost:7777]`,
+        `  npm run sim:lobby -- --room=HOST01 [--url=http://127.0.0.1:7777]`,
         `  ROOM=HOST01 npm run sim:lobby`,
         '',
       ].join('\n')
@@ -141,8 +141,62 @@ function stamp() {
   return new Date().toISOString().slice(11, 23)
 }
 
-function main() {
+/** Best-effort; Engine.IO attaches extra fields inconsistently across versions */
+function describeConnectErr(err) {
+  if (err == null) return '(no detail)'
+  const msg = typeof err.message === 'string' ? err.message : ''
+  const cause =
+    err.cause &&
+    typeof err.cause.message === 'string' &&
+    err.cause.message.length > 0
+      ? err.cause.message
+      : ''
+  const desc =
+    typeof err.description === 'string' && err.description.length > 0
+      ? err.description
+      : ''
+  return [msg, cause, desc].filter(Boolean).join(' — ') || String(err)
+}
+
+async function probeHealth(baseUrl) {
+  const healthUrl = `${baseUrl.replace(/\/$/, '')}/health`
+  try {
+    const res = await fetch(healthUrl, {
+      signal: AbortSignal.timeout(8000),
+    })
+    const text = (await res.text()).trim()
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+    if (!text.startsWith('ok')) {
+      throw new Error(`unexpected body: ${text.slice(0, 80)}`)
+    }
+  } catch (e) {
+    const why =
+      e?.name === 'AbortError'
+        ? 'request timed out'
+        : (e instanceof Error ? e.message : String(e))
+    console.error(
+      [
+        `Could not reach ${healthUrl} (${why}).`,
+        '',
+        'Start the Socket.IO server first — this script hits the backend port directly:',
+        '  npm start --workspace apps/server',
+        '  npm run dev   # full stack; server defaults to PORT 7777',
+        '',
+        `Current socket base URL: ${baseUrl}`,
+        'Wrong port or host? Pass `--url=…` or set SOCKET_URL.',
+        '`localhost` vs `127.0.0.1`: this script defaults to 127.0.0.1 to avoid occasional Windows loopback quirks.',
+        '',
+      ].join('\n')
+    )
+    process.exit(1)
+  }
+}
+
+async function main() {
   const { url, room } = parseArgs()
+  await probeHealth(url)
   const names = generateBotNames(BOT_COUNT)
   const sockets = []
   const timeouts = []
@@ -159,8 +213,10 @@ function main() {
     const tid = globalThis.setTimeout(() => {
       if (exited) return
       const socket = io(url, {
-        transports: ['websocket', 'polling'],
-        autoConnect: true,
+        /** Polling first avoids noisy “websocket error” fallbacks on some setups */
+        transports: ['polling', 'websocket'],
+        reconnection: false,
+        timeout: 25_000,
       })
 
       sockets.push(socket)
@@ -187,7 +243,9 @@ function main() {
       })
 
       socket.on('connect_error', (err) => {
-        console.warn(`connect_error ${name}:`, err?.message ?? err)
+        console.warn(
+          `[${stamp()}] connect_error ${name} (${id}/${BOT_COUNT}): ${describeConnectErr(err)}`
+        )
       })
 
       socket.on('disconnect', (reason) => {
@@ -216,4 +274,7 @@ function main() {
   process.on('SIGTERM', shutdown)
 }
 
-main()
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})
