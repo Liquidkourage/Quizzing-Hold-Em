@@ -379,7 +379,7 @@ function WelcomeNewPlayerTipsPanel({
   reducedMotion: boolean
 }) {
   const bulletClass =
-    'min-w-0 flex-1 text-balance font-semibold leading-[1.38] text-amber-50/96 [text-shadow:0_2px_14px_rgba(0,0,0,_0.82)] text-[clamp(0.838rem,min(2.642vw,_2.31vh),_1.279rem)] lg:leading-[1.42] lg:text-[clamp(0.879rem,min(2.814vw,_2.435vh),_1.329rem)]'
+    'text-balance font-semibold leading-[1.38] text-amber-50/96 [text-shadow:0_2px_14px_rgba(0,0,0,_0.82)] text-[clamp(0.838rem,min(2.642vw,_2.31vh),_1.279rem)] lg:leading-[1.42] lg:text-[clamp(0.879rem,min(2.814vw,_2.435vh),_1.329rem)]'
 
   const tips = [
     "Quizz'em is a trivia game played exactly like Texas Hold'em—answers are numeric, cards are single digits (e.g. 99, 1492, 90210).",
@@ -393,21 +393,23 @@ function WelcomeNewPlayerTipsPanel({
       <VegasAttentionPanel
         showCorners
         animateShimmer={!reducedMotion}
-        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center lg:h-full lg:justify-start"
+        innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center lg:h-full"
         className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 lg:min-h-0 lg:h-full lg:flex-1"
       >
-        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] pl-[calc(clamp(20px,_2.35vmin,_32px)_+_15%)] pr-[clamp(18px,_2.1vmin,_30px)] py-[clamp(12px,_1.65vmin,_22px)] lg:justify-start lg:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
-          <p className={`${hintsTitleClass} shrink-0 text-center`}>How to play</p>
-          <ul className="m-0 flex min-h-0 flex-1 list-none flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 pl-[6px] lg:justify-start lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
-            {tips.map((t) => (
-              <li key={t} className="flex items-start gap-x-[clamp(12px,_1.35vmin,_16px)]">
-                <span className="mt-[0.42em] shrink-0 text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
-                  ●
-                </span>
-                <span className={bulletClass}>{t}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col items-center justify-center px-[clamp(18px,_2.35vmin,_32px)] py-[clamp(12px,_1.65vmin,_22px)]">
+          <div className="flex w-full max-w-[min(100%,56ch)] shrink-0 flex-col items-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] lg:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
+            <p className={`${hintsTitleClass} w-full shrink-0 text-center`}>How to play</p>
+            <ul className="m-0 flex w-full list-none flex-col gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
+              {tips.map((t) => (
+                <li key={t} className="text-balance text-center">
+                  <span className="mr-[0.35em] inline text-[0.75em] font-bold leading-none text-emerald-300/92" aria-hidden>
+                    ●
+                  </span>
+                  <span className={`${bulletClass} inline`}>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </VegasAttentionPanel>
     </section>
