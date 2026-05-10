@@ -80,15 +80,38 @@ app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json())
 
+/** Vite SPAs: never cache `index.html` (avoids stale chunk references after deploy); hashed assets may be immutable. */
+function mountSpaStatic(urlPath: string, distRelFromCompiledServer: string) {
+  const rootDir = path.join(__dirname, distRelFromCompiledServer)
+  app.use(
+    urlPath,
+    express.static(rootDir, {
+      index: 'index.html',
+      setHeaders(res, filePath) {
+        if (filePath.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+          res.setHeader('Pragma', 'no-cache')
+          res.setHeader('Expires', '0')
+          return
+        }
+        const norm = filePath.replace(/\\/g, '/')
+        if (norm.includes('/assets/')) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+        }
+      },
+    }),
+  )
+}
+
 // Lightweight health checks (Railway / load balancers)
 app.get('/health', (_req, res) => {
   res.status(200).type('text').send('ok')
 })
 
 // Serve static files for all apps
-app.use('/host', express.static(path.join(__dirname, '../../host/dist')))
-app.use('/player', express.static(path.join(__dirname, '../../player/dist')))
-app.use('/display', express.static(path.join(__dirname, '../../display/dist')))
+mountSpaStatic('/host', '../../host/dist')
+mountSpaStatic('/player', '../../player/dist')
+mountSpaStatic('/display', '../../display/dist')
 
 // Test route for debugging cards
 app.get('/test-cards', (req, res) => {

@@ -140,7 +140,9 @@ Implemented in **`@qhe/core`**: **`check`, `call`, `raise`, `allIn`, `fold`**, p
 
 So: UI changes in **`AudienceWelcomeWall.tsx`** do not affect the mosaic; after **Start Game** you will **not** see that screen until **New Game** restores briefing.
 
-**Production:** Express serves **`/display`** from **`apps/display/dist`**. Deploy must run **`npm run build`** at the **repo root** so the display bundle updates; building only **`apps/server`** leaves stale or missing TV assets.
+**Production:** Express serves **`/display`** from **`apps/display/dist`**. Deploy must run **`npm run build`** at the **repo root** so the display bundle updates; building only **`apps/server`** leaves stale or missing TV assets. **`railway.toml`** in this repo runs **`npm ci && npm run build`** from the root on Railway.
+
+After deploy, **`index.html`** is sent with **`Cache-Control: no-store`** so browsers pick up new hashed JS/CSS; long-term cache applies only to **`/display/assets/*`**. On the TV tab, open DevTools → Elements on **`#root`** and check **`data-display-build`** (7-char git SHA, or **`local`** when built without CI env vars)—it must match the latest commit on GitHub for that deploy.
 
 ---
 

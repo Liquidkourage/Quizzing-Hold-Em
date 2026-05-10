@@ -1,0 +1,8 @@
+# Monorepo: Express serves apps/display/dist (and host/player). Root build is required.
+# https://docs.railway.app/reference/config-as-code
+
+[build]
+buildCommand = "npm ci && npm run build"
+
+[deploy]
+startCommand = "npm start"

@@ -2,7 +2,19 @@
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+/** First 7 chars of CI git SHA (Railway / Vercel) — baked at build time for “which bundle is this?” checks. */
+const displayBuildId =
+  (process.env.RAILWAY_GIT_COMMIT_SHA ||
+    process.env.RAILWAY_GIT_COMMIT ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    '')
+    .toString()
+    .slice(0, 7) || 'local'
+
 export default defineConfig({
+  define: {
+    __DISPLAY_BUILD_ID__: JSON.stringify(displayBuildId),
+  },
   plugins: [react()],
   resolve: {
     alias: {
