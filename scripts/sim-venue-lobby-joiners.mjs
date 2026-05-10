@@ -191,7 +191,7 @@ async function probeHealth(baseUrl) {
       targetingLocalLoopback ?
         [
           '',
-          `This URL still looks LOCAL (${baseUrl}). If your backend is on Railway, `--url=https://…` did not reach the script.`,
+          `This URL still looks LOCAL (${baseUrl}). If your backend is on Railway, the flag --url=https://… likely did not reach this script.`,
           '',
           `Use npm’s argument separator (--), then flags:`,
           `  npm run sim:lobby -- --room HOST01 --url=https://YOUR_APP.up.railway.app`,
