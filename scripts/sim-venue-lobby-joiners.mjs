@@ -5,15 +5,20 @@
  *
  * Usage:
  *   npm run sim:lobby -- HOST01
+ *
+ * Recommended on Windows/npm (often only one token survives after `--`; use ROOM@ORIGIN):
+ *   npm run sim:lobby -- HOST01@https://quizz-em.up.railway.app
+ *   npm run sim:lobby -- HOST01 https://quizz-em.up.railway.app
+ *
+ * Or flags (still works where npm forwards argv correctly):
  *   npm run sim:lobby -- --room HOST01
  *   npm run sim:lobby -- --room=HOST01 [--url=http://127.0.0.1:7777]
  *
- * PowerShell/npm: put a bare **`--`** before `--url`; otherwise npm may not forward it and this
- * script stays on localhost. Bypass npm entirely like this (repo root):
+ * Bypass npm entirely (repo root):
  *   node scripts/sim-venue-lobby-joiners.mjs --room HOST01 --url https://YOUR_DEPLOY_ORIGIN
  *
- * Railway deploy:
- *   npm run sim:lobby -- --room HOST01 --url=https://YOUR_APP.up.railway.app
+ * Railway deploy: after `--`, ROOM@ORIGIN avoids npm dropping extra `--url=` on some Windows setups.
+ *
  * Quick check: https://YOUR_APP.up.railway.app/health should return `ok`.
  *
  * Prereqs: backend reachable at that URL; host opened that room code on this venue.
@@ -68,6 +73,10 @@ function shuffleInPlace(arr) {
 /** @returns {{ url: string, room: string }} */
 function parseArgs() {
   const raw = process.argv.slice(2)
+  if (process.env.SIM_LOBBY_TRACE === '1') {
+    console.error('[sim:lobby] process.argv:', raw)
+  }
+
   const out = {
     url: (
       process.env.SOCKET_URL ||
@@ -79,10 +88,13 @@ function parseArgs() {
 
   /** First bare token (often how npm forwards args on Windows) */
   const positionals = []
+  let explicitRoom = false
+  let explicitUrl = false
 
   for (let i = 0; i < raw.length; i++) {
     const a = raw[i]
     if (a === '--room' || a === '-r') {
+      explicitRoom = true
       const next = raw[i + 1]
       if (next != null && !next.startsWith('-')) {
         out.room = next.trim().toUpperCase()
@@ -91,10 +103,12 @@ function parseArgs() {
       continue
     }
     if (a.startsWith('--room=')) {
+      explicitRoom = true
       out.room = a.slice(7).trim().toUpperCase()
       continue
     }
     if (a === '--url' || a === '-u') {
+      explicitUrl = true
       const next = raw[i + 1]
       if (next != null && !next.startsWith('-')) {
         out.url = next.trim().replace(/\/$/, '')
@@ -103,24 +117,46 @@ function parseArgs() {
       continue
     }
     if (a.startsWith('--url=')) {
+      explicitUrl = true
       out.url = a.slice(6).trim().replace(/\/$/, '')
       continue
     }
     if (!a.startsWith('-')) positionals.push(a)
   }
 
-  if (!out.room && positionals.length > 0)
-    out.room = positionals[0].trim().toUpperCase()
+  /** ROOM@ORIGIN single token works when npm only forwards one arg after `--` (common on Windows) */
+  const p0 = positionals[0]?.trim()
+  const p1 = positionals[1]?.trim()
+  const atMatch =
+    p0 &&
+    /^(.+?)@(https?:\/\/\S+)/i.exec(
+      /** avoid matching email-like garbage; URLs start with scheme */
+      p0
+    )
+  if (atMatch) {
+    if (!explicitRoom) out.room = atMatch[1].trim().toUpperCase()
+    if (!explicitUrl) out.url = atMatch[2].trim().replace(/\/$/, '')
+  } else if (p0 && p1 && /^https?:\/\//i.test(p1)) {
+    if (!explicitRoom) out.room = p0.toUpperCase()
+    if (!explicitUrl) out.url = p1.replace(/\/$/, '')
+  }
+
+  if (!out.room) {
+    const firstNonUrlPos = positionals.find(
+      (p) => String(p ?? '').trim() && !/^https?:\/\//i.test(String(p ?? '').trim())
+    )
+    if (firstNonUrlPos) out.room = String(firstNonUrlPos).trim().toUpperCase()
+  }
 
   if (!out.room) {
     console.error(
       [
         'Missing room code.',
         '',
-        `  npm run sim:lobby -- HOST01`,
+        `  npm run sim:lobby -- HOST01@https://YOUR_APP.up.railway.app`,
+        `  npm run sim:lobby -- HOST01 https://YOUR_APP.up.railway.app`,
         `  npm run sim:lobby -- --room HOST01`,
-        `  npm run sim:lobby -- --room=HOST01 [--url=http://127.0.0.1:7777]`,
-        `  ROOM=HOST01 npm run sim:lobby`,
+        `  SIM_LOBBY_TRACE=1 npm run sim:lobby …   # prints argv`,
         '',
       ].join('\n')
     )
@@ -191,15 +227,16 @@ async function probeHealth(baseUrl) {
       targetingLocalLoopback ?
         [
           '',
-          `This URL still looks LOCAL (${baseUrl}). If your backend is on Railway, the flag --url=https://… likely did not reach this script.`,
-          '',
-          `Use npm’s argument separator (--), then flags:`,
-          `  npm run sim:lobby -- --room HOST01 --url=https://YOUR_APP.up.railway.app`,
-          `Or call node directly from the repo root (avoids npm):`,
+          `This socket base URL still looks LOCAL (${baseUrl}). On Windows npm often drops --url/--room so only HOST01 arrives — pass room + origin in one positional:`,
+          `  npm run sim:lobby -- HOST01@https://YOUR_APP.up.railway.app`,
+          `Or two tokens (if npm forwards both):`,
+          `  npm run sim:lobby -- HOST01 https://YOUR_APP.up.railway.app`,
+          `Bypass npm entirely:`,
           `  node scripts/sim-venue-lobby-joiners.mjs --room HOST01 --url https://YOUR_APP.up.railway.app`,
-          `Or PowerShell:`,
+          `Or set env alone:`,
           `  $env:SOCKET_URL='https://YOUR_APP.up.railway.app'`,
           `  npm run sim:lobby -- HOST01`,
+          `Debug npm argv: SIM_LOBBY_TRACE=1 (PowerShell: $env:SIM_LOBBY_TRACE='1')`,
           '',
         ].join('\n')
       : ''
