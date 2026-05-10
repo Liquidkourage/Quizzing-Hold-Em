@@ -1,6 +1,10 @@
 ﻿import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import os from 'node:os'
 import path from 'path'
+
+/** Keeps pre-bundle cache out of `node_modules/` so Docker/Railway `npm ci` does not contend with `.vite`. */
+const cacheDir = path.join(os.tmpdir(), 'quizzem-vite', 'display')
 
 /** First 7 chars of CI git SHA (Railway / Vercel) — baked at build time for “which bundle is this?” checks. */
 const displayBuildId =
@@ -12,6 +16,7 @@ const displayBuildId =
     .slice(0, 7) || 'local'
 
 export default defineConfig({
+  cacheDir,
   define: {
     __DISPLAY_BUILD_ID__: JSON.stringify(displayBuildId),
   },

@@ -2,9 +2,9 @@
 # https://docs.railway.app/reference/config-as-code
 
 [build]
-# `npm ci` can hit EBUSY removing `node_modules/.vite` (Vite cache) when Docker/Railway layers
-# left a prior install. Nuke all workspace `node_modules` first, then a clean `npm ci`.
-buildCommand = "find . -depth -name node_modules -type d -exec rm -rf {} + 2>/dev/null || true; npm ci && npm run build"
+# `npm ci` can hit EBUSY on cached `apps/*/node_modules/.vite`; Vite `cacheDir` is under /tmp now.
+# This script chmod+retries recursive rm — do not hide failures with `2>/dev/null` on the outer rm alone.
+buildCommand = "sh scripts/railway-build.sh"
 
 [deploy]
 startCommand = "npm start"
