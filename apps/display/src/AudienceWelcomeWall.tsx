@@ -193,7 +193,7 @@ function WelcomeQrColumn({
     'relative flex min-h-0 max-h-full w-full flex-1 flex-col items-center justify-center overflow-hidden min-w-0 px-[clamp(2px,min(0.42vmin,_4px),_5px)] lg:min-h-[min(20dvh,140px)] lg:justify-start lg:px-[clamp(5px,min(1.1vmin,_8px),_10px)] lg:py-[clamp(2px,min(0.48vmin,_4px),_6px)]'
 
   const whiteTileBase =
-    'box-border flex min-h-[120px] w-max max-w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(2px,min(0.42vmin,_4px),_5px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
+    'box-border grid min-h-[120px] min-w-0 w-max max-w-full place-items-center overflow-hidden rounded-2xl border-[3px] border-amber-300/98 bg-white p-[clamp(2px,min(0.42vmin,_4px),_5px)] shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_26px_80px_-14px_rgba(234,179,8,0.55),0_0_52px_rgba(239,68,68,0.14)] max-[height:880px]:shadow-[inset_0_0_0_2px_rgba(254,249,231,1),0_18px_64px_-12px_rgba(234,179,8,0.45),0_0_40px_rgba(239,68,68,0.12)] mx-auto'
 
   const whiteClass =
     `${whiteTileBase} aspect-square max-h-full w-auto max-w-[min(100%,min(85vw,min(52dvh,522px)))] shrink-0 max-[height:880px]:max-w-[min(100%,min(83vw,min(47dvh,468px)))] lg:mx-auto lg:aspect-square lg:h-auto lg:max-h-[min(100%,41dvh)] lg:w-full lg:max-w-full [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-h-[min(31.5vmin,31.5dvh,317px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:max-w-[min(31.5vmin,31.5dvh,317px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:!p-[2px] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)_and_(max-width:1279px)]:shadow-[0_8px_48px_-6px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(254,249,231,1),0_0_40px_rgba(234,179,8,0.35)]`
@@ -218,7 +218,7 @@ function WelcomeQrColumn({
                 alt=""
                 width={640}
                 height={640}
-                className="block h-auto w-auto max-h-[min(93%,42dvh)] max-w-[93%] min-h-0 min-w-0 rounded-sm object-contain lg:max-h-[min(92%,42dvh)] lg:max-w-[92%]"
+                className="block h-auto w-auto max-h-[min(93%,42dvh)] max-w-[93%] min-h-0 min-w-0 rounded-sm object-contain object-center leading-none lg:max-h-[min(92%,42dvh)] lg:max-w-[92%]"
                 referrerPolicy="no-referrer"
                 onError={() => setQrOk(false)}
               />
@@ -396,7 +396,7 @@ function WelcomeNewPlayerTipsPanel({
         innerFlexClassName="relative z-[5] flex h-full min-h-0 min-w-0 w-full flex-1 flex-col justify-center lg:h-full lg:justify-start"
         className="flex min-h-0 min-w-0 h-full w-full flex-1 flex-col overflow-hidden rounded-[clamp(10px,min(1.6vmin,_20px),_20px)] border-[3px] border-amber-500/65 bg-black/78 px-0 py-0 shadow-[inset_0_0_22px_-8px_rgba(234,179,8,0.11),0_0_42px_-10px_rgba(52,211,153,0.14),0_0_54px_-12px_rgba(124,58,237,0.07)] ring-2 ring-purple-950/90 lg:min-h-0 lg:h-full lg:flex-1"
       >
-        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] pl-[clamp(20px,_2.35vmin,_32px)] pr-[clamp(18px,_2.1vmin,_30px)] py-[clamp(12px,_1.65vmin,_22px)] lg:justify-start lg:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
+        <div className="relative z-[1] flex h-full min-h-0 flex-1 flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_14px),_16px)] pl-[calc(clamp(20px,_2.35vmin,_32px)_+_15%)] pr-[clamp(18px,_2.1vmin,_30px)] py-[clamp(12px,_1.65vmin,_22px)] lg:justify-start lg:gap-y-[clamp(12px,min(1.35vmin,_18px),_20px)]">
           <p className={`${hintsTitleClass} shrink-0 text-center`}>How to play</p>
           <ul className="m-0 flex min-h-0 flex-1 list-none flex-col justify-center gap-y-[clamp(10px,min(1.2vmin,_13px),_16px)] p-0 pl-[6px] lg:justify-start lg:gap-y-[clamp(12px,min(1.3vmin,_17px),_18px)]">
             {tips.map((t) => (
