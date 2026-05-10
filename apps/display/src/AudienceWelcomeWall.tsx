@@ -220,7 +220,7 @@ function WelcomeQrColumn({
                 alt=""
                 width={640}
                 height={640}
-                className="block h-auto w-auto max-h-[min(93%,42dvh)] max-w-[93%] min-h-0 min-w-0 rounded-sm object-contain object-center leading-none lg:max-h-[min(92%,42dvh)] lg:max-w-[92%]"
+                className="block h-auto w-auto max-h-[min(93%,42dvh)] max-w-[93%] min-h-0 min-w-0 rounded-sm object-contain object-center leading-none [clip-path:inset(0_10%_0_10%)] lg:max-h-[min(92%,42dvh)] lg:max-w-[92%]"
                 referrerPolicy="no-referrer"
                 onError={() => setQrOk(false)}
               />
