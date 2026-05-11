@@ -147,23 +147,21 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
   const doubled = [...rows, ...rows]
 
   return (
-    <section
-      className="flex max-h-[min(82vh,720px)] flex-col rounded-2xl border-2 border-yellow-700/35 bg-black/50 shadow-xl backdrop-blur-md"
+    <aside
+      className="fixed inset-y-0 right-0 z-20 flex w-52 flex-col border-l-2 border-yellow-700/40 bg-slate-950/92 shadow-[-12px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:w-56"
       aria-label="Players and table assignments"
     >
-      <div className="border-b border-white/10 px-5 py-4 sm:px-6 sm:py-5">
-        <h2 className="text-base font-bold uppercase tracking-[0.2em] text-white/60 sm:text-lg">
-          Players
-        </h2>
-        <p className="mt-1 text-xl font-bold leading-snug text-white/92 sm:text-2xl">Table seating</p>
+      <div className="shrink-0 border-b border-white/10 px-3 py-3 sm:px-3.5 sm:py-3.5">
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/55 sm:text-xs">Players</h2>
+        <p className="mt-0.5 text-sm font-bold leading-tight text-white/90 sm:text-base">Seating</p>
       </div>
       <div
-        className="relative h-64 overflow-hidden px-2 py-2 sm:h-80 sm:px-3 lg:h-[min(58vh,520px)]"
+        className="relative min-h-0 flex-1 overflow-hidden px-1.5 py-1 sm:px-2"
         style={{
           maskImage:
-            'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
           WebkitMaskImage:
-            'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
         }}
       >
         <div
@@ -173,19 +171,19 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
           {doubled.map((r, idx) => (
             <div
               key={`${r.tableNum}-${r.name}-${idx}`}
-              className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-3 py-3.5 sm:px-4 sm:py-4"
+              className="flex flex-col gap-0.5 border-b border-white/[0.08] py-2.5 pl-0 pr-0 sm:py-3"
             >
-              <span className="min-w-0 flex-1 truncate text-lg font-semibold leading-snug text-white/95 sm:text-xl md:text-2xl">
+              <span className="w-full truncate text-sm font-semibold leading-snug text-white/95 sm:text-[0.95rem]">
                 {r.name}
               </span>
-              <span className="shrink-0 whitespace-nowrap font-mono text-base font-bold uppercase tracking-[0.12em] text-yellow-400/95 sm:text-lg md:text-xl">
+              <span className="w-full truncate font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-yellow-400/95 sm:text-[11px]">
                 TABLE {r.tableNum}
               </span>
             </div>
           ))}
         </div>
       </div>
-    </section>
+    </aside>
   )
 }
 
@@ -249,7 +247,11 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   const showRoster = rosterRowsFromTiles(tileRows).length > 0
 
   return (
-    <div className="relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+    <div
+      className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
+        showRoster ? 'pr-52 sm:pr-56' : ''
+      }`}
+    >
       <div className="pointer-events-none absolute inset-0 opacity-35">
         <div
           className="absolute inset-0"
@@ -328,76 +330,66 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             </p>
           </motion.div>
         ) : (
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-8">
-            {showRoster ? (
-              <aside className="order-1 w-full shrink-0 lg:order-2 lg:sticky lg:top-4 lg:min-w-0 lg:max-w-[min(42rem,40vw)] lg:w-[min(42rem,40vw)] xl:max-w-none xl:w-[min(44rem,34vw)]">
-                <VenueScrollingRoster tiles={tileRows} />
-              </aside>
-            ) : null}
-            <div
-              className={`order-2 min-w-0 flex-1 ${showRoster ? 'lg:order-1' : ''}`}
-            >
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-2 2xl:grid-cols-4 2xl:gap-6">
-                {tileRows.map((row, idx) => {
-                  const tn = row.tableNum
-                  const seats = row.seated
-                  const pot = row.pot
-                  const ph = row.phase
-                  const seatNames = padSeatNames(row.seatNames)
-                  return (
-                    <motion.article
-                      key={tn}
-                      data-spotlight-tile={tn}
-                      initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: skipMountIntro ? 0 : idx * 0.045,
-                        duration: skipMountIntro ? 0 : 0.35,
-                      }}
-                      className="flex flex-col rounded-2xl border-2 border-yellow-700/35 bg-black/55 p-5 shadow-xl backdrop-blur-md sm:p-6"
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-2 2xl:grid-cols-4 2xl:gap-6">
+            {tileRows.map((row, idx) => {
+              const tn = row.tableNum
+              const seats = row.seated
+              const pot = row.pot
+              const ph = row.phase
+              const seatNames = padSeatNames(row.seatNames)
+              return (
+                <motion.article
+                  key={tn}
+                  data-spotlight-tile={tn}
+                  initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: skipMountIntro ? 0 : idx * 0.045,
+                    duration: skipMountIntro ? 0 : 0.35,
+                  }}
+                  className="flex flex-col rounded-2xl border-2 border-yellow-700/35 bg-black/55 p-5 shadow-xl backdrop-blur-md sm:p-6"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60 sm:text-base">
+                        Table
+                      </div>
+                      <div className="text-5xl font-black tabular-nums leading-none text-yellow-400 sm:text-6xl">
+                        {tn}
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold uppercase sm:text-sm ${phaseAccent(ph)}`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60 sm:text-base">
-                            Table
-                          </div>
-                          <div className="text-5xl font-black tabular-nums leading-none text-yellow-400 sm:text-6xl">
-                            {tn}
-                          </div>
-                        </div>
-                        <span
-                          className={`rounded-xl px-3 py-1.5 text-xs font-bold uppercase sm:text-sm ${phaseAccent(ph)}`}
-                        >
-                          {phaseLabel(ph)}
-                        </span>
-                      </div>
+                      {phaseLabel(ph)}
+                    </span>
+                  </div>
 
-                      <div className="mt-4 flex-shrink-0">
-                        <SeatRingWithLabels seatedCount={seats} seatNames={seatNames} />
-                      </div>
+                  <div className="mt-4 flex-shrink-0">
+                    <SeatRingWithLabels seatedCount={seats} seatNames={seatNames} />
+                  </div>
 
-                      <dl className="mt-5 space-y-2.5 border-t border-white/10 pt-5 text-base leading-snug sm:text-lg md:text-xl">
-                        <div className="flex justify-between gap-3">
-                          <dt className="font-medium text-white/65">Occupied seats</dt>
-                          <dd className="font-mono font-bold tabular-nums text-casino-emerald">
-                            {seats} / 8
-                          </dd>
-                        </div>
-                        <div className="flex justify-between gap-3">
-                          <dt className="font-medium text-white/65">Pot (local)</dt>
-                          <dd className="font-mono font-bold tabular-nums text-yellow-300">
-                            ${pot.toLocaleString()}
-                          </dd>
-                        </div>
-                      </dl>
-                    </motion.article>
-                  )
-                })}
-              </div>
-            </div>
+                  <dl className="mt-5 space-y-2.5 border-t border-white/10 pt-5 text-base leading-snug sm:text-lg md:text-xl">
+                    <div className="flex justify-between gap-3">
+                      <dt className="font-medium text-white/65">Occupied seats</dt>
+                      <dd className="font-mono font-bold tabular-nums text-casino-emerald">
+                        {seats} / 8
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="font-medium text-white/65">Pot (local)</dt>
+                      <dd className="font-mono font-bold tabular-nums text-yellow-300">
+                        ${pot.toLocaleString()}
+                      </dd>
+                    </div>
+                  </dl>
+                </motion.article>
+              )
+            })}
           </div>
         )}
       </main>
+      {showRoster ? <VenueScrollingRoster tiles={tileRows} /> : null}
     </div>
   )
 }
