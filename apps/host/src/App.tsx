@@ -1309,10 +1309,13 @@ function HostApp() {
                 <p className="text-sm text-white/72 leading-relaxed">
                   Adds CPU opponents with the same server rules as humans: wagering uses check/call/min-raise/all-in/noise folding;
                   answering picks the nearest legal numeric answer from holes + board (five digit cards + optional decimal).
-                  Table cap is{' '}
+                  Each table’s roster caps at{' '}
                   <span className="font-semibold text-casino-gold">{gameState.maxPlayers}</span>{' '}
-                  seats ({gameState.players.length} filled — add CPUs in batches until you reach 20, then join as player).
-                  {' '}Active virtual seats now:{' '}
+                  seats — you can add many CPUs to the <strong className="text-white/88">LOBBY</strong> pool alongside real players, then tap{' '}
+                  <strong className="text-white/88">Assign from lobby</strong> to split the venue into multiple numbered tables automatically (~balanced
+                  shards, same as an all-human crowd).
+                  Current session has <span className="font-semibold text-casino-gold">{gameState.players.length}</span> seat(s){' '}
+                  filled; CPUs on this roster:{' '}
                   <span className="font-semibold text-casino-gold">{virtualSeatCount}</span>.
                 </p>
                 <div className="flex flex-wrap gap-2 items-center">
