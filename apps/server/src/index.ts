@@ -1650,7 +1650,6 @@ io.on('connection', (socket) => {
             emitVenueTableState(tk, gs)
           }
           socket.emit('toast', 'Hole cards dealt — wagering round 1 (all tables).')
-          markVenueShowStarted(gameState.code)
           gameState = rooms.get(sessionKey)!
           break
         }
@@ -2007,6 +2006,7 @@ io.on('connection', (socket) => {
             'toast',
             `Seated ${N} players randomly across ${tableCount} tables (${sizes.join(', ')}). You are now on table 1.`
           )
+          markVenueShowStarted(lobbyGs.code)
           gameState = rooms.get(t1Key)!
           break
         }

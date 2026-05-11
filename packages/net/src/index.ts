@@ -37,8 +37,8 @@ export type DisplayVenueWallSnapshot = {
   /** Sum of seated humans across numbered tables (1–8). */
   totalSeatedAtTables: number
   /**
-   * Public TV briefing: false after host dismisses venue welcome, once any mosaic tile leaves `lobby`, or mosaic forced locally.
-   * Client uses live tile phases so the floor appears even when an older deploy only clears the flag after **Start Game** (not Deal).
+   * Public TV briefing: false after host **Assign from lobby** (or **Start Game** fallback for single-table flows),
+   * mosaic tile phases, or local mosaic force.
    */
   showAudienceWelcome: boolean
 }
