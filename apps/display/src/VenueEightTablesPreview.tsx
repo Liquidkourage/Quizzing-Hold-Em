@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import {
-  DISPLAY_PREVIEW_NAMES,
   DISPLAY_PREVIEW_SYNCED_PHASE,
   DISPLAY_PREVIEW_TABLES,
+  rehearsalSeatDisplayName,
 } from '@qhe/core'
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
 
@@ -108,6 +108,14 @@ function phaseAccent(ph: string) {
   return 'text-white/85'
 }
 
+/** Latin-first sort key: leading word of the display name (first name). */
+function firstNameSortKey(displayName: string): string {
+  const t = displayName.trim()
+  if (!t) return ''
+  const w = t.split(/\s+/)[0]
+  return w ?? t
+}
+
 function rosterRowsFromTiles(
   tiles: DisplayVenueTileSnapshot[]
 ): { name: string; tableNum: number }[] {
@@ -120,7 +128,13 @@ function rosterRowsFromTiles(
       if (raw) out.push({ name: raw, tableNum: t.tableNum })
     }
   }
-  out.sort((a, b) => a.tableNum - b.tableNum || a.name.localeCompare(b.name))
+  out.sort((a, b) => {
+    const cmp = firstNameSortKey(a.name).localeCompare(firstNameSortKey(b.name), undefined, {
+      sensitivity: 'base',
+    })
+    if (cmp !== 0) return cmp
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  })
   return out
 }
 
@@ -211,8 +225,9 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
         ? []
         : DISPLAY_PREVIEW_TABLES.map((snap, i) => {
             const seated = snap.seated
+            const base = i * VENUE_SEAT_SLOTS
             const seatNames = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
-              j < seated ? (DISPLAY_PREVIEW_NAMES[j] ?? `Guest ${j + 1}`) : ''
+              j < seated ? rehearsalSeatDisplayName(base + j) : ''
             )
             return {
               tableNum: i + 1,

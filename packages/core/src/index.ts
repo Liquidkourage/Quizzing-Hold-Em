@@ -683,4 +683,5 @@ export {
   DISPLAY_PREVIEW_TABLES,
   buildDisplayPreviewGameState,
   normalizeDisplayPreviewTableNum,
+  rehearsalSeatDisplayName,
 } from './displayPreviewFixture'

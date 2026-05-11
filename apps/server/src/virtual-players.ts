@@ -10,6 +10,7 @@ import {
   playerRaise,
   playerAllIn,
   nearestLegalAnswerToTarget,
+  rehearsalSeatDisplayName,
 } from '@qhe/core'
 
 /** Synthetic seats — never collide with Socket.IO ids. */
@@ -35,8 +36,8 @@ export function addVirtualPlayers(state: GameState, requested: number): GameStat
   let s = state
   for (let i = 0; i < n; i++) {
     const id = generateVirtualSeatId()
-    const ordinal = liveVirtualCount(s) + 1
-    s = addPlayer(s, id, `CPU ${ordinal}`)
+    const slot = liveVirtualCount(s)
+    s = addPlayer(s, id, rehearsalSeatDisplayName(slot))
   }
   return s
 }

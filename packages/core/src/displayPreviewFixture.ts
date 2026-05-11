@@ -24,16 +24,62 @@ export const DISPLAY_PREVIEW_TABLES = [
   { seated: 8, pot: 1340 },
 ] as const
 
-export const DISPLAY_PREVIEW_NAMES = [
+/** First names cycle for rehearsal CPUs and venue-wall previews (paired with surnames for initials). */
+const REHEARSAL_FIRST = [
   'Alice',
-  'Bob',
-  'Carol',
-  'Dave',
-  'Eve',
+  'Blake',
+  'Carla',
+  'Devon',
+  'Elena',
   'Frank',
   'Grace',
-  'Henry',
+  'Hugo',
+  'Iris',
+  'Jamal',
+  'Kim',
+  'Liam',
+  'Maria',
+  'Noah',
+  'Opal',
+  'Priya',
 ] as const
+
+/** Surnames — only the first letter is shown on CPUs (“First L.”). */
+const REHEARSAL_SUR = [
+  'Adams',
+  'Bennett',
+  'Cruz',
+  'Diaz',
+  'Ellis',
+  'Ford',
+  'Garcia',
+  'Hayes',
+  'Inoue',
+  'Jones',
+  'Khan',
+  'Lewis',
+  'Moore',
+  'Nguyen',
+  'Ortiz',
+  'Patel',
+] as const
+
+/**
+ * Shared rehearsal/CPU display name: first name plus surname initial (e.g. `Alice S.`).
+ * Deterministic from seat index so venue previews and server `vp:*` seats stay consistent.
+ */
+export function rehearsalSeatDisplayName(seatIndex: number): string {
+  const i = Math.max(0, Math.floor(seatIndex))
+  const first = REHEARSAL_FIRST[i % REHEARSAL_FIRST.length]!
+  const sur = REHEARSAL_SUR[(i * 5 + 2) % REHEARSAL_SUR.length]!
+  const L = sur.charAt(0).toUpperCase()
+  return `${first} ${L}.`
+}
+
+/** First eight seat labels in venue-wall preview tiles — matches `rehearsalSeatDisplayName(0..7)`. */
+export const DISPLAY_PREVIEW_NAMES: readonly string[] = Array.from({ length: 8 }, (_, i) =>
+  rehearsalSeatDisplayName(i)
+)
 
 export const DISPLAY_PREVIEW_BANKROLLS = [
   1200, 850, 1100, 950, 1350, 700, 1600, 900,
@@ -61,7 +107,7 @@ export function buildDisplayPreviewGameState(code: string, rawTableId: string): 
   for (let i = 0; i < snap.seated; i++) {
     players.push({
       id: `vp:preview:${tableId}:${i}`,
-      name: DISPLAY_PREVIEW_NAMES[i] ?? `Guest ${i + 1}`,
+      name: rehearsalSeatDisplayName(i),
       bankroll: DISPLAY_PREVIEW_BANKROLLS[i % DISPLAY_PREVIEW_BANKROLLS.length],
       hand: [digit(i + 3), digit(i + 7)],
       hasFolded: false,
