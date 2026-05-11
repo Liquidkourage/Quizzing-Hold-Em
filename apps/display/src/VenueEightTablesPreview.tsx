@@ -625,12 +625,22 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Spotlight showing table {seatingHeroRow.tableNum}
             </p>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-              <div className="order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:col-span-4">
-                <h2 className="mb-3 hidden text-xs font-bold uppercase tracking-[0.18em] text-white/45 sm:text-sm lg:block">
+            <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8 lg:items-start">
+              <div className="order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:col-span-4 lg:h-[min(80dvh,52rem)] lg:max-h-[min(80dvh,52rem)] lg:shrink-0">
+                <h2 className="mb-3 hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-white/45 sm:text-sm lg:block">
                   All tables
                 </h2>
-                <div className="flex max-h-[min(40vh,18rem)] gap-2.5 overflow-x-auto overflow-y-hidden pb-1 pt-1 lg:max-h-[min(72vh,52rem)] lg:flex-col lg:gap-2.5 lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1 lg:pt-0">
+                <div
+                  className="
+                    flex min-h-0 w-full flex-1 flex-row gap-2.5 overflow-x-auto overflow-y-hidden pb-1 pt-1
+                    [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable]
+                    max-h-[min(40vh,18rem)]
+                    lg:flex-col lg:gap-2.5 lg:overflow-x-hidden lg:overflow-y-scroll lg:pb-0 lg:pr-1 lg:pt-0
+                    touch-pan-x lg:touch-pan-y
+                  "
+                  role="region"
+                  aria-label="Scrollable list of all tables"
+                >
                   {spotlightThumbList}
                 </div>
               </div>
