@@ -61,21 +61,25 @@ function SeatRingWithLabels({
   seatedCount: number
   seatNames: string[]
   seatBankrolls: number[]
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'thumb' | 'md' | 'lg'
 }) {
   const wrap =
     size === 'lg'
       ? 'max-w-[min(440px,92vw)]'
-      : size === 'sm'
-        ? 'w-full max-w-[min(100%,14rem)]'
+      : size === 'thumb'
+        ? 'w-full max-w-none'
         : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
   const dot =
-    size === 'lg' ? 'h-9 w-9' : size === 'sm' ? 'h-5 w-5 sm:h-6 sm:w-6' : 'h-8 w-8'
+    size === 'lg'
+      ? 'h-9 w-9'
+      : size === 'thumb'
+        ? 'h-7 w-7 sm:h-8 sm:w-8'
+        : 'h-8 w-8'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(9rem,28vw)] text-xl sm:text-2xl'
-      : size === 'sm'
-        ? 'max-w-[min(4.5rem,42%)] text-[9px] leading-[1.15] sm:max-w-[min(5rem,44%)] sm:text-[10px] md:text-xs'
+      : size === 'thumb'
+        ? 'max-w-[min(8.5rem,54%)] text-sm font-semibold leading-snug sm:max-w-[min(9rem,52%)] sm:text-base'
         : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
@@ -122,8 +126,8 @@ function SeatRingWithLabels({
                 <span className="block max-w-full truncate">{raw}</span>
                 <span
                   className={`mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald ${
-                    size === 'sm'
-                      ? 'text-[8px] sm:text-[9px]'
+                    size === 'thumb'
+                      ? 'text-xs sm:text-sm'
                       : 'text-xs sm:text-sm md:text-base lg:text-lg'
                   }`}
                 >
@@ -188,36 +192,36 @@ function VenueMosaicTableCard({
         initial={skipMountIntro ? false : { opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: skipMountIntro ? 0 : idx * 0.03, duration: 0.28 }}
-        className={`flex min-w-0 shrink-0 flex-col rounded-lg border bg-black/50 p-2 shadow backdrop-blur-sm sm:w-40 sm:p-2.5 lg:w-full ${
+        className={`flex min-w-0 shrink-0 flex-col rounded-xl border bg-black/50 p-3.5 shadow backdrop-blur-sm lg:w-full ${
           isSpotlightThumb
-            ? 'w-36 border-amber-400/70 ring-2 ring-amber-400/45'
-            : 'w-36 border-yellow-700/30'
+            ? 'min-w-[15rem] w-[min(15rem,88vw)] border-amber-400/70 ring-2 ring-amber-400/45 sm:min-w-[16.5rem] sm:w-[16.5rem]'
+            : 'min-w-[15rem] w-[min(15rem,88vw)] border-yellow-700/30 sm:min-w-[16.5rem] sm:w-[16.5rem]'
         }`}
       >
-        <div className="flex items-start justify-between gap-1">
+        <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-white/55 sm:text-[10px]">
+            <div className="text-xs font-semibold uppercase tracking-wider text-white/55 sm:text-sm">
               Table
             </div>
-            <div className="text-2xl font-black tabular-nums leading-none text-yellow-400 sm:text-3xl">
+            <div className="text-4xl font-black tabular-nums leading-none text-yellow-400 sm:text-5xl">
               {tn}
             </div>
           </div>
           <span
-            className={`max-w-[4.5rem] shrink-0 truncate rounded px-1 py-0.5 text-[9px] font-bold uppercase leading-tight sm:text-[10px] ${phaseAccent(ph)}`}
+            className={`max-w-[6rem] shrink-0 truncate rounded-md px-2 py-1 text-xs font-bold uppercase leading-tight sm:max-w-[7rem] sm:text-sm ${phaseAccent(ph)}`}
           >
             {phaseLabel(ph)}
           </span>
         </div>
-        <div className="mt-1.5 shrink-0">
+        <div className="mt-2.5 shrink-0">
           <SeatRingWithLabels
             seatedCount={seats}
             seatNames={seatNames}
             seatBankrolls={seatBankrolls}
-            size="sm"
+            size="thumb"
           />
         </div>
-        <div className="mt-1.5 flex justify-between gap-1 border-t border-white/[0.07] pt-1.5 text-[10px] font-semibold tabular-nums text-white/75 sm:text-xs">
+        <div className="mt-3 flex justify-between gap-2 border-t border-white/[0.08] pt-3 text-xs font-semibold tabular-nums text-white/80 sm:text-sm">
           <span>{seats} / 8</span>
           <span className="font-mono text-yellow-200/90">${pot.toLocaleString()}</span>
         </div>
@@ -626,7 +630,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               Spotlight showing table {seatingHeroRow.tableNum}
             </p>
             <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8 lg:items-start">
-              <div className="order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:col-span-4 lg:h-[min(80dvh,52rem)] lg:max-h-[min(80dvh,52rem)] lg:shrink-0">
+              <div className="order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:col-span-5 lg:h-[min(80dvh,52rem)] lg:max-h-[min(80dvh,52rem)] lg:shrink-0">
                 <h2 className="mb-3 hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-white/45 sm:text-sm lg:block">
                   All tables
                 </h2>
@@ -634,7 +638,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                   className="
                     flex min-h-0 w-full flex-1 flex-row gap-2.5 overflow-x-auto overflow-y-hidden pb-1 pt-1
                     [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable]
-                    max-h-[min(40vh,18rem)]
+                    max-h-[min(52vh,24rem)]
                     lg:flex-col lg:gap-2.5 lg:overflow-x-hidden lg:overflow-y-scroll lg:pb-0 lg:pr-1 lg:pt-0
                     touch-pan-x lg:touch-pan-y
                   "
@@ -644,7 +648,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                   {spotlightThumbList}
                 </div>
               </div>
-              <div className="order-1 min-w-0 lg:order-2 lg:col-span-8">
+              <div className="order-1 min-w-0 lg:order-2 lg:col-span-7">
                 <AnimatePresence mode="wait">
                   <VenueMosaicTableCard
                     key={seatingHeroRow.tableNum}
