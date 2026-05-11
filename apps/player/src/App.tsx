@@ -212,8 +212,8 @@ function PlayerApp() {
           <div className="absolute inset-0 bg-gradient-to-bl from-yellow-400/5 via-transparent to-purple-500/5 animate-glow"></div>
         </div>
 
-        <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-          <Card variant="glass" className="p-8 w-full max-w-md">
+        <div className="relative z-10 flex min-h-screen items-center justify-center p-4 sm:p-6">
+          <Card variant="glass" className="w-full max-w-md p-6 sm:p-8">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -323,6 +323,22 @@ function PlayerApp() {
     wageringRound === 1 &&
     gameState.round.communityCards.length === 0
 
+  /** Fixed bottom docks on phones; desktop keeps controls in-flow (lg+) */
+  const needsMobileBetDock =
+    gameState.phase === 'betting' && currentPlayer && !currentPlayer.hasFolded
+  const needsMobileAnswerDock =
+    gameState.phase === 'answering' && currentPlayer && !currentPlayer.hasFolded
+
+  const mainScrollPaddingClass = [
+    'relative z-10 px-3 pt-3 pb-6 sm:px-5 sm:pt-4 sm:pb-8 md:p-8',
+    needsMobileBetDock ? 'max-lg:pb-[calc(17.5rem+env(safe-area-inset-bottom,0px))]' : '',
+    needsMobileAnswerDock && !needsMobileBetDock
+      ? 'max-lg:pb-[calc(8.5rem+env(safe-area-inset-bottom,0px))]'
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
       {/* Animated Background */}
@@ -336,7 +352,11 @@ function PlayerApp() {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            className="fixed top-4 right-4 z-50 bg-glass-gradient backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-4 text-white"
+            className="fixed z-50 max-w-[min(92vw,22rem)] bg-glass-gradient backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-3 text-sm text-white sm:p-4 sm:text-base"
+            style={{
+              top: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+              right: 'max(0.75rem, env(safe-area-inset-right, 0px))',
+            }}
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
@@ -347,35 +367,49 @@ function PlayerApp() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 p-8">
+      <div className={mainScrollPaddingClass}>
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-4 sm:mb-8"
         >
-          <h1 className="text-4xl font-black text-casino-emerald mb-4">🎮 PLAYER VIEW</h1>
-          <div className="text-xl text-white">
-            Venue: <span className="text-casino-emerald font-bold">{gameState.code}</span>
-            {' · '}
-            Table: <span className="text-casino-gold font-bold">{gameState.tableId ?? '1'}</span>
+          <h1 className="mb-2 text-xl font-black tracking-tight text-casino-emerald sm:mb-2 sm:text-4xl sm:tracking-normal">
+            <span className="sm:hidden">🎮 Playing</span>
+            <span className="hidden sm:inline">🎮 PLAYER VIEW</span>
+          </h1>
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-white sm:text-xl">
+            <span>
+              Venue <span className="text-casino-emerald font-bold">{gameState.code}</span>
+            </span>
+            <span className="text-white/35" aria-hidden>·</span>
+            <span>
+              Table <span className="text-casino-gold font-bold">{gameState.tableId ?? '1'}</span>
+            </span>
             {showSeatNumbers && myIndex >= 0 && (
               <>
-                {' · '}
-                Seat: <span className="text-casino-gold font-bold">{myIndex + 1}</span>
+                <span className="text-white/35" aria-hidden>·</span>
+                <span>
+                  Seat <span className="text-casino-gold font-bold">{myIndex + 1}</span>
+                </span>
               </>
             )}
-            {' | '}
-            Player: <span className="text-casino-gold font-bold">{playerName}</span>
+            <span className="text-white/35 w-full sm:hidden" aria-hidden />
+            <span className="sm:before:content-['·'] sm:before:px-2 sm:before:text-white/35">
+              <span className="text-white/65 sm:hidden">You: </span>
+              <span className="text-casino-gold font-semibold sm:font-bold truncate max-w-[10rem] sm:max-w-none inline-block align-bottom">
+                {playerName}
+              </span>
+            </span>
           </div>
-          <div className="mt-4 inline-block p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
-            <div className="text-sm text-white/80">Game Phase</div>
-            <div className="text-lg font-bold text-casino-emerald capitalize">{gameState.phase}</div>
+          <div className="mt-2 inline-block rounded-lg border border-white/20 bg-white/10 p-2 backdrop-blur-md sm:mt-4 sm:p-3">
+            <div className="text-[11px] text-white/80 uppercase tracking-wide sm:text-sm">Phase</div>
+            <div className="text-base font-bold capitalize text-casino-emerald sm:text-lg">{gameState.phase}</div>
             {gameState.phase === 'betting' && (
-              <div className="mt-2 border-t border-white/10 pt-2 text-sm text-white/75">
-                Wagering round{' '}
+              <div className="mt-2 border-t border-white/10 pt-2 text-left text-[11px] text-white/75 sm:text-sm">
+                Wager rnd{' '}
                 <span className="font-bold text-casino-gold">{wageringRound || '—'}</span>
                 {boardHiddenDuringBetting && (
-                  <div className="mt-1 text-xs text-white/60">Board hidden until the host deals community cards.</div>
+                  <div className="mt-1 text-[10px] text-white/60 sm:text-xs">Flop not shown yet — board hidden until dealt.</div>
                 )}
               </div>
             )}
@@ -383,21 +417,21 @@ function PlayerApp() {
         </motion.div>
 
         {(gameState.tableId ?? '') === LOBBY_TABLE_ID && gameState.phase === 'lobby' && (
-          <div className="mb-6 mx-auto max-w-xl rounded-xl border border-amber-400/50 bg-amber-950/35 px-4 py-3 text-center text-sm text-amber-100">
+          <div className="mb-4 mx-auto max-w-xl rounded-xl border border-amber-400/50 bg-amber-950/35 px-3 py-3 text-center text-xs text-amber-100 sm:mb-6 sm:text-sm">
             Lobby pool — the host will randomly assign you to a table when they tap <strong>Assign from lobby</strong>.
           </div>
         )}
 
         {/* Game Info Section */}
-        <Card variant="glass" className="mb-8 p-8">
-          <div className="text-center mb-6">
-            <div className="text-lg text-white/80">Pot</div>
-            <div className="text-4xl font-bold text-casino-emerald">${gameState.round.pot}</div>
+        <Card variant="glass" className="mb-4 p-4 sm:mb-8 sm:p-8">
+          <div className="mb-4 text-center sm:mb-6">
+            <div className="text-base text-white/80 sm:text-lg">Pot</div>
+            <div className="text-3xl font-bold text-casino-emerald sm:text-4xl">${gameState.round.pot}</div>
           </div>
           {gameState.round.question && (
-            <div className="p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg max-w-2xl mx-auto">
-              <div className="text-lg text-white/80 mb-3">Question</div>
-              <div className="text-lg text-casino-gold font-bold">{gameState.round.question.text}</div>
+            <div className="mx-auto max-w-2xl rounded-lg border border-white/20 bg-white/10 p-4 backdrop-blur-md sm:p-6">
+              <div className="mb-2 text-base text-white/80 sm:mb-3 sm:text-lg">Question</div>
+              <div className="text-base font-bold text-casino-gold sm:text-lg">{gameState.round.question.text}</div>
               {gameState.phase === 'showdown' && (
                 <div className="text-lg font-bold text-casino-emerald mt-3">
                   Answer: {gameState.round.question.answer}
@@ -409,27 +443,33 @@ function PlayerApp() {
 
         {/* Answer Composition Interface */}
         {(gameState.phase === 'betting' || gameState.phase === 'answering') && currentPlayer && !currentPlayer.hasFolded && (
-          <Card variant="glass" className="mb-8 p-8">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-8 text-center">Compose Your Answer</h2>
+          <Card variant="glass" className="mb-4 space-y-4 p-4 sm:mb-8 sm:p-8">
+            <h2 className="mb-4 text-center text-2xl font-bold text-casino-emerald sm:mb-8 sm:text-3xl">
+              Compose your answer
+            </h2>
+            {gameState.phase === 'betting' && (
+              <p className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-center text-xs leading-snug text-white/60">
+                Tap cards below anytime to rehearse — you can tap <strong className="text-white/85">Submit</strong> only
+                once the host opens answering.
+              </p>
+            )}
             {gameState.phase === 'answering' && (
-              <div className="text-center mb-4">
-                <span className="text-white/80 mr-2">Time Remaining:</span>
-                <span className="text-casino-gold font-extrabold text-2xl">
-                  {remainingSec}s
-                </span>
+              <div className="mb-4 hidden text-center sm:block">
+                <span className="mr-2 text-white/80">Time left:</span>
+                <span className="text-2xl font-extrabold text-casino-gold">{remainingSec}s</span>
               </div>
             )}
             
             {/* Composed Answer Display */}
-            <div className="text-center mb-8">
-              <div className="text-lg text-white/80 mb-1">Your Answer</div>
-              <div className="text-sm text-casino-emerald/95 mb-3">
-                Tap exactly {ANSWER_CARD_COUNT} digit cards in order (holes and/or board); add a decimal if you need one.
+            <div className="mb-6 text-center sm:mb-8">
+              <div className="mb-1 text-base text-white/80 sm:text-lg">Your answer</div>
+              <div className="mb-3 text-xs text-casino-emerald/95 sm:text-sm">
+                Tap exactly {ANSWER_CARD_COUNT} digit cards (holes and/or board); add a decimal if needed.
               </div>
-              <div className="text-sm text-white/70 mb-2">
-                Cards in hand: {selectedCards.length}/{ANSWER_CARD_COUNT}
+              <div className="mb-2 text-xs text-white/70 sm:text-sm">
+                Cards selected: {selectedCards.length}/{ANSWER_CARD_COUNT}
               </div>
-              <div className="text-6xl font-bold text-casino-gold bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-6 min-h-[120px] flex items-center justify-center">
+              <div className="flex min-h-[5.5rem] items-center justify-center break-all rounded-lg border border-white/20 bg-white/10 px-2 py-4 text-4xl font-bold leading-tight text-casino-gold backdrop-blur-md sm:min-h-[7.5rem] sm:p-6 sm:text-6xl">
                 {composedAnswer.display || '—'}
               </div>
             </div>
@@ -578,8 +618,10 @@ function PlayerApp() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 justify-center">
+            {/* Action Buttons — duplicated in bottom dock while answering on phones */}
+            <div
+              className={`flex justify-center gap-4 ${needsMobileAnswerDock ? 'max-lg:hidden' : ''}`}
+            >
               <NeonButton 
                 variant="red"
                 size="large"
@@ -603,9 +645,9 @@ function PlayerApp() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8">
           {/* Player Info */}
-          <Card variant="glass" className="p-6">
+          <Card variant="glass" className="p-4 sm:p-6">
             <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Player Info</h2>
             <div className="text-center mb-6">
               <div className="text-sm text-white/80">Bankroll</div>
@@ -618,8 +660,8 @@ function PlayerApp() {
             )}
           </Card>
 
-          {/* Game Actions */}
-          <Card variant="glass" className="p-6">
+          {/* Game Actions — wagering buttons use fixed dock on small screens while betting */}
+          <Card variant="glass" className="p-4 sm:p-6">
             <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Game Actions</h2>
             <div className="space-y-4">
               {gameState.phase === 'betting' && (
@@ -632,7 +674,9 @@ function PlayerApp() {
                   <div>Turn: <span className={`font-bold ${isMyTurn ? 'text-casino-gold' : ''}`}>{isMyTurn ? 'YOURS' : 'Other Player'}</span></div>
                 </div>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div
+                className={`grid grid-cols-1 gap-3 md:grid-cols-2 ${gameState.phase === 'betting' ? 'hidden lg:grid' : 'grid'}`}
+              >
                 <NeonButton 
                   variant="emerald"
                   size="large"
@@ -700,7 +744,7 @@ function PlayerApp() {
         </div>
 
         {/* Other Players */}
-        <Card variant="glass" className="mt-8 p-6">
+        <Card variant="glass" className="mt-6 p-4 sm:mt-8 sm:p-6">
           <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Other Players</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {gameState.players.filter(p => p.name !== playerName).map((player) => {
@@ -738,6 +782,151 @@ function PlayerApp() {
           </div>
         </Card>
       </div>
+
+      {/* Mobile thumb-zone: wagering (betting only, max-lg) */}
+      {needsMobileBetDock && currentPlayer && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/15 bg-black/80 backdrop-blur-lg lg:hidden"
+          style={{
+            paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
+            paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0px))',
+            paddingTop: '0.5rem',
+          }}
+        >
+          <div className="mx-auto max-w-lg">
+            <div className="mb-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-center text-[11px] text-white/80">
+              <span>
+                To call <span className="font-bold text-white">${toCall}</span>
+              </span>
+              <span className="text-white/35" aria-hidden>
+                ·
+              </span>
+              <span>
+                {isMyTurn ? (
+                  <span className="font-bold text-casino-gold">Your turn</span>
+                ) : (
+                  <span>Waiting</span>
+                )}
+              </span>
+              <span className="text-white/35" aria-hidden>
+                ·
+              </span>
+              <span>
+                Stack <span className="font-bold text-casino-gold">${currentPlayer.bankroll}</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <NeonButton
+                variant="emerald"
+                size="normal"
+                className="min-h-[2.75rem] w-full !px-3 !py-2.5 !text-sm"
+                onClick={handleCheck}
+                disabled={!canCheck}
+              >
+                Check
+              </NeonButton>
+              <NeonButton
+                variant="gold"
+                size="normal"
+                className="min-h-[2.75rem] w-full !px-3 !py-2.5 !text-sm"
+                onClick={handleCall}
+                disabled={!canCall}
+              >
+                {toCall > 0 ? `Call $${toCall}` : 'Call'}
+              </NeonButton>
+            </div>
+            <div className="mt-2 space-y-1.5">
+              <label className="block text-[11px] text-white/75">
+                Raise <span className="text-white/45">(min ${minRaise})</span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={raiseAmount}
+                  onChange={(e) => setRaiseAmount(Number(e.target.value))}
+                  min={minRaise}
+                  max={Math.max(0, (currentPlayer.bankroll || 0) - toCall)}
+                  placeholder={String(minRaise)}
+                  className="min-h-[2.75rem] min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 p-2 text-sm text-white backdrop-blur-md focus:border-casino-emerald focus:outline-none"
+                />
+                <NeonButton
+                  variant="purple"
+                  size="normal"
+                  className="min-h-[2.75rem] shrink-0 !px-4 !py-2.5 !text-sm"
+                  onClick={handleRaise}
+                  disabled={!canRaise}
+                >
+                  Raise
+                </NeonButton>
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <NeonButton
+                variant="red"
+                size="normal"
+                className="min-h-[2.75rem] w-full !px-3 !py-2.5 !text-sm"
+                onClick={handleFold}
+                disabled={!isMyTurn || !canBet}
+              >
+                Fold
+              </NeonButton>
+              <NeonButton
+                variant="blue"
+                size="normal"
+                className="min-h-[2.75rem] w-full !px-3 !py-2.5 !text-sm"
+                onClick={handleAllIn}
+                disabled={!canAllIn}
+              >
+                All-In
+              </NeonButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile thumb-zone: answer actions (answering only, max-lg) */}
+      {needsMobileAnswerDock && currentPlayer && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/15 bg-black/80 backdrop-blur-lg lg:hidden"
+          style={{
+            paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
+            paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0px))',
+            paddingTop: '0.75rem',
+          }}
+        >
+          <div className="mx-auto max-w-lg space-y-3">
+            <div className="text-center text-sm text-white/85">
+              <span className="text-white/60">Time left: </span>
+              <span className="text-xl font-extrabold tabular-nums text-casino-gold">{remainingSec}s</span>
+            </div>
+            <div className="flex justify-center gap-3">
+              <NeonButton
+                variant="red"
+                size="normal"
+                className="min-h-[2.75rem] flex-1 !px-4 !py-2.5 !text-sm"
+                onClick={handleClearAnswer}
+              >
+                Clear
+              </NeonButton>
+              <NeonButton
+                variant="emerald"
+                size="normal"
+                className="min-h-[2.75rem] flex-1 !px-4 !py-2.5 !text-sm"
+                onClick={handleSubmitAnswer}
+                disabled={
+                  gameState.phase !== 'answering' ||
+                  selectedCards.length !== ANSWER_CARD_COUNT ||
+                  !composedAnswer.display.trim()
+                }
+              >
+                Submit
+              </NeonButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
