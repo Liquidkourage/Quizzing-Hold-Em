@@ -146,7 +146,7 @@ function phaseAccent(ph: string) {
   return 'text-white/85'
 }
 
-type VenueMosaicTileMode = 'grid' | 'hero' | 'thumb'
+type VenueMosaicTileMode = 'grid' | 'hero' | 'thumb' | 'crawl'
 
 function VenueMosaicTableCard({
   row,
@@ -167,6 +167,45 @@ function VenueMosaicTableCard({
   const ph = row.phase
   const seatNames = padSeatNames(row.seatNames)
   const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
+
+  if (mode === 'crawl') {
+    const spotlight = isSpotlightThumb === true
+    const rowShell = spotlight
+      ? 'border-amber-400/70 bg-black/55 ring-2 ring-amber-400/45 shadow-[0_0_16px_rgba(251,191,36,0.1)]'
+      : 'border-white/[0.12] bg-black/35'
+
+    return (
+      <div
+        data-spotlight-tile={tn}
+        role="group"
+        aria-current={spotlight ? 'true' : undefined}
+        className={`flex w-full min-w-0 items-center gap-2 rounded-lg border p-2.5 backdrop-blur-md ${rowShell}`}
+      >
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-black tabular-nums ${
+            spotlight ? 'bg-amber-500/35 text-lg text-amber-50' : 'bg-white/[0.07] text-base text-yellow-400'
+          }`}
+        >
+          {tn}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+            <span className="text-sm font-bold leading-tight text-white/95">T{tn}</span>
+            <span
+              className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none ${phaseAccent(ph)}`}
+            >
+              {phaseLabel(ph)}
+            </span>
+          </div>
+          <p className="mt-0.5 text-[11px] leading-snug text-white/60">
+            <span className="font-mono tabular-nums text-casino-emerald">{seats}/8</span>
+            <span className="mx-1 text-white/35">·</span>
+            <span className="font-mono tabular-nums text-yellow-200/90">${pot.toLocaleString()}</span>
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (mode === 'thumb') {
     const spotlight = isSpotlightThumb === true
@@ -408,6 +447,72 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
   )
 }
 
+/** Fixed left strip — same width/height treatment as {@link VenueScrollingRoster}. */
+function VenueAllTablesCrawl({
+  tiles,
+  spotlightTableNum,
+  prefersReducedMotion,
+}: {
+  tiles: DisplayVenueTileSnapshot[]
+  spotlightTableNum: number
+  prefersReducedMotion: boolean
+}) {
+  const durationSec = Math.max(24, Math.min(100, Math.max(1, tiles.length) * 6))
+  const doubled = useMemo(() => [...tiles, ...tiles], [tiles])
+
+  return (
+    <aside
+      className="fixed inset-y-0 left-0 z-20 flex w-52 flex-col border-r border-yellow-600/50 bg-slate-950/94 shadow-[8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md sm:w-56 lg:w-[15rem]"
+      aria-label="All tables crawl"
+    >
+      <div className="shrink-0 border-b border-white/10 px-2.5 py-3 sm:px-3">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/55 sm:text-xs">Tables</h2>
+        <p className="mt-0.5 text-xl font-bold leading-none text-white/92 sm:text-2xl">All tables</p>
+      </div>
+      <div
+        className="relative min-h-0 flex-1 overflow-hidden px-1.5 py-1 sm:px-2"
+        style={{
+          maskImage:
+            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+        }}
+      >
+        {prefersReducedMotion ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-y-contain py-1">
+            {tiles.map((row, idx) => (
+              <VenueMosaicTableCard
+                key={row.tableNum}
+                row={row}
+                mode="crawl"
+                idx={idx}
+                skipMountIntro
+                isSpotlightThumb={row.tableNum === spotlightTableNum}
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="venue-roster-animate flex flex-col gap-2"
+            style={{ ['--venue-roster-secs' as string]: `${durationSec}s` }}
+          >
+            {doubled.map((row, idx) => (
+              <VenueMosaicTableCard
+                key={`${row.tableNum}-${idx}`}
+                row={row}
+                mode="crawl"
+                idx={idx}
+                skipMountIntro
+                isSpotlightThumb={row.tableNum === spotlightTableNum}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </aside>
+  )
+}
+
 type VenueEightTablesPreviewProps = {
   /** null until first `displayVenueSnapshot` from socket */
   wall: DisplayVenueWallSnapshot | null
@@ -423,7 +528,7 @@ type VenueEightTablesPreviewProps = {
  * Headline shows only live question text + countdown from the server snapshot.
  * While **every** felt is still in **lobby** (pre-start), or when showing the **rehearsal** preview
  * without a live wall, the grid becomes a **seating spotlight tour**: one enlarged table on a timer
- * with compact **table list** rows (detail on the hero only).
+ * **All tables** is a fixed left crawl (same strip width/height as the players roster) when in this mode.
  */
 export default function VenueEightTablesPreview({ wall, skipMountIntro = false }: VenueEightTablesPreviewProps) {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
@@ -518,22 +623,11 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
 
   const showRoster = rosterRowsFromTiles(tileRows).length > 0
 
-  const spotlightThumbList = tileRows.map((row, i) => (
-    <VenueMosaicTableCard
-      key={row.tableNum}
-      row={row}
-      mode="thumb"
-      idx={i}
-      skipMountIntro={skipMountIntro}
-      isSpotlightThumb={row.tableNum === seatingHeroRow?.tableNum}
-    />
-  ))
-
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
-        showRoster ? 'pr-52 sm:pr-56 lg:pr-[15rem]' : ''
-      }`}
+        showSeatingSpotlightCycle ? 'pl-52 sm:pl-56 lg:pl-[15rem]' : ''
+      } ${showRoster ? 'pr-52 sm:pr-56 lg:pr-[15rem]' : ''}`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
         <div
@@ -617,70 +711,48 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Spotlight showing table {seatingHeroRow.tableNum}
             </p>
-            <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8 lg:items-start">
-              <div className="order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:col-span-5 lg:h-[min(80dvh,52rem)] lg:max-h-[min(80dvh,52rem)] lg:shrink-0">
-                <h2 className="mb-3 hidden shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-white/45 sm:text-sm lg:block">
-                  All tables
-                </h2>
-                <div
-                  className="
-                    flex min-h-0 w-full flex-1 flex-row gap-2.5 overflow-x-auto overflow-y-hidden pb-1 pt-1
-                    [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable]
-                    max-h-[min(52vh,24rem)]
-                    lg:flex-col lg:gap-2.5 lg:overflow-x-hidden lg:overflow-y-scroll lg:pb-0 lg:pr-1 lg:pt-0
-                    touch-pan-x lg:touch-pan-y
-                  "
-                  role="region"
-                  aria-label="Scrollable list of all tables"
-                >
-                  {spotlightThumbList}
-                </div>
-              </div>
-              <div className="order-1 min-w-0 lg:order-2 lg:col-span-7">
-                <AnimatePresence mode="wait">
-                  <VenueMosaicTableCard
-                    key={seatingHeroRow.tableNum}
-                    row={seatingHeroRow}
-                    mode="hero"
-                    idx={0}
-                    skipMountIntro={skipMountIntro}
-                  />
-                </AnimatePresence>
-                <p className="mt-4 text-center text-base text-white/50 sm:text-lg">
-                  {prefersReducedMotion
-                    ? `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
-                    : `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length}`}
-                </p>
-                {!prefersReducedMotion && tileRows.length > 1 ? (
-                  <div className="mx-auto mt-4 max-w-3xl">
-                    <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
-                      <span className="font-semibold uppercase tracking-wider text-white/45">
-                        Next table
-                      </span>
-                      <span className="font-mono tabular-nums text-amber-200/90">
-                        {Math.max(
-                          0,
-                          Math.ceil((1 - seatingCycleProgress) * SEATING_SPOTLIGHT_CYCLE_SEC)
-                        )}
-                        s
-                      </span>
-                    </div>
-                    <div
-                      className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={Math.round(seatingCycleProgress * 100)}
-                      aria-label="Seating tour progress until the next table"
-                    >
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-amber-700/95 to-amber-300/95"
-                        style={{ width: `${seatingCycleProgress * 100}%` }}
-                      />
-                    </div>
+            <div className="mx-auto w-full max-w-[min(100%,56rem)]">
+              <AnimatePresence mode="wait">
+                <VenueMosaicTableCard
+                  key={seatingHeroRow.tableNum}
+                  row={seatingHeroRow}
+                  mode="hero"
+                  idx={0}
+                  skipMountIntro={skipMountIntro}
+                />
+              </AnimatePresence>
+              <p className="mt-4 text-center text-base text-white/50 sm:text-lg">
+                {prefersReducedMotion
+                  ? `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
+                  : `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length}`}
+              </p>
+              {!prefersReducedMotion && tileRows.length > 1 ? (
+                <div className="mx-auto mt-4 max-w-3xl">
+                  <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
+                    <span className="font-semibold uppercase tracking-wider text-white/45">Next table</span>
+                    <span className="font-mono tabular-nums text-amber-200/90">
+                      {Math.max(
+                        0,
+                        Math.ceil((1 - seatingCycleProgress) * SEATING_SPOTLIGHT_CYCLE_SEC)
+                      )}
+                      s
+                    </span>
                   </div>
-                ) : null}
-              </div>
+                  <div
+                    className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(seatingCycleProgress * 100)}
+                    aria-label="Seating tour progress until the next table"
+                  >
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-700/95 to-amber-300/95"
+                      style={{ width: `${seatingCycleProgress * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
           </section>
         ) : (
@@ -697,6 +769,13 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
           </div>
         )}
       </main>
+      {showSeatingSpotlightCycle && seatingHeroRow ? (
+        <VenueAllTablesCrawl
+          tiles={tileRows}
+          spotlightTableNum={seatingHeroRow.tableNum}
+          prefersReducedMotion={prefersReducedMotion}
+        />
+      ) : null}
       {showRoster ? <VenueScrollingRoster tiles={tileRows} /> : null}
     </div>
   )
