@@ -353,11 +353,11 @@ function HostApp() {
 
   return (
     <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 animate-pulse-slow"></div>
-        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-blue-500/10 animate-float"></div>
-        <div className="absolute inset-0 bg-gradient-to-bl from-yellow-400/5 via-transparent to-purple-500/5 animate-glow"></div>
+      {/* Backdrop — static gradient so the desk stays readable during long hosts */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,180,120,0.08),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_rgba(100,70,160,0.06),transparent_50%)]" />
       </div>
 
       {/* Toast Messages */}
@@ -375,62 +375,71 @@ function HostApp() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 p-8">
-        {/* Header */}
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: -50 }}
+      <div className="relative z-10 mx-auto max-w-6xl px-4 pb-12 pt-4 sm:px-6 lg:px-8 lg:pb-16">
+        <motion.header
+          className="mb-6 rounded-2xl border border-white/10 bg-black/35 px-4 py-4 shadow-lg shadow-black/20 backdrop-blur-md sm:px-5 sm:py-5"
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.35 }}
         >
-          <h1 className="text-6xl font-black text-casino-emerald mb-4">
-            🎰 <PokerChip size="lg" className="mx-1" />
-            {'Quizz\u2019em'}
-          </h1>
-          <div className="text-xl text-white">
-            Venue: <span className="text-casino-emerald font-bold">{gameState.code}</span>
-            <span className="text-white/50"> · </span>
-            Table{' '}
-            <span className="text-casino-gold font-bold">{gameState.tableId ?? '1'}</span>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="flex items-center gap-2">
+                <PokerChip size="md" className="opacity-95" />
+                <span className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+                  {'Quizz\u2019em'} <span className="font-normal text-white/40">·</span>{' '}
+                  <span className="font-semibold text-casino-emerald">Host</span>
+                </span>
+              </div>
+              <span className="hidden h-8 w-px bg-white/15 lg:block" aria-hidden />
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1 font-mono font-semibold text-white/90 tabular-nums">
+                  {gameState.code}
+                </span>
+                <span className="text-white/45">Synced table</span>
+                <span className="rounded-full border border-amber-500/35 bg-amber-950/30 px-2.5 py-0.5 font-medium text-casino-gold">
+                  {gameState.tableId ?? '1'}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              <span className="text-xs uppercase tracking-wider text-white/35">Phase</span>
+              <span className="rounded-md border border-casino-emerald/40 bg-casino-emerald/15 px-3 py-1 text-sm font-bold capitalize text-casino-emerald">
+                {gameState.phase}
+              </span>
+              <label className="flex items-center gap-2 text-sm text-white/70">
+                <span className="sr-only sm:not-sr-only sm:inline">You control</span>
+                <select
+                  value={hostTableId}
+                  title="Which session Keyed host actions apply to — use Lobby for pooled players"
+                  onChange={(e) => setHostTableId(e.target.value)}
+                  className="max-w-[14rem] rounded-lg border border-white/20 bg-zinc-950 py-2 pl-2 pr-8 text-sm text-white [color-scheme:dark] sm:max-w-xs"
+                >
+                  {[LOBBY_TABLE_ID, '1', '2', '3', '4', '5', '6', '7', '8'].map((v) => (
+                    <option key={v} value={v} className="bg-zinc-950 text-white">
+                      {v === LOBBY_TABLE_ID ? 'Lobby pool' : `Table ${v}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
-          <div className="text-lg text-white mt-2">
-            Phase: <span className="text-casino-gold font-bold">{gameState.phase}</span>
-          </div>
-          <div className="flex flex-wrap gap-3 items-center justify-center text-sm text-white/85 mt-4">
-            <label className="flex items-center gap-2">
-              <span>Host binds to:</span>
-              <select
-                value={hostTableId}
-                onChange={e => setHostTableId(e.target.value)}
-                className="rounded-lg border border-white/25 bg-zinc-950 px-3 py-2 text-white [color-scheme:dark]"
-              >
-                {[LOBBY_TABLE_ID, '1', '2', '3', '4', '5', '6', '7', '8'].map(v => (
-                  <option key={v} value={v} className="bg-zinc-950 text-white">
-                    {v === LOBBY_TABLE_ID ? 'Lobby (pool — auto-assign)' : `Table ${v}`}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span className="text-white/55 max-w-md">
-              <strong className="text-white">Venue-wide sync:</strong> live question, blinds, dealing, timers, and round flow apply to every table under{' '}
-              <span className="text-casino-gold">{gameState.code}</span>. Trivia wording is synced to tables; numeric answers remain host-only except on reveal/showdown per table.
-            </span>
-          </div>
+
           {!viteHostSecret ? (
             <form
-              className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm"
+              className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-sm"
               onSubmit={(e) => {
                 e.preventDefault()
                 setHostSecretApplied(secretDraft)
               }}
             >
-              <span className="text-white/60">Host password</span>
+              <span className="text-white/50">Host password</span>
               <input
                 type="password"
                 value={secretDraft}
                 onChange={(e) => setSecretDraft(e.target.value)}
-                placeholder='if SERVER sets HOST_SECRET'
-                className="rounded-lg bg-black/40 border border-white/25 text-white px-3 py-1.5 w-56 max-w-[80vw]"
+                placeholder="if SERVER sets HOST_SECRET"
+                className="w-52 max-w-full rounded-lg border border-white/20 bg-black/40 px-3 py-1.5 text-white"
                 autoComplete="off"
               />
               <NeonButton variant="blue" size="small" type="submit">
@@ -438,18 +447,29 @@ function HostApp() {
               </NeonButton>
             </form>
           ) : (
-            <p className="mt-3 text-xs text-emerald-200/85">
-              Host auth from <code className="text-white/90">VITE_HOST_SECRET</code> (bundled).
+            <p className="mt-3 border-t border-white/10 pt-3 text-xs text-emerald-200/85">
+              Using bundled <code className="rounded bg-white/10 px-1 text-white/90">VITE_HOST_SECRET</code>.
             </p>
           )}
-        </motion.div>
 
-        <div
-          className="mb-8 rounded-2xl border border-white/15 bg-black/35 backdrop-blur-md p-2 sm:p-3"
+          <details className="mt-4 border-t border-white/10 pt-3 text-left text-xs text-white/50">
+            <summary className="cursor-pointer select-none text-white/60 hover:text-white/75">
+              How venue sync works
+            </summary>
+            <p className="mt-2 leading-relaxed">
+              Actions you send from this panel apply venue-wide under <span className="font-mono text-white/65">{gameState.code}</span>
+              {' — '}questions, blinds, dealing, timers, and round transitions fan out to every table. Numeric answers stay off public
+              TVs until reveal / showdown.
+            </p>
+          </details>
+        </motion.header>
+
+        <nav
+          className="mb-6 rounded-xl border border-white/10 bg-black/25 p-1 backdrop-blur-sm"
           role="tablist"
           aria-label="Host sections"
         >
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1">
             {HOST_TABS.map((t) => {
               const active = hostTab === t.id
               return (
@@ -458,29 +478,35 @@ function HostApp() {
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  className={`rounded-xl px-4 py-2.5 text-left text-sm font-semibold transition-colors sm:min-w-[11rem] ${
+                  title={t.hint}
+                  className={`min-h-[44px] flex-1 rounded-lg px-3 py-2.5 text-center text-sm font-semibold transition-colors sm:flex-none sm:text-left sm:min-w-[8.5rem] ${
                     active
-                      ? 'bg-casino-emerald/20 text-casino-emerald border border-casino-emerald/50 shadow-[0_0_20px_rgba(0,255,180,0.12)]'
-                      : 'text-white/70 border border-transparent hover:bg-white/8 hover:text-white'
+                      ? 'bg-white/14 text-white shadow-inner ring-1 ring-casino-emerald/35'
+                      : 'text-white/55 hover:bg-white/[0.06] hover:text-white/90'
                   }`}
                   onClick={() => setHostTab(t.id)}
                 >
-                  <span className="block leading-tight">{t.label}</span>
-                  <span className="mt-0.5 block text-[11px] font-normal text-white/45">{t.hint}</span>
+                  <span className="block leading-snug">{t.label}</span>
+                  {active ? (
+                    <span className="mt-0.5 block text-[10px] font-normal capitalize tracking-wide text-casino-emerald/85">
+                      {t.hint}
+                    </span>
+                  ) : null}
                 </button>
               )
             })}
           </div>
-        </div>
+        </nav>
 
         {hostTab === 'library' && (
-        <Card variant="glass" className="mb-8 p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
+          <div className="mb-6 flex flex-col gap-1 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-casino-emerald">Question bank</h2>
-              <p className="text-sm text-white/65 mt-1 max-w-2xl">
-                Ordered bank for venue <strong className="text-white/90">{gameState.code}</strong>. Use <strong className="text-white/80">Setlists</strong> for ordered rundowns; push to tables from here or from the{' '}
-                <strong className="text-white/80">Live show</strong> tab.
+              <h2 className="text-xl font-semibold tracking-tight text-white">Question bank</h2>
+              <p className="mt-1 max-w-2xl text-sm text-white/50">
+                Venue <span className="font-mono text-white/65">{gameState.code}</span>. Build here or on{' '}
+                <strong className="text-white/75">Live show</strong> /{' '}
+                <strong className="text-white/75">Setlists</strong>.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 shrink-0">
@@ -690,15 +716,13 @@ function HostApp() {
         )}
 
         {hostTab === 'setlists' && (
-        <Card variant="glass" className="mb-8 p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-casino-emerald">Setlists (rundowns)</h2>
-              <p className="text-sm text-white/65 mt-1 max-w-2xl">
-                Ordered playlists drawn from your bank. Pick an active rundown on the{' '}
-                <strong className="text-white/80">Live show</strong> tab, then use <strong className="text-white/80">Next from setlist</strong> for each cue.
-              </p>
-            </div>
+        <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
+          <div className="mb-6 border-b border-white/10 pb-5">
+            <h2 className="text-xl font-semibold tracking-tight text-white">Setlists (rundowns)</h2>
+            <p className="mt-1 max-w-2xl text-sm text-white/50">
+              Ordered cues from your bank. Pick active rundown on <strong className="text-white/75">Live show</strong>, then{' '}
+              <strong className="text-white/75">Next from setlist</strong>.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2 items-end mb-4">
             <label className="block text-sm text-white/80">
@@ -874,24 +898,44 @@ function HostApp() {
 
         {hostTab === 'live' && (
         <>
-        <Card variant="glass" className="max-w-3xl mx-auto mb-8 p-6">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-4 text-center">Live show</h2>
-            <div className="mb-6 rounded-lg border border-casino-emerald/30 bg-black/20 p-4 text-left text-sm text-white/90">
-              <div className="mb-2 font-bold text-casino-emerald">PoC — one full round</div>
-              <ol className="list-decimal list-inside space-y-1.5">
-                <li>
-                  Players join venue with <strong>auto-assign</strong> (lobby) or pick a numbered table manually. Use{' '}
-                  <strong className="text-casino-gold">Assign from lobby</strong> once everyone is pooled — seats are randomized and sized from headcount.
-                </li>
-                <li><strong>Start Game</strong> → <strong>Random from bank</strong>, <strong>To tables</strong> on a row, or an active <strong>setlist</strong> + <strong>Next from setlist</strong> → <strong>Deal Initial Cards</strong> (hole cards only)</li>
-                <li><strong>Wagering round 1:</strong> when ready → <strong>Close Betting</strong></li>
-                <li><strong>Deal Community Cards</strong> (full five-card board) → <strong>Wagering round 2</strong></li>
-                <li><strong>Close Betting</strong> again → <strong>Start Answering (45s)</strong> → <strong>Reveal Answer</strong> if needed</li>
-                <li><strong>End Round</strong> → lobby; <strong>Start Game</strong> again for next round</li>
-              </ol>
+        <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
+            <div className="mb-5 flex flex-col gap-1 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">Live show</h2>
+                <p className="mt-1 max-w-xl text-sm text-white/48">Lobby seating, cues, dealing, wagering controls, rehearsal bots, reveal.</p>
+              </div>
             </div>
-            
-            <div className="space-y-4">
+
+            <details className="group mb-6 rounded-xl border border-white/10 bg-black/25 open:border-white/[0.14] [&_summary::-webkit-details-marker]:hidden">
+              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-white/70 hover:bg-white/[0.04] hover:text-white/85 rounded-xl">
+                Suggested round order
+                <span className="ml-2 inline-block translate-y-px text-white/35 transition-transform group-open:rotate-180">▼</span>
+              </summary>
+              <ol className="border-t border-white/10 px-4 py-4 text-sm leading-relaxed text-white/60">
+                <li className="mb-2">
+                  Lobby / auto-assign · then <strong className="text-white/85">Assign from lobby</strong> when pooled.
+                </li>
+                <li className="mb-2">
+                  <strong className="text-white/85">Start Game</strong> → question via <strong className="text-white/85">Random</strong>, bank row{' '}
+                  <strong className="text-white/85">To tables</strong>, or setlist <strong className="text-white/85">Next from setlist</strong> →{' '}
+                  <strong className="text-white/85">Deal Initial Cards</strong>.
+                </li>
+                <li className="mb-2">Wager round 1 → <strong className="text-white/85">Close Betting</strong>.</li>
+                <li className="mb-2">
+                  <strong className="text-white/85">Deal Community Cards</strong> · wager round 2 → close again →{' '}
+                  <strong className="text-white/85">Start Answering</strong> → <strong className="text-white/85">Reveal Answer</strong> if needed.
+                </li>
+                <li>
+                  <strong className="text-white/85">End Round</strong> clears to lobby · <strong className="text-white/85">Start Game</strong> for the next cycle.
+                </li>
+              </ol>
+            </details>
+
+            <div className="space-y-8">
+              <section aria-labelledby="live-lobby-heading" className="space-y-3">
+                <h3 id="live-lobby-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+                  Lobby &amp; seating
+                </h3>
               <NeonButton
                 variant="emerald"
                 size="large"
@@ -935,6 +979,12 @@ function HostApp() {
                   </ul>
                 </div>
               ) : null}
+              </section>
+
+              <section aria-labelledby="live-questions-heading" className="space-y-3">
+                <h3 id="live-questions-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+                  Questions &amp; rundown
+                </h3>
 
               <NeonButton
                 variant="purple"
@@ -989,6 +1039,12 @@ function HostApp() {
                   Next from setlist
                 </NeonButton>
               </div>
+              </section>
+
+              <section aria-labelledby="live-table-heading" className="space-y-3">
+                <h3 id="live-table-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+                  Deals &amp; answering window
+                </h3>
 
               <NeonButton
                 variant="blue"
@@ -1041,6 +1097,12 @@ function HostApp() {
                 </p>
               )}
 
+              </section>
+
+              <section aria-labelledby="live-admin-heading" className="space-y-3">
+                <h3 id="live-admin-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+                  Wagering overrides &amp; blinds
+                </h3>
               {/* Admin betting controls */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <NeonButton
@@ -1096,6 +1158,12 @@ function HostApp() {
                 </NeonButton>
               </div>
 
+              </section>
+
+              <section aria-labelledby="live-rehearsal-heading" className="space-y-3">
+                <h3 id="live-rehearsal-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+                  Rehearsal (CPU seats)
+                </h3>
               <div className="rounded-xl border border-amber-400/40 bg-black/25 p-4 space-y-3">
                 <div className="text-sm font-bold text-amber-200">Test mode — virtual seats</div>
                 <p className="text-xs text-white/70 leading-relaxed">
@@ -1142,6 +1210,13 @@ function HostApp() {
                 )}
               </div>
 
+              </section>
+
+              <section aria-labelledby="live-wrap-heading" className="space-y-3">
+                <h3 id="live-wrap-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+                  Reveal &amp; round reset
+                </h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <NeonButton
                 variant="gold"
                 size="large"
@@ -1170,12 +1245,14 @@ function HostApp() {
               >
                 🆕 New Game
               </NeonButton>
+              </div>
+              </section>
             </div>
           </Card>
 
         {gameState.phase === 'showdown' && (
-          <Card variant="glass" className="max-w-3xl mx-auto mt-8 p-6">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Showdown</h2>
+          <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
+            <h2 className="mb-5 text-xl font-semibold tracking-tight text-white sm:text-2xl">Showdown</h2>
             <div className="text-center text-white mb-6">
               <div className="text-white/80">Correct Answer</div>
               <div className="text-4xl font-extrabold text-casino-gold">
@@ -1244,9 +1321,9 @@ function HostApp() {
 
         {hostTab === 'venue' && (
         <>
-        <Card variant="glass" className="p-6 mb-8 border border-white/15">
-          <h2 className="text-2xl font-bold text-casino-emerald mb-3 text-center">Public TVs ({gameState.code})</h2>
-          <p className="mx-auto mb-6 max-w-3xl text-center text-sm leading-relaxed text-white/65">
+        <Card variant="glass" hover={false} className="mb-8 border border-white/15 p-5 sm:p-6">
+          <h2 className="mb-3 text-xl font-semibold tracking-tight text-white">Public TVs ({gameState.code})</h2>
+          <p className="mb-6 max-w-3xl text-sm leading-relaxed text-white/55">
             Read-only TVs on <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display</code>{' '}
             show a short pairing code unless you bookmark{' '}
             <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display?room={gameState.code}</code>.
@@ -1297,7 +1374,7 @@ function HostApp() {
             </div>
           </div>
           <div className="mx-auto mb-8 max-w-5xl rounded-xl bg-black/30 p-5">
-            <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">Venue wall</div>
+            <div className="mb-8 text-[11px] font-bold uppercase tracking-[0.12em] text-white/38">Venue wall</div>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <NeonButton
                 variant="emerald"
@@ -1327,8 +1404,8 @@ function HostApp() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Card variant="glass" className="p-6">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game status</h2>
+          <Card variant="glass" hover={false} className="p-6">
+            <h2 className="mb-5 text-xl font-semibold tracking-tight text-white">Game status</h2>
 
             <div className="space-y-4">
               <JackpotDisplay amount={gameState.round.pot} variant="control" />
@@ -1372,8 +1449,8 @@ function HostApp() {
             </div>
           </Card>
 
-          <Card variant="glass" className="p-6 max-h-[min(720px,80vh)] flex flex-col">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center shrink-0">Seats</h2>
+          <Card variant="glass" hover={false} className="flex max-h-[min(720px,80vh)] flex-col p-6">
+            <h2 className="mb-5 shrink-0 text-xl font-semibold tracking-tight text-white">Seats</h2>
             <div className="overflow-y-auto pr-1 flex flex-wrap content-start gap-3 flex-1 min-h-0">
               {gameState.players.map((player) => (
                 <div
