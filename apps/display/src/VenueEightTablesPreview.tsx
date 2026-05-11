@@ -50,12 +50,12 @@ function SeatRingWithLabels({
   const wrap =
     size === 'lg'
       ? 'max-w-[min(440px,92vw)]'
-      : 'w-full max-w-[min(100%,17rem)] sm:max-w-[min(100%,18rem)]'
-  const dot = size === 'lg' ? 'h-9 w-9' : 'h-6 w-6'
+      : 'w-full max-w-[min(100%,19rem)] sm:max-w-[min(100%,20rem)]'
+  const dot = size === 'lg' ? 'h-9 w-9' : 'h-7 w-7'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(9rem,28vw)] text-lg sm:text-xl'
-      : 'max-w-[min(6rem,46%)] text-xs sm:text-sm md:text-base'
+      : 'max-w-[min(8rem,48%)] text-sm sm:text-base md:text-lg lg:text-xl'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
@@ -99,7 +99,7 @@ function SeatRingWithLabels({
                 style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
               >
                 <span className="block max-w-full truncate">{raw}</span>
-                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald [font-size:max(0.58em,8px)] sm:[font-size:max(0.62em,9px)]">
+                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-[10px] sm:text-[11px] md:text-xs lg:text-sm">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
@@ -170,17 +170,17 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
 
   return (
     <aside
-      className="fixed inset-y-0 right-0 z-20 flex w-60 flex-col border-l-2 border-yellow-700/40 bg-slate-950/92 shadow-[-12px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:w-72"
+      className="fixed inset-y-0 right-0 z-20 flex w-[min(22rem,52vw)] flex-col border-l-2 border-yellow-700/40 bg-slate-950/92 shadow-[-12px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:w-[min(26rem,44vw)] lg:w-96"
       aria-label="Players and table assignments"
     >
-      <div className="shrink-0 border-b border-white/10 px-3 py-4 sm:px-4 sm:py-4">
-        <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-white/60 sm:text-sm">
+      <div className="shrink-0 border-b border-white/10 px-4 py-5 sm:px-5 sm:py-5">
+        <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-white/65 sm:text-base">
           Players
         </h2>
-        <p className="mt-1 text-lg font-bold leading-tight text-white/92 sm:text-xl">Seating</p>
+        <p className="mt-1.5 text-2xl font-bold leading-tight text-white/92 sm:text-3xl">Seating</p>
       </div>
       <div
-        className="relative min-h-0 flex-1 overflow-hidden px-2 py-2 sm:px-3"
+        className="relative min-h-0 flex-1 overflow-hidden px-3 py-2 sm:px-4"
         style={{
           maskImage:
             'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
@@ -195,15 +195,15 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
           {doubled.map((r, idx) => (
             <div
               key={`${r.tableNum}-${r.name}-${idx}`}
-              className="flex flex-col gap-1 border-b border-white/[0.08] py-3 sm:py-3.5"
+              className="flex flex-col gap-1.5 border-b border-white/[0.08] py-4 sm:py-5"
             >
-              <span className="w-full truncate text-base font-semibold leading-snug text-white/95 sm:text-lg md:text-xl">
+              <span className="w-full truncate text-xl font-bold leading-snug text-white/95 sm:text-2xl md:text-3xl">
                 {r.name}
               </span>
-              <span className="w-full truncate font-mono tabular-nums text-sm font-semibold leading-none text-casino-emerald sm:text-base">
+              <span className="w-full truncate font-mono tabular-nums text-lg font-bold leading-none text-casino-emerald sm:text-xl md:text-2xl">
                 {formatVenueBankroll(r.bankroll)}
               </span>
-              <span className="w-full truncate font-mono text-xs font-bold uppercase tracking-[0.12em] text-yellow-400/95 sm:text-sm md:text-base">
+              <span className="w-full truncate font-mono text-base font-bold uppercase tracking-[0.11em] text-yellow-400/95 sm:text-lg md:text-xl">
                 TABLE {r.tableNum}
               </span>
             </div>
@@ -282,7 +282,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
-        showRoster ? 'pr-60 sm:pr-72' : ''
+        showRoster ? 'pr-[min(22rem,52vw)] sm:pr-[min(26rem,44vw)] lg:pr-96' : ''
       }`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
@@ -381,25 +381,25 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                     delay: skipMountIntro ? 0 : idx * 0.045,
                     duration: skipMountIntro ? 0 : 0.35,
                   }}
-                  className="flex flex-col rounded-xl border-2 border-yellow-700/35 bg-black/55 p-3.5 shadow-lg backdrop-blur-md sm:p-4"
+                  className="flex flex-col rounded-xl border-2 border-yellow-700/35 bg-black/55 p-4 shadow-lg backdrop-blur-md sm:p-5"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60 sm:text-sm">
+                      <div className="text-sm font-semibold uppercase tracking-[0.14em] text-white/60 sm:text-base md:text-lg">
                         Table
                       </div>
-                      <div className="text-4xl font-black tabular-nums leading-none text-yellow-400 sm:text-5xl lg:text-6xl">
+                      <div className="text-5xl font-black tabular-nums leading-none text-yellow-400 sm:text-6xl lg:text-7xl">
                         {tn}
                       </div>
                     </div>
                     <span
-                      className={`max-w-[min(8.5rem,45%)] shrink-0 truncate rounded-lg px-2 py-1 text-[10px] font-bold uppercase leading-tight sm:max-w-none sm:px-2.5 sm:py-1.5 sm:text-xs md:text-sm ${phaseAccent(ph)}`}
+                      className={`max-w-[min(9rem,46%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase leading-tight sm:max-w-none sm:px-3 sm:py-2 sm:text-sm md:text-base ${phaseAccent(ph)}`}
                     >
                       {phaseLabel(ph)}
                     </span>
                   </div>
 
-                  <div className="mt-2 flex-shrink-0">
+                  <div className="mt-3 flex-shrink-0">
                     <SeatRingWithLabels
                       seatedCount={seats}
                       seatNames={seatNames}
@@ -407,15 +407,15 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                     />
                   </div>
 
-                  <dl className="mt-3 space-y-1.5 border-t border-white/10 pt-3 text-sm leading-snug sm:text-base md:text-lg">
+                  <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-base leading-snug sm:text-lg md:text-xl lg:text-2xl">
                     <div className="flex justify-between gap-3">
-                      <dt className="font-medium text-white/65">Occupied seats</dt>
+                      <dt className="font-semibold text-white/70">Occupied seats</dt>
                       <dd className="font-mono font-bold tabular-nums text-casino-emerald">
                         {seats} / 8
                       </dd>
                     </div>
                     <div className="flex justify-between gap-3">
-                      <dt className="font-medium text-white/65">Pot (local)</dt>
+                      <dt className="font-semibold text-white/70">Pot (local)</dt>
                       <dd className="font-mono font-bold tabular-nums text-yellow-300">
                         ${pot.toLocaleString()}
                       </dd>
