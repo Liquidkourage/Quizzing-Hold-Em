@@ -127,7 +127,7 @@ Implemented in **`@qhe/core`**: **`check`, `call`, `raise`, `allIn`, `fold`**, p
 
 - **`setQuestion`** resets **`phase` to `question`** and clears **`communityCards`** in that transition (see **`setQuestion`** in core).
 - **Venue-synced** **`setQuestion`** on server applies chosen question to **all playable numbered tables**.
-- Imports / CRUD mutate **persisted venue library** (`venue-library-persist`) — orthogonal to phase until **`setQuestion` / random / next from setlist** fires.
+- Imports / CRUD mutate **persisted venue library** (SQLite via `venue-library-db`, with one-time import from legacy JSON if the DB is empty) — orthogonal to phase until **`setQuestion` / random / next from setlist** fires.
 
 ---
 

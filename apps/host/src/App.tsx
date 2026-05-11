@@ -617,8 +617,10 @@ function HostApp() {
                 </NeonButton>
               </div>
               <span className="text-[11px] text-white/45 text-right max-w-xs">
-                Saved automatically to <span className="text-white/60">apps/server/data/venue-libraries.json</span> on the server
-                (questions + setlists). CSV: columns <span className="text-white/60">text</span>, <span className="text-white/60">answer</span>; optional{' '}
+                Saved automatically to the SQLite file <span className="text-white/60">venue-libraries.sqlite</span> under{' '}
+                <span className="text-white/60">apps/server/data/</span> (optional env{' '}
+                <span className="font-mono text-white/60">VENUE_DATABASE_PATH</span>). Stores questions + setlists. CSV: columns{' '}
+                <span className="text-white/60">text</span>, <span className="text-white/60">answer</span>; optional{' '}
                 <span className="text-white/60">category</span>, <span className="text-white/60">difficulty</span>. JSON: a top-level array, or any object that has a{' '}
                 <span className="text-white/60">questions</span> array.
               </span>

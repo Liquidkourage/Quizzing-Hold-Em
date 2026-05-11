@@ -18,3 +18,4 @@ apps/*/node_modules/
 packages/*/node_modules/
 apps/server/data/question-banks.json
 apps/server/data/venue-libraries.json
+apps/server/data/venue-libraries.sqlite*

@@ -84,7 +84,8 @@ function ingestRootObject(map: Map<string, VenueLibraryData>, obj: Record<string
   }
 }
 
-export function loadVenueLibraries(): Map<string, VenueLibraryData> {
+/** One-time SQLite migration — banks now live in `venue-libraries.sqlite` (see venue-library-db). */
+export function loadVenueLibrariesFromJsonDisk(): Map<string, VenueLibraryData> {
   const map = new Map<string, VenueLibraryData>()
   try {
     const txt = fs.readFileSync(VENUE_LIBRARIES_FILE, 'utf8')
@@ -101,21 +102,6 @@ export function loadVenueLibraries(): Map<string, VenueLibraryData> {
       return map
     }
   }
-}
-
-export function persistVenueLibraries(map: Map<string, VenueLibraryData>): void {
-  fs.mkdirSync(path.dirname(VENUE_LIBRARIES_FILE), { recursive: true })
-  const obj: Record<string, VenueLibraryData> = {}
-  for (const [k, v] of map) {
-    obj[k] = {
-      questions: v.questions.map((q) => ({ ...q })),
-      setlists: v.setlists.map((s) => ({
-        ...s,
-        questionIds: [...s.questionIds],
-      })),
-    }
-  }
-  fs.writeFileSync(VENUE_LIBRARIES_FILE, `${JSON.stringify(obj, null, 2)}\n`, 'utf8')
 }
 
 export function coerceImportQuestions(normVenue: string, rows: unknown[]): Question[] {

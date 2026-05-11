@@ -64,12 +64,11 @@ import {
   liveVirtualCount,
 } from './virtual-players'
 import {
-  loadVenueLibraries,
-  persistVenueLibraries,
   coerceImportQuestions,
   pruneSetlistRefs,
   type VenueLibraryData,
 } from './venue-library-persist'
+import { loadVenueLibraries, persistVenueLibraries } from './venue-library-db'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
