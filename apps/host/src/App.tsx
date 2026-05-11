@@ -617,9 +617,10 @@ function HostApp() {
                 </NeonButton>
               </div>
               <span className="text-[11px] text-white/45 text-right max-w-xs">
-                Saved automatically to the SQLite file <span className="text-white/60">venue-libraries.sqlite</span> under{' '}
-                <span className="text-white/60">apps/server/data/</span> (optional env{' '}
-                <span className="font-mono text-white/60">VENUE_DATABASE_PATH</span>). Stores questions + setlists. CSV: columns{' '}
+                Saved automatically when you change anything: use{' '}
+                <span className="font-mono text-white/60">DATABASE_URL</span> on Railway (Postgres); locally, SQLite{' '}
+                <span className="text-white/60">venue-libraries.sqlite</span> unless <span className="font-mono text-white/60">DATABASE_URL</span> or{' '}
+                <span className="font-mono text-white/60">VENUE_DATABASE_PATH</span> is set. Stores questions + setlists. CSV: columns{' '}
                 <span className="text-white/60">text</span>, <span className="text-white/60">answer</span>; optional{' '}
                 <span className="text-white/60">category</span>, <span className="text-white/60">difficulty</span>. JSON: a top-level array, or any object that has a{' '}
                 <span className="text-white/60">questions</span> array.

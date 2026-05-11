@@ -815,11 +815,11 @@ function tableSessionKey(venueCode: string, tableId?: string): string {
 
 const rooms = new Map<string, any>()
 const answerTimers = new Map<string, NodeJS.Timeout>()
-const venueLibraries = loadVenueLibraries()
+let venueLibraries!: Map<string, VenueLibraryData>
 const venuePlayhead = new Map<string, { setlistId: string | null; nextIndex: number }>()
 
-function persistVenues() {
-  persistVenueLibraries(venueLibraries)
+async function persistVenues() {
+  await persistVenueLibraries(venueLibraries)
 }
 
 function hostVenueRoom(venueCode: string): string {
@@ -981,14 +981,14 @@ function wireDisplaySocketToVenue(socket: Socket, venueCodeRaw: string, data: Cl
   emitVenueTableState(watchKey, gsLive)
 }
 
-function ensureVenueLibrary(venueCode: string): VenueLibraryData {
+async function ensureVenueLibrary(venueCode: string): Promise<VenueLibraryData> {
   const k = normalizeVenueCode(venueCode)
   if (!venueLibraries.has(k)) {
     venueLibraries.set(k, {
       questions: SAMPLE_QUESTIONS.map((q) => ({ ...q })),
       setlists: [],
     })
-    persistVenues()
+    await persistVenues()
   }
   return venueLibraries.get(k)!
 }
@@ -1002,9 +1002,9 @@ function getPlayhead(venueCode: string) {
   )
 }
 
-function buildHostLibraryPayload(venueCode: string) {
+async function buildHostLibraryPayload(venueCode: string) {
   const k = normalizeVenueCode(venueCode)
-  const lib = ensureVenueLibrary(k)
+  const lib = await ensureVenueLibrary(k)
   const ph = getPlayhead(k)
   return {
     questions: lib.questions.map((q) => ({ ...q })),
@@ -1017,8 +1017,8 @@ function buildHostLibraryPayload(venueCode: string) {
   }
 }
 
-function emitHostLibrary(venueCode: string) {
-  io.to(hostVenueRoom(venueCode)).emit('hostLibrary', buildHostLibraryPayload(venueCode))
+async function emitHostLibrary(venueCode: string) {
+  io.to(hostVenueRoom(venueCode)).emit('hostLibrary', await buildHostLibraryPayload(venueCode))
 }
 
 function pruneIdFromAllSetlists(lib: VenueLibraryData, questionId: string) {
@@ -1219,7 +1219,7 @@ const VENUE_SYNC_ACTION_TYPES = new Set<string>([
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
 
-  socket.on('hello', (data: ClientHello) => {
+  socket.on('hello', async (data: ClientHello) => {
     const { role, name, roomCode } = data
 
     const requiredHostSecret = process.env.HOST_SECRET?.trim()
@@ -1283,7 +1283,7 @@ io.on('connection', (socket) => {
 
     if (role === 'host') {
       socket.join(hostVenueRoom(venueCode))
-      socket.emit('hostLibrary', buildHostLibraryPayload(venueCode))
+      socket.emit('hostLibrary', await buildHostLibraryPayload(venueCode))
     }
 
     if (role === 'display') {
@@ -1317,7 +1317,7 @@ io.on('connection', (socket) => {
     emitVenueTableState(helloSessionKey, gameState)
   })
 
-  socket.on('action', (data: any) => {
+  socket.on('action', async (data: any) => {
     const { type, payload } = data
 
     if (type === 'displaySetLayout') {
@@ -1457,7 +1457,7 @@ io.on('connection', (socket) => {
             break
           }
           if (!assertVenueHost(socket, gameState)) break
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           const bank = lib.questions
           const questionIdRaw = payload?.questionId
           const questionId = typeof questionIdRaw === 'string' ? questionIdRaw.trim() : ''
@@ -1476,7 +1476,7 @@ io.on('connection', (socket) => {
             }
           }
           applyQuestionToAllPlayable(gameState.code, picked)
-          emitHostLibrary(gameState.code)
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question synced to all tables at this venue.')
           gameState = rooms.get(sessionKey)!
           break
@@ -1490,7 +1490,7 @@ io.on('connection', (socket) => {
           }
           if (!assertVenueHost(socket, gameState)) break
           const venue = normalizeVenueCode(gameState.code)
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           let ph = getPlayhead(venue)
           if (!ph.setlistId) {
             socket.emit('toast', 'Select a setlist for this game first.')
@@ -1500,7 +1500,7 @@ io.on('connection', (socket) => {
           if (!sl) {
             socket.emit('toast', 'Active setlist was removed — pick another.')
             venuePlayhead.set(venue, { setlistId: null, nextIndex: 0 })
-            emitHostLibrary(venue)
+            await emitHostLibrary(venue)
             break
           }
           let dispatched = false
@@ -1512,7 +1512,7 @@ io.on('connection', (socket) => {
             const qFound = lib.questions.find((q) => q.id === qid)
             if (qFound) {
               applyQuestionToAllPlayable(gameState.code, qFound)
-              emitHostLibrary(gameState.code)
+              await emitHostLibrary(gameState.code)
               socket.emit(
                 'toast',
                 `Setlist “${sl.name}”: question ${pos} of ${sl.questionIds.length} → all tables.`
@@ -1523,7 +1523,7 @@ io.on('connection', (socket) => {
             }
           }
           if (!dispatched && ph.nextIndex >= sl.questionIds.length) {
-            emitHostLibrary(venue)
+            await emitHostLibrary(venue)
             socket.emit(
               'toast',
               `End of setlist “${sl.name}” (or remaining ids missing from bank). Pick another rundown or free play.`
@@ -1535,11 +1535,11 @@ io.on('connection', (socket) => {
         case 'selectTriviaSetlist': {
           if (!assertVenueHost(socket, gameState)) break
           const venue = normalizeVenueCode(gameState.code)
-          const lib = ensureVenueLibrary(venue)
+          const lib = await ensureVenueLibrary(venue)
           const raw = payload?.setlistId
           if (raw == null || raw === '') {
             venuePlayhead.set(venue, { setlistId: null, nextIndex: 0 })
-            emitHostLibrary(venue)
+            await emitHostLibrary(venue)
             socket.emit('toast', 'Setlist rundown cleared — free play from the full bank.')
             break
           }
@@ -1549,7 +1549,7 @@ io.on('connection', (socket) => {
             break
           }
           venuePlayhead.set(venue, { setlistId: id, nextIndex: 0 })
-          emitHostLibrary(venue)
+          await emitHostLibrary(venue)
           const sel = lib.setlists.find((s) => s.id === id)!
           socket.emit(
             'toast',
@@ -1565,11 +1565,11 @@ io.on('connection', (socket) => {
             socket.emit('toast', 'Setlist needs a name.')
             break
           }
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           const id = `sl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`
           lib.setlists.push({ id, name, questionIds: [] })
-          persistVenues()
-          emitHostLibrary(gameState.code)
+          await persistVenues()
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', `Setlist created: ${name}`)
           break
         }
@@ -1581,7 +1581,7 @@ io.on('connection', (socket) => {
             socket.emit('toast', 'setlistSave requires id.')
             break
           }
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           const idx = lib.setlists.findIndex((s) => s.id === id)
           if (idx < 0) {
             socket.emit('toast', 'Setlist not found.')
@@ -1600,7 +1600,7 @@ io.on('connection', (socket) => {
             )
           }
           lib.setlists[idx] = { id: prev.id, name, questionIds }
-          persistVenues()
+          await persistVenues()
           const ph = getPlayhead(normalizeVenueCode(gameState.code))
           if (ph.setlistId === id && ph.nextIndex > questionIds.length) {
             venuePlayhead.set(normalizeVenueCode(gameState.code), {
@@ -1608,7 +1608,7 @@ io.on('connection', (socket) => {
               nextIndex: Math.max(0, questionIds.length),
             })
           }
-          emitHostLibrary(gameState.code)
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', `Setlist “${name}” saved (${questionIds.length} questions).`)
           break
         }
@@ -1617,19 +1617,19 @@ io.on('connection', (socket) => {
           if (!assertVenueHost(socket, gameState)) break
           const id = String(payload?.id ?? '').trim()
           const venue = normalizeVenueCode(gameState.code)
-          const lib = ensureVenueLibrary(venue)
+          const lib = await ensureVenueLibrary(venue)
           const next = lib.setlists.filter((s) => s.id !== id)
           if (next.length === lib.setlists.length) {
             socket.emit('toast', 'Setlist not found.')
             break
           }
           lib.setlists = next
-          persistVenues()
+          await persistVenues()
           const ph = getPlayhead(venue)
           if (ph.setlistId === id) {
             venuePlayhead.set(venue, { setlistId: null, nextIndex: 0 })
           }
-          emitHostLibrary(gameState.code)
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', 'Setlist removed.')
           break
         }
@@ -1990,7 +1990,7 @@ io.on('connection', (socket) => {
 
         case 'questionBankAdd': {
           if (!assertVenueHost(socket, gameState)) break
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           const bank = lib.questions
           const text = String(payload?.text ?? '').trim()
           const answer = Number(payload?.answer)
@@ -2009,15 +2009,15 @@ io.on('connection', (socket) => {
             difficulty: Number.isFinite(diff) && diff >= 1 && diff <= 5 ? diff : undefined,
           }
           bank.push(q)
-          persistVenues()
-          emitHostLibrary(gameState.code)
+          await persistVenues()
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question added.')
           break
         }
 
         case 'questionBankUpdate': {
           if (!assertVenueHost(socket, gameState)) break
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           const bank = lib.questions
           const id = String(payload?.id ?? '').trim()
           const idx = bank.findIndex((q) => q.id === id)
@@ -2060,15 +2060,15 @@ io.on('connection', (socket) => {
             category: cat,
             difficulty: diff,
           }
-          persistVenues()
-          emitHostLibrary(gameState.code)
+          await persistVenues()
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question saved.')
           break
         }
 
         case 'questionBankDelete': {
           if (!assertVenueHost(socket, gameState)) break
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           const bank = lib.questions
           const id = String(payload?.id ?? '').trim()
           const filtered = bank.filter((q) => q.id !== id)
@@ -2078,15 +2078,15 @@ io.on('connection', (socket) => {
           }
           pruneIdFromAllSetlists(lib, id)
           lib.questions = filtered
-          persistVenues()
-          emitHostLibrary(gameState.code)
+          await persistVenues()
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', 'Question removed.')
           break
         }
 
         case 'questionBankMove': {
           if (!assertVenueHost(socket, gameState)) break
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           const bank = [...lib.questions]
           const id = String(payload?.id ?? '').trim()
           const dir = payload?.direction === 'down' ? 'down' : 'up'
@@ -2096,8 +2096,8 @@ io.on('connection', (socket) => {
           if (j < 0 || j >= bank.length) break
           ;[bank[idx], bank[j]] = [bank[j], bank[idx]]
           lib.questions = bank
-          persistVenues()
-          emitHostLibrary(gameState.code)
+          await persistVenues()
+          await emitHostLibrary(gameState.code)
           break
         }
 
@@ -2115,15 +2115,15 @@ io.on('connection', (socket) => {
             socket.emit('toast', 'No valid rows (each needs text plus a numeric answer).')
             break
           }
-          const lib = ensureVenueLibrary(venue)
+          const lib = await ensureVenueLibrary(venue)
           if (replace) {
             lib.questions = validated
           } else {
             lib.questions = [...lib.questions, ...validated]
           }
           pruneSetlistRefs(lib)
-          persistVenues()
-          emitHostLibrary(gameState.code)
+          await persistVenues()
+          await emitHostLibrary(gameState.code)
           socket.emit(
             'toast',
             replace
@@ -2135,11 +2135,11 @@ io.on('connection', (socket) => {
 
         case 'questionBankResetSamples': {
           if (!assertVenueHost(socket, gameState)) break
-          const lib = ensureVenueLibrary(gameState.code)
+          const lib = await ensureVenueLibrary(gameState.code)
           lib.questions = SAMPLE_QUESTIONS.map((q) => ({ ...q }))
           pruneSetlistRefs(lib)
-          persistVenues()
-          emitHostLibrary(gameState.code)
+          await persistVenues()
+          await emitHostLibrary(gameState.code)
           socket.emit('toast', 'Starter pack restored.')
           break
         }
@@ -2189,6 +2189,11 @@ const publicOrigin =
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
     : null
 
+async function bootstrap(): Promise<void> {
+  venueLibraries = await loadVenueLibraries()
+  const dbMode = process.env.DATABASE_URL?.trim() ? 'PostgreSQL (DATABASE_URL)' : 'SQLite file (VENUE_DATABASE_PATH or default under apps/server/data)'
+  console.log(`📚 Venue libraries: ${dbMode}`)
+
 httpServer.listen(PORT, HOST, () => {
   console.log(`🎰 Quizz\u2019em server running on ${HOST}:${PORT}`)
   console.log(`🌐 WebSocket server ready for connections`)
@@ -2196,4 +2201,10 @@ httpServer.listen(PORT, HOST, () => {
   console.log(`📱 Host: ${base}/host`)
   console.log(`👤 Player: ${base}/player`)
   console.log(`📺 Display: ${base}/display`)
+})
+}
+
+bootstrap().catch((err) => {
+  console.error('Fatal: failed to start server (venue library load):', err)
+  process.exit(1)
 })
