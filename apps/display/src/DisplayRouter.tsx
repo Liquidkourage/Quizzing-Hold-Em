@@ -150,12 +150,16 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const prevAudienceWelcomeRef = useRef<boolean | undefined>(undefined)
 
   const wallOverview = venueOverview(layout)
+  /** Hide join hero once any numbered table has left lobby (tiles stay in sync via venue snapshot). */
+  const mosaicShowsLiveFelts =
+    venueWall?.tiles?.some((t) => t.phase !== 'lobby') ?? false
   /** Lobby / join briefing — only after we have wall payload; avoids hiding the mosaic forever when snapshot never applies. */
   const audienceBriefing =
     wallOverview &&
     venueWall != null &&
     venueWall.showAudienceWelcome !== false &&
-    !mosaicForcedByHost
+    !mosaicForcedByHost &&
+    !mosaicShowsLiveFelts
   const spotlightN = venueSpotlightTable(layout)
   const fullscreenLive = showFullscreenLiveFelt(layout)
 
