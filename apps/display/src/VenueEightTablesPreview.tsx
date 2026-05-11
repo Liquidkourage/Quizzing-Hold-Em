@@ -146,7 +146,7 @@ function phaseAccent(ph: string) {
   return 'text-white/85'
 }
 
-type VenueMosaicTileMode = 'grid' | 'hero' | 'thumb' | 'crawl'
+type VenueMosaicTileMode = 'grid' | 'hero' | 'crawl'
 
 function VenueMosaicTableCard({
   row,
@@ -204,55 +204,6 @@ function VenueMosaicTableCard({
           </p>
         </div>
       </div>
-    )
-  }
-
-  if (mode === 'thumb') {
-    const spotlight = isSpotlightThumb === true
-    const rowShell = spotlight
-      ? 'border-amber-400/70 bg-black/55 ring-2 ring-amber-400/45 shadow-[0_0_24px_rgba(251,191,36,0.12)]'
-      : 'border-white/[0.12] bg-black/35 hover:border-white/25'
-
-    return (
-      <motion.div
-        data-spotlight-tile={tn}
-        role="group"
-        aria-current={spotlight ? 'true' : undefined}
-        initial={skipMountIntro ? false : { opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: skipMountIntro ? 0 : idx * 0.03, duration: 0.25 }}
-        className={`flex min-w-0 shrink-0 items-center gap-3 rounded-xl border p-3.5 backdrop-blur-md sm:gap-4 sm:p-4 lg:w-full ${rowShell} ${
-          spotlight
-            ? 'min-w-[17rem] w-[min(17rem,92vw)] sm:min-w-[18rem] sm:w-[18rem]'
-            : 'min-w-[16.5rem] w-[min(17rem,92vw)] sm:min-w-[17.5rem] sm:w-[17.5rem]'
-        }`}
-      >
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-black tabular-nums sm:h-12 sm:w-12 ${
-            spotlight ? 'bg-amber-500/30 text-2xl text-amber-50 sm:text-3xl' : 'bg-white/[0.07] text-xl text-yellow-400 sm:text-2xl'
-          }`}
-        >
-          {tn}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="text-lg font-bold tracking-tight text-white/95 sm:text-xl">Table {tn}</span>
-            <span
-              className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase leading-none sm:text-xs ${phaseAccent(ph)}`}
-            >
-              {phaseLabel(ph)}
-            </span>
-          </div>
-          <p className="mt-1.5 text-sm leading-snug text-white/65 sm:text-base">
-            <span className="font-mono font-semibold tabular-nums text-casino-emerald">{seats} / 8</span>
-            <span className="mx-1.5 text-white/35 sm:mx-2">·</span>
-            <span className="text-white/50">Pot</span>{' '}
-            <span className="font-mono tabular-nums font-semibold text-yellow-200/95">
-              ${pot.toLocaleString()}
-            </span>
-          </p>
-        </div>
-      </motion.div>
     )
   }
 
