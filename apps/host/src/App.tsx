@@ -40,6 +40,26 @@ const HOST_TABS = [
   { id: 'venue' as const, label: 'Venue & roster', hint: 'Status & seats' },
 ]
 
+/** Host UI: "First L." from full name; unchanged for single tokens and CPU seats */
+function hostPlayerLabel(raw: string): string {
+  const s = String(raw ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+  if (!s) return '—'
+  const parts = s.split(' ')
+  if (parts[0].toUpperCase() === 'CPU' && parts.length >= 2) return s
+  if (parts.length === 1) return parts[0]
+  const first = parts[0]
+  const last = parts[parts.length - 1]
+  if (/^[A-Za-z]\.?$/i.test(last)) {
+    const L = last.replace(/\./g, '').charAt(0).toUpperCase()
+    return `${first} ${L}.`
+  }
+  const m = last.match(/[A-Za-z]/)
+  const L = m ? m[0].toUpperCase() : ''
+  return L ? `${first} ${L}.` : first
+}
+
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -898,6 +918,23 @@ function HostApp() {
               {gameState.phase === 'lobby' && (gameState.tableId ?? '') === LOBBY_TABLE_ID && gameState.players.length === 0 ? (
                 <p className="-mt-2 text-xs text-white/55">Waiting for players to join the lobby…</p>
               ) : null}
+              {gameState.phase === 'lobby' && (gameState.tableId ?? '') === LOBBY_TABLE_ID && gameState.players.length > 0 ? (
+                <div className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
+                  <div className="text-sm font-bold text-casino-emerald mb-2">
+                    In lobby ({gameState.players.length})
+                  </div>
+                  <ul className="flex flex-wrap gap-2" aria-label="Players in lobby">
+                    {gameState.players.map((p) => (
+                      <li
+                        key={p.id}
+                        className="rounded-full border border-emerald-400/40 bg-black/35 px-3 py-1 text-sm font-semibold text-emerald-100"
+                      >
+                        {hostPlayerLabel(p.name)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
               <NeonButton
                 variant="purple"
@@ -1176,7 +1213,7 @@ function HostApp() {
                       {rows.map(({ player, seat, hasAnswer, distance }) => (
                         <tr key={player.id} className={`${player.id === winnerId ? 'bg-white/10' : ''}`}>
                           <td className="py-2 px-3 tabular-nums text-white/80">{seat}</td>
-                          <td className="py-2 px-3 font-bold text-casino-emerald">{player.name}</td>
+                          <td className="py-2 px-3 font-bold text-casino-emerald">{hostPlayerLabel(player.name)}</td>
                           <td className="py-2 px-3">{hasAnswer ? player.submittedAnswer : '—'}</td>
                           <td className="py-2 px-3">{hasAnswer && typeof correct === 'number' ? distance : '—'}</td>
                           <td className="py-2 px-3">
@@ -1322,7 +1359,7 @@ function HostApp() {
                     {(() => {
                       const idx = (gameState.round as any).currentPlayerIndex as number | undefined
                       const p = typeof idx === 'number' ? gameState.players[idx] : undefined
-                      return p ? p.name : '—'
+                      return p ? hostPlayerLabel(p.name) : '—'
                     })()}
                   </span>
                 </div>
@@ -1348,7 +1385,7 @@ function HostApp() {
             {gameState.players.map((player, i) => (
               <div key={player.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-4">
                 <div className="text-xs uppercase tracking-wide text-white/50 mb-1">Seat {i + 1}</div>
-                <div className="text-lg font-bold text-casino-emerald">{player.name}</div>
+                <div className="text-lg font-bold text-casino-emerald">{hostPlayerLabel(player.name)}</div>
                 <div className="text-white">
                   Bankroll: <span className="text-casino-gold font-bold">${player.bankroll}</span>
                 </div>
