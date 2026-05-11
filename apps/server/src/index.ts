@@ -1077,8 +1077,9 @@ function allTableSessionsInVenue(venueCode: string): string[] {
 
 const displayVenueSnapshotTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
-function humanAudienceCount(gs: GameState): number {
-  return gs.players.filter((p) => !String(p.id).startsWith('vp:')).length
+/** Seats wired into the venue wall / welcome mosaic (human + rehearsal CPU vp:*). */
+function welcomeWallSeatCount(gs: GameState): number {
+  return gs.players.length
 }
 
 /** Hidden on displays after venue-wide Start Game until New Game resets the venue. */
@@ -1118,7 +1119,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
   const vn = normalizeVenueCode(vnRaw)
   const lobbyKey = tableSessionKey(vn, LOBBY_TABLE_ID)
   const lobbyGs = rooms.get(lobbyKey)
-  const lobbyPlayerCount = lobbyGs != null ? humanAudienceCount(lobbyGs) : 0
+  const lobbyPlayerCount = lobbyGs != null ? welcomeWallSeatCount(lobbyGs) : 0
 
   const tiles: DisplayVenueTileSnapshot[] = []
   let totalSeatedAtTables = 0
@@ -1132,7 +1133,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     if (n == null) continue
     const gs = rooms.get(key)
     if (!gs) continue
-    const seated = humanAudienceCount(gs)
+    const seated = welcomeWallSeatCount(gs)
     totalSeatedAtTables += seated
     tiles.push({
       tableNum: n,
