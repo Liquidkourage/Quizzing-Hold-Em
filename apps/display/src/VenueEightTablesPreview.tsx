@@ -170,17 +170,17 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
 
   return (
     <aside
-      className="fixed inset-y-0 right-0 z-20 flex w-[min(24rem,54vw)] flex-col border-l-2 border-yellow-700/40 bg-slate-950/92 shadow-[-12px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:w-[min(28rem,46vw)] lg:w-[28rem]"
+      className="fixed inset-y-0 right-0 z-20 flex w-52 flex-col border-l border-yellow-600/50 bg-slate-950/94 shadow-[-8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md sm:w-56 lg:w-[15rem]"
       aria-label="Players and table assignments"
     >
-      <div className="shrink-0 border-b border-white/10 px-4 py-5 sm:px-5 sm:py-5">
-        <h2 className="text-base font-bold uppercase tracking-[0.14em] text-white/65 sm:text-lg">
+      <div className="shrink-0 border-b border-white/10 px-2.5 py-3 sm:px-3">
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55 sm:text-xs">
           Players
         </h2>
-        <p className="mt-1.5 text-3xl font-bold leading-tight text-white/92 sm:text-4xl">Seating</p>
+        <p className="mt-0.5 text-lg font-bold leading-none text-white/92 sm:text-xl">Seating</p>
       </div>
       <div
-        className="relative min-h-0 flex-1 overflow-hidden px-3 py-2 sm:px-4"
+        className="relative min-h-0 flex-1 overflow-hidden px-1.5 py-1 sm:px-2"
         style={{
           maskImage:
             'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
@@ -195,17 +195,20 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
           {doubled.map((r, idx) => (
             <div
               key={`${r.tableNum}-${r.name}-${idx}`}
-              className="flex flex-col gap-1.5 border-b border-white/[0.08] py-4 sm:py-5"
+              className="border-b border-white/[0.07] py-2.5 sm:py-3"
+              aria-label={`${r.name}, ${formatVenueBankroll(r.bankroll)}, Table ${r.tableNum}`}
             >
-              <span className="w-full truncate text-2xl font-bold leading-snug text-white/95 sm:text-3xl md:text-4xl xl:text-[2.25rem]">
+              <div className="truncate text-base font-bold leading-snug text-white/95 sm:text-lg">
                 {r.name}
-              </span>
-              <span className="w-full truncate font-mono tabular-nums text-xl font-bold leading-none text-casino-emerald sm:text-2xl md:text-3xl">
-                {formatVenueBankroll(r.bankroll)}
-              </span>
-              <span className="w-full truncate font-mono text-lg font-bold uppercase tracking-[0.1em] text-yellow-400/95 sm:text-xl md:text-2xl">
-                TABLE {r.tableNum}
-              </span>
+              </div>
+              <div className="mt-1 flex min-w-0 items-baseline justify-between gap-2 text-sm sm:text-base">
+                <span className="shrink-0 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-yellow-400/92 sm:text-xs">
+                  T{r.tableNum}
+                </span>
+                <span className="min-w-0 truncate text-right font-mono tabular-nums font-semibold leading-none text-casino-emerald">
+                  {formatVenueBankroll(r.bankroll)}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -282,7 +285,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
-        showRoster ? 'pr-[min(24rem,54vw)] sm:pr-[min(28rem,46vw)] lg:pr-[28rem]' : ''
+        showRoster ? 'pr-52 sm:pr-56 lg:pr-[15rem]' : ''
       }`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
