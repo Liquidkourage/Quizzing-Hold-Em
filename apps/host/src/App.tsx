@@ -1381,22 +1381,17 @@ function HostApp() {
 
           <Card variant="glass" className="p-6 max-h-[min(720px,80vh)] flex flex-col">
             <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center shrink-0">Seats</h2>
-            <div className="overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 min-h-0">
-            {gameState.players.map((player, i) => (
-              <div key={player.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-4">
-                <div className="text-xs uppercase tracking-wide text-white/50 mb-1">Seat {i + 1}</div>
-                <div className="text-lg font-bold text-casino-emerald">{hostPlayerLabel(player.name)}</div>
-                <div className="text-white">
-                  Bankroll: <span className="text-casino-gold font-bold">${player.bankroll}</span>
+            <div className="overflow-y-auto pr-1 flex flex-wrap content-start gap-3 flex-1 min-h-0">
+              {gameState.players.map((player) => (
+                <div
+                  key={player.id}
+                  className="rounded-xl border border-emerald-400/35 bg-black/30 px-5 py-4 text-center shadow-inner"
+                >
+                  <div className="text-lg font-bold text-casino-emerald">
+                    {hostPlayerLabel(player.name)}
+                  </div>
                 </div>
-                <div className="text-white">
-                  Cards: <span className="text-casino-purple font-bold">{player.hand.length}</span>
-                </div>
-                {player.hasFolded && (
-                  <div className="text-red-400 font-bold">FOLDED</div>
-                )}
-              </div>
-            ))}
+              ))}
             </div>
           </Card>
         </div>
