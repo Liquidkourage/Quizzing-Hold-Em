@@ -34,7 +34,7 @@ import { LOBBY_TABLE_ID } from '@qhe/core'
 import { parseQuestionsCsv, parseQuestionsJson } from './questionImport'
 
 const HOST_TABS = [
-  { id: 'live' as const, label: 'Run show', hint: 'Floor + flow' },
+  { id: 'live' as const, label: 'Run show', hint: 'Lobby, CPUs, cues, deals' },
   { id: 'content' as const, label: 'Content', hint: 'Bank & setlists' },
   { id: 'venue' as const, label: 'Room & displays', hint: 'TVs only' },
 ]
@@ -976,6 +976,13 @@ function HostApp() {
                     ) : null}
                   </span>
                 </div>
+                <p className="text-xs leading-snug text-white/42">
+                  <a href="#live-rehearsal-heading" className="text-amber-200/85 underline underline-offset-2 hover:text-amber-100">
+                    Rehearsal — CPU seats
+                  </a>
+                  {' '}
+                  lives under Lobby (scroll on “Run show”).
+                </p>
                 {gameState.phase === 'betting' && (
                   <div>
                     <div className="text-xs font-semibold tracking-wide text-white/50">Action on</div>
@@ -1032,7 +1039,13 @@ function HostApp() {
               </summary>
               <ol className="border-t border-white/10 px-4 py-4 text-base leading-relaxed text-white/62">
                 <li className="mb-2">
-                  Lobby / auto-assign · then <strong className="text-white/85">Assign from lobby</strong> when pooled.
+                  Lobby / auto-assign · then <strong className="text-white/85">Assign from lobby</strong> when pooled. Add CPU fill with{' '}
+                  <strong className="text-white/85">
+                    <a href="#live-rehearsal-heading" className="text-casino-gold underline decoration-casino-gold/55 underline-offset-2 hover:text-amber-200">
+                      Rehearsal — CPU seats
+                    </a>
+                  </strong>{' '}
+                  just below.
                 </li>
                 <li className="mb-2">
                   <strong className="text-white/85">Start Game</strong> → question via <strong className="text-white/85">Random</strong>, bank row{' '}
@@ -1100,6 +1113,82 @@ function HostApp() {
                   </ul>
                 </div>
               ) : null}
+              </section>
+
+              <section
+                aria-labelledby="live-rehearsal-heading"
+                className="mb-8 space-y-3 rounded-xl border border-amber-400/40 bg-amber-950/15 p-4 sm:p-5"
+              >
+                <h3
+                  id="live-rehearsal-heading"
+                  className="text-sm font-bold uppercase tracking-[0.12em] text-amber-200/95"
+                >
+                  Rehearsal — CPU seats
+                </h3>
+                <p className="text-sm text-white/72 leading-relaxed">
+                  Adds bot players with the same server rules as humans: check / call / min-raise / occasional all-in / fold; answering
+                  uses the nearest legal number from holes + board. Works on <strong className="text-white/88">LOBBY</strong>{' '}
+                  (then <strong className="text-white/88">Assign from lobby</strong>) or on any numbered table roster. Cap per table:{' '}
+                  <span className="font-semibold text-casino-gold">{gameState.maxPlayers}</span> · this roster:{' '}
+                  <span className="font-semibold text-casino-gold">{gameState.players.length}</span> filled (
+                  <span className="font-semibold text-casino-gold">{virtualSeatCount}</span> CPU).
+                </p>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <div
+                    className="flex flex-wrap gap-1.5 rounded-lg border border-white/20 bg-black/40 p-1"
+                    role="group"
+                    aria-label="Number of virtual CPUs to add"
+                  >
+                    {[1, 2, 5, 10, 15, 20].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        disabled={atPlayerCap}
+                        onClick={() => setVirtualAddCount(n)}
+                        className={`min-w-[2.75rem] rounded-md px-2.5 py-2.5 text-center text-base font-bold tabular-nums transition-colors disabled:opacity-40 ${
+                          virtualAddCount === n
+                            ? 'border border-amber-400/60 bg-amber-500/25 text-amber-100 shadow-[0_0_12px_rgba(251,191,36,0.2)]'
+                            : 'border border-transparent text-white/75 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  <NeonButton
+                    variant="gold"
+                    size="small"
+                    disabled={atPlayerCap}
+                    onClick={() => addVirtualPlayers(virtualAddCount)}
+                  >
+                    Add CPU seats
+                  </NeonButton>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label htmlFor="virtual-add-custom" className="text-sm whitespace-nowrap text-white/65">
+                      Exact count
+                    </label>
+                    <input
+                      id="virtual-add-custom"
+                      type="number"
+                      min={1}
+                      max={Math.max(1, gameState.maxPlayers - gameState.players.length)}
+                      disabled={atPlayerCap}
+                      value={virtualAddCount}
+                      onChange={(e) => {
+                        const cap = Math.max(1, gameState.maxPlayers - gameState.players.length)
+                        const v = Math.max(1, Math.min(cap, Math.floor(Number(e.target.value)) || 1))
+                        setVirtualAddCount(v)
+                      }}
+                      className="w-28 rounded-md border border-white/25 bg-black/45 px-2 py-2 text-center text-base font-bold tabular-nums text-white disabled:opacity-40"
+                    />
+                  </div>
+                  <NeonButton variant="purple" size="small" onClick={() => clearVirtualPlayers()}>
+                    Clear all CPUs
+                  </NeonButton>
+                </div>
+                {atPlayerCap && (
+                  <p className="text-sm text-amber-200/85">Room is at max players — remove humans or CPUs before inviting more bots.</p>
+                )}
               </section>
 
               <section aria-labelledby="live-questions-heading" className="space-y-4">
@@ -1295,90 +1384,7 @@ function HostApp() {
               </div>
             </details>
 
-            <details className="group mb-6 rounded-xl border border-white/10 bg-black/25 open:border-white/[0.14] [&_summary::-webkit-details-marker]:hidden">
-              <summary
-                id="live-rehearsal-heading"
-                className="cursor-pointer list-none px-4 py-3 text-base font-medium text-white/75 hover:bg-white/[0.04] hover:text-white/88 rounded-xl"
-              >
-                Rehearsal (CPU seats)
-                <span className="ml-2 inline-block translate-y-px text-white/35 transition-transform group-open:rotate-180">▼</span>
-              </summary>
-              <div className="border-t border-white/10 px-4 py-4">
-                <div className="space-y-3 rounded-xl border border-amber-400/40 bg-black/25 p-4">
-                <div className="text-base font-bold text-amber-200">Test mode — virtual seats</div>
-                <p className="text-sm text-white/72 leading-relaxed">
-                  Adds CPU opponents with the same server rules as humans: wagering uses check/call/min-raise/all-in/noise folding;
-                  answering picks the nearest legal numeric answer from holes + board (five digit cards + optional decimal).
-                  Each table’s roster caps at{' '}
-                  <span className="font-semibold text-casino-gold">{gameState.maxPlayers}</span>{' '}
-                  seats — you can add many CPUs to the <strong className="text-white/88">LOBBY</strong> pool alongside real players, then tap{' '}
-                  <strong className="text-white/88">Assign from lobby</strong> to split the venue into multiple numbered tables automatically (~balanced
-                  shards, same as an all-human crowd).
-                  Current session has <span className="font-semibold text-casino-gold">{gameState.players.length}</span> seat(s){' '}
-                  filled; CPUs on this roster:{' '}
-                  <span className="font-semibold text-casino-gold">{virtualSeatCount}</span>.
-                </p>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <div
-                    className="flex flex-wrap gap-1.5 rounded-lg border border-white/20 bg-black/40 p-1"
-                    role="group"
-                    aria-label="Number of virtual CPUs to add"
-                  >
-                    {[1, 2, 5, 10, 15, 20].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        disabled={atPlayerCap}
-                        onClick={() => setVirtualAddCount(n)}
-                        className={`min-w-[2.75rem] rounded-md px-2.5 py-2.5 text-center text-base font-bold tabular-nums transition-colors disabled:opacity-40 ${
-                          virtualAddCount === n
-                            ? 'border border-amber-400/60 bg-amber-500/25 text-amber-100 shadow-[0_0_12px_rgba(251,191,36,0.2)]'
-                            : 'border border-transparent text-white/75 hover:bg-white/10 hover:text-white'
-                        }`}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                  <NeonButton
-                    variant="gold"
-                    size="small"
-                    disabled={atPlayerCap}
-                    onClick={() => addVirtualPlayers(virtualAddCount)}
-                  >
-                    Add CPU seats
-                  </NeonButton>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label htmlFor="virtual-add-custom" className="text-sm whitespace-nowrap text-white/65">
-                      Exact count
-                    </label>
-                    <input
-                      id="virtual-add-custom"
-                      type="number"
-                      min={1}
-                      max={Math.max(1, gameState.maxPlayers - gameState.players.length)}
-                      disabled={atPlayerCap}
-                      value={virtualAddCount}
-                      onChange={(e) => {
-                        const cap = Math.max(1, gameState.maxPlayers - gameState.players.length)
-                        const v = Math.max(1, Math.min(cap, Math.floor(Number(e.target.value)) || 1))
-                        setVirtualAddCount(v)
-                      }}
-                      className="w-28 rounded-md border border-white/25 bg-black/45 px-2 py-2 text-center text-base font-bold tabular-nums text-white disabled:opacity-40"
-                    />
-                  </div>
-                  <NeonButton variant="purple" size="small" onClick={() => clearVirtualPlayers()}>
-                    Clear all CPUs
-                  </NeonButton>
-                </div>
-                {atPlayerCap && (
-                  <p className="text-sm text-amber-200/85">Room is at max players — remove humans or CPUs before inviting more bots.</p>
-                )}
-                </div>
-              </div>
-              </details>
-
-              <section aria-labelledby="live-wrap-heading" className="space-y-4">
+            <section aria-labelledby="live-wrap-heading" className="space-y-4">
                 <h3 id="live-wrap-heading" className="text-sm font-bold uppercase tracking-[0.12em] text-white/45">
                   Reveal &amp; round reset
                 </h3>
