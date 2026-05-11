@@ -174,10 +174,10 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
       aria-label="Players and table assignments"
     >
       <div className="shrink-0 border-b border-white/10 px-2.5 py-3 sm:px-3">
-        <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55 sm:text-xs">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/55 sm:text-xs">
           Players
         </h2>
-        <p className="mt-0.5 text-lg font-bold leading-none text-white/92 sm:text-xl">Seating</p>
+        <p className="mt-0.5 text-xl font-bold leading-none text-white/92 sm:text-2xl">Seating</p>
       </div>
       <div
         className="relative min-h-0 flex-1 overflow-hidden px-1.5 py-1 sm:px-2"
@@ -195,17 +195,17 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
           {doubled.map((r, idx) => (
             <div
               key={`${r.tableNum}-${r.name}-${idx}`}
-              className="border-b border-white/[0.07] py-2.5 sm:py-3"
+              className="border-b border-white/[0.07] py-2 sm:py-2.5"
               aria-label={`${r.name}, ${formatVenueBankroll(r.bankroll)}, Table ${r.tableNum}`}
             >
-              <div className="truncate text-base font-bold leading-snug text-white/95 sm:text-lg">
+              <div className="truncate text-lg font-bold leading-[1.15] text-white/95 sm:text-xl md:text-2xl">
                 {r.name}
               </div>
-              <div className="mt-1 flex min-w-0 items-baseline justify-between gap-2 text-sm sm:text-base">
-                <span className="shrink-0 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-yellow-400/92 sm:text-xs">
+              <div className="mt-0.5 flex min-w-0 items-baseline justify-between gap-1.5">
+                <span className="shrink-0 font-mono text-xs font-bold uppercase tracking-[0.1em] text-yellow-400/92 sm:text-sm">
                   T{r.tableNum}
                 </span>
-                <span className="min-w-0 truncate text-right font-mono tabular-nums font-semibold leading-none text-casino-emerald">
+                <span className="min-w-0 truncate text-right font-mono text-base font-bold tabular-nums leading-none text-casino-emerald sm:text-lg">
                   {formatVenueBankroll(r.bankroll)}
                 </span>
               </div>
