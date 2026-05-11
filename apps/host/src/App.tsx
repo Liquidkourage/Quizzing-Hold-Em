@@ -435,6 +435,47 @@ function HostApp() {
             </div>
           </div>
 
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/10 pt-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-white/45">Pair TV</span>
+            <input
+              id="tv-pair-code"
+              type="text"
+              autoCapitalize="characters"
+              spellCheck={false}
+              placeholder="••••"
+              maxLength={4}
+              value={tvPairCode}
+              aria-label="Display pairing code from TV"
+              title="Four characters shown on the TV’s pairing screen (/display)"
+              onChange={(e) =>
+                setTvPairCode(
+                  e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z2-9]/g, '')
+                    .slice(0, 4)
+                )
+              }
+              className="w-[7rem] shrink-0 rounded-md border border-sky-500/35 bg-black/45 px-2 py-1.5 text-center font-mono text-lg tracking-[0.18em] text-white outline-none ring-sky-500/30 placeholder:text-white/20 focus:border-sky-500/60 focus:ring-1 sm:text-xl"
+            />
+            <NeonButton
+              variant="gold"
+              size="small"
+              className="!px-3 !py-1.5"
+              disabled={tvPairCode.length !== 4}
+              onClick={() => {
+                if (tvPairCode.length !== 4) return
+                pairDisplayWithHost(tvPairCode, (ack) => {
+                  if (ack.ok) setTvPairCode('')
+                })
+              }}
+            >
+              Attach
+            </NeonButton>
+            <span className="min-w-0 flex-1 text-[11px] leading-snug text-white/40 basis-full sm:basis-auto sm:flex-none">
+              Same venue (<span className="font-mono text-white/55">{gameState.code}</span>) — chars from the TV glow box.
+            </span>
+          </div>
+
           {!viteHostSecret ? (
             <form
               className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-sm"
@@ -1413,53 +1454,12 @@ function HostApp() {
             Read-only TVs on <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display</code>{' '}
             show a short pairing code unless you bookmark{' '}
             <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display?room={gameState.code}</code>.
+            Use the compact <strong className="text-white/75">Pair TV</strong> row at the top of this host screen (header) to attach displays.
             Live pot, cues, and seat chips stay on{' '}
-            <strong className="text-white/80">Run show</strong> — this tab is pairing and wall layout only. Buttons steer every paired display on this venue to the{' '}
+            <strong className="text-white/80">Run show</strong> — here you only steer wall layout. Buttons send every paired display on this venue to the{' '}
             <strong className="text-white/80">venue wall preview</strong> (eight mock felts){' '}
             or <strong className="text-white/80">full live felt</strong> for one table — nothing is tapped at the TV.
           </p>
-          <div className="mx-auto mb-8 max-w-md rounded-xl border border-white/10 bg-black/25 p-5">
-            <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white/45">
-              Pair a TV by code
-            </div>
-            <p className="mb-4 text-center text-xs leading-relaxed text-white/55">
-              On the venue screen, note the four characters in the glowing box &mdash; then enter them here (same venue you are hosting).
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <input
-                id="tv-pair-code"
-                type="text"
-                autoCapitalize="characters"
-                spellCheck={false}
-                placeholder="AAAA"
-                maxLength={4}
-                value={tvPairCode}
-                aria-label="Display pairing code from TV"
-                onChange={(e) =>
-                  setTvPairCode(
-                    e.target.value
-                      .toUpperCase()
-                      .replace(/[^A-Z2-9]/g, '')
-                      .slice(0, 4)
-                  )
-                }
-                className="w-44 rounded-lg border border-white/15 bg-black/35 px-3 py-2.5 text-center font-mono text-2xl tracking-[0.15em] text-white outline-none ring-sky-500/40 placeholder:text-white/25 focus:border-sky-500/55 focus:ring-2"
-              />
-              <NeonButton
-                variant="gold"
-                className="!px-5"
-                disabled={tvPairCode.length !== 4}
-                onClick={() => {
-                  if (tvPairCode.length !== 4) return
-                  pairDisplayWithHost(tvPairCode, (ack) => {
-                    if (ack.ok) setTvPairCode('')
-                  })
-                }}
-              >
-                Attach TV
-              </NeonButton>
-            </div>
-          </div>
           <div className="mx-auto mb-8 max-w-5xl rounded-xl bg-black/30 p-5">
             <div className="mb-8 text-[11px] font-bold uppercase tracking-[0.12em] text-white/38">Venue wall</div>
             <div className="flex flex-wrap items-center justify-center gap-2">
