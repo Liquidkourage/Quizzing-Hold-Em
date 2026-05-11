@@ -84,7 +84,7 @@ export function buildDisplayPreviewGameState(code: string, rawTableId: string): 
     bigBlind: 20,
     smallBlind: 10,
     minPlayers: 2,
-    maxPlayers: 8,
+    maxPlayers: 32,
     players,
     round: {
       roundId: 'preview-r1',

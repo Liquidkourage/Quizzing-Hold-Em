@@ -2011,8 +2011,9 @@ io.on('connection', (socket) => {
 
         case 'addVirtualPlayers': {
           if (!assertVenueHost(socket, gameState)) break
-          const vpCount = Math.min(8, Number((payload as { count?: number })?.count ?? 2))
-          gameState = spawnVirtualPlayers(gameState, vpCount || 2)
+          const raw = Number((payload as { count?: number })?.count ?? 2)
+          const asked = Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 2
+          gameState = spawnVirtualPlayers(gameState, asked)
           const nVirt = liveVirtualCount(gameState)
           io.to(sessionKey).emit('toast', `Test mode: added virtual seats (CPU total: ${nVirt}).`)
           break

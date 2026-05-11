@@ -220,7 +220,8 @@ export function createEmptyGame(code: string, hostId: string = '', tableId: stri
     bigBlind: 20,
     smallBlind: 10,
     minPlayers: 2,
-    maxPlayers: 8,
+    /** Large enough for test sessions (many CPU seats); lobby split still shards by venue rules. */
+    maxPlayers: 32,
     round: {
       roundId: 'r1',
       question: null,
