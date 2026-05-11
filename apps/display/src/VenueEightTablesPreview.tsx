@@ -11,6 +11,13 @@ import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/ne
 
 const VENUE_SEAT_SLOTS = 8
 
+/** Fixed crawl strips (Players + All tables): keep widths and page padding in sync */
+const VENUE_CRAWL_STRIP_CLASS = 'w-80 sm:w-[22rem] lg:w-96'
+
+/** Mirror {@link VENUE_CRAWL_STRIP_CLASS} for main shell horizontal padding when crawls mount */
+const VENUE_CRAWL_PL_CLASS = 'pl-80 sm:pl-[22rem] lg:pl-96'
+const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
+
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
 const SEATING_SPOTLIGHT_CYCLE_SEC = 10
 
@@ -171,37 +178,78 @@ function VenueMosaicTableCard({
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true
     const rowShell = spotlight
-      ? 'border-amber-400/70 bg-black/55 ring-2 ring-amber-400/45 shadow-[0_0_16px_rgba(251,191,36,0.1)]'
+      ? 'border-amber-400/70 bg-black/55 ring-2 ring-amber-400/45 shadow-[0_0_20px_rgba(251,191,36,0.12)]'
       : 'border-white/[0.12] bg-black/35'
+
+    let totalChips = 0
+    const filledNames: string[] = []
+    for (let i = 0; i < VENUE_SEAT_SLOTS; i++) {
+      const nm = seatNames[i]?.trim()
+      if (nm) {
+        filledNames.push(nm)
+        totalChips += seatBankrolls[i] ?? 0
+      }
+    }
+    const openSeats = Math.max(0, VENUE_SEAT_SLOTS - seats)
+    const rosterPreview =
+      filledNames.length === 0
+        ? 'No players at this table yet'
+        : filledNames.length <= 2
+          ? filledNames.join(' · ')
+          : `${filledNames.slice(0, 2).join(' · ')} · +${filledNames.length - 2} more`
 
     return (
       <div
         data-spotlight-tile={tn}
         role="group"
         aria-current={spotlight ? 'true' : undefined}
-        className={`flex w-full min-w-0 items-center gap-2 rounded-lg border p-2.5 backdrop-blur-md ${rowShell}`}
+        className={`flex w-full min-w-0 gap-3 rounded-xl border p-3 backdrop-blur-md sm:gap-3.5 sm:p-3.5 ${rowShell}`}
       >
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-black tabular-nums ${
-            spotlight ? 'bg-amber-500/35 text-lg text-amber-50' : 'bg-white/[0.07] text-base text-yellow-400'
+          className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl sm:h-14 sm:w-14 ${
+            spotlight
+              ? 'bg-amber-500/35 text-amber-50'
+              : 'bg-white/[0.08] text-yellow-400'
           }`}
         >
-          {tn}
+          <span className="text-[9px] font-semibold uppercase leading-none tracking-wider text-white/55 sm:text-[10px]">
+            Tbl
+          </span>
+          <span
+            className={`font-black tabular-nums leading-none ${spotlight ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}
+          >
+            {tn}
+          </span>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-            <span className="text-sm font-bold leading-tight text-white/95">T{tn}</span>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <span className="text-base font-bold leading-snug text-white/95 sm:text-lg">Table {tn}</span>
             <span
-              className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none ${phaseAccent(ph)}`}
+              className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-bold uppercase leading-tight sm:text-xs ${phaseAccent(ph)}`}
             >
               {phaseLabel(ph)}
             </span>
           </div>
-          <p className="mt-0.5 text-[11px] leading-snug text-white/60">
-            <span className="font-mono tabular-nums text-casino-emerald">{seats}/8</span>
-            <span className="mx-1 text-white/35">·</span>
-            <span className="font-mono tabular-nums text-yellow-200/90">${pot.toLocaleString()}</span>
+          <p className="text-sm leading-snug text-white/75 sm:text-base">
+            <span className="font-mono font-semibold tabular-nums text-casino-emerald">
+              {seats} / {VENUE_SEAT_SLOTS} seated
+            </span>
+            {openSeats > 0 ? (
+              <span className="text-white/45"> · {openSeats} seat{openSeats !== 1 ? 's' : ''} open</span>
+            ) : (
+              <span className="text-white/45"> · full</span>
+            )}
           </p>
+          <p className="text-sm text-white/80 sm:text-base">
+            <span className="text-white/55">Local pot</span>{' '}
+            <span className="font-mono font-semibold tabular-nums text-yellow-200">${pot.toLocaleString()}</span>
+            <span className="mx-1.5 text-white/30 sm:mx-2">·</span>
+            <span className="text-white/55">Chips on table</span>{' '}
+            <span className="font-mono font-semibold tabular-nums text-white/90">
+              {formatVenueBankroll(totalChips)}
+            </span>
+          </p>
+          <p className="text-xs leading-snug text-white/60 line-clamp-3 sm:text-sm">{rosterPreview}</p>
         </div>
       </div>
     )
@@ -351,17 +399,15 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
 
   return (
     <aside
-      className="fixed inset-y-0 right-0 z-20 flex w-52 flex-col border-l border-yellow-600/50 bg-slate-950/94 shadow-[-8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md sm:w-56 lg:w-[15rem]"
+      className={`fixed inset-y-0 right-0 z-20 flex flex-col border-l border-yellow-600/50 bg-slate-950/94 shadow-[-8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md ${VENUE_CRAWL_STRIP_CLASS}`}
       aria-label="Players and table assignments"
     >
-      <div className="shrink-0 border-b border-white/10 px-2.5 py-3 sm:px-3">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/55 sm:text-xs">
-          Players
-        </h2>
-        <p className="mt-0.5 text-xl font-bold leading-none text-white/92 sm:text-2xl">Seating</p>
+      <div className="shrink-0 border-b border-white/10 px-3 py-3.5 sm:px-4 sm:py-4">
+        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/55 sm:text-sm">Players</h2>
+        <p className="mt-1 text-2xl font-bold leading-none text-white/92 sm:text-3xl">Seating</p>
       </div>
       <div
-        className="relative min-h-0 flex-1 overflow-hidden px-1.5 py-1 sm:px-2"
+        className="relative min-h-0 flex-1 overflow-hidden px-2 py-1.5 sm:px-3 sm:py-2"
         style={{
           maskImage:
             'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
@@ -376,17 +422,17 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
           {doubled.map((r, idx) => (
             <div
               key={`${r.tableNum}-${r.name}-${idx}`}
-              className="w-full min-w-0 border-b border-white/[0.07] py-2 sm:py-2.5"
+              className="w-full min-w-0 border-b border-white/[0.08] py-3 sm:py-3.5"
               aria-label={`${r.name}, ${formatVenueBankroll(r.bankroll)}, Table ${r.tableNum}`}
             >
-              <div className="w-full min-w-0 truncate text-lg font-bold leading-[1.15] text-white/95 sm:text-xl md:text-2xl">
+              <div className="w-full min-w-0 truncate text-xl font-bold leading-[1.15] text-white/95 sm:text-2xl md:text-3xl">
                 {r.name}
               </div>
-              <div className="mt-0.5 flex w-full min-w-0 items-baseline justify-between gap-1.5">
-                <span className="min-w-0 flex-1 truncate font-mono text-xs font-bold tabular-nums tracking-tight text-yellow-400/92 sm:text-sm">
+              <div className="mt-1 flex w-full min-w-0 items-baseline justify-between gap-2">
+                <span className="min-w-0 flex-1 truncate font-mono text-sm font-bold tabular-nums tracking-tight text-yellow-400/92 sm:text-base">
                   Table {r.tableNum}
                 </span>
-                <span className="shrink-0 text-right font-mono text-base font-bold tabular-nums leading-none text-casino-emerald sm:text-lg">
+                <span className="shrink-0 text-right font-mono text-lg font-bold tabular-nums leading-none text-casino-emerald sm:text-xl">
                   {formatVenueBankroll(r.bankroll)}
                 </span>
               </div>
@@ -408,20 +454,20 @@ function VenueAllTablesCrawl({
   spotlightTableNum: number
   prefersReducedMotion: boolean
 }) {
-  const durationSec = Math.max(24, Math.min(100, Math.max(1, tiles.length) * 6))
+  const durationSec = Math.max(36, Math.min(120, Math.max(1, tiles.length) * 8))
   const doubled = useMemo(() => [...tiles, ...tiles], [tiles])
 
   return (
     <aside
-      className="fixed inset-y-0 left-0 z-20 flex w-52 flex-col border-r border-yellow-600/50 bg-slate-950/94 shadow-[8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md sm:w-56 lg:w-[15rem]"
+      className={`fixed inset-y-0 left-0 z-20 flex flex-col border-r border-yellow-600/50 bg-slate-950/94 shadow-[8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md ${VENUE_CRAWL_STRIP_CLASS}`}
       aria-label="All tables crawl"
     >
-      <div className="shrink-0 border-b border-white/10 px-2.5 py-3 sm:px-3">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/55 sm:text-xs">Tables</h2>
-        <p className="mt-0.5 text-xl font-bold leading-none text-white/92 sm:text-2xl">All tables</p>
+      <div className="shrink-0 border-b border-white/10 px-3 py-3.5 sm:px-4 sm:py-4">
+        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/55 sm:text-sm">Tables</h2>
+        <p className="mt-1 text-2xl font-bold leading-none text-white/92 sm:text-3xl">All tables</p>
       </div>
       <div
-        className="relative min-h-0 flex-1 overflow-hidden px-1.5 py-1 sm:px-2"
+        className="relative min-h-0 flex-1 overflow-hidden px-2 py-1.5 sm:px-3 sm:py-2"
         style={{
           maskImage:
             'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
@@ -430,7 +476,7 @@ function VenueAllTablesCrawl({
         }}
       >
         {prefersReducedMotion ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-y-contain py-1">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain py-1">
             {tiles.map((row, idx) => (
               <VenueMosaicTableCard
                 key={row.tableNum}
@@ -444,7 +490,7 @@ function VenueAllTablesCrawl({
           </div>
         ) : (
           <div
-            className="venue-roster-animate flex flex-col gap-2"
+            className="venue-roster-animate flex flex-col gap-3"
             style={{ ['--venue-roster-secs' as string]: `${durationSec}s` }}
           >
             {doubled.map((row, idx) => (
@@ -577,8 +623,8 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
-        showSeatingSpotlightCycle ? 'pl-52 sm:pl-56 lg:pl-[15rem]' : ''
-      } ${showRoster ? 'pr-52 sm:pr-56 lg:pr-[15rem]' : ''}`}
+        showSeatingSpotlightCycle ? VENUE_CRAWL_PL_CLASS : ''
+      } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
         <div
