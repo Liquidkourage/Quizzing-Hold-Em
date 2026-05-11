@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import {
+  DISPLAY_PREVIEW_BANKROLLS,
   DISPLAY_PREVIEW_SYNCED_PHASE,
   DISPLAY_PREVIEW_TABLES,
   rehearsalSeatDisplayName,
@@ -9,6 +10,11 @@ import {
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
 
 const VENUE_SEAT_SLOTS = 8
+
+function formatVenueBankroll(amount: number): string {
+  const n = Number.isFinite(amount) ? Math.round(amount) : 0
+  return `$${Math.max(0, n).toLocaleString()}`
+}
 
 function padSeatNames(raw: string[] | undefined): string[] {
   return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
@@ -20,16 +26,25 @@ function padSeatNames(raw: string[] | undefined): string[] {
   })
 }
 
+function padSeatBankrolls(raw: number[] | undefined): number[] {
+  return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
+    const v = raw?.[i]
+    return typeof v === 'number' && Number.isFinite(v) ? v : 0
+  })
+}
+
 /**
  * Eight seat positions around the mini felt; optional name chips just outside each chair.
  */
 function SeatRingWithLabels({
   seatedCount,
   seatNames,
+  seatBankrolls,
   size = 'md',
 }: {
   seatedCount: number
   seatNames: string[]
+  seatBankrolls: number[]
   size?: 'md' | 'lg'
 }) {
   const wrap =
@@ -67,6 +82,7 @@ function SeatRingWithLabels({
         const ly = 42 * Math.sin(a)
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
+        const chips = seatBankrolls[i] ?? 0
         return (
           <div key={i}>
             <div
@@ -82,7 +98,10 @@ function SeatRingWithLabels({
                 className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-center font-semibold leading-tight text-white/92 shadow-black/80 drop-shadow ${labelClass}`}
                 style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
               >
-                <span className="block truncate">{raw}</span>
+                <span className="block max-w-full truncate">{raw}</span>
+                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald [font-size:max(0.58em,8px)] sm:[font-size:max(0.62em,9px)]">
+                  {formatVenueBankroll(chips)}
+                </span>
               </div>
             ) : null}
           </div>
@@ -121,14 +140,15 @@ function firstNameSortKey(displayName: string): string {
 
 function rosterRowsFromTiles(
   tiles: DisplayVenueTileSnapshot[]
-): { name: string; tableNum: number }[] {
-  const out: { name: string; tableNum: number }[] = []
+): { name: string; tableNum: number; bankroll: number }[] {
+  const out: { name: string; tableNum: number; bankroll: number }[] = []
   for (const t of tiles) {
     const sn = t.seatNames
+    const br = padSeatBankrolls(t.seatBankrolls)
     if (sn == null || sn.length === 0) continue
     for (let i = 0; i < sn.length; i++) {
       const raw = sn[i]?.trim()
-      if (raw) out.push({ name: raw, tableNum: t.tableNum })
+      if (raw) out.push({ name: raw, tableNum: t.tableNum, bankroll: br[i] ?? 0 })
     }
   }
   out.sort((a, b) => {
@@ -179,6 +199,9 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
             >
               <span className="w-full truncate text-base font-semibold leading-snug text-white/95 sm:text-lg md:text-xl">
                 {r.name}
+              </span>
+              <span className="w-full truncate font-mono tabular-nums text-sm font-semibold leading-none text-casino-emerald sm:text-base">
+                {formatVenueBankroll(r.bankroll)}
               </span>
               <span className="w-full truncate font-mono text-xs font-bold uppercase tracking-[0.12em] text-yellow-400/95 sm:text-sm md:text-base">
                 TABLE {r.tableNum}
@@ -234,12 +257,18 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             const seatNames = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
               j < seated ? rehearsalSeatDisplayName(base + j) : ''
             )
+            const seatBankrolls = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
+              j < seated
+                ? DISPLAY_PREVIEW_BANKROLLS[j % DISPLAY_PREVIEW_BANKROLLS.length]!
+                : 0
+            )
             return {
               tableNum: i + 1,
               seated,
               pot: snap.pot,
               phase: DISPLAY_PREVIEW_SYNCED_PHASE,
               seatNames,
+              seatBankrolls,
             }
           })
 
@@ -341,6 +370,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               const pot = row.pot
               const ph = row.phase
               const seatNames = padSeatNames(row.seatNames)
+              const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
               return (
                 <motion.article
                   key={tn}
@@ -370,7 +400,11 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                   </div>
 
                   <div className="mt-2 flex-shrink-0">
-                    <SeatRingWithLabels seatedCount={seats} seatNames={seatNames} />
+                    <SeatRingWithLabels
+                      seatedCount={seats}
+                      seatNames={seatNames}
+                      seatBankrolls={seatBankrolls}
+                    />
                   </div>
 
                   <dl className="mt-3 space-y-1.5 border-t border-white/10 pt-3 text-sm leading-snug sm:text-base md:text-lg">

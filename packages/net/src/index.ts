@@ -26,6 +26,8 @@ export type DisplayVenueTileSnapshot = {
   phase: string
   /** Up to eight seat labels (vacant seats are empty strings), index matches player order on the felt. */
   seatNames: string[]
+  /** Chip stacks per seat, parallel to `seatNames`; `0` when empty. Omitted by older servers. */
+  seatBankrolls?: number[]
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */

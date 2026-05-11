@@ -1144,12 +1144,19 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       const nm = typeof p.name === 'string' ? p.name.trim() : ''
       return nm
     })
+    const seatBankrolls = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
+      const p = gs.players[i]
+      if (p == null) return 0
+      const br = p.bankroll
+      return typeof br === 'number' && Number.isFinite(br) ? br : 0
+    })
     tiles.push({
       tableNum: n,
       seated,
       pot: gs.round.pot ?? 0,
       phase: gs.phase,
       seatNames,
+      seatBankrolls,
     })
   }
 
