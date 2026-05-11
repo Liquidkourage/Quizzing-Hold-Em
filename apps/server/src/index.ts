@@ -1075,6 +1075,9 @@ function allTableSessionsInVenue(venueCode: string): string[] {
   return allVenueSessionKeys(venueCode).filter(k => !isLobbySessionKey(k))
 }
 
+/** Seats labeled on the public venue-wall mosaic (matches felt chair count in UI). */
+const VENUE_WALL_SEAT_COUNT = 8
+
 const displayVenueSnapshotTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 /** Seats wired into the venue wall / welcome mosaic (human + rehearsal CPU vp:*). */
@@ -1135,11 +1138,18 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     if (!gs) continue
     const seated = welcomeWallSeatCount(gs)
     totalSeatedAtTables += seated
+    const seatNames = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
+      const p = gs.players[i]
+      if (p == null) return ''
+      const nm = typeof p.name === 'string' ? p.name.trim() : ''
+      return nm
+    })
     tiles.push({
       tableNum: n,
       seated,
       pot: gs.round.pot ?? 0,
       phase: gs.phase,
+      seatNames,
     })
   }
 

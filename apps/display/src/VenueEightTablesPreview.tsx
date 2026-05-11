@@ -1,21 +1,43 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import {
+  DISPLAY_PREVIEW_NAMES,
   DISPLAY_PREVIEW_SYNCED_PHASE,
   DISPLAY_PREVIEW_TABLES,
 } from '@qhe/core'
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
 
-function SeatDots({
+const VENUE_SEAT_SLOTS = 8
+
+function padSeatNames(raw: string[] | undefined): string[] {
+  return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
+    if (raw != null && raw[i] != null) {
+      const t = String(raw[i]).trim()
+      return t
+    }
+    return ''
+  })
+}
+
+/**
+ * Eight seat positions around the mini felt; optional name chips just outside each chair.
+ */
+function SeatRingWithLabels({
   seatedCount,
+  seatNames,
   size = 'md',
 }: {
   seatedCount: number
+  seatNames: string[]
   size?: 'md' | 'lg'
 }) {
   const wrap = size === 'lg' ? 'max-w-[min(440px,92vw)]' : 'max-w-[200px]'
   const dot = size === 'lg' ? 'h-6 w-6' : 'h-4 w-4'
+  const labelClass =
+    size === 'lg'
+      ? 'max-w-[min(6.5rem,22vw)] text-[11px]'
+      : 'max-w-[min(4.5rem,17vw)] text-[9px]'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
@@ -38,17 +60,29 @@ function SeatDots({
         const a = (i / 8) * 2 * Math.PI - Math.PI / 2
         const xr = 48 * Math.cos(a)
         const yr = 38 * Math.sin(a)
+        const lx = 54 * Math.cos(a)
+        const ly = 42 * Math.sin(a)
         const filled = i < seatedCount
+        const raw = seatNames[i]?.trim() ?? ''
         return (
-          <div
-            key={i}
-            className={`absolute ${dot} -translate-x-1/2 -translate-y-1/2 rounded-full border shadow ${
-              filled
-                ? 'border-emerald-300/70 bg-black/85'
-                : 'border-white/20 bg-black/35'
-            }`}
-            style={{ left: `calc(50% + ${xr}%)`, top: `calc(50% + ${yr}%)` }}
-          />
+          <div key={i}>
+            <div
+              className={`absolute ${dot} -translate-x-1/2 -translate-y-1/2 rounded-full border shadow ${
+                filled
+                  ? 'border-emerald-300/70 bg-black/85'
+                  : 'border-white/20 bg-black/35'
+              }`}
+              style={{ left: `calc(50% + ${xr}%)`, top: `calc(50% + ${yr}%)` }}
+            />
+            {raw ? (
+              <div
+                className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-center font-semibold leading-tight text-white/92 shadow-black/80 drop-shadow ${labelClass}`}
+                style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
+              >
+                <span className="block truncate">{raw}</span>
+              </div>
+            ) : null}
+          </div>
         )
       })}
     </div>
@@ -72,6 +106,70 @@ function phaseAccent(ph: string) {
   if (ph === 'showdown') return 'text-yellow-300 ring-1 ring-yellow-400/35'
   if (ph === 'question') return 'text-emerald-200/95'
   return 'text-white/85'
+}
+
+function rosterRowsFromTiles(
+  tiles: DisplayVenueTileSnapshot[]
+): { name: string; tableNum: number }[] {
+  const out: { name: string; tableNum: number }[] = []
+  for (const t of tiles) {
+    const sn = t.seatNames
+    if (sn == null || sn.length === 0) continue
+    for (let i = 0; i < sn.length; i++) {
+      const raw = sn[i]?.trim()
+      if (raw) out.push({ name: raw, tableNum: t.tableNum })
+    }
+  }
+  out.sort((a, b) => a.tableNum - b.tableNum || a.name.localeCompare(b.name))
+  return out
+}
+
+function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) {
+  const rows = useMemo(() => rosterRowsFromTiles(tiles), [tiles])
+  if (rows.length === 0) return null
+
+  const durationSec = Math.max(28, Math.min(120, rows.length * 2.2))
+  const doubled = [...rows, ...rows]
+
+  return (
+    <section
+      className="flex max-h-[min(76vh,600px)] flex-col rounded-2xl border border-yellow-700/30 bg-black/50 shadow-xl backdrop-blur-md"
+      aria-label="Players and table assignments"
+    >
+      <div className="border-b border-white/10 px-4 py-3 sm:px-5">
+        <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-white/55">Players</h2>
+        <p className="mt-0.5 text-sm font-semibold text-white/88">Table seating</p>
+      </div>
+      <div
+        className="relative h-52 overflow-hidden px-1 py-2 sm:h-60 sm:px-2 lg:h-[min(52vh,420px)]"
+        style={{
+          maskImage:
+            'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+        }}
+      >
+        <div
+          className="venue-roster-animate flex flex-col gap-0"
+          style={{ ['--venue-roster-secs' as string]: `${durationSec}s` }}
+        >
+          {doubled.map((r, idx) => (
+            <div
+              key={`${r.tableNum}-${r.name}-${idx}`}
+              className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-3 py-2 text-sm"
+            >
+              <span className="shrink-0 font-mono text-xs font-bold tabular-nums text-yellow-400/95">
+                T{r.tableNum}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-right font-medium text-white/90">
+                {r.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 type VenueEightTablesPreviewProps = {
@@ -111,17 +209,26 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
       ? [...wall.tiles].sort((a, b) => a.tableNum - b.tableNum)
       : wall?.tiles != null && wall.tiles.length === 0
         ? []
-        : DISPLAY_PREVIEW_TABLES.map((snap, i) => ({
-            tableNum: i + 1,
-            seated: snap.seated,
-            pot: snap.pot,
-            phase: DISPLAY_PREVIEW_SYNCED_PHASE,
-          }))
+        : DISPLAY_PREVIEW_TABLES.map((snap, i) => {
+            const seated = snap.seated
+            const seatNames = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
+              j < seated ? (DISPLAY_PREVIEW_NAMES[j] ?? `Guest ${j + 1}`) : ''
+            )
+            return {
+              tableNum: i + 1,
+              seated,
+              pot: snap.pot,
+              phase: DISPLAY_PREVIEW_SYNCED_PHASE,
+              seatNames,
+            }
+          })
 
   const hasLiveWall =
     wall != null && wall.tiles != null && wall.tiles.length > 0
   const showHeadline =
     hasLiveWall && (headlineQuestionText != null || answerDeadlineMs != null)
+
+  const showRoster = rosterRowsFromTiles(tileRows).length > 0
 
   return (
     <div className="relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
@@ -203,51 +310,63 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             </p>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {tileRows.map((row, idx) => {
-            const tn = row.tableNum
-            const seats = row.seated
-            const pot = row.pot
-            const ph = row.phase
-            return (
-              <motion.article
-                key={tn}
-                data-spotlight-tile={tn}
-                initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: skipMountIntro ? 0 : idx * 0.045,
-                  duration: skipMountIntro ? 0 : 0.35,
-                }}
-                className="flex flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
-                    <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
-                  </div>
-                  <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(ph)}`}>
-                    {phaseLabel(ph)}
-                  </span>
-                </div>
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-6">
+            {showRoster ? (
+              <aside className="order-1 w-full shrink-0 lg:order-2 lg:sticky lg:top-4 lg:w-80 xl:w-[22rem]">
+                <VenueScrollingRoster tiles={tileRows} />
+              </aside>
+            ) : null}
+            <div
+              className={`order-2 min-w-0 flex-1 ${showRoster ? 'lg:order-1' : ''}`}
+            >
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {tileRows.map((row, idx) => {
+                  const tn = row.tableNum
+                  const seats = row.seated
+                  const pot = row.pot
+                  const ph = row.phase
+                  const seatNames = padSeatNames(row.seatNames)
+                  return (
+                    <motion.article
+                      key={tn}
+                      data-spotlight-tile={tn}
+                      initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: skipMountIntro ? 0 : idx * 0.045,
+                        duration: skipMountIntro ? 0 : 0.35,
+                      }}
+                      className="flex flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
+                          <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
+                        </div>
+                        <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(ph)}`}>
+                          {phaseLabel(ph)}
+                        </span>
+                      </div>
 
-                <div className="mt-3 flex-shrink-0">
-                  <SeatDots seatedCount={seats} />
-                </div>
+                      <div className="mt-3 flex-shrink-0">
+                        <SeatRingWithLabels seatedCount={seats} seatNames={seatNames} />
+                      </div>
 
-                <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm leading-snug">
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-white/55">Occupied seats</dt>
-                    <dd className="font-mono font-bold tabular-nums text-casino-emerald">{seats} / 8</dd>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <dt className="text-white/55">Pot (local)</dt>
-                    <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
-                  </div>
-                </dl>
-              </motion.article>
-            )
-          })}
+                      <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm leading-snug">
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-white/55">Occupied seats</dt>
+                          <dd className="font-mono font-bold tabular-nums text-casino-emerald">{seats} / 8</dd>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-white/55">Pot (local)</dt>
+                          <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
+                        </div>
+                      </dl>
+                    </motion.article>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         )}
       </main>

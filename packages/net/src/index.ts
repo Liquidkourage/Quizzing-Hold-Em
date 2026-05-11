@@ -24,6 +24,8 @@ export type DisplayVenueTileSnapshot = {
   seated: number
   pot: number
   phase: string
+  /** Up to eight seat labels (vacant seats are empty strings), index matches player order on the felt. */
+  seatNames: string[]
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */

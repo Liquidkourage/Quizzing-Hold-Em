@@ -185,3 +185,19 @@
     opacity: 0;
   }
 }
+
+/* Venue wall — seamless vertical roster (content duplicated; animates -50%) */
+@keyframes venue-roster-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@layer utilities {
+  .venue-roster-animate {
+    animation: venue-roster-scroll var(--venue-roster-secs, 40s) linear infinite;
+  }
+}
