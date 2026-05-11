@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import {
@@ -12,7 +12,7 @@ import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/ne
 const VENUE_SEAT_SLOTS = 8
 
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
-const SEATING_SPOTLIGHT_CYCLE_SEC = 18
+const SEATING_SPOTLIGHT_CYCLE_SEC = 10
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false)
@@ -436,7 +436,9 @@ type VenueEightTablesPreviewProps = {
 export default function VenueEightTablesPreview({ wall, skipMountIntro = false }: VenueEightTablesPreviewProps) {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
   const [seatingHeroIdx, setSeatingHeroIdx] = useState(0)
+  const [seatingCycleTick, setSeatingCycleTick] = useState(0)
   const prefersReducedMotion = usePrefersReducedMotion()
+  const seatingCycleStartRef = useRef(0)
 
   const headlineQuestionText = wall?.headlineQuestionText ?? null
   const answerDeadlineMs = wall?.answerDeadlineMs ?? null
@@ -504,6 +506,23 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
     }, SEATING_SPOTLIGHT_CYCLE_SEC * 1000)
     return () => window.clearInterval(id)
   }, [showSeatingSpotlightCycle, prefersReducedMotion, tileRows.length])
+
+  useLayoutEffect(() => {
+    seatingCycleStartRef.current = Date.now()
+  }, [seatingHeroIdx])
+
+  useEffect(() => {
+    if (!showSeatingSpotlightCycle || prefersReducedMotion || tileRows.length <= 1)
+      return undefined
+    const id = window.setInterval(() => setSeatingCycleTick((n) => n + 1), 50)
+    return () => window.clearInterval(id)
+  }, [showSeatingSpotlightCycle, prefersReducedMotion, tileRows.length, seatingHeroIdx])
+
+  const seatingCycleProgress = useMemo(() => {
+    if (prefersReducedMotion || tileRows.length <= 1) return 0
+    const elapsed = Date.now() - seatingCycleStartRef.current
+    return Math.min(1, elapsed / (SEATING_SPOTLIGHT_CYCLE_SEC * 1000))
+  }, [seatingCycleTick, seatingHeroIdx, prefersReducedMotion, tileRows.length])
 
   const showRoster = rosterRowsFromTiles(tileRows).length > 0
 
@@ -607,7 +626,15 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               Spotlight showing table {seatingHeroRow.tableNum}
             </p>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-              <div className="min-w-0 lg:col-span-8">
+              <div className="order-2 flex min-h-0 min-w-0 flex-col lg:order-1 lg:col-span-4">
+                <h2 className="mb-3 hidden text-xs font-bold uppercase tracking-[0.18em] text-white/45 sm:text-sm lg:block">
+                  All tables
+                </h2>
+                <div className="flex max-h-[min(40vh,18rem)] gap-2.5 overflow-x-auto overflow-y-hidden pb-1 pt-1 lg:max-h-[min(72vh,52rem)] lg:flex-col lg:gap-2.5 lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1 lg:pt-0">
+                  {spotlightThumbList}
+                </div>
+              </div>
+              <div className="order-1 min-w-0 lg:order-2 lg:col-span-8">
                 <AnimatePresence mode="wait">
                   <VenueMosaicTableCard
                     key={seatingHeroRow.tableNum}
@@ -620,16 +647,37 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                 <p className="mt-4 text-center text-base text-white/50 sm:text-lg">
                   {prefersReducedMotion
                     ? `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
-                    : `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length} · ${SEATING_SPOTLIGHT_CYCLE_SEC}s per table`}
+                    : `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length}`}
                 </p>
-              </div>
-              <div className="flex min-h-0 min-w-0 flex-col lg:col-span-4">
-                <h2 className="mb-3 hidden text-xs font-bold uppercase tracking-[0.18em] text-white/45 sm:text-sm lg:block">
-                  All tables
-                </h2>
-                <div className="flex max-h-[min(40vh,18rem)] gap-2.5 overflow-x-auto overflow-y-hidden pb-1 pt-1 lg:max-h-[min(72vh,52rem)] lg:flex-col lg:gap-2.5 lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1 lg:pt-0">
-                  {spotlightThumbList}
-                </div>
+                {!prefersReducedMotion && tileRows.length > 1 ? (
+                  <div className="mx-auto mt-4 max-w-3xl">
+                    <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
+                      <span className="font-semibold uppercase tracking-wider text-white/45">
+                        Next table
+                      </span>
+                      <span className="font-mono tabular-nums text-amber-200/90">
+                        {Math.max(
+                          0,
+                          Math.ceil((1 - seatingCycleProgress) * SEATING_SPOTLIGHT_CYCLE_SEC)
+                        )}
+                        s
+                      </span>
+                    </div>
+                    <div
+                      className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.round(seatingCycleProgress * 100)}
+                      aria-label="Seating tour progress until the next table"
+                    >
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-amber-700/95 to-amber-300/95"
+                        style={{ width: `${seatingCycleProgress * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>
