@@ -33,12 +33,14 @@ function SeatRingWithLabels({
   size?: 'md' | 'lg'
 }) {
   const wrap =
-    size === 'lg' ? 'max-w-[min(440px,92vw)]' : 'max-w-[min(340px,94vw)]'
-  const dot = size === 'lg' ? 'h-9 w-9' : 'h-7 w-7'
+    size === 'lg'
+      ? 'max-w-[min(440px,92vw)]'
+      : 'w-full max-w-[min(100%,17rem)] sm:max-w-[min(100%,18rem)]'
+  const dot = size === 'lg' ? 'h-9 w-9' : 'h-6 w-6'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(9rem,28vw)] text-lg sm:text-xl'
-      : 'max-w-[min(8.5rem,30vw)] text-base sm:text-lg md:text-xl'
+      : 'max-w-[min(6rem,46%)] text-xs sm:text-sm md:text-base'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
@@ -332,7 +334,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             </p>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-2 2xl:grid-cols-4 2xl:gap-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5 md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-4">
             {tileRows.map((row, idx) => {
               const tn = row.tableNum
               const seats = row.seated
@@ -349,29 +351,29 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                     delay: skipMountIntro ? 0 : idx * 0.045,
                     duration: skipMountIntro ? 0 : 0.35,
                   }}
-                  className="flex flex-col rounded-2xl border-2 border-yellow-700/35 bg-black/55 p-5 shadow-xl backdrop-blur-md sm:p-6"
+                  className="flex flex-col rounded-xl border-2 border-yellow-700/35 bg-black/55 p-3.5 shadow-lg backdrop-blur-md sm:p-4"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-base font-semibold uppercase tracking-[0.18em] text-white/60 sm:text-lg">
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60 sm:text-sm">
                         Table
                       </div>
-                      <div className="text-6xl font-black tabular-nums leading-none text-yellow-400 sm:text-7xl">
+                      <div className="text-4xl font-black tabular-nums leading-none text-yellow-400 sm:text-5xl lg:text-6xl">
                         {tn}
                       </div>
                     </div>
                     <span
-                      className={`rounded-xl px-3 py-2 text-sm font-bold uppercase sm:text-base ${phaseAccent(ph)}`}
+                      className={`max-w-[min(8.5rem,45%)] shrink-0 truncate rounded-lg px-2 py-1 text-[10px] font-bold uppercase leading-tight sm:max-w-none sm:px-2.5 sm:py-1.5 sm:text-xs md:text-sm ${phaseAccent(ph)}`}
                     >
                       {phaseLabel(ph)}
                     </span>
                   </div>
 
-                  <div className="mt-4 flex-shrink-0">
+                  <div className="mt-2 flex-shrink-0">
                     <SeatRingWithLabels seatedCount={seats} seatNames={seatNames} />
                   </div>
 
-                  <dl className="mt-5 space-y-3 border-t border-white/10 pt-5 text-lg leading-snug sm:text-xl md:text-2xl">
+                  <dl className="mt-3 space-y-1.5 border-t border-white/10 pt-3 text-sm leading-snug sm:text-base md:text-lg">
                     <div className="flex justify-between gap-3">
                       <dt className="font-medium text-white/65">Occupied seats</dt>
                       <dd className="font-mono font-bold tabular-nums text-casino-emerald">
