@@ -195,17 +195,17 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
           {doubled.map((r, idx) => (
             <div
               key={`${r.tableNum}-${r.name}-${idx}`}
-              className="border-b border-white/[0.07] py-2 sm:py-2.5"
+              className="w-full min-w-0 border-b border-white/[0.07] py-2 sm:py-2.5"
               aria-label={`${r.name}, ${formatVenueBankroll(r.bankroll)}, Table ${r.tableNum}`}
             >
-              <div className="truncate text-lg font-bold leading-[1.15] text-white/95 sm:text-xl md:text-2xl">
+              <div className="w-full min-w-0 truncate text-lg font-bold leading-[1.15] text-white/95 sm:text-xl md:text-2xl">
                 {r.name}
               </div>
-              <div className="mt-0.5 flex min-w-0 items-baseline justify-between gap-1.5">
-                <span className="shrink-0 font-mono text-xs font-bold uppercase tracking-[0.1em] text-yellow-400/92 sm:text-sm">
-                  T{r.tableNum}
+              <div className="mt-0.5 flex w-full min-w-0 items-baseline justify-between gap-1.5">
+                <span className="min-w-0 flex-1 truncate font-mono text-xs font-bold tabular-nums tracking-tight text-yellow-400/92 sm:text-sm">
+                  Table {r.tableNum}
                 </span>
-                <span className="min-w-0 truncate text-right font-mono text-base font-bold tabular-nums leading-none text-casino-emerald sm:text-lg">
+                <span className="shrink-0 text-right font-mono text-base font-bold tabular-nums leading-none text-casino-emerald sm:text-lg">
                   {formatVenueBankroll(r.bankroll)}
                 </span>
               </div>
