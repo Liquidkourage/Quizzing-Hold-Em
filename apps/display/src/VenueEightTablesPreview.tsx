@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import {
@@ -457,52 +457,95 @@ function VenueAllTablesCrawl({
   const durationSec = Math.max(36, Math.min(120, Math.max(1, tiles.length) * 8))
   const doubled = useMemo(() => [...tiles, ...tiles], [tiles])
 
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const measureRef = useRef<HTMLDivElement>(null)
+  const [allTablesFit, setAllTablesFit] = useState(true)
+
+  const recalcFit = useCallback(() => {
+    const vp = viewportRef.current
+    const ms = measureRef.current
+    if (!vp || !ms) return
+    setAllTablesFit(ms.scrollHeight <= vp.clientHeight + 2)
+  }, [tiles, spotlightTableNum])
+
+  useLayoutEffect(() => {
+    recalcFit()
+  }, [recalcFit])
+
+  useEffect(() => {
+    const vp = viewportRef.current
+    if (!vp || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => recalcFit())
+    ro.observe(vp)
+    window.addEventListener('resize', recalcFit)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', recalcFit)
+    }
+  }, [recalcFit])
+
+  const showCrawlAnimation = !prefersReducedMotion && !allTablesFit
+  const edgeFadeMask =
+    !allTablesFit
+      ? {
+          maskImage:
+            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+        }
+      : undefined
+
+  const tableRow = (row: (typeof tiles)[0], idx: number, key: string) => (
+    <VenueMosaicTableCard
+      key={key}
+      row={row}
+      mode="crawl"
+      idx={idx}
+      skipMountIntro
+      isSpotlightThumb={row.tableNum === spotlightTableNum}
+    />
+  )
+
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-20 flex flex-col border-r border-yellow-600/50 bg-slate-950/94 shadow-[8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md ${VENUE_CRAWL_STRIP_CLASS}`}
-      aria-label="All tables crawl"
+      aria-label="All tables"
     >
       <div className="shrink-0 border-b border-white/10 px-3 py-3.5 sm:px-4 sm:py-4">
         <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/55 sm:text-sm">Tables</h2>
         <p className="mt-1 text-2xl font-bold leading-none text-white/92 sm:text-3xl">All tables</p>
       </div>
       <div
+        ref={viewportRef}
         className="relative min-h-0 flex-1 overflow-hidden px-2 py-1.5 sm:px-3 sm:py-2"
-        style={{
-          maskImage:
-            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
-          WebkitMaskImage:
-            'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
-        }}
+        style={edgeFadeMask}
       >
+        {/* Off-screen column: height must match visible copy so we know if everything fits */}
+        <div
+          className="pointer-events-none absolute left-0 right-0 top-0 -z-10 opacity-0"
+          aria-hidden
+        >
+          <div ref={measureRef} className="flex flex-col gap-3">
+            {tiles.map((row, idx) => tableRow(row, idx, `measure-${row.tableNum}`))}
+          </div>
+        </div>
+
         {prefersReducedMotion ? (
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain py-1">
-            {tiles.map((row, idx) => (
-              <VenueMosaicTableCard
-                key={row.tableNum}
-                row={row}
-                mode="crawl"
-                idx={idx}
-                skipMountIntro
-                isSpotlightThumb={row.tableNum === spotlightTableNum}
-              />
-            ))}
+            {tiles.map((row, idx) => tableRow(row, idx, `a11y-${row.tableNum}`))}
           </div>
-        ) : (
+        ) : showCrawlAnimation ? (
           <div
             className="venue-roster-animate flex flex-col gap-3"
             style={{ ['--venue-roster-secs' as string]: `${durationSec}s` }}
           >
-            {doubled.map((row, idx) => (
-              <VenueMosaicTableCard
-                key={`${row.tableNum}-${idx}`}
-                row={row}
-                mode="crawl"
-                idx={idx}
-                skipMountIntro
-                isSpotlightThumb={row.tableNum === spotlightTableNum}
-              />
-            ))}
+            {doubled.map((row, idx) =>
+              tableRow(row, idx, `crawl-${row.tableNum}-${idx}`)
+            )}
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 py-1">
+            {tiles.map((row, idx) => tableRow(row, idx, `fit-${row.tableNum}`))}
           </div>
         )}
       </div>
