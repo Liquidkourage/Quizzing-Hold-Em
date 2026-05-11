@@ -32,12 +32,13 @@ function SeatRingWithLabels({
   seatNames: string[]
   size?: 'md' | 'lg'
 }) {
-  const wrap = size === 'lg' ? 'max-w-[min(440px,92vw)]' : 'max-w-[200px]'
-  const dot = size === 'lg' ? 'h-6 w-6' : 'h-4 w-4'
+  const wrap =
+    size === 'lg' ? 'max-w-[min(440px,92vw)]' : 'max-w-[min(320px,94vw)]'
+  const dot = size === 'lg' ? 'h-8 w-8' : 'h-6 w-6'
   const labelClass =
     size === 'lg'
-      ? 'max-w-[min(6.5rem,22vw)] text-[11px]'
-      : 'max-w-[min(4.5rem,17vw)] text-[9px]'
+      ? 'max-w-[min(8rem,26vw)] text-base sm:text-lg'
+      : 'max-w-[min(7.5rem,26vw)] text-sm sm:text-base md:text-lg'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
@@ -147,15 +148,17 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
 
   return (
     <section
-      className="flex max-h-[min(76vh,600px)] flex-col rounded-2xl border border-yellow-700/30 bg-black/50 shadow-xl backdrop-blur-md"
+      className="flex max-h-[min(82vh,720px)] flex-col rounded-2xl border-2 border-yellow-700/35 bg-black/50 shadow-xl backdrop-blur-md"
       aria-label="Players and table assignments"
     >
-      <div className="border-b border-white/10 px-4 py-3 sm:px-5">
-        <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-white/55">Players</h2>
-        <p className="mt-0.5 text-sm font-semibold text-white/88">Table seating</p>
+      <div className="border-b border-white/10 px-5 py-4 sm:px-6 sm:py-5">
+        <h2 className="text-base font-bold uppercase tracking-[0.2em] text-white/60 sm:text-lg">
+          Players
+        </h2>
+        <p className="mt-1 text-xl font-bold leading-snug text-white/92 sm:text-2xl">Table seating</p>
       </div>
       <div
-        className="relative h-52 overflow-hidden px-1 py-2 sm:h-60 sm:px-2 lg:h-[min(52vh,420px)]"
+        className="relative h-64 overflow-hidden px-2 py-2 sm:h-80 sm:px-3 lg:h-[min(58vh,520px)]"
         style={{
           maskImage:
             'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
@@ -170,10 +173,12 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
           {doubled.map((r, idx) => (
             <div
               key={`${r.tableNum}-${r.name}-${idx}`}
-              className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-3 py-2 text-sm"
+              className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-3 py-3.5 sm:px-4 sm:py-4"
             >
-              <span className="min-w-0 flex-1 truncate font-medium text-white/90">{r.name}</span>
-              <span className="shrink-0 whitespace-nowrap font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-yellow-400/95">
+              <span className="min-w-0 flex-1 truncate text-lg font-semibold leading-snug text-white/95 sm:text-xl md:text-2xl">
+                {r.name}
+              </span>
+              <span className="shrink-0 whitespace-nowrap font-mono text-base font-bold uppercase tracking-[0.12em] text-yellow-400/95 sm:text-lg md:text-xl">
                 TABLE {r.tableNum}
               </span>
             </div>
@@ -284,7 +289,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
           >
             <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start lg:gap-10">
               {headlineQuestionText ? (
-                <p className="flex-1 text-balance text-center text-2xl font-bold leading-snug text-yellow-400 sm:text-left md:text-3xl lg:text-4xl">
+                <p className="flex-1 text-balance text-center text-3xl font-bold leading-snug text-yellow-400 sm:text-left md:text-4xl lg:text-5xl">
                   {headlineQuestionText}
                 </p>
               ) : (
@@ -292,13 +297,13 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               )}
               {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
                 <div
-                  className={`flex min-w-[8.5rem] shrink-0 flex-col items-center justify-center self-center rounded-xl border px-6 py-5 lg:self-stretch lg:justify-center ${
+                  className={`flex min-w-[9.5rem] shrink-0 flex-col items-center justify-center self-center rounded-xl border px-7 py-6 lg:self-stretch lg:justify-center ${
                     timerSeconds <= 10
                       ? 'border-amber-400/60 bg-amber-950/40 shadow-[0_0_28px_rgba(251,191,36,0.12)]'
                       : 'border-amber-500/35 bg-amber-950/30'
                   }`}
                 >
-                  <div className="font-mono text-5xl font-black tabular-nums tracking-tight text-amber-200 sm:text-6xl lg:text-[4.25rem]">
+                  <div className="font-mono text-6xl font-black tabular-nums tracking-tight text-amber-200 sm:text-7xl lg:text-8xl">
                     {timerSeconds}s
                   </div>
                 </div>
@@ -315,24 +320,24 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             initial={skipMountIntro ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-xl font-semibold leading-snug text-white/92 sm:text-2xl">
+            <p className="text-2xl font-semibold leading-snug text-white/92 sm:text-3xl md:text-4xl">
               Felts open here after the host assigns players from the lobby.
             </p>
-            <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-white/55">
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-white/65 sm:text-xl md:text-2xl">
               Guests can keep joining from the briefing screen until seating runs.
             </p>
           </motion.div>
         ) : (
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-6">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-8">
             {showRoster ? (
-              <aside className="order-1 w-full shrink-0 lg:order-2 lg:sticky lg:top-4 lg:w-80 xl:w-[22rem]">
+              <aside className="order-1 w-full shrink-0 lg:order-2 lg:sticky lg:top-4 lg:min-w-0 lg:max-w-[min(42rem,40vw)] lg:w-[min(42rem,40vw)] xl:max-w-none xl:w-[min(44rem,34vw)]">
                 <VenueScrollingRoster tiles={tileRows} />
               </aside>
             ) : null}
             <div
               className={`order-2 min-w-0 flex-1 ${showRoster ? 'lg:order-1' : ''}`}
             >
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-2 2xl:grid-cols-4 2xl:gap-6">
                 {tileRows.map((row, idx) => {
                   const tn = row.tableNum
                   const seats = row.seated
@@ -349,30 +354,40 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                         delay: skipMountIntro ? 0 : idx * 0.045,
                         duration: skipMountIntro ? 0 : 0.35,
                       }}
-                      className="flex flex-col rounded-2xl border border-yellow-700/35 bg-black/55 p-4 shadow-xl backdrop-blur-md"
+                      className="flex flex-col rounded-2xl border-2 border-yellow-700/35 bg-black/55 p-5 shadow-xl backdrop-blur-md sm:p-6"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-white/55">Table</div>
-                          <div className="text-3xl font-black tabular-nums text-yellow-400">{tn}</div>
+                          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60 sm:text-base">
+                            Table
+                          </div>
+                          <div className="text-5xl font-black tabular-nums leading-none text-yellow-400 sm:text-6xl">
+                            {tn}
+                          </div>
                         </div>
-                        <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase ${phaseAccent(ph)}`}>
+                        <span
+                          className={`rounded-xl px-3 py-1.5 text-xs font-bold uppercase sm:text-sm ${phaseAccent(ph)}`}
+                        >
                           {phaseLabel(ph)}
                         </span>
                       </div>
 
-                      <div className="mt-3 flex-shrink-0">
+                      <div className="mt-4 flex-shrink-0">
                         <SeatRingWithLabels seatedCount={seats} seatNames={seatNames} />
                       </div>
 
-                      <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm leading-snug">
-                        <div className="flex justify-between gap-2">
-                          <dt className="text-white/55">Occupied seats</dt>
-                          <dd className="font-mono font-bold tabular-nums text-casino-emerald">{seats} / 8</dd>
+                      <dl className="mt-5 space-y-2.5 border-t border-white/10 pt-5 text-base leading-snug sm:text-lg md:text-xl">
+                        <div className="flex justify-between gap-3">
+                          <dt className="font-medium text-white/65">Occupied seats</dt>
+                          <dd className="font-mono font-bold tabular-nums text-casino-emerald">
+                            {seats} / 8
+                          </dd>
                         </div>
-                        <div className="flex justify-between gap-2">
-                          <dt className="text-white/55">Pot (local)</dt>
-                          <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
+                        <div className="flex justify-between gap-3">
+                          <dt className="font-medium text-white/65">Pot (local)</dt>
+                          <dd className="font-mono font-bold tabular-nums text-yellow-300">
+                            ${pot.toLocaleString()}
+                          </dd>
                         </div>
                       </dl>
                     </motion.article>
