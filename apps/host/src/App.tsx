@@ -326,7 +326,7 @@ function HostApp() {
     : null
   const triviaOptionalNote =
     !dealInitialBlocked && !gameState.round?.question ? (
-      <p className="-mt-2 text-xs text-amber-200/80">
+      <p className="text-sm text-amber-200/80">
         No trivia loaded yet—you can still deal to enter betting (use <strong>Random from bank</strong>, <strong>To tables</strong>, or a <strong>setlist cue</strong>).
       </p>
     ) : null
@@ -362,7 +362,7 @@ function HostApp() {
     setlistDraftId != null ? setlists.find((s) => s.id === setlistDraftId) : undefined
 
   return (
-    <div className="min-h-screen bg-casino-gradient relative overflow-hidden">
+    <div className="host-root min-h-screen bg-casino-gradient relative overflow-hidden">
       {/* Backdrop — static gradient so the desk stays readable during long hosts */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-zinc-900 to-slate-950" />
@@ -374,7 +374,7 @@ function HostApp() {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            className="fixed top-4 right-4 z-50 bg-glass-gradient backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-4 text-white"
+            className="fixed top-4 right-4 z-50 rounded-xl border border-white/20 bg-glass-gradient p-5 text-lg text-white shadow-lg backdrop-blur-md"
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
@@ -396,7 +396,7 @@ function HostApp() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <div className="flex items-center gap-2">
                 <PokerChip size="md" className="opacity-95" />
-                <span className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+                <span className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
                   {'Quizz\u2019em'} <span className="font-normal text-white/40">·</span>{' '}
                   <span className="font-semibold text-casino-emerald">Host</span>
                 </span>
@@ -413,17 +413,17 @@ function HostApp() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-              <span className="text-xs uppercase tracking-wider text-white/35">Phase</span>
-              <span className="rounded-md border border-casino-emerald/40 bg-casino-emerald/15 px-3 py-1 text-sm font-bold capitalize text-casino-emerald">
+              <span className="text-sm uppercase tracking-wider text-white/35">Phase</span>
+              <span className="rounded-md border border-casino-emerald/40 bg-casino-emerald/15 px-3 py-1 text-base font-bold capitalize text-casino-emerald">
                 {gameState.phase}
               </span>
-              <label className="flex items-center gap-2 text-sm text-white/70">
+              <label className="flex items-center gap-2 text-base text-white/70">
                 <span className="sr-only sm:not-sr-only sm:inline">You control</span>
                 <select
                   value={hostTableId}
                   title="Which session Keyed host actions apply to — use Lobby for pooled players"
                   onChange={(e) => setHostTableId(e.target.value)}
-                  className="max-w-[14rem] rounded-lg border border-white/20 bg-zinc-950 py-2 pl-2 pr-8 text-sm text-white [color-scheme:dark] sm:max-w-xs"
+                  className="max-w-[14rem] rounded-lg border border-white/20 bg-zinc-950 py-2 pl-2 pr-8 text-base text-white [color-scheme:dark] sm:max-w-xs"
                 >
                   {[LOBBY_TABLE_ID, '1', '2', '3', '4', '5', '6', '7', '8'].map((v) => (
                     <option key={v} value={v} className="bg-zinc-950 text-white">
@@ -436,7 +436,7 @@ function HostApp() {
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/10 pt-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-white/45">Pair TV</span>
+            <span className="text-sm font-semibold uppercase tracking-wider text-white/45">Pair TV</span>
             <input
               id="tv-pair-code"
               type="text"
@@ -471,14 +471,14 @@ function HostApp() {
             >
               Attach
             </NeonButton>
-            <span className="min-w-0 flex-1 text-[11px] leading-snug text-white/40 basis-full sm:basis-auto sm:flex-none">
+            <span className="min-w-0 flex-1 text-sm leading-snug text-white/40 basis-full sm:basis-auto sm:flex-none">
               Same venue (<span className="font-mono text-white/55">{gameState.code}</span>) — chars from the TV glow box.
             </span>
           </div>
 
           {!viteHostSecret ? (
             <form
-              className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-sm"
+              className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4 text-base"
               onSubmit={(e) => {
                 e.preventDefault()
                 setHostSecretApplied(secretDraft)
@@ -530,7 +530,7 @@ function HostApp() {
                   role="tab"
                   aria-selected={active}
                   title={t.hint}
-                  className={`min-h-[44px] flex-1 rounded-lg px-3 py-2.5 text-center text-sm font-semibold transition-colors sm:flex-none sm:text-left sm:min-w-[8.5rem] ${
+                  className={`min-h-[48px] flex-1 rounded-lg px-3 py-3 text-center text-base font-semibold transition-colors sm:flex-none sm:text-left sm:min-w-[9rem] ${
                     active
                       ? 'bg-white/14 text-white shadow-inner ring-1 ring-casino-emerald/35'
                       : 'text-white/55 hover:bg-white/[0.06] hover:text-white/90'
@@ -554,8 +554,8 @@ function HostApp() {
         <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
           <div className="mb-6 flex flex-col gap-1 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold tracking-tight text-white">Question bank</h2>
-              <p className="mt-1 max-w-2xl text-sm text-white/50">
+              <h2 className="text-2xl font-semibold tracking-tight text-white">Question bank</h2>
+              <p className="mt-1 max-w-2xl text-base text-white/52">
                 Venue <span className="font-mono text-white/65">{gameState.code}</span>. Edit during prep; cue questions from{' '}
                 <strong className="text-white/75">Run show</strong> (Random / setlist / <strong className="text-white/75">To tables</strong>).
               </p>
@@ -626,7 +626,7 @@ function HostApp() {
           </div>
 
           <form onSubmit={handleSaveBankQuestion} className="mb-6 rounded-xl border border-white/15 bg-black/25 p-4 space-y-3">
-            <div className="text-sm font-bold text-white/90">{editingBankId ? 'Edit question' : 'Add question'}</div>
+            <div className="text-base font-bold text-white/90">{editingBankId ? 'Edit question' : 'Add question'}</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="block md:col-span-2 text-sm text-white/80">
                 Prompt
@@ -638,7 +638,7 @@ function HostApp() {
                   placeholder="Trivia prompt with a numeric correct answer…"
                 />
               </label>
-              <label className="block text-sm text-white/80">
+              <label className="block text-base text-white/80">
                 Correct answer (number)
                 <input
                   type="number"
@@ -648,7 +648,7 @@ function HostApp() {
                   className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
                 />
               </label>
-              <label className="block text-sm text-white/80">
+              <label className="block text-base text-white/80">
                 Category (optional)
                 <input
                   type="text"
@@ -657,7 +657,7 @@ function HostApp() {
                   className="mt-1 w-full rounded-lg bg-white/10 border border-white/20 text-white px-3 py-2"
                 />
               </label>
-              <label className="block text-sm text-white/80 md:col-span-2">
+              <label className="block text-base text-white/80 md:col-span-2">
                 Difficulty (1–5, optional)
                 <input
                   type="number"
@@ -683,7 +683,7 @@ function HostApp() {
           </form>
 
           <div className="overflow-x-auto max-h-[min(480px,50vh)] overflow-y-auto rounded-lg border border-white/15">
-            <table className="min-w-full text-left text-sm text-white/90">
+            <table className="min-w-full text-left text-base text-white/90">
               <thead className="sticky top-0 bg-gray-950/95 z-10 text-white/60">
                 <tr>
                   <th className="py-2 px-3 w-12">#</th>
@@ -767,14 +767,14 @@ function HostApp() {
 
         <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
           <div className="mb-6 border-b border-white/10 pb-5">
-            <h2 className="text-xl font-semibold tracking-tight text-white">Setlists (rundowns)</h2>
-            <p className="mt-1 max-w-2xl text-sm text-white/50">
+            <h2 className="text-2xl font-semibold tracking-tight text-white">Setlists (rundowns)</h2>
+            <p className="mt-1 max-w-2xl text-base text-white/52">
               Ordered cues from your bank. Pick active rundown on <strong className="text-white/75">Run show</strong>, then{' '}
               <strong className="text-white/75">Next from setlist</strong>.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 items-end mb-4">
-            <label className="block text-sm text-white/80">
+            <label className="block text-base text-white/80">
               New setlist name
               <input
                 type="text"
@@ -800,7 +800,7 @@ function HostApp() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="rounded-xl border border-white/15 bg-black/25 p-4 space-y-3">
-              <label className="block text-sm text-white/80">
+              <label className="block text-base text-white/80">
                 Edit setlist
                 <select
                   className="mt-1 w-full rounded-lg border border-white/20 bg-zinc-950 px-3 py-2 text-white [color-scheme:dark]"
@@ -824,7 +824,7 @@ function HostApp() {
               </label>
               {setlistDraftId ? (
                 <>
-                  <label className="block text-sm text-white/80">
+                  <label className="block text-base text-white/80">
                     Rundown name
                     <input
                       type="text"
@@ -950,33 +950,33 @@ function HostApp() {
         <>
         <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(272px,340px)_1fr] lg:items-start">
           <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-            <Card variant="glass" hover={false} className="p-5">
-              <h2 className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">Room monitor</h2>
-              <div className="space-y-4 text-sm">
+            <Card variant="glass" hover={false} className="p-6">
+              <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-white/42">Room monitor</h2>
+              <div className="space-y-4 text-base">
                 <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
-                  <span className="text-white/55">Phase</span>
-                  <span className="font-semibold text-white/85">{HOST_PHASE_LABEL[gameState.phase]}</span>
+                  <span className="text-white/60">Phase</span>
+                  <span className="font-semibold text-white/90">{HOST_PHASE_LABEL[gameState.phase]}</span>
                 </div>
                 <JackpotDisplay amount={gameState.round.pot} variant="control" />
                 {gameState.round.question && (
                   <div>
-                    <div className="text-[11px] font-medium text-white/45">Current question</div>
-                    <div className="mt-1 font-semibold leading-snug text-casino-gold">{gameState.round.question.text}</div>
+                    <div className="text-xs font-semibold tracking-wide text-white/50">Current question</div>
+                    <div className="mt-1 text-base font-semibold leading-snug text-casino-gold">{gameState.round.question.text}</div>
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-white/55">Players</span>
-                  <span className="font-bold text-casino-emerald">
+                  <span className="text-white/60">Players</span>
+                  <span className="text-lg font-bold text-casino-emerald">
                     {gameState.players.length}
                     {virtualSeatCount > 0 ? (
-                      <span className="text-xs font-normal text-amber-200/90"> ({virtualSeatCount} CPU)</span>
+                      <span className="text-sm font-normal text-amber-200/90"> ({virtualSeatCount} CPU)</span>
                     ) : null}
                   </span>
                 </div>
                 {gameState.phase === 'betting' && (
                   <div>
-                    <div className="text-[11px] font-medium text-white/45">Action on</div>
-                    <div className="mt-1 font-extrabold text-casino-gold">
+                    <div className="text-xs font-semibold tracking-wide text-white/50">Action on</div>
+                    <div className="mt-1 text-lg font-extrabold text-casino-gold">
                       {(() => {
                         const idx = (gameState.round as { currentPlayerIndex?: number }).currentPlayerIndex
                         const p = typeof idx === 'number' ? gameState.players[idx] : undefined
@@ -987,23 +987,23 @@ function HostApp() {
                 )}
                 {gameState.phase === 'answering' && (
                   <div>
-                    <div className="text-[11px] font-medium text-white/45">Answering time</div>
-                    <div className="mt-1 text-xl font-extrabold tabular-nums text-casino-gold">
+                    <div className="text-xs font-semibold tracking-wide text-white/50">Answering time</div>
+                    <div className="mt-1 text-2xl font-extrabold tabular-nums text-casino-gold">
                       {Math.max(0, Math.ceil(((gameState.round.answerDeadline ?? 0) - Date.now()) / 1000))}s
                     </div>
                   </div>
                 )}
               </div>
               <div className="mt-5 border-t border-white/10 pt-4">
-                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">At this table</div>
+                <div className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-white/42">At this table</div>
                 <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
                   {gameState.players.length === 0 ? (
-                    <span className="text-xs text-white/45">No one seated yet.</span>
+                    <span className="text-sm text-white/50">No one seated yet.</span>
                   ) : (
                     gameState.players.map((player) => (
                       <span
                         key={player.id}
-                        className="rounded-full border border-emerald-400/35 bg-black/35 px-3 py-1 text-xs font-semibold text-emerald-100"
+                        className="rounded-full border border-emerald-400/35 bg-black/35 px-3 py-1.5 text-sm font-semibold text-emerald-100"
                       >
                         {hostPlayerLabel(player.name)}
                       </span>
@@ -1014,20 +1014,20 @@ function HostApp() {
             </Card>
           </aside>
           <div className="min-w-0">
-        <Card variant="glass" hover={false} className="p-5 sm:p-6">
-            <div className="mb-5 flex flex-col gap-1 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <Card variant="glass" hover={false} className="p-6 sm:p-8">
+            <div className="mb-6 flex flex-col gap-2 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">Run show</h2>
-                <p className="mt-1 max-w-xl text-sm text-white/48">Lobby, cues, deals, reveal — monitor stays beside you on wide screens.</p>
+                <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Run show</h2>
+                <p className="mt-2 max-w-2xl text-base text-white/52">Lobby, cues, deals, reveal — monitor stays beside you on wide screens.</p>
               </div>
             </div>
 
             <details className="group mb-6 rounded-xl border border-white/10 bg-black/25 open:border-white/[0.14] [&_summary::-webkit-details-marker]:hidden">
-              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-white/70 hover:bg-white/[0.04] hover:text-white/85 rounded-xl">
+              <summary className="cursor-pointer list-none px-4 py-3 text-base font-medium text-white/75 hover:bg-white/[0.04] hover:text-white/88 rounded-xl">
                 Suggested round order
                 <span className="ml-2 inline-block translate-y-px text-white/35 transition-transform group-open:rotate-180">▼</span>
               </summary>
-              <ol className="border-t border-white/10 px-4 py-4 text-sm leading-relaxed text-white/60">
+              <ol className="border-t border-white/10 px-4 py-4 text-base leading-relaxed text-white/62">
                 <li className="mb-2">
                   Lobby / auto-assign · then <strong className="text-white/85">Assign from lobby</strong> when pooled.
                 </li>
@@ -1047,17 +1047,18 @@ function HostApp() {
               </ol>
             </details>
 
-            <div className="space-y-8">
-              <section aria-labelledby="live-lobby-heading" className="space-y-3">
-                <h3 id="live-lobby-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+            <div className="space-y-10">
+              <section aria-labelledby="live-lobby-heading" className="space-y-4">
+                <h3 id="live-lobby-heading" className="text-sm font-bold uppercase tracking-[0.12em] text-white/45">
                   Lobby &amp; seating
                 </h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <NeonButton
                 variant="emerald"
                 size="large"
                 onClick={handleStartGame}
                 disabled={gameState.phase !== 'lobby'}
-                className="w-full"
+                className="w-full min-h-[52px]"
               >
                 Start Game
               </NeonButton>
@@ -1071,23 +1072,24 @@ function HostApp() {
                   (gameState.tableId ?? '') !== LOBBY_TABLE_ID ||
                   gameState.players.length === 0
                 }
-                className="w-full"
+                className="w-full min-h-[52px]"
               >
                 Assign from lobby (random seats)
               </NeonButton>
+              </div>
               {gameState.phase === 'lobby' && (gameState.tableId ?? '') === LOBBY_TABLE_ID && gameState.players.length === 0 ? (
-                <p className="-mt-2 text-xs text-white/55">Waiting for players to join the lobby…</p>
+                <p className="text-sm text-white/58">Waiting for players to join the lobby…</p>
               ) : null}
               {gameState.phase === 'lobby' && (gameState.tableId ?? '') === LOBBY_TABLE_ID && gameState.players.length > 0 ? (
                 <div className="rounded-lg border border-emerald-400/25 bg-emerald-950/20 p-4">
-                  <div className="text-sm font-bold text-casino-emerald mb-2">
+                  <div className="text-base font-bold text-casino-emerald mb-2">
                     In lobby ({gameState.players.length})
                   </div>
                   <ul className="flex flex-wrap gap-2" aria-label="Players in lobby">
                     {gameState.players.map((p) => (
                       <li
                         key={p.id}
-                        className="rounded-full border border-emerald-400/40 bg-black/35 px-3 py-1 text-sm font-semibold text-emerald-100"
+                        className="rounded-full border border-emerald-400/40 bg-black/35 px-3 py-1.5 text-base font-semibold text-emerald-100"
                       >
                         {hostPlayerLabel(p.name)}
                       </li>
@@ -1097,31 +1099,43 @@ function HostApp() {
               ) : null}
               </section>
 
-              <section aria-labelledby="live-questions-heading" className="space-y-3">
-                <h3 id="live-questions-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+              <section aria-labelledby="live-questions-heading" className="space-y-4">
+                <h3 id="live-questions-heading" className="text-sm font-bold uppercase tracking-[0.12em] text-white/45">
                   Questions &amp; rundown
                 </h3>
 
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <NeonButton
                 variant="purple"
                 size="large"
                 onClick={handleSetRandomQuestion}
                 disabled={gameState.phase !== 'lobby' && gameState.phase !== 'question'}
-                className="w-full"
+                className="w-full min-h-[52px]"
               >
                 Random from bank
               </NeonButton>
-              <p className="-mt-2 text-xs text-white/50">
-                Or push from <strong className="text-white/70">Content</strong> (<strong className="text-white/70">To tables</strong>), or build setlists in the same tab.
+              <NeonButton
+                  variant="purple"
+                  size="large"
+                  onClick={() => nextQuestionFromSetlist()}
+                  disabled={gameState.phase !== 'lobby' && gameState.phase !== 'question'}
+                  className="w-full min-h-[52px]"
+                >
+                  Next from setlist
+                </NeonButton>
+              </div>
+              <p className="text-sm text-white/55">
+                Or push from <strong className="text-white/75">Content</strong> (<strong className="text-white/75">To tables</strong>), or build setlists in the same tab.
               </p>
 
               <div className="rounded-lg border border-casino-emerald/25 bg-black/25 p-4 space-y-3">
-                <div className="text-sm font-bold text-casino-emerald">Trivia rundown</div>
-                <p className="text-xs text-white/55 leading-relaxed">
-                  Select a setlist (from <strong className="text-white/70">Content</strong>) for a fixed cue order.{' '} <strong className="text-white/70">None</strong> = use random / bank row pushes only.
+                <div className="text-base font-bold text-casino-emerald">Trivia rundown</div>
+                <p className="text-sm text-white/58 leading-relaxed">
+                  Select a setlist (from <strong className="text-white/75">Content</strong>) for a fixed cue order.{' '}
+                  <strong className="text-white/75">None</strong> = use random / bank row pushes only.
                 </p>
                 <select
-                  className="w-full rounded-lg border border-white/25 bg-zinc-950 px-3 py-2 text-sm text-white [color-scheme:dark]"
+                  className="w-full rounded-lg border border-white/25 bg-zinc-950 px-3 py-2.5 text-base text-white [color-scheme:dark]"
                   value={activeSetlistId ?? ''}
                   onChange={(e) => selectTriviaSetlist(e.target.value || null)}
                 >
@@ -1135,7 +1149,7 @@ function HostApp() {
                   ))}
                 </select>
                 {activeSetlistId ? (
-                  <p className="text-xs text-white/50">
+                  <p className="text-sm text-white/55">
                     {(() => {
                       const sl = setlists.find((s) => s.id === activeSetlistId)
                       const n = sl?.questionIds.length ?? 0
@@ -1145,80 +1159,77 @@ function HostApp() {
                     })()}
                   </p>
                 ) : null}
-                <NeonButton
-                  variant="purple"
-                  size="large"
-                  onClick={() => nextQuestionFromSetlist()}
-                  disabled={gameState.phase !== 'lobby' && gameState.phase !== 'question'}
-                  className="w-full"
-                >
-                  Next from setlist
-                </NeonButton>
               </div>
               </section>
 
-              <section aria-labelledby="live-table-heading" className="space-y-3">
-                <h3 id="live-table-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+              <section aria-labelledby="live-table-heading" className="space-y-4">
+                <h3 id="live-table-heading" className="text-sm font-bold uppercase tracking-[0.12em] text-white/45">
                   Deals &amp; answering window
                 </h3>
 
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="flex min-w-0 flex-col gap-2">
               <NeonButton
                 variant="blue"
                 size="large"
                 onClick={handleDealInitialCards}
                 disabled={dealInitialBlocked}
-                className="w-full"
+                className="w-full min-h-[52px]"
                 data-phase={gameState.phase}
                 data-can-deal-initial={dealInitialBlocked ? 'no' : 'yes'}
               >
                 Deal Initial Cards
               </NeonButton>
               {dealInitialHint && (
-                <p className="-mt-2 text-xs text-amber-200/90">{dealInitialHint}</p>
+                <p className="text-sm text-amber-200/90">{dealInitialHint}</p>
               )}
               {triviaOptionalNote}
               {!dealInitialBlocked && !!gameState.round?.question && (
-                <p className="-mt-2 text-xs text-white/50">
+                <p className="text-sm text-white/52">
                   Players aren’t required—you can deal before anyone joins for a dry run.
                 </p>
               )}
-
+                </div>
+                <div className="flex min-w-0 flex-col gap-2">
               <NeonButton
                 variant="blue"
                 size="large"
                 onClick={handleDealCommunityCards}
                 disabled={dealCommunityBlocked}
-                className="w-full"
+                className="w-full min-h-[52px]"
                 data-betting-round={bettingRound}
                 data-community-count={communityLen}
               >
                 Deal Community Cards (board)
               </NeonButton>
               {dealCommunityHint && (
-                <p className="-mt-2 text-xs text-amber-200/90">{dealCommunityHint}</p>
+                <p className="text-sm text-amber-200/90">{dealCommunityHint}</p>
               )}
-
+                </div>
+                <div className="flex flex-col gap-2 sm:col-span-2">
               <NeonButton
                 variant="purple"
                 size="large"
                 onClick={handleStartAnswering}
                 disabled={startAnswerBlocked}
-                className="w-full"
+                className="w-full min-h-[52px]"
               >
                 Start Answering (45s)
               </NeonButton>
               {startAnswerBlocked && gameState.phase === 'betting' && (
-                <p className="-mt-2 text-xs text-white/50">
+                <p className="text-sm text-white/52">
                   Needs full board (5 community) and both wagering rounds closed.
                 </p>
               )}
+                </div>
+              </div>
 
               </section>
 
             <details className="group mb-6 rounded-xl border border-white/10 bg-black/25 open:border-white/[0.14] [&_summary::-webkit-details-marker]:hidden">
               <summary
                 id="live-admin-heading"
-                className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-white/70 hover:bg-white/[0.04] hover:text-white/85 rounded-xl"
+                className="cursor-pointer list-none px-4 py-3 text-base font-medium text-white/75 hover:bg-white/[0.04] hover:text-white/88 rounded-xl"
               >
                 Wagering overrides &amp; blinds
                 <span className="ml-2 inline-block translate-y-px text-white/35 transition-transform group-open:rotate-180">▼</span>
@@ -1249,7 +1260,7 @@ function HostApp() {
               {/* Blinds controls */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                 <div>
-                  <div className="text-sm text-white/80 mb-1">Small Blind</div>
+                  <div className="text-base text-white/85 mb-1">Small Blind</div>
                   <input
                     type="number"
                     defaultValue={gameState.smallBlind}
@@ -1258,7 +1269,7 @@ function HostApp() {
                   />
                 </div>
                 <div>
-                  <div className="text-sm text-white/80 mb-1">Big Blind</div>
+                  <div className="text-base text-white/85 mb-1">Big Blind</div>
                   <input
                     type="number"
                     defaultValue={gameState.bigBlind}
@@ -1284,15 +1295,15 @@ function HostApp() {
             <details className="group mb-6 rounded-xl border border-white/10 bg-black/25 open:border-white/[0.14] [&_summary::-webkit-details-marker]:hidden">
               <summary
                 id="live-rehearsal-heading"
-                className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-white/70 hover:bg-white/[0.04] hover:text-white/85 rounded-xl"
+                className="cursor-pointer list-none px-4 py-3 text-base font-medium text-white/75 hover:bg-white/[0.04] hover:text-white/88 rounded-xl"
               >
                 Rehearsal (CPU seats)
                 <span className="ml-2 inline-block translate-y-px text-white/35 transition-transform group-open:rotate-180">▼</span>
               </summary>
               <div className="border-t border-white/10 px-4 py-4">
                 <div className="space-y-3 rounded-xl border border-amber-400/40 bg-black/25 p-4">
-                <div className="text-sm font-bold text-amber-200">Test mode — virtual seats</div>
-                <p className="text-xs text-white/70 leading-relaxed">
+                <div className="text-base font-bold text-amber-200">Test mode — virtual seats</div>
+                <p className="text-sm text-white/72 leading-relaxed">
                   Adds CPU players for rehearsals. During betting they check whenever legal, otherwise call (or fold as a last resort). During answering they compose the closest numeric permutation to the trivia answer using their hole and board digits.
                   {' '}Active virtual seats now:{' '}
                   <span className="font-semibold text-casino-gold">{virtualSeatCount}</span>.
@@ -1309,7 +1320,7 @@ function HostApp() {
                         type="button"
                         disabled={atPlayerCap}
                         onClick={() => setVirtualAddCount(n)}
-                        className={`min-w-[2.5rem] rounded-md px-2.5 py-2 text-center text-sm font-bold tabular-nums transition-colors disabled:opacity-40 ${
+                        className={`min-w-[2.75rem] rounded-md px-2.5 py-2.5 text-center text-base font-bold tabular-nums transition-colors disabled:opacity-40 ${
                           virtualAddCount === n
                             ? 'border border-amber-400/60 bg-amber-500/25 text-amber-100 shadow-[0_0_12px_rgba(251,191,36,0.2)]'
                             : 'border border-transparent text-white/75 hover:bg-white/10 hover:text-white'
@@ -1332,23 +1343,23 @@ function HostApp() {
                   </NeonButton>
                 </div>
                 {atPlayerCap && (
-                  <p className="text-xs text-amber-200/85">Room is at max players — remove humans or CPUs before inviting more bots.</p>
+                  <p className="text-sm text-amber-200/85">Room is at max players — remove humans or CPUs before inviting more bots.</p>
                 )}
                 </div>
               </div>
               </details>
 
-              <section aria-labelledby="live-wrap-heading" className="space-y-3">
-                <h3 id="live-wrap-heading" className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/38">
+              <section aria-labelledby="live-wrap-heading" className="space-y-4">
+                <h3 id="live-wrap-heading" className="text-sm font-bold uppercase tracking-[0.12em] text-white/45">
                   Reveal &amp; round reset
                 </h3>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <NeonButton
                 variant="gold"
                 size="large"
                 onClick={handleRevealAnswer}
                 disabled={gameState.phase !== 'answering'}
-                className="w-full"
+                className="w-full min-h-[52px]"
               >
                 Reveal Answer
               </NeonButton>
@@ -1358,7 +1369,7 @@ function HostApp() {
                 size="large"
                 onClick={handleEndRound}
                 disabled={gameState.phase !== 'showdown'}
-                className="w-full"
+                className="w-full min-h-[52px]"
               >
                 End Round
               </NeonButton>
@@ -1367,7 +1378,7 @@ function HostApp() {
                 variant="gold"
                 size="large"
                 onClick={handleNewGame}
-                className="w-full"
+                className="w-full min-h-[52px] sm:col-span-2"
               >
                 🆕 New Game
               </NeonButton>
@@ -1380,7 +1391,7 @@ function HostApp() {
 
         {gameState.phase === 'showdown' && (
           <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
-            <h2 className="mb-5 text-xl font-semibold tracking-tight text-white sm:text-2xl">Showdown</h2>
+            <h2 className="mb-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Showdown</h2>
             <div className="text-center text-white mb-6">
               <div className="text-white/80">Correct Answer</div>
               <div className="text-4xl font-extrabold text-casino-gold">
@@ -1449,8 +1460,8 @@ function HostApp() {
 
         {hostTab === 'venue' && (
         <Card variant="glass" hover={false} className="mb-8 border border-white/15 p-5 sm:p-6">
-          <h2 className="mb-3 text-xl font-semibold tracking-tight text-white">Public TVs ({gameState.code})</h2>
-          <p className="mb-6 max-w-3xl text-sm leading-relaxed text-white/55">
+          <h2 className="mb-3 text-2xl font-semibold tracking-tight text-white">Public TVs ({gameState.code})</h2>
+          <p className="mb-6 max-w-3xl text-base leading-relaxed text-white/58">
             Read-only TVs on <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display</code>{' '}
             show a short pairing code unless you bookmark{' '}
             <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display?room={gameState.code}</code>.

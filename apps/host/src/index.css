@@ -11,6 +11,11 @@
     font-family: 'Rajdhani', system-ui, sans-serif;
     overflow-x: hidden;
   }
+
+  /* Slightly larger type for host control desk (readable at arm’s length). */
+  .host-root {
+    font-size: clamp(15px, 0.42vw + 14px, 17px);
+  }
 }
 
 /* ===== COMPONENT STYLES ===== */
