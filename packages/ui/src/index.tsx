@@ -176,28 +176,57 @@ export function NeonText({
   );
 }
 
-export function JackpotDisplay({ 
-  amount, 
-  className 
-}: { 
-  amount: number; 
-  className?: string;
+export function JackpotDisplay({
+  amount,
+  className,
+  variant = 'showcase',
+}: {
+  amount: number
+  className?: string
+  /** showcase = flashy public-TV style; control = subdued backstage/host readout */
+  variant?: 'showcase' | 'control'
 }) {
+  if (variant === 'control') {
+    return (
+      <div
+        className={clsx(
+          'rounded-lg border border-white/12 bg-black/45 px-4 py-3 text-left',
+          'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+          className,
+        )}
+      >
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/42">
+          Table pot
+        </div>
+        <div className="mt-1 font-mono text-xl font-semibold tabular-nums tracking-tight text-white/88 sm:text-2xl">
+          ${amount.toLocaleString()}
+        </div>
+        <div className="mt-2 text-[10px] leading-snug text-white/35">Backstage · not for TV</div>
+      </div>
+    )
+  }
+
   return (
-    <motion.div 
+    <motion.div
       className={clsx(
         'relative overflow-hidden rounded-2xl p-6 bg-gradient-to-r from-yellow-400 via-emerald-400 to-purple-500',
         'shadow-[0_0_20px_rgba(255,215,0,0.6)] border border-yellow-400/50',
-        className
+        className,
       )}
       animate="jackpot"
       variants={{
         jackpot: {
           scale: [1, 1.05, 1.1, 1.05, 1],
           rotate: [0, 2, -2, 2, 0],
-          filter: ['brightness(1)', 'brightness(1.2)', 'brightness(1.4)', 'brightness(1.2)', 'brightness(1)'],
-          transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-        }
+          filter: [
+            'brightness(1)',
+            'brightness(1.2)',
+            'brightness(1.4)',
+            'brightness(1.2)',
+            'brightness(1)',
+          ],
+          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+        },
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
@@ -208,7 +237,7 @@ export function JackpotDisplay({
         </div>
       </div>
     </motion.div>
-  );
+  )
 }
 
 export function AnimatedBackground() {
