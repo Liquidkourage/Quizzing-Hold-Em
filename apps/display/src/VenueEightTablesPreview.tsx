@@ -61,26 +61,17 @@ function SeatRingWithLabels({
   seatedCount: number
   seatNames: string[]
   seatBankrolls: number[]
-  size?: 'thumb' | 'md' | 'lg'
+  size?: 'md' | 'lg'
 }) {
   const wrap =
     size === 'lg'
       ? 'max-w-[min(440px,92vw)]'
-      : size === 'thumb'
-        ? 'w-full max-w-none'
-        : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
-  const dot =
-    size === 'lg'
-      ? 'h-9 w-9'
-      : size === 'thumb'
-        ? 'h-7 w-7 sm:h-8 sm:w-8'
-        : 'h-8 w-8'
+      : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
+  const dot = size === 'lg' ? 'h-9 w-9' : 'h-8 w-8'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(9rem,28vw)] text-xl sm:text-2xl'
-      : size === 'thumb'
-        ? 'max-w-[min(8.5rem,54%)] text-sm font-semibold leading-snug sm:max-w-[min(9rem,52%)] sm:text-base'
-        : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
+      : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
@@ -124,13 +115,7 @@ function SeatRingWithLabels({
                 style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
               >
                 <span className="block max-w-full truncate">{raw}</span>
-                <span
-                  className={`mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald ${
-                    size === 'thumb'
-                      ? 'text-xs sm:text-sm'
-                      : 'text-xs sm:text-sm md:text-base lg:text-lg'
-                  }`}
-                >
+                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-xs sm:text-sm md:text-base lg:text-lg">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
@@ -184,46 +169,49 @@ function VenueMosaicTableCard({
   const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
 
   if (mode === 'thumb') {
+    const spotlight = isSpotlightThumb === true
+    const rowShell = spotlight
+      ? 'border-amber-400/70 bg-black/55 ring-2 ring-amber-400/45 shadow-[0_0_24px_rgba(251,191,36,0.12)]'
+      : 'border-white/[0.12] bg-black/35 hover:border-white/25'
+
     return (
       <motion.div
         data-spotlight-tile={tn}
         role="group"
-        aria-current={isSpotlightThumb ? 'true' : undefined}
-        initial={skipMountIntro ? false : { opacity: 0, scale: 0.96 }}
+        aria-current={spotlight ? 'true' : undefined}
+        initial={skipMountIntro ? false : { opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: skipMountIntro ? 0 : idx * 0.03, duration: 0.28 }}
-        className={`flex min-w-0 shrink-0 flex-col rounded-xl border bg-black/50 p-3.5 shadow backdrop-blur-sm lg:w-full ${
-          isSpotlightThumb
-            ? 'min-w-[15rem] w-[min(15rem,88vw)] border-amber-400/70 ring-2 ring-amber-400/45 sm:min-w-[16.5rem] sm:w-[16.5rem]'
-            : 'min-w-[15rem] w-[min(15rem,88vw)] border-yellow-700/30 sm:min-w-[16.5rem] sm:w-[16.5rem]'
+        transition={{ delay: skipMountIntro ? 0 : idx * 0.03, duration: 0.25 }}
+        className={`flex min-w-0 shrink-0 items-center gap-3 rounded-xl border p-3.5 backdrop-blur-md sm:gap-4 sm:p-4 lg:w-full ${rowShell} ${
+          spotlight
+            ? 'min-w-[17rem] w-[min(17rem,92vw)] sm:min-w-[18rem] sm:w-[18rem]'
+            : 'min-w-[16.5rem] w-[min(17rem,92vw)] sm:min-w-[17.5rem] sm:w-[17.5rem]'
         }`}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-wider text-white/55 sm:text-sm">
-              Table
-            </div>
-            <div className="text-4xl font-black tabular-nums leading-none text-yellow-400 sm:text-5xl">
-              {tn}
-            </div>
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-black tabular-nums sm:h-12 sm:w-12 ${
+            spotlight ? 'bg-amber-500/30 text-2xl text-amber-50 sm:text-3xl' : 'bg-white/[0.07] text-xl text-yellow-400 sm:text-2xl'
+          }`}
+        >
+          {tn}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-lg font-bold tracking-tight text-white/95 sm:text-xl">Table {tn}</span>
+            <span
+              className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase leading-none sm:text-xs ${phaseAccent(ph)}`}
+            >
+              {phaseLabel(ph)}
+            </span>
           </div>
-          <span
-            className={`max-w-[6rem] shrink-0 truncate rounded-md px-2 py-1 text-xs font-bold uppercase leading-tight sm:max-w-[7rem] sm:text-sm ${phaseAccent(ph)}`}
-          >
-            {phaseLabel(ph)}
-          </span>
-        </div>
-        <div className="mt-2.5 shrink-0">
-          <SeatRingWithLabels
-            seatedCount={seats}
-            seatNames={seatNames}
-            seatBankrolls={seatBankrolls}
-            size="thumb"
-          />
-        </div>
-        <div className="mt-3 flex justify-between gap-2 border-t border-white/[0.08] pt-3 text-xs font-semibold tabular-nums text-white/80 sm:text-sm">
-          <span>{seats} / 8</span>
-          <span className="font-mono text-yellow-200/90">${pot.toLocaleString()}</span>
+          <p className="mt-1.5 text-sm leading-snug text-white/65 sm:text-base">
+            <span className="font-mono font-semibold tabular-nums text-casino-emerald">{seats} / 8</span>
+            <span className="mx-1.5 text-white/35 sm:mx-2">·</span>
+            <span className="text-white/50">Pot</span>{' '}
+            <span className="font-mono tabular-nums font-semibold text-yellow-200/95">
+              ${pot.toLocaleString()}
+            </span>
+          </p>
         </div>
       </motion.div>
     )
@@ -435,7 +423,7 @@ type VenueEightTablesPreviewProps = {
  * Headline shows only live question text + countdown from the server snapshot.
  * While **every** felt is still in **lobby** (pre-start), or when showing the **rehearsal** preview
  * without a live wall, the grid becomes a **seating spotlight tour**: one enlarged table on a timer
- * with compact thumbnails of all tables.
+ * with compact **table list** rows (detail on the hero only).
  */
 export default function VenueEightTablesPreview({ wall, skipMountIntro = false }: VenueEightTablesPreviewProps) {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
