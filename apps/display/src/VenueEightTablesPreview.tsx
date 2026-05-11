@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import {
   DISPLAY_PREVIEW_BANKROLLS,
@@ -10,6 +10,22 @@ import {
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
 
 const VENUE_SEAT_SLOTS = 8
+
+/** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
+const SEATING_SPOTLIGHT_CYCLE_SEC = 18
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const onChange = () => setReduced(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduced
+}
 
 function formatVenueBankroll(amount: number): string {
   const n = Number.isFinite(amount) ? Math.round(amount) : 0
@@ -45,17 +61,22 @@ function SeatRingWithLabels({
   seatedCount: number
   seatNames: string[]
   seatBankrolls: number[]
-  size?: 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
 }) {
   const wrap =
     size === 'lg'
       ? 'max-w-[min(440px,92vw)]'
-      : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
-  const dot = size === 'lg' ? 'h-9 w-9' : 'h-8 w-8'
+      : size === 'sm'
+        ? 'w-full max-w-[min(100%,14rem)]'
+        : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
+  const dot =
+    size === 'lg' ? 'h-9 w-9' : size === 'sm' ? 'h-5 w-5 sm:h-6 sm:w-6' : 'h-8 w-8'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(9rem,28vw)] text-xl sm:text-2xl'
-      : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
+      : size === 'sm'
+        ? 'max-w-[min(4.5rem,42%)] text-[9px] leading-[1.15] sm:max-w-[min(5rem,44%)] sm:text-[10px] md:text-xs'
+        : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
@@ -99,7 +120,13 @@ function SeatRingWithLabels({
                 style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
               >
                 <span className="block max-w-full truncate">{raw}</span>
-                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-xs sm:text-sm md:text-base lg:text-lg">
+                <span
+                  className={`mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald ${
+                    size === 'sm'
+                      ? 'text-[8px] sm:text-[9px]'
+                      : 'text-xs sm:text-sm md:text-base lg:text-lg'
+                  }`}
+                >
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
@@ -128,6 +155,178 @@ function phaseAccent(ph: string) {
   if (ph === 'showdown') return 'text-yellow-300 ring-1 ring-yellow-400/35'
   if (ph === 'question') return 'text-emerald-200/95'
   return 'text-white/85'
+}
+
+type VenueMosaicTileMode = 'grid' | 'hero' | 'thumb'
+
+function VenueMosaicTableCard({
+  row,
+  mode,
+  idx,
+  skipMountIntro,
+  isSpotlightThumb,
+}: {
+  row: DisplayVenueTileSnapshot
+  mode: VenueMosaicTileMode
+  idx: number
+  skipMountIntro?: boolean
+  isSpotlightThumb?: boolean
+}) {
+  const tn = row.tableNum
+  const seats = row.seated
+  const pot = row.pot
+  const ph = row.phase
+  const seatNames = padSeatNames(row.seatNames)
+  const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
+
+  if (mode === 'thumb') {
+    return (
+      <motion.div
+        data-spotlight-tile={tn}
+        role="group"
+        aria-current={isSpotlightThumb ? 'true' : undefined}
+        initial={skipMountIntro ? false : { opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: skipMountIntro ? 0 : idx * 0.03, duration: 0.28 }}
+        className={`flex min-w-0 shrink-0 flex-col rounded-lg border bg-black/50 p-2 shadow backdrop-blur-sm sm:w-40 sm:p-2.5 lg:w-full ${
+          isSpotlightThumb
+            ? 'w-36 border-amber-400/70 ring-2 ring-amber-400/45'
+            : 'w-36 border-yellow-700/30'
+        }`}
+      >
+        <div className="flex items-start justify-between gap-1">
+          <div className="min-w-0">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-white/55 sm:text-[10px]">
+              Table
+            </div>
+            <div className="text-2xl font-black tabular-nums leading-none text-yellow-400 sm:text-3xl">
+              {tn}
+            </div>
+          </div>
+          <span
+            className={`max-w-[4.5rem] shrink-0 truncate rounded px-1 py-0.5 text-[9px] font-bold uppercase leading-tight sm:text-[10px] ${phaseAccent(ph)}`}
+          >
+            {phaseLabel(ph)}
+          </span>
+        </div>
+        <div className="mt-1.5 shrink-0">
+          <SeatRingWithLabels
+            seatedCount={seats}
+            seatNames={seatNames}
+            seatBankrolls={seatBankrolls}
+            size="sm"
+          />
+        </div>
+        <div className="mt-1.5 flex justify-between gap-1 border-t border-white/[0.07] pt-1.5 text-[10px] font-semibold tabular-nums text-white/75 sm:text-xs">
+          <span>{seats} / 8</span>
+          <span className="font-mono text-yellow-200/90">${pot.toLocaleString()}</span>
+        </div>
+      </motion.div>
+    )
+  }
+
+  if (mode === 'hero') {
+    return (
+      <motion.article
+        data-spotlight-tile={tn}
+        role="region"
+        aria-label={`Table ${tn}, seating`}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-col rounded-2xl border-2 border-amber-500/45 bg-black/60 p-5 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:p-7"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-lg font-semibold uppercase tracking-[0.12em] text-white/60 sm:text-xl">
+              Table
+            </div>
+            <div className="text-7xl font-black tabular-nums leading-none text-yellow-400 sm:text-8xl lg:text-9xl">
+              {tn}
+            </div>
+          </div>
+          <span
+            className={`max-w-[min(12rem,45%)] shrink-0 truncate rounded-xl px-3 py-2 text-base font-bold uppercase leading-tight sm:px-4 sm:py-2.5 sm:text-lg md:text-xl ${phaseAccent(ph)}`}
+          >
+            {phaseLabel(ph)}
+          </span>
+        </div>
+
+        <div className="mt-4 flex-shrink-0">
+          <SeatRingWithLabels
+            seatedCount={seats}
+            seatNames={seatNames}
+            seatBankrolls={seatBankrolls}
+            size="lg"
+          />
+        </div>
+
+        <dl className="mt-5 space-y-2 border-t border-white/10 pt-5 text-xl leading-snug sm:text-2xl md:text-3xl lg:text-4xl">
+          <div className="flex justify-between gap-3">
+            <dt className="font-semibold text-white/70">Occupied seats</dt>
+            <dd className="font-mono font-bold tabular-nums text-casino-emerald">
+              {seats} / 8
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="font-semibold text-white/70">Pot (local)</dt>
+            <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
+          </div>
+        </dl>
+      </motion.article>
+    )
+  }
+
+  return (
+    <motion.article
+      data-spotlight-tile={tn}
+      initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        delay: skipMountIntro ? 0 : idx * 0.045,
+        duration: skipMountIntro ? 0 : 0.35,
+      }}
+      className="flex flex-col rounded-xl border-2 border-yellow-700/35 bg-black/55 p-4 shadow-lg backdrop-blur-md sm:p-5"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="text-base font-semibold uppercase tracking-[0.12em] text-white/60 sm:text-lg md:text-xl">
+            Table
+          </div>
+          <div className="text-6xl font-black tabular-nums leading-none text-yellow-400 sm:text-7xl lg:text-8xl">
+            {tn}
+          </div>
+        </div>
+        <span
+          className={`max-w-[min(10rem,48%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-tight sm:max-w-none sm:px-3.5 sm:py-2 sm:text-base md:text-lg ${phaseAccent(ph)}`}
+        >
+          {phaseLabel(ph)}
+        </span>
+      </div>
+
+      <div className="mt-3 flex-shrink-0">
+        <SeatRingWithLabels
+          seatedCount={seats}
+          seatNames={seatNames}
+          seatBankrolls={seatBankrolls}
+        />
+      </div>
+
+      <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-lg leading-snug sm:text-xl md:text-2xl lg:text-3xl">
+        <div className="flex justify-between gap-3">
+          <dt className="font-semibold text-white/70">Occupied seats</dt>
+          <dd className="font-mono font-bold tabular-nums text-casino-emerald">
+            {seats} / 8
+          </dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="font-semibold text-white/70">Pot (local)</dt>
+          <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
+        </div>
+      </dl>
+    </motion.article>
+  )
 }
 
 /** Latin-first sort key: leading word of the display name (first name). */
@@ -230,9 +429,14 @@ type VenueEightTablesPreviewProps = {
 /**
  * Mosaic rows mirror each table session on the server; spotlight opens the matching full felt.
  * Headline shows only live question text + countdown from the server snapshot.
+ * While **every** felt is still in **lobby** (pre-start), or when showing the **rehearsal** preview
+ * without a live wall, the grid becomes a **seating spotlight tour**: one enlarged table on a timer
+ * with compact thumbnails of all tables.
  */
 export default function VenueEightTablesPreview({ wall, skipMountIntro = false }: VenueEightTablesPreviewProps) {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
+  const [seatingHeroIdx, setSeatingHeroIdx] = useState(0)
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   const headlineQuestionText = wall?.headlineQuestionText ?? null
   const answerDeadlineMs = wall?.answerDeadlineMs ?? null
@@ -280,7 +484,39 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   const showHeadline =
     hasLiveWall && (headlineQuestionText != null || answerDeadlineMs != null)
 
+  const allTablesInLobby =
+    tileRows.length > 0 && tileRows.every((t) => t.phase === 'lobby')
+  /** Pre-start: all felts still in lobby, or rehearsal preview without a live snapshot. */
+  const showSeatingSpotlightCycle =
+    tileRows.length > 0 && (hasLiveWall ? allTablesInLobby : true)
+
+  const seatingHeroRow = tileRows[seatingHeroIdx] ?? tileRows[0]
+
+  useEffect(() => {
+    setSeatingHeroIdx((i) => Math.min(i, Math.max(0, tileRows.length - 1)))
+  }, [tileRows.length])
+
+  useEffect(() => {
+    if (!showSeatingSpotlightCycle || prefersReducedMotion || tileRows.length <= 1)
+      return undefined
+    const id = window.setInterval(() => {
+      setSeatingHeroIdx((i) => (i + 1) % tileRows.length)
+    }, SEATING_SPOTLIGHT_CYCLE_SEC * 1000)
+    return () => window.clearInterval(id)
+  }, [showSeatingSpotlightCycle, prefersReducedMotion, tileRows.length])
+
   const showRoster = rosterRowsFromTiles(tileRows).length > 0
+
+  const spotlightThumbList = tileRows.map((row, i) => (
+    <VenueMosaicTableCard
+      key={row.tableNum}
+      row={row}
+      mode="thumb"
+      idx={i}
+      skipMountIntro={skipMountIntro}
+      isSpotlightThumb={row.tableNum === seatingHeroRow?.tableNum}
+    />
+  ))
 
   return (
     <div
@@ -365,68 +601,49 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               Guests can keep joining from the briefing screen until seating runs.
             </p>
           </motion.div>
+        ) : showSeatingSpotlightCycle && seatingHeroRow ? (
+          <section aria-label="Seating spotlight tour">
+            <p className="sr-only" aria-live="polite" aria-atomic="true">
+              Spotlight showing table {seatingHeroRow.tableNum}
+            </p>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+              <div className="min-w-0 lg:col-span-8">
+                <AnimatePresence mode="wait">
+                  <VenueMosaicTableCard
+                    key={seatingHeroRow.tableNum}
+                    row={seatingHeroRow}
+                    mode="hero"
+                    idx={0}
+                    skipMountIntro={skipMountIntro}
+                  />
+                </AnimatePresence>
+                <p className="mt-4 text-center text-base text-white/50 sm:text-lg">
+                  {prefersReducedMotion
+                    ? `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
+                    : `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length} · ${SEATING_SPOTLIGHT_CYCLE_SEC}s per table`}
+                </p>
+              </div>
+              <div className="flex min-h-0 min-w-0 flex-col lg:col-span-4">
+                <h2 className="mb-3 hidden text-xs font-bold uppercase tracking-[0.18em] text-white/45 sm:text-sm lg:block">
+                  All tables
+                </h2>
+                <div className="flex max-h-[min(40vh,18rem)] gap-2.5 overflow-x-auto overflow-y-hidden pb-1 pt-1 lg:max-h-[min(72vh,52rem)] lg:flex-col lg:gap-2.5 lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1 lg:pt-0">
+                  {spotlightThumbList}
+                </div>
+              </div>
+            </div>
+          </section>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5 md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-4">
-            {tileRows.map((row, idx) => {
-              const tn = row.tableNum
-              const seats = row.seated
-              const pot = row.pot
-              const ph = row.phase
-              const seatNames = padSeatNames(row.seatNames)
-              const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
-              return (
-                <motion.article
-                  key={tn}
-                  data-spotlight-tile={tn}
-                  initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: skipMountIntro ? 0 : idx * 0.045,
-                    duration: skipMountIntro ? 0 : 0.35,
-                  }}
-                  className="flex flex-col rounded-xl border-2 border-yellow-700/35 bg-black/55 p-4 shadow-lg backdrop-blur-md sm:p-5"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="text-base font-semibold uppercase tracking-[0.12em] text-white/60 sm:text-lg md:text-xl">
-                        Table
-                      </div>
-                      <div className="text-6xl font-black tabular-nums leading-none text-yellow-400 sm:text-7xl lg:text-8xl">
-                        {tn}
-                      </div>
-                    </div>
-                    <span
-                      className={`max-w-[min(10rem,48%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-tight sm:max-w-none sm:px-3.5 sm:py-2 sm:text-base md:text-lg ${phaseAccent(ph)}`}
-                    >
-                      {phaseLabel(ph)}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex-shrink-0">
-                    <SeatRingWithLabels
-                      seatedCount={seats}
-                      seatNames={seatNames}
-                      seatBankrolls={seatBankrolls}
-                    />
-                  </div>
-
-                  <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-lg leading-snug sm:text-xl md:text-2xl lg:text-3xl">
-                    <div className="flex justify-between gap-3">
-                      <dt className="font-semibold text-white/70">Occupied seats</dt>
-                      <dd className="font-mono font-bold tabular-nums text-casino-emerald">
-                        {seats} / 8
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="font-semibold text-white/70">Pot (local)</dt>
-                      <dd className="font-mono font-bold tabular-nums text-yellow-300">
-                        ${pot.toLocaleString()}
-                      </dd>
-                    </div>
-                  </dl>
-                </motion.article>
-              )
-            })}
+            {tileRows.map((row, idx) => (
+              <VenueMosaicTableCard
+                key={row.tableNum}
+                row={row}
+                mode="grid"
+                idx={idx}
+                skipMountIntro={skipMountIntro}
+              />
+            ))}
           </div>
         )}
       </main>
