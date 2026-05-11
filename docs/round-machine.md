@@ -72,10 +72,12 @@ stateDiagram-v2
 
 After **`phase === 'answering'`** (or logically after timer), **`revealAnswer`** moves to **`showdown`**.
 
-- **`determineWinner`**: Among non-folder players with **`submittedAnswer`** defined and a **`round.question`**, picks the **minimum** `|answer − question.answer|`. Ties broken by iterate order / first-best in loop (see core).
-- **`endRound`**: Applies **`payoutWinner`** to **`round.pot`**, increments **`roundId`**, clears hands and betting fields, rotates **`dealerIndex`**, returns **`phase: lobby`**.
+- **`determineTriviaWinners`** (and legacy **`determineWinner`**, first seat only): Among non-folder players with **`submittedAnswer`** and a **`round.question`**, minimum `|answer − question.answer|`; **ties split the pot** evenly (whole dollars; remainder to earlier roster order among winner ids).
+- **`endRound`**: Only runs from **`phase === 'showdown'`** (wrong phase → no-op in core). Pays **`round.pot`**: trivia winners if any eligible submission exists; else **sole survivor** (only one non-folder); else **split among all non-folders** (no valid trivia); else **split among all seated** if everyone folded (edge). Then increments **`roundId`**, clears cards/betting, rotates **`dealerIndex`**, **`phase: lobby`**. **Chip total (bankrolls + pot) is conserved** going into the next lobby.
 
-Folding removes a player from **answer contention** (`hasFolded` skip in `determineWinner`).
+Folding removes a player from **answer contention** (`hasFolded` skip in trivia resolution).
+
+**`submitAnswer` (server)** rejects values that **cannot** be built from that player’s **two holes + five board** digits using **exactly five** digit cards in order with **at most one** decimal (matches player UI).
 
 ---
 
@@ -101,7 +103,8 @@ Actions that mutate **only** **`sessionKey`** (typical **`bet`, `fold`, `check`,
 |------------|-------------------|
 | **`dealCommunityCards`** | `phase === 'betting'`, **`bettingRound === 1`**, **`isBettingOpen === false`**, **`communityCards.length < 5`**. Deals **five** cards and opens **`bettingRound: 2`**. |
 | **`startAnswering`** | **`phase === 'betting'`**, **`!isBettingOpen`**, **`communityCards.length >= 5`**. Sets **`answerDeadline`**, **`phase: answering`**, 45 s **`revealAnswer`** timer per qualifying table. |
-| **`submitAnswer`** | Accepted only in **`answering`** before **`answerDeadline`** (server toasts otherwise). |
+| **`submitAnswer`** | **`answering`** and before **`answerDeadline`**; value must be **constructible** from holes + board (exactly five digit positions, optional decimal). |
+| **`endRound`** | Server only applies to tables in **`showdown`**; others skipped with a host toast. |
 
 ---
 
@@ -112,7 +115,7 @@ Actions that mutate **only** **`sessionKey`** (typical **`bet`, `fold`, `check`,
 | **adminCloseBetting** | Force-closes current betting wave so **`dealCommunityCards`** or **`startAnswering`** preconditions can be met if players stall. Venue-wide iteration on server where implemented. |
 | **adminAdvanceTurn** | Advances **`currentPlayerIndex`** without validating player action — escape hatch only. |
 | **revealAnswer** | Manual premature exit from **`answering`** to **`showdown`** (matches auto-timer semantics). Venue-wide fan-out where implemented. |
-| **endRound** | Payout + full round cleanup → **`lobby`**. Venue-wide fan-out. |
+| **endRound** | Payout + full round cleanup → **`lobby`** (core no-op unless **`showdown`**). Venue-wide fan-out; tables not in showdown are skipped. |
 | **newGame** | Fresh **`createEmptyGame`** per venue session — **destructive**. |
 
 ---

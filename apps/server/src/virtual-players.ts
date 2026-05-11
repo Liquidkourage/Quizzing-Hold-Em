@@ -7,7 +7,7 @@ import {
   foldPlayer,
   playerCheck,
   playerCall,
-  generateAllArrangements,
+  nearestLegalAnswerToTarget,
 } from '@qhe/core'
 
 /** Synthetic seats — never collide with Socket.IO ids. */
@@ -48,19 +48,8 @@ export function removeAllVirtualPlayers(state: GameState): GameState {
 }
 
 function nearestGuessFromDigits(digits: number[], answer: number): number {
-  const arr = [...digits]
-  if (arr.length === 0) return 0
-  const cand = generateAllArrangements(arr)
-  let best = cand[0] ?? 0
-  let dist = Infinity
-  for (const value of cand) {
-    const d = Math.abs(value - answer)
-    if (d < dist) {
-      dist = d
-      best = value
-    }
-  }
-  return best
+  if (digits.length !== 7) return 0
+  return nearestLegalAnswerToTarget(digits, answer)
 }
 
 /** One deterministic step so real players can join between bot actions after each broadcast. */

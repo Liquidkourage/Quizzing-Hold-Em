@@ -104,6 +104,80 @@ export function compareHandsToAnswer(candidateNumbers: number[], correctAnswer: 
   return best;
 }
 
+/** Player UI uses exactly this many digit cards (+ optional decimal) for the submitted value. */
+export const PLAYER_ANSWER_DIGIT_CARD_COUNT = 5;
+
+const ANSWER_NUMERIC_EPS = 1e-7;
+
+/** Loose equality for values built from decimal strings vs submitted doubles. */
+export function nearlyEqualNumbers(a: number, b: number): boolean {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  return Math.abs(a - b) <= ANSWER_NUMERIC_EPS * Math.max(1, Math.abs(a), Math.abs(b));
+}
+
+function addDecimalVariantsForFiveDigits(digitsFive: number[], sink: Set<number>): void {
+  sink.add(Number(digitsFive.join('')));
+  for (let k = 1; k <= PLAYER_ANSWER_DIGIT_CARD_COUNT - 1; k++) {
+    const left = digitsFive.slice(0, k).join('');
+    const right = digitsFive.slice(k).join('');
+    if (left !== '' && right !== '') sink.add(Number(`${left}.${right}`));
+  }
+}
+
+/** All numbers you can legally form using exactly five of seven digit cards in order, optional one decimal (player rules). */
+export function composeNumericAnswersFromSevenDigitCards(sevenDigits: number[]): Set<number> {
+  const out = new Set<number>();
+  if (sevenDigits.length !== 7) return out;
+  const path: number[] = [];
+  const used = [false, false, false, false, false, false, false];
+  const dfs = () => {
+    if (path.length === PLAYER_ANSWER_DIGIT_CARD_COUNT) {
+      const five = path.map((i) => sevenDigits[i]!);
+      addDecimalVariantsForFiveDigits(five, out);
+      return;
+    }
+    for (let i = 0; i < 7; i++) {
+      if (used[i]) continue;
+      used[i] = true;
+      path.push(i);
+      dfs();
+      path.pop();
+      used[i] = false;
+    }
+  };
+  dfs();
+  return out;
+}
+
+export function isSubmittedAnswerComposableFromDeal(state: GameState, playerId: string, answer: number): boolean {
+  if (!Number.isFinite(answer)) return false;
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player || player.hand.length !== 2 || state.round.communityCards.length !== 5) return false;
+  const seven = [...player.hand, ...state.round.communityCards].map((c) => c.digit);
+  for (const v of composeNumericAnswersFromSevenDigitCards(seven)) {
+    if (nearlyEqualNumbers(v, answer)) return true;
+  }
+  return false;
+}
+
+/** Best legal guess for bots: minimum distance to `target`, tie-break lower numeric value. */
+export function nearestLegalAnswerToTarget(sevenDigits: number[], target: number): number {
+  if (sevenDigits.length !== 7 || !Number.isFinite(target)) return 0;
+  const values = composeNumericAnswersFromSevenDigitCards(sevenDigits);
+  let best: number | null = null;
+  let bestD = Infinity;
+  for (const v of values) {
+    const d = Math.abs(v - target);
+    if (d < bestD - 1e-15) {
+      bestD = d;
+      best = v;
+    } else if (best !== null && Math.abs(d - bestD) <= 1e-15 && v < best) {
+      best = v;
+    }
+  }
+  return best ?? 0;
+}
+
 export function generateAllArrangements(digits: number[]): number[] {
   // generate all permutations and interpret as base-10 numbers without leading zero trimming
   const results: number[] = [];
@@ -129,8 +203,9 @@ export function generateAllArrangements(digits: number[]): number[] {
 }
 
 export function bestHandDistanceToAnswer(hand: NumericCard[], community: NumericCard[], answer: number): number {
-  const allDigits = hand.concat(community).map(c => c.digit);
-  const candidates = generateAllArrangements(allDigits);
+  if (hand.length !== 2 || community.length !== 5) return Infinity;
+  const seven = hand.concat(community).map((c) => c.digit);
+  const candidates = [...composeNumericAnswersFromSevenDigitCards(seven)];
   return compareHandsToAnswer(candidates, answer);
 }
 
@@ -413,7 +488,6 @@ export function playerRaise(state: GameState, playerId: string, raiseAmount: num
   // Enforce min raise equal to big blind
   const minRaise = Math.max(0, state.bigBlind);
   if (raiseAmount < minRaise) return state;
-  const targetBet = (state.round.currentBet || 0) + raiseAmount;
   // Total contribution needed this action = toCall + raiseAmount
   const totalNeeded = toCall + raiseAmount;
   const contribution = Math.min(totalNeeded, state.players[seat].bankroll);
@@ -422,7 +496,10 @@ export function playerRaise(state: GameState, playerId: string, raiseAmount: num
   const contributedNow = (after.round.playerBets || {})[playerId] || 0;
   after = { ...after, round: { ...after.round, currentBet: Math.max(after.round.currentBet || 0, contributedNow) } };
   const nextIndex = advanceToNextPlayer(after);
-  return { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+  after = { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+  return isBettingComplete(after)
+    ? { ...after, round: { ...after.round, isBettingOpen: false, currentPlayerIndex: -1 } }
+    : after;
 }
 
 export function playerAllIn(state: GameState, playerId: string): GameState {
@@ -485,48 +562,113 @@ export function revealAnswer(state: GameState): GameState {
   return { ...state, phase: 'showdown' };
 }
 
-export function determineWinner(state: GameState): { winnerId: string; distance: number } | null {
-  if (!state.round.question) return null;
-  let bestPlayer: PlayerState | null = null;
+/** Trivia leaderboard: ties share the same `distance`; all IDs are joint winners for payout split. */
+export function determineTriviaWinners(state: GameState): { winnerIds: string[]; distance: number } | null {
+  const q = state.round.question;
+  if (!q) return null;
   let bestDistance = Infinity;
-  
   for (const player of state.players) {
     if (player.hasFolded || player.submittedAnswer === undefined) continue;
-    
-    const distance = Math.abs(player.submittedAnswer - state.round.question.answer);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestPlayer = player;
-    }
+    const distance = Math.abs(player.submittedAnswer - q.answer);
+    if (distance < bestDistance) bestDistance = distance;
   }
-  
-  return bestPlayer ? { winnerId: bestPlayer.id, distance: bestDistance } : null;
+  if (bestDistance === Infinity) return null;
+  const winnerIds = state.players
+    .filter(
+      (p) =>
+        !p.hasFolded &&
+        p.submittedAnswer !== undefined &&
+        Math.abs(p.submittedAnswer - q.answer) === bestDistance
+    )
+    .map((p) => p.id);
+  return winnerIds.length === 0 ? null : { winnerIds, distance: bestDistance };
+}
+
+/** @deprecated Prefer determineTriviaWinners — this returns only the first tied seat in roster order. */
+export function determineWinner(state: GameState): { winnerId: string; distance: number } | null {
+  const tw = determineTriviaWinners(state);
+  if (!tw || tw.winnerIds.length === 0) return null;
+  return { winnerId: tw.winnerIds[0]!, distance: tw.distance };
+}
+
+/** Split whole pot evenly in whole dollars; remainder $1 chips go to earliest ids in `winnerIds`. */
+export function payoutPotSplitAmong(state: GameState, winnerIds: string[]): GameState {
+  const pot = state.round.pot;
+  const ids = [...new Set(winnerIds)].filter((id) => state.players.some((p) => p.id === id));
+  if (pot <= 0 || ids.length === 0) {
+    return { ...state, round: { ...state.round, pot: 0 } };
+  }
+  const n = ids.length;
+  const baseShare = Math.floor(pot / n);
+  let remainder = pot - baseShare * n;
+  const extraById = new Map<string, number>();
+  for (let i = 0; i < n; i++) {
+    const id = ids[i]!;
+    const add = baseShare + (remainder > 0 ? 1 : 0);
+    remainder = Math.max(0, remainder - 1);
+    extraById.set(id, (extraById.get(id) || 0) + add);
+  }
+  const players = state.players.map((p) => {
+    const add = extraById.get(p.id);
+    return add ? { ...p, bankroll: p.bankroll + add } : p;
+  });
+  return { ...state, round: { ...state.round, pot: 0 }, players };
 }
 
 export function payoutWinner(state: GameState, winnerId: string): GameState {
-  const updatedPlayers = state.players.map(player => (player.id === winnerId ? { ...player, bankroll: player.bankroll + state.round.pot } : player));
-  return { ...state, round: { ...state.round, pot: 0 }, players: updatedPlayers };
+  return payoutPotSplitAmong(state, [winnerId]);
 }
 
+function playerIdsStillInHand(state: GameState): string[] {
+  return state.players.filter((p) => !p.hasFolded).map((p) => p.id);
+}
+
+/** Run only from showdown (after reveal): pays pot, resets to lobby. Wrong phase → unchanged. */
 export function endRound(state: GameState): GameState {
-  const winner = determineWinner(state);
-  const afterPayout = winner ? payoutWinner(state, winner.winnerId) : state;
+  if (state.phase !== 'showdown') return state;
+
+  const pendingPot = state.round.pot;
+  let afterPayout = state;
+
+  const trivia = determineTriviaWinners(state);
+  if (trivia && trivia.winnerIds.length > 0 && pendingPot > 0) {
+    afterPayout = payoutPotSplitAmong(state, trivia.winnerIds);
+  } else if (pendingPot > 0) {
+    const alive = playerIdsStillInHand(state);
+    if (alive.length === 1) {
+      afterPayout = payoutPotSplitAmong(state, alive);
+    } else if (alive.length >= 2) {
+      afterPayout = payoutPotSplitAmong(state, alive);
+    } else {
+      const seated = state.players.map((p) => p.id);
+      afterPayout = seated.length > 0 ? payoutPotSplitAmong(state, seated) : { ...state, round: { ...state.round, pot: 0 } };
+    }
+  } else {
+    afterPayout = { ...state, round: { ...state.round, pot: 0 } };
+  }
+
   return {
     ...afterPayout,
     phase: 'lobby',
     round: {
-      roundId: nextRoundId(state.round.roundId),
+      roundId: nextRoundId(afterPayout.round.roundId),
       question: null,
       communityCards: [],
       pot: 0,
-      dealerIndex: (state.round.dealerIndex + 1) % Math.max(1, state.players.length),
+      dealerIndex: (afterPayout.round.dealerIndex + 1) % Math.max(1, afterPayout.players.length),
       bettingRound: 1,
       currentBet: 0,
       currentPlayerIndex: -1,
       isBettingOpen: false,
       playerBets: {},
     },
-    players: afterPayout.players.map(p => ({ ...p, hand: [], hasFolded: false, isAllIn: false, submittedAnswer: undefined })),
+    players: afterPayout.players.map((p) => ({
+      ...p,
+      hand: [],
+      hasFolded: false,
+      isAllIn: false,
+      submittedAnswer: undefined,
+    })),
   };
 }
 

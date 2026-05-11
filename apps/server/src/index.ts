@@ -16,9 +16,8 @@ import {
   foldPlayer,
   submitAnswer,
   revealAnswer,
-  determineWinner,
-  payoutWinner,
   endRound,
+  isSubmittedAnswerComposableFromDeal,
   adminCloseBetting,
   adminAdvanceTurn,
   adminSetBlinds,
@@ -1805,21 +1804,41 @@ io.on('connection', (socket) => {
           io.to(sessionKey).emit('toast', `${foldAction.playerId} folded`)
           break
           
-        case 'submitAnswer':
+        case 'submitAnswer': {
           const submitAnswerAction = payload as SubmitAnswerAction
-          // Validate phase and deadline
           if (gameState.phase !== 'answering') {
             socket.emit('toast', 'Not accepting answers right now.')
+            socket.emit('ack', { ok: false, message: 'Not accepting answers right now.' })
             break
           }
           const deadline = gameState.round.answerDeadline ?? 0
           if (Date.now() > deadline) {
             socket.emit('toast', '⏱️ Too late! Answer window has closed.')
+            socket.emit('ack', { ok: false, message: 'Answer window has closed.' })
+            break
+          }
+          if (
+            !isSubmittedAnswerComposableFromDeal(
+              gameState,
+              submitAnswerAction.playerId,
+              submitAnswerAction.answer
+            )
+          ) {
+            socket.emit(
+              'toast',
+              'That number cannot be built from your two hole cards and the five board cards (exactly five digit picks, optional decimal).'
+            )
+            socket.emit('ack', {
+              ok: false,
+              message: 'Answer is not constructible from the dealt digit cards.',
+            })
             break
           }
           gameState = submitAnswer(gameState, submitAnswerAction.playerId, submitAnswerAction.answer)
           io.to(sessionKey).emit('toast', `Answer submitted: ${submitAnswerAction.answer}`)
+          socket.emit('ack', { ok: true, message: 'Answer recorded.' })
           break
+        }
           
         case 'revealAnswer': {
           if (!assertVenueHost(socket, gameState)) break
@@ -1846,13 +1865,35 @@ io.on('connection', (socket) => {
             socket.emit('toast', 'No playable tables yet.')
             break
           }
+          let ended = 0
+          let skipped = 0
           for (const tk of playable) {
-            let gs = rooms.get(tk)
-            gs = endRound(gs)
-            rooms.set(tk, gs)
-            emitVenueTableState(tk, gs)
+            const gs = rooms.get(tk)
+            if (!gs) continue
+            if (gs.phase !== 'showdown') {
+              skipped++
+              continue
+            }
+            const next = endRound(gs)
+            rooms.set(tk, next)
+            emitVenueTableState(tk, next)
+            ended++
           }
-          socket.emit('toast', 'Round ended — all tables at this venue.')
+          if (ended === 0) {
+            socket.emit(
+              'toast',
+              skipped > 0
+                ? 'Reveal answers first — end round only works while tables are in showdown.'
+                : 'No tables were ended.'
+            )
+          } else {
+            socket.emit(
+              'toast',
+              skipped > 0
+                ? `Round ended on ${ended} table(s); ${skipped} skipped (not in showdown).`
+                : `Round ended — ${ended} table(s) at this venue.`
+            )
+          }
           gameState = rooms.get(sessionKey)!
           break
         }
