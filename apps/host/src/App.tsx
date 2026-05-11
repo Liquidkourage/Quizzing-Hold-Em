@@ -1328,11 +1328,11 @@ function HostApp() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card variant="glass" className="p-6">
-            <h2 className="text-3xl font-bold text-casino-emerald mb-4 text-center">Game status</h2>
-
-            <JackpotDisplay amount={gameState.round.pot} variant="control" className="mb-6" />
+            <h2 className="text-3xl font-bold text-casino-emerald mb-6 text-center">Game status</h2>
 
             <div className="space-y-4">
+              <JackpotDisplay amount={gameState.round.pot} variant="control" />
+
               {gameState.round.question && (
                 <div className="text-center">
                   <div className="text-lg text-white">Current Question:</div>

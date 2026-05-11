@@ -183,25 +183,16 @@ export function JackpotDisplay({
 }: {
   amount: number
   className?: string
-  /** showcase = flashy public-TV style; control = subdued backstage/host readout */
+  /** showcase = flashy public-TV style; control = same typography as host Game status rows */
   variant?: 'showcase' | 'control'
 }) {
   if (variant === 'control') {
     return (
-      <div
-        className={clsx(
-          'rounded-lg border border-white/12 bg-black/45 px-4 py-3 text-left',
-          'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-          className,
-        )}
-      >
-        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/42">
-          Table pot
-        </div>
-        <div className="mt-1 font-mono text-xl font-semibold tabular-nums tracking-tight text-white/88 sm:text-2xl">
+      <div className={clsx('text-center', className)}>
+        <div className="text-lg text-white">Table pot:</div>
+        <span className="text-casino-emerald font-bold text-xl tabular-nums">
           ${amount.toLocaleString()}
-        </div>
-        <div className="mt-2 text-[10px] leading-snug text-white/35">Backstage · not for TV</div>
+        </span>
       </div>
     )
   }
