@@ -454,7 +454,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
   const playerCountLabelClass =
     'min-w-0 break-words text-balance font-black tracking-[0.13em] text-[clamp(0.95rem,min(3.05vw,_2.55vh),_1.95rem)] uppercase text-emerald-50/94 [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:tracking-[0.11em] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(0.85rem,min(2.5vw,_1.95vh),_1.58rem)] [text-shadow:0_0_18px_rgba(167,243,208,0.28),0_2px_8px_rgba(0,0,0,.58)] mb-[clamp(3px,min(0.55vmin,_5px),_6px)]'
   const venueMono =
-    'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-[clamp(1.45rem,min(7.5vw,min(8.5vh,_3.2rem)),_4.25rem)] uppercase text-transparent bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 bg-clip-text [-webkit-background-clip:text] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,.9))]'
+    'max-w-full break-all text-center font-mono font-black leading-none tracking-[0.06em] text-[clamp(1.65rem,min(8.6vw,min(9.5vh,_3.55rem)),_4.85rem)] uppercase text-transparent bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 bg-clip-text [-webkit-background-clip:text] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,.9))]'
 
   /** Join card URL — Orbitron; slash-bridged display + break-words for readable wraps. */
   const joinUrlText =
@@ -466,7 +466,7 @@ export default function AudienceWelcomeWall({ venueCode, wall }: AudienceWelcome
 
   /** Slightly taller digits limited on short viewports; default keeps large-TV punch. */
   const statDigitBase =
-    'py-[clamp(3px,min(0.95vmin,_8px),_8px)] font-mono tabular-nums tracking-tight leading-none text-[clamp(1.55rem,min(8.5vw,min(10vmin,_8.5dvh)),_5.5rem)] font-black [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(2px,min(0.55vmin,_5px),_5px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(1.25rem,min(5.5vw,min(6.5vmin,_6dvh)),_3.85rem)]'
+    'py-[clamp(3px,min(0.95vmin,_8px),_8px)] font-mono tabular-nums tracking-tight leading-none text-[clamp(1.72rem,min(9.4vw,min(11vmin,_9.2dvh)),_6.1rem)] font-black [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:py-[clamp(2px,min(0.55vmin,_5px),_5px)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:text-[clamp(1.4rem,min(6.1vw,min(7.2vmin,_6.5dvh)),_4.25rem)]'
 
   const statDigitAccentShadow =
     '[text-shadow:0_0_36px_rgba(253,224,138,0.65),0_0_92px_rgba(234,179,8,0.35),0_2px_4px_rgba(0,0,0,0.95)] [@media(max-height:1080px)_and_(min-width:1024px)_and_(orientation:landscape)]:[text-shadow:0_0_22px_rgba(253,224,138,0.55),0_0_54px_rgba(234,179,8,0.28),0_2px_3px_rgba(0,0,0,0.92)]'

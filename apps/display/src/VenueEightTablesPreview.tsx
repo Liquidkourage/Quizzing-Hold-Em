@@ -50,12 +50,12 @@ function SeatRingWithLabels({
   const wrap =
     size === 'lg'
       ? 'max-w-[min(440px,92vw)]'
-      : 'w-full max-w-[min(100%,19rem)] sm:max-w-[min(100%,20rem)]'
-  const dot = size === 'lg' ? 'h-9 w-9' : 'h-7 w-7'
+      : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
+  const dot = size === 'lg' ? 'h-9 w-9' : 'h-8 w-8'
   const labelClass =
     size === 'lg'
-      ? 'max-w-[min(9rem,28vw)] text-lg sm:text-xl'
-      : 'max-w-[min(8rem,48%)] text-sm sm:text-base md:text-lg lg:text-xl'
+      ? 'max-w-[min(9rem,28vw)] text-xl sm:text-2xl'
+      : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
@@ -99,7 +99,7 @@ function SeatRingWithLabels({
                 style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
               >
                 <span className="block max-w-full truncate">{raw}</span>
-                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-[10px] sm:text-[11px] md:text-xs lg:text-sm">
+                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-xs sm:text-sm md:text-base lg:text-lg">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
@@ -170,14 +170,14 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
 
   return (
     <aside
-      className="fixed inset-y-0 right-0 z-20 flex w-[min(22rem,52vw)] flex-col border-l-2 border-yellow-700/40 bg-slate-950/92 shadow-[-12px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:w-[min(26rem,44vw)] lg:w-96"
+      className="fixed inset-y-0 right-0 z-20 flex w-[min(24rem,54vw)] flex-col border-l-2 border-yellow-700/40 bg-slate-950/92 shadow-[-12px_0_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:w-[min(28rem,46vw)] lg:w-[28rem]"
       aria-label="Players and table assignments"
     >
       <div className="shrink-0 border-b border-white/10 px-4 py-5 sm:px-5 sm:py-5">
-        <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-white/65 sm:text-base">
+        <h2 className="text-base font-bold uppercase tracking-[0.14em] text-white/65 sm:text-lg">
           Players
         </h2>
-        <p className="mt-1.5 text-2xl font-bold leading-tight text-white/92 sm:text-3xl">Seating</p>
+        <p className="mt-1.5 text-3xl font-bold leading-tight text-white/92 sm:text-4xl">Seating</p>
       </div>
       <div
         className="relative min-h-0 flex-1 overflow-hidden px-3 py-2 sm:px-4"
@@ -197,13 +197,13 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
               key={`${r.tableNum}-${r.name}-${idx}`}
               className="flex flex-col gap-1.5 border-b border-white/[0.08] py-4 sm:py-5"
             >
-              <span className="w-full truncate text-xl font-bold leading-snug text-white/95 sm:text-2xl md:text-3xl">
+              <span className="w-full truncate text-2xl font-bold leading-snug text-white/95 sm:text-3xl md:text-4xl xl:text-[2.25rem]">
                 {r.name}
               </span>
-              <span className="w-full truncate font-mono tabular-nums text-lg font-bold leading-none text-casino-emerald sm:text-xl md:text-2xl">
+              <span className="w-full truncate font-mono tabular-nums text-xl font-bold leading-none text-casino-emerald sm:text-2xl md:text-3xl">
                 {formatVenueBankroll(r.bankroll)}
               </span>
-              <span className="w-full truncate font-mono text-base font-bold uppercase tracking-[0.11em] text-yellow-400/95 sm:text-lg md:text-xl">
+              <span className="w-full truncate font-mono text-lg font-bold uppercase tracking-[0.1em] text-yellow-400/95 sm:text-xl md:text-2xl">
                 TABLE {r.tableNum}
               </span>
             </div>
@@ -282,7 +282,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
-        showRoster ? 'pr-[min(22rem,52vw)] sm:pr-[min(26rem,44vw)] lg:pr-96' : ''
+        showRoster ? 'pr-[min(24rem,54vw)] sm:pr-[min(28rem,46vw)] lg:pr-[28rem]' : ''
       }`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
@@ -324,7 +324,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
           >
             <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start lg:gap-10">
               {headlineQuestionText ? (
-                <p className="flex-1 text-balance text-center text-4xl font-bold leading-snug text-yellow-400 sm:text-left md:text-5xl lg:text-6xl">
+                <p className="flex-1 text-balance text-center text-5xl font-bold leading-snug text-yellow-400 sm:text-left md:text-6xl lg:text-7xl">
                   {headlineQuestionText}
                 </p>
               ) : (
@@ -338,7 +338,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                       : 'border-amber-500/35 bg-amber-950/30'
                   }`}
                 >
-                  <div className="font-mono text-7xl font-black tabular-nums tracking-tight text-amber-200 sm:text-8xl lg:text-9xl">
+                  <div className="font-mono text-8xl font-black tabular-nums tracking-tight text-amber-200 sm:text-9xl">
                     {timerSeconds}s
                   </div>
                 </div>
@@ -355,10 +355,10 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             initial={skipMountIntro ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-3xl font-semibold leading-snug text-white/92 sm:text-4xl md:text-5xl">
+            <p className="text-4xl font-semibold leading-snug text-white/92 sm:text-5xl md:text-6xl">
               Felts open here after the host assigns players from the lobby.
             </p>
-            <p className="mx-auto mt-5 max-w-2xl text-xl leading-relaxed text-white/65 sm:text-2xl md:text-3xl">
+            <p className="mx-auto mt-5 max-w-2xl text-2xl leading-relaxed text-white/65 sm:text-3xl md:text-4xl">
               Guests can keep joining from the briefing screen until seating runs.
             </p>
           </motion.div>
@@ -385,15 +385,15 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-sm font-semibold uppercase tracking-[0.14em] text-white/60 sm:text-base md:text-lg">
+                      <div className="text-base font-semibold uppercase tracking-[0.12em] text-white/60 sm:text-lg md:text-xl">
                         Table
                       </div>
-                      <div className="text-5xl font-black tabular-nums leading-none text-yellow-400 sm:text-6xl lg:text-7xl">
+                      <div className="text-6xl font-black tabular-nums leading-none text-yellow-400 sm:text-7xl lg:text-8xl">
                         {tn}
                       </div>
                     </div>
                     <span
-                      className={`max-w-[min(9rem,46%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase leading-tight sm:max-w-none sm:px-3 sm:py-2 sm:text-sm md:text-base ${phaseAccent(ph)}`}
+                      className={`max-w-[min(10rem,48%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-tight sm:max-w-none sm:px-3.5 sm:py-2 sm:text-base md:text-lg ${phaseAccent(ph)}`}
                     >
                       {phaseLabel(ph)}
                     </span>
@@ -407,7 +407,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                     />
                   </div>
 
-                  <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-base leading-snug sm:text-lg md:text-xl lg:text-2xl">
+                  <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-lg leading-snug sm:text-xl md:text-2xl lg:text-3xl">
                     <div className="flex justify-between gap-3">
                       <dt className="font-semibold text-white/70">Occupied seats</dt>
                       <dd className="font-mono font-bold tabular-nums text-casino-emerald">

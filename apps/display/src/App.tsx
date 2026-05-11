@@ -397,7 +397,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
       <div className="min-h-screen bg-casino-gradient flex items-center justify-center">
         <div className="text-center">
           <motion.h1 
-            className="text-6xl font-black text-casino-emerald mb-8"
+            className="text-8xl font-black text-casino-emerald mb-8"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -405,7 +405,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
             🎰 QUIZZING HOLD-EM
           </motion.h1>
           <motion.div 
-            className="text-2xl text-white"
+            className="text-3xl text-white"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
@@ -535,7 +535,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            className="fixed top-4 right-4 z-50 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-4 text-white"
+            className="fixed top-4 right-4 z-50 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-5 text-lg text-white"
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
@@ -556,11 +556,11 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="text-3xl font-black text-yellow-400 mb-1 flex items-center justify-center gap-2">
+          <h1 className="text-5xl font-black text-yellow-400 mb-1 flex items-center justify-center gap-2 md:text-6xl">
             🎰 <PokerChip size="lg" className="mx-1" />
             {'Quizz\u2019em'}
           </h1>
-          <div className="text-base text-white">
+          <div className="text-xl text-white md:text-2xl">
             Phase: <span className="text-yellow-400 font-bold">{displayGameState.phase}</span>
             {!gameState && <span className="text-red-400 ml-2">(DEMO MODE - 8 Players)</span>}
           </div>
@@ -576,8 +576,8 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
           >
             <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-2xl border-2 border-yellow-500/50 bg-black/90 p-5 shadow-2xl backdrop-blur-md sm:flex-row sm:items-stretch">
               <div className="min-w-0 flex-1 text-center">
-                <div className="mb-2 text-xl font-semibold text-white">🎯 Current question</div>
-                <div className="text-balance text-3xl font-bold leading-snug text-yellow-400 sm:text-4xl">
+                <div className="mb-2 text-2xl font-semibold text-white md:text-3xl">🎯 Current question</div>
+                <div className="text-balance text-4xl font-bold leading-snug text-yellow-400 sm:text-5xl md:text-6xl">
                   {displayGameState.round.question.text}
                 </div>
               </div>
@@ -590,10 +590,10 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                       : 'border-yellow-500/25 bg-yellow-950/20'
                   }`}
                 >
-                  <div className="text-xs font-bold uppercase tracking-widest text-white/65">Time left</div>
+                  <div className="text-sm font-bold uppercase tracking-widest text-white/65">Time left</div>
                   <motion.div
                     key={answerSecondsLeft ?? 'wait'}
-                    className={`tabular-nums text-6xl font-black sm:text-7xl ${
+                    className={`tabular-nums text-7xl font-black sm:text-8xl md:text-9xl ${
                       typeof answerSecondsLeft === 'number' && answerSecondsLeft <= 10
                         ? 'text-red-300'
                         : 'text-yellow-400'
@@ -947,11 +947,11 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                   />
                 )}
                 <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center w-[120px] h-[130px] shadow-lg transform scale-[1.40625] origin-center relative">
-                  <div className="text-yellow-600/85 text-[10px] font-semibold uppercase tracking-wide mb-0.5">
+                  <div className="text-yellow-600/85 text-xs font-semibold uppercase tracking-wide mb-0.5">
                     Seat {index + 1}
                   </div>
-                  <div className="text-yellow-400 font-bold text-sm mb-1">{player.name}</div>
-                  <div className="text-white text-sm mb-1">
+                  <div className="text-yellow-400 font-bold text-base mb-1">{player.name}</div>
+                  <div className="text-white text-base mb-1">
                     ${player.bankroll}
                   </div>
                   
@@ -974,7 +974,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                   
                   {/* Player status */}
                   {player.hasFolded && (
-                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-red-400 font-bold text-xs">FOLDED</div>
+                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-red-400 font-bold text-sm">FOLDED</div>
                   )}
                 </div>
               </motion.div>
@@ -1099,7 +1099,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
               {/* Pot display - positioned higher */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-36 text-center">
                 <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2 relative overflow-visible">
-                  <div className="text-white text-sm">Pot: <span className="text-yellow-400 font-bold text-2xl">${payoutTick > 0 ? payoutTick : displayGameState.round.pot}</span></div>
+                  <div className="text-white text-lg">Pot: <span className="text-yellow-400 font-bold text-4xl">${payoutTick > 0 ? payoutTick : displayGameState.round.pot}</span></div>
                   {/* Chip flights from pot to winner */}
                   {showdownWinnerId && chipFlights.map(chip => (
                     <motion.div
@@ -1175,7 +1175,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
           <motion.div
-            className="relative bg-black/90 border-2 border-yellow-500/60 rounded-2xl shadow-2xl max-w-4xl w-[90%] p-8 text-white"
+            className="relative bg-black/90 border-2 border-yellow-500/60 rounded-2xl shadow-2xl max-w-4xl w-[90%] p-10 text-lg text-white"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
@@ -1186,12 +1186,12 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                   initial={{ x: '100%' }}
                   animate={{ x: '-100%' }}
                   transition={{ duration: 6, ease: 'easeInOut' }}
-                  className="py-2 whitespace-nowrap"
+                  className="py-3 whitespace-nowrap text-xl md:text-2xl"
                 >
-                  <span className="mx-6 text-yellow-300 font-extrabold tracking-wide">
+                  <span className="mx-6 text-xl text-yellow-300 font-extrabold tracking-wide md:text-2xl">
                     🏆 WINNER: {showdownWinnerName}
                   </span>
-                  <span className="mx-6 text-yellow-300 font-extrabold tracking-wide">
+                  <span className="mx-6 text-xl text-yellow-300 font-extrabold tracking-wide md:text-2xl">
                     🏆 WINNER: {showdownWinnerName}
                   </span>
                 </motion.div>
@@ -1199,7 +1199,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
             )}
 
             <div className="text-center mb-6">
-              <div className="text-white/80">Correct Answer</div>
+              <div className="text-white/80 text-xl font-semibold md:text-2xl">Correct Answer</div>
               <motion.div
                 key={String(displayGameState.round.question?.answer ?? '—')}
                 initial={{ rotateX: -90, opacity: 0, transformPerspective: 800 }}
@@ -1207,7 +1207,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                 transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                 className="inline-block px-4 py-1 rounded-lg bg-yellow-500/10 border border-yellow-400/40 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
               >
-                <span className="text-5xl font-extrabold text-yellow-400 tracking-wide">
+                <span className="text-7xl font-extrabold text-yellow-400 tracking-wide md:text-8xl">
                   {displayGameState.round.question?.answer ?? '—'}
                 </span>
               </motion.div>
@@ -1226,14 +1226,14 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
 
               return (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-left">
+                  <table className="min-w-full text-left text-lg md:text-xl">
                     <thead>
-                      <tr className="text-white/70">
-                        <th className="py-2 px-3">Seat</th>
-                        <th className="py-2 px-3">Player</th>
-                        <th className="py-2 px-3">Submitted</th>
-                        <th className="py-2 px-3">Distance</th>
-                        <th className="py-2 px-3">Status</th>
+                      <tr className="text-white/80">
+                        <th className="py-3 px-4">Seat</th>
+                        <th className="py-3 px-4">Player</th>
+                        <th className="py-3 px-4">Submitted</th>
+                        <th className="py-3 px-4">Distance</th>
+                        <th className="py-3 px-4">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1245,9 +1245,9 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                           transition={{ delay: idx * 0.08 }}
                           className={player.id === winnerId ? 'bg-white/10' : ''}
                         >
-                          <td className="py-2 px-3 tabular-nums text-white/75">{seat}</td>
-                          <td className="py-2 px-3 font-bold text-yellow-300">{player.name}</td>
-                          <td className="py-2 px-3">
+                          <td className="py-3 px-4 tabular-nums text-white/80">{seat}</td>
+                          <td className="py-3 px-4 font-bold text-yellow-300">{player.name}</td>
+                          <td className="py-3 px-4">
                             {has ? (
                               <motion.span
                                 initial={{ scale: 0.8, rotate: -5, opacity: 0 }}
@@ -1259,8 +1259,8 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                               </motion.span>
                             ) : '—'}
                           </td>
-                          <td className="py-2 px-3">{has && typeof correct === 'number' ? distance : '—'}</td>
-                          <td className="py-2 px-3">
+                          <td className="py-3 px-4">{has && typeof correct === 'number' ? distance : '—'}</td>
+                          <td className="py-3 px-4">
                             {player.hasFolded ? (
                               <span className="text-red-400 font-semibold">FOLDED</span>
                             ) : has ? (
@@ -1336,29 +1336,29 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
       {/* Game Info Panel - Docked to bottom of screen */}
       <div className="fixed bottom-0 left-0 right-0 z-30">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-t-lg p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-t-lg px-4 py-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-center">
               <div>
-                <div className="text-white text-sm">Felt</div>
-                <div className="text-yellow-400 font-bold text-xl">
+                <div className="text-white text-lg md:text-xl">Felt</div>
+                <div className="text-yellow-400 font-bold text-2xl md:text-3xl">
                   {displayTableLabel(displayGameState.tableId ?? '1')}
                 </div>
               </div>
               <div>
-                <div className="text-white text-sm">Blinds</div>
-                <div className="text-yellow-400 font-bold text-xl tabular-nums">
+                <div className="text-white text-lg md:text-xl">Blinds</div>
+                <div className="text-yellow-400 font-bold text-2xl tabular-nums md:text-3xl">
                   ${displayGameState.smallBlind} / ${displayGameState.bigBlind}
                 </div>
               </div>
               <div>
-                <div className="text-white text-sm">Phase</div>
-                <div className="text-yellow-400 font-bold text-xl">
+                <div className="text-white text-lg md:text-xl">Phase</div>
+                <div className="text-yellow-400 font-bold text-2xl md:text-3xl">
                   {displayPhaseLabel(displayGameState.phase)}
                 </div>
               </div>
               <div>
-                <div className="text-white text-sm">Street</div>
-                <div className="text-yellow-400 font-bold text-xl">{displayStreetLabel(displayGameState)}</div>
+                <div className="text-white text-lg md:text-xl">Street</div>
+                <div className="text-yellow-400 font-bold text-2xl md:text-3xl">{displayStreetLabel(displayGameState)}</div>
               </div>
             </div>
           </div>

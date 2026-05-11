@@ -36,7 +36,7 @@ export default function DisplayDiagPanel() {
       role="region"
       aria-label="Display deployment diagnostics"
     >
-      <div className="pointer-events-auto rounded-lg border-2 border-emerald-400/90 bg-black/95 p-3 font-mono text-[11px] leading-snug text-emerald-100 shadow-[0_0_24px_rgba(16,185,129,0.35)]">
+      <div className="pointer-events-auto rounded-lg border-2 border-emerald-400/90 bg-black/95 p-3 font-mono text-xs leading-snug text-emerald-100 shadow-[0_0_24px_rgba(16,185,129,0.35)] md:text-sm">
         <p className="mb-2 font-black uppercase tracking-wide text-amber-200">Display diagnostics</p>
         <p className="mb-1 break-all">
           <span className="text-white/45">#root data-display-build</span> → <span className="text-white">{rootBuild}</span>
