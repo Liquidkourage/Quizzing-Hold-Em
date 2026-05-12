@@ -642,24 +642,32 @@ function VenueMosaicTableCard({
       : 'border-white/[0.12] bg-black/35'
 
     let totalChips = 0
-    const filledNames: string[] = []
-    for (let i = 0; i < VENUE_SEAT_SLOTS; i++) {
-      const nm = seatNames[i]?.trim()
-      if (nm) {
-        filledNames.push(nm)
-        totalChips += seatBankrolls[i] ?? 0
-      }
+    const chipRoster = crawlTableChipRoster(seatNames, seatBankrolls, ph)
+    for (const p of chipRoster) {
+      totalChips += p.bankroll
     }
     const openSeats = Math.max(0, VENUE_SEAT_SLOTS - seats)
     const rosterChips =
-      filledNames.length === 0 ? null : (
-        <ul className="list-none flex flex-wrap gap-1.5" aria-label={`Players at table ${tn}`}>
-          {filledNames.map((nm, ri) => (
+      chipRoster.length === 0 ? null : (
+        <ul
+          className="list-none flex flex-wrap gap-1.5"
+          aria-label={
+            ph === 'lobby'
+              ? `Players at table ${tn}`
+              : `Players at table ${tn} ranked by bankroll`
+          }
+        >
+          {chipRoster.map(({ name: nm, bankroll: brChip }, ri) => (
             <li
-              key={`${tn}-r-${ri}-${nm}`}
+              key={`${tn}-r-${ri}-${nm}-${brChip}`}
               className="min-w-0 max-w-[min(100%,14rem)] rounded-full border border-white/[0.14] bg-black/40 px-2.5 py-1 text-[11px] font-semibold leading-snug text-white/90 shadow-sm sm:px-3 sm:text-xs"
             >
               <span className="block break-words">{nm}</span>
+              {ph !== 'lobby' ? (
+                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums font-bold text-casino-emerald">
+                  {formatVenueBankroll(brChip)}
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -853,10 +861,24 @@ function firstNameSortKey(displayName: string): string {
   return w ?? t
 }
 
+/** Any numbered felt has advanced past lobby — venue lists switch to chip / bankroll leaderboard order. */
+function venueWallGameplayActive(tiles: DisplayVenueTileSnapshot[]): boolean {
+  return tiles.some((t) => t.phase !== 'lobby')
+}
+
+function comparePlayersByFirstNameThenFullName(a: { name: string }, b: { name: string }): number {
+  const cmp = firstNameSortKey(a.name).localeCompare(firstNameSortKey(b.name), undefined, {
+    sensitivity: 'base',
+  })
+  if (cmp !== 0) return cmp
+  return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+}
+
 function rosterRowsFromTiles(
   tiles: DisplayVenueTileSnapshot[]
 ): { name: string; tableNum: number; bankroll: number }[] {
   const out: { name: string; tableNum: number; bankroll: number }[] = []
+  const leaderboardOrder = venueWallGameplayActive(tiles)
   for (const t of tiles) {
     const sn = t.seatNames
     const br = padSeatBankrolls(t.seatBankrolls)
@@ -867,6 +889,12 @@ function rosterRowsFromTiles(
     }
   }
   out.sort((a, b) => {
+    if (leaderboardOrder) {
+      if (b.bankroll !== a.bankroll) return b.bankroll - a.bankroll
+      const c = comparePlayersByFirstNameThenFullName(a, b)
+      if (c !== 0) return c
+      return a.tableNum - b.tableNum
+    }
     const cmp = firstNameSortKey(a.name).localeCompare(firstNameSortKey(b.name), undefined, {
       sensitivity: 'base',
     })
@@ -876,7 +904,32 @@ function rosterRowsFromTiles(
   return out
 }
 
+/** Sorted player chips line for mosaic crawl tiles (seat order preserved on felts elsewhere). */
+function crawlTableChipRoster(
+  seatNames: string[],
+  seatBankrolls: number[],
+  tablePhase: string
+): { name: string; bankroll: number }[] {
+  const pairs: { name: string; bankroll: number }[] = []
+  for (let i = 0; i < VENUE_SEAT_SLOTS; i++) {
+    const nm = seatNames[i]?.trim()
+    if (nm) pairs.push({ name: nm, bankroll: seatBankrolls[i] ?? 0 })
+  }
+  if (tablePhase === 'lobby') {
+    pairs.sort((a, b) => comparePlayersByFirstNameThenFullName(a, b))
+  } else {
+    pairs.sort((a, b) => {
+      if (b.bankroll !== a.bankroll) return b.bankroll - a.bankroll
+      const c = comparePlayersByFirstNameThenFullName(a, b)
+      if (c !== 0) return c
+      return 0
+    })
+  }
+  return pairs
+}
+
 function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) {
+  const gameOn = useMemo(() => venueWallGameplayActive(tiles), [tiles])
   const rows = useMemo(() => rosterRowsFromTiles(tiles), [tiles])
   if (rows.length === 0) return null
 
@@ -886,11 +939,15 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
   return (
     <aside
       className={`fixed inset-y-0 right-0 z-20 flex flex-col border-l border-yellow-600/50 bg-slate-950/94 shadow-[-8px_0_28px_rgba(0,0,0,0.4)] backdrop-blur-md ${VENUE_CRAWL_STRIP_CLASS}`}
-      aria-label="Players and table assignments"
+      aria-label={
+        gameOn
+          ? 'Player stacks ranked by bankroll across numbered tables.'
+          : 'Players and table assignments by first name.'
+      }
     >
       <div className="shrink-0 border-b border-white/10 px-3 py-3.5 sm:px-4 sm:py-4">
         <h2 className="text-2xl font-bold leading-none tracking-tight text-white/92 sm:text-3xl">
-          Seating
+          {gameOn ? 'Stacks' : 'Seating'}
         </h2>
       </div>
       <div
