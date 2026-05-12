@@ -993,57 +993,62 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
         />
       </div>
 
-      <header className="relative z-10 border-b border-white/10 bg-transparent px-4 py-2 sm:px-6 sm:py-2.5">
+      <header className="relative z-10 border-b border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm sm:px-5 sm:py-2.5 lg:py-3">
         <motion.div
-          className="mx-auto flex w-full max-w-[1600px] justify-center"
-          initial={skipMountIntro ? false : { opacity: 0, y: -10 }}
+          className={`mx-auto flex w-full max-w-[1600px] items-start gap-3 sm:items-center sm:gap-5 ${
+            showHeadline ? 'min-h-[3.75rem]' : ''
+          } sm:min-h-0`}
+          initial={skipMountIntro ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex min-w-0 justify-center">
-            <div
-              className="max-w-full w-[calc(min(86vw,(min(1600px,100vw)-2rem)*0.92)*0.96)] sm:w-[calc((min(1600px,100vw)-2rem-1.25rem)*0.48)] lg:w-[calc((min(1600px,100vw)-2rem-3.75rem)*0.24)]"
-              style={{ aspectRatio: '958 / 592' }}
-            >
-              <QuizzEmWordmark layout="fill" />
-            </div>
-          </div>
-        </motion.div>
-      </header>
-
-      <div className="relative z-10 mx-auto max-w-[1600px] px-4 pt-5 sm:px-6 sm:pt-6">
-        {showHeadline ? (
-          <motion.section
-            className="mb-8 rounded-2xl border-2 border-casino-emerald/40 bg-black/65 p-6 shadow-[0_0_40px_rgba(0,255,180,0.08)] backdrop-blur-md sm:p-8"
-            initial={skipMountIntro ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
+            className="shrink-0 self-center w-[clamp(8.75rem,min(38vw,12rem),14rem)] sm:w-[clamp(10rem,min(34vw,14rem),16rem)]"
+            style={{ aspectRatio: '958 / 592' }}
           >
-            <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start lg:gap-10">
-              {headlineQuestionText ? (
-                <p className="flex-1 text-balance text-center text-5xl font-bold leading-snug text-yellow-400 sm:text-left md:text-6xl lg:text-7xl">
-                  {headlineQuestionText}
-                </p>
-              ) : (
-                <div className="hidden flex-1 lg:block" aria-hidden />
-              )}
+            <QuizzEmWordmark layout="fill" />
+          </div>
+
+          {showHeadline ? (
+            <motion.div
+              className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-xl border border-casino-emerald/35 bg-black/40 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(0,255,180,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:gap-5 sm:px-4 sm:py-3"
+              initial={skipMountIntro ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="min-w-0 flex-1">
+                {headlineQuestionText ? (
+                  <p className="text-balance text-left text-xl font-bold leading-snug text-yellow-400 sm:text-2xl md:text-3xl lg:text-4xl xl:text-[2.75rem] xl:leading-tight">
+                    {headlineQuestionText}
+                  </p>
+                ) : (
+                  <p className="sr-only">Answering in progress.</p>
+                )}
+              </div>
               {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
                 <div
-                  className={`flex min-w-[9.5rem] shrink-0 flex-col items-center justify-center self-center rounded-xl border px-7 py-6 lg:self-stretch lg:justify-center ${
+                  className={`flex shrink-0 flex-row items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 sm:flex-col sm:px-4 sm:py-2 sm:tabular-nums ${
                     timerSeconds <= 10
-                      ? 'border-amber-400/60 bg-amber-950/40 shadow-[0_0_28px_rgba(251,191,36,0.12)]'
-                      : 'border-amber-500/35 bg-amber-950/30'
+                      ? 'border-amber-400/55 bg-amber-950/45 shadow-[0_0_20px_rgba(251,191,36,0.1)]'
+                      : 'border-amber-600/35 bg-amber-950/25'
                   }`}
+                  aria-live="polite"
+                  aria-label={`Time remaining ${timerSeconds} seconds`}
                 >
-                  <div className="font-mono text-8xl font-black tabular-nums tracking-tight text-amber-200 sm:text-9xl">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-white/50 sm:hidden">
+                    Time
+                  </span>
+                  <div className="font-mono text-4xl font-black tracking-tight text-amber-200 sm:text-5xl md:text-6xl lg:text-7xl">
                     {timerSeconds}s
                   </div>
                 </div>
               ) : null}
-            </div>
-          </motion.section>
-        ) : null}
-      </div>
+            </motion.div>
+          ) : (
+            <div className="min-w-0 flex-1" aria-hidden />
+          )}
+        </motion.div>
+      </header>
 
-      <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 sm:px-6">
+      <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 pt-3 sm:px-6 sm:pt-4">
         {wall != null && tileRows.length === 0 ? (
           <motion.div
             className="rounded-2xl border border-yellow-700/35 bg-black/55 p-10 text-center shadow-xl backdrop-blur-md sm:p-14"
@@ -1060,7 +1065,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
         ) : showSeatingSpotlightCycle && seatingHeroRow ? (
           <section
             aria-label="Seating spotlight tour"
-            className="mx-auto flex max-h-[calc(100dvh-11.25rem)] min-h-0 w-full max-w-[min(1024px,min(96dvw,100%))] flex-col gap-3 overflow-hidden sm:gap-4"
+            className="mx-auto flex max-h-[calc(100dvh-10rem)] min-h-0 w-full max-w-[min(1024px,min(96dvw,100%))] flex-col gap-3 overflow-hidden sm:gap-4"
           >
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Spotlight showing table {seatingHeroRow.tableNum}
