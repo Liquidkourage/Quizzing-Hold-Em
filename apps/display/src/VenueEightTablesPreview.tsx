@@ -85,7 +85,7 @@ function SeatRingWithLabels({
   feltSeatStacks?: boolean
 }) {
   const lgRing =
-    'mx-auto aspect-[10/8] h-auto w-[min(100%,64rem)] max-w-full max-h-[min(72svh,48rem)] shrink-0'
+    'mx-auto aspect-[10/8] h-auto max-h-full w-[min(100%,64rem)] max-w-full min-h-0 shrink-0'
   const wrap =
     size === 'lg'
       ? lgRing
@@ -99,7 +99,7 @@ function SeatRingWithLabels({
   return (
     <div className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
       <div
-        className={`absolute inset-[10%_6%_13%_6%] rounded-[50%] border-amber-700/70 shadow-inner ${
+        className={`absolute inset-[11%_7%_14%_7%] rounded-[50%] border-amber-700/70 shadow-inner ${
           size === 'lg' ? 'border-[3px]' : 'border-2'
         }`}
         style={{
@@ -117,10 +117,10 @@ function SeatRingWithLabels({
       />
       {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
         const a = (i / 8) * 2 * Math.PI - Math.PI / 2
-        const xr = 48 * Math.cos(a)
-        const yr = 38 * Math.sin(a)
-        const lx = 54 * Math.cos(a)
-        const ly = 42 * Math.sin(a)
+        const xr = size === 'lg' ? 47 * Math.cos(a) : 48 * Math.cos(a)
+        const yr = size === 'lg' ? 37 * Math.sin(a) : 38 * Math.sin(a)
+        const lx = size === 'lg' ? 51 * Math.cos(a) : 54 * Math.cos(a)
+        const ly = size === 'lg' ? 38.5 * Math.sin(a) : 42 * Math.sin(a)
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
         const chips = seatBankrolls[i] ?? 0
@@ -313,9 +313,9 @@ function VenueMosaicTableCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 pb-5 pt-3 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:pb-6 sm:pt-4 md:px-6"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 pb-4 pt-2 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:pb-5 sm:pt-3 md:px-6"
       >
-        <div className="-mt-1 shrink-0 pb-2">
+        <div className="-mt-0.5 shrink-0 pb-1">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-base font-semibold uppercase tracking-[0.14em] text-white/65 sm:text-lg">
@@ -333,7 +333,7 @@ function VenueMosaicTableCard({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-start pt-0">
+        className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden pt-1"
           <SeatRingWithLabels
             seatedCount={seats}
             seatNames={seatNames}
@@ -343,7 +343,7 @@ function VenueMosaicTableCard({
           />
         </div>
 
-        <dl className="mt-auto shrink-0 space-y-1.5 border-t border-white/10 pt-3 text-xl leading-snug sm:space-y-2 sm:pt-4 sm:text-2xl md:text-3xl lg:text-[2.25rem]">
+        <dl className="relative z-[4] mt-3 shrink-0 space-y-1.5 border-t border-white/10 bg-black/55 pt-3 text-xl leading-snug backdrop-blur-sm sm:mt-4 sm:space-y-2 sm:pt-4 sm:text-2xl md:text-3xl lg:text-[2.25rem]">
           <div className="flex justify-between gap-3">
             <dt className="font-semibold text-white/70">Occupied seats</dt>
             <dd className="font-mono font-bold tabular-nums text-casino-emerald">
