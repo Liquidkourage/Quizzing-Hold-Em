@@ -180,6 +180,8 @@ function venueTileActingSeat(row: DisplayVenueTileSnapshot): number | null {
     isBettingOpen: row.isBettingOpen ?? undefined,
   })
   if (fromRound != null) return fromRound
+  /** Closed betting / sentinel index — never resurrect a stale wall `actingSeatIndex`. */
+  if (row.isBettingOpen === false || row.currentPlayerIndex === -1) return null
   const legacy = row.actingSeatIndex
   if (
     typeof legacy === 'number' &&
@@ -190,6 +192,24 @@ function venueTileActingSeat(row: DisplayVenueTileSnapshot): number | null {
     return Math.floor(legacy)
   }
   return null
+}
+
+/** Betting phase but no seat may act yet (between streets / waiting on host). */
+function venueTileBettingPausedCenter(row: DisplayVenueTileSnapshot): boolean {
+  const ph = String(row.phase ?? '').trim().toLowerCase()
+  if (ph !== 'betting' || row.seated < 2) return false
+  if (venueTileActingSeat(row) != null) return false
+  return row.isBettingOpen === false || row.currentPlayerIndex === -1
+}
+
+function mosaicPhaseLabel(row: DisplayVenueTileSnapshot): string {
+  if (venueTileBettingPausedCenter(row)) return 'Wager pause'
+  return phaseLabel(row.phase)
+}
+
+function mosaicPhaseAccent(row: DisplayVenueTileSnapshot): string {
+  if (venueTileBettingPausedCenter(row)) return 'text-sky-200 ring-1 ring-sky-400/50'
+  return phaseAccent(row.phase)
 }
 
 /**
@@ -348,6 +368,7 @@ function SeatRingWithLabels({
   feltSeatStacks = false,
   blindSeats = null,
   actingSeatIndex = null,
+  bettingPaused = false,
 }: {
   seatedCount: number
   seatNames: string[]
@@ -359,6 +380,8 @@ function SeatRingWithLabels({
   blindSeats?: VenueWallBlindSeats | null
   /** Pulse this seat rim during open betting; null hides. Matches `seatNames` index. */
   actingSeatIndex?: number | null
+  /** Center-of-felt cue when this table is in betting but action is closed (host / next street). */
+  bettingPaused?: boolean
 }) {
   const prefersReducedMotion = usePrefersReducedMotion()
   const lgRing =
@@ -409,6 +432,8 @@ function SeatRingWithLabels({
     [feltSeatStacks, ringPx.h, ringPx.w, seatNames, size]
   )
 
+  const showBettingPaused = bettingPaused && actingSeatIndex == null
+
   return (
     <div ref={ringElRef} className={`relative overflow-visible ${wrap}`}>
       <div
@@ -429,9 +454,26 @@ function SeatRingWithLabels({
               #1b4528 4px
             ),
             linear-gradient(135deg, #2d7a4a, #1e502e)
-          `,
+            `,
         }}
       />
+      {showBettingPaused ? (
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 z-[11] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center px-2"
+          role="status"
+          aria-label="Wagering paused on this table until the host advances."
+        >
+          <span
+            className={`whitespace-nowrap rounded-lg border-[3px] border-black bg-sky-300 px-[0.45rem] py-[5px] font-black uppercase leading-none tracking-wide text-black shadow-[0_2px_0_0_rgb(9,9,11),0_0_20px_rgba(125,211,252,0.95)] sm:px-[0.55rem] ${
+              size === 'lg'
+                ? 'text-[0.66rem] sm:text-[0.76rem] md:text-[0.88rem]'
+                : 'text-[0.52rem] sm:text-[0.58rem] md:text-[0.66rem]'
+            }`}
+          >
+            Wager pause
+          </span>
+        </div>
+      ) : null}
       {Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
         const seatRim = feltEllipsePct(i, 1)
         const chipPos = feltEllipsePct(i, chipInnerScale)
@@ -634,6 +676,7 @@ function VenueMosaicTableCard({
   const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
   const blindSeatSnapshot = venueTileBlindSeats(row)
   const actingSeat = venueTileActingSeat(row)
+  const bettingPaused = venueTileBettingPausedCenter(row)
 
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true
@@ -700,9 +743,9 @@ function VenueMosaicTableCard({
           <div className="flex flex-wrap items-start justify-between gap-2">
             <span className="text-base font-bold leading-snug text-white/95 sm:text-lg">Table {tn}</span>
             <span
-              className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-bold uppercase leading-tight sm:text-xs ${phaseAccent(ph)}`}
+              className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-bold uppercase leading-tight sm:text-xs ${mosaicPhaseAccent(row)}`}
             >
-              {phaseLabel(ph)}
+              {mosaicPhaseLabel(row)}
             </span>
           </div>
           <p className="text-sm leading-snug text-white/75 sm:text-base">
@@ -760,9 +803,9 @@ function VenueMosaicTableCard({
               </div>
             </div>
             <span
-              className={`max-w-[min(11rem,46%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-snug sm:max-w-[12rem] sm:rounded-xl sm:px-3 sm:py-2 sm:text-base md:text-lg ${phaseAccent(ph)}`}
+              className={`max-w-[min(11rem,46%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-snug sm:max-w-[12rem] sm:rounded-xl sm:px-3 sm:py-2 sm:text-base md:text-lg ${mosaicPhaseAccent(row)}`}
             >
-              {phaseLabel(ph)}
+              {mosaicPhaseLabel(row)}
             </span>
           </div>
         </div>
@@ -776,6 +819,7 @@ function VenueMosaicTableCard({
             feltSeatStacks
             blindSeats={blindSeatSnapshot}
             actingSeatIndex={actingSeat}
+            bettingPaused={bettingPaused}
           />
         </div>
 
@@ -821,9 +865,9 @@ function VenueMosaicTableCard({
           </div>
         </div>
         <span
-          className={`max-w-[min(10rem,48%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-tight sm:max-w-none sm:px-3.5 sm:py-2 sm:text-base md:text-lg ${phaseAccent(ph)}`}
+          className={`max-w-[min(10rem,48%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-tight sm:max-w-none sm:px-3.5 sm:py-2 sm:text-base md:text-lg ${mosaicPhaseAccent(row)}`}
         >
-          {phaseLabel(ph)}
+          {mosaicPhaseLabel(row)}
         </span>
       </div>
 
@@ -834,6 +878,7 @@ function VenueMosaicTableCard({
           seatBankrolls={seatBankrolls}
           blindSeats={blindSeatSnapshot}
           actingSeatIndex={actingSeat}
+          bettingPaused={bettingPaused}
         />
       </div>
 
