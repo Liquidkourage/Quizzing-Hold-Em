@@ -1670,7 +1670,8 @@ io.on('connection', (socket) => {
           for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = dealInitialCards(gs)
-            gs = runVirtualPlayerSimulation(gs)
+            // Skip runVirtualPlayerSimulation here: draining CPU seats instantly can close
+            // preflop before the venue snapshot renders, hiding the Action seat on every felt.
             rooms.set(tk, gs)
             io.to(tk).emit('dealingCards')
             emitVenueTableState(tk, gs)
@@ -1694,7 +1695,7 @@ io.on('connection', (socket) => {
             gs = dealCommunityCards(gs)
             const dealt = gs.round.communityCards.length > communityBefore
             if (dealt) anyDealt = true
-            gs = runVirtualPlayerSimulation(gs)
+            // Same as hole-card deal — avoid draining an all-CPU table through round-2 instantly.
             rooms.set(tk, gs)
             emitVenueTableState(tk, gs)
             if (dealt) {
