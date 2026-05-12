@@ -84,9 +84,11 @@ function SeatRingWithLabels({
   /** Spotlight hero: draw mini chip stack + bankroll on the felt by each seated player. */
   feltSeatStacks?: boolean
 }) {
+  const lgRing =
+    'mx-auto aspect-[10/8] h-auto w-[min(100%,43rem)] max-w-full max-h-[min(58svh,32rem)] shrink-0'
   const wrap =
     size === 'lg'
-      ? 'w-full min-w-0 max-h-full max-w-none'
+      ? lgRing
       : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
   const dot = size === 'lg' ? 'h-9 w-9' : 'h-8 w-8'
   const labelClass =
@@ -95,9 +97,7 @@ function SeatRingWithLabels({
       : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
-    <div
-      className={`relative mx-auto aspect-[10/8] ${size === 'lg' ? 'min-h-0 max-h-full' : ''} w-full ${wrap}`}
-    >
+    <div className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
       <div
         className="absolute inset-[10%_6%_13%_6%] rounded-[50%] border-2 border-amber-700/70 shadow-inner"
         style={{
