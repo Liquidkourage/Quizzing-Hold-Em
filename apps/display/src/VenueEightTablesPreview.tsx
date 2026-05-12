@@ -502,24 +502,20 @@ function SeatRingWithLabels({
         const actionChipTopPct = (seatRim.topPct + 50) * 0.5
         const seatDotClass = (() => {
           if (isActing && prefersReducedMotion) {
-            return 'border-[6px] border-white bg-neutral-950 shadow-[0_0_36px_8px_rgba(250,204,21,0.95),inset_0_0_14px_rgba(253,224,71,0.35)]'
+            return 'border-[3px] border-amber-200/95 bg-neutral-950 shadow-[0_0_14px_rgba(234,179,8,0.4)]'
           }
           if (isActing) {
-            return 'border-[5px] border-yellow-50 bg-neutral-950 shadow-[0_0_28px_rgba(250,204,21,0.95),0_0_48px_rgba(251,191,36,0.55),inset_0_0_14px_rgba(254,252,232,0.12)] motion-reduce:border-[6px] motion-reduce:border-white motion-reduce:shadow-[0_0_36px_8px_rgba(250,204,21,0.95)] motion-reduce:animate-none'
+            return 'border-[3px] border-amber-300/85 bg-neutral-950 shadow-[0_0_14px_rgba(234,179,8,0.35)] ring-1 ring-amber-400/25'
           }
           if (isFolded) {
             return 'border-rose-500/50 bg-black/50 shadow-inner opacity-[0.78] saturate-[0.7]'
           }
           return filled ? 'border-emerald-300/70 bg-black/85' : 'border-white/20 bg-black/35'
         })()
-        const pingOuterClasses =
+        const actingSoftPulse =
           size === 'lg'
-            ? 'h-28 w-28 bg-amber-200/85 shadow-[0_0_52px_rgba(250,204,21,0.92)] sm:h-32 sm:w-32'
-            : 'h-[7rem] w-[7rem] bg-amber-200/85 shadow-[0_0_52px_rgba(250,204,21,0.92)]'
-        const pingInnerClasses =
-          size === 'lg'
-            ? 'h-24 w-24 animate-ping [animation-duration:2.2s] bg-yellow-300/72 shadow-[0_0_44px_rgba(253,224,71,0.88)] sm:h-28 sm:w-28'
-            : 'h-[5.5rem] w-[5.5rem] animate-ping [animation-duration:2.2s] bg-yellow-300/72 shadow-[0_0_40px_rgba(253,224,71,0.88)]'
+            ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden'
+            : 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-11 w-11 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/10 motion-reduce:hidden'
         return (
           <div key={i}>
             <div
@@ -531,16 +527,7 @@ function SeatRingWithLabels({
               }}
             >
               {isActing && !prefersReducedMotion ? (
-                <>
-                  <span
-                    aria-hidden
-                    className={`pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 rounded-full ${pingOuterClasses} animate-ping`}
-                  />
-                  <span
-                    aria-hidden
-                    className={`pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 rounded-full [animation-delay:480ms] ${pingInnerClasses}`}
-                  />
-                </>
+                <span aria-hidden className={`${actingSoftPulse} motion-safe:animate-pulse motion-safe:[animation-duration:2.8s]`} />
               ) : null}
               <div
                 className={`relative z-[2] shrink-0 ${dot} rounded-full border-2 shadow ${seatDotClass}`}
@@ -564,7 +551,7 @@ function SeatRingWithLabels({
                   top: `${actionChipTopPct}%`,
                 }}
               >
-                <span className="whitespace-nowrap rounded-md border-[3px] border-black bg-yellow-400 px-[0.42rem] py-[3px] text-[0.55rem] font-black uppercase leading-none tracking-wide text-black shadow-[0_2px_0_0_rgb(9,9,11),0_0_24px_rgba(253,224,71,1)] sm:px-[0.5rem] sm:text-[0.62rem] md:text-[0.74rem]">
+                <span className="whitespace-nowrap rounded border border-amber-900/35 bg-amber-300/90 px-[0.28rem] py-px text-[0.48rem] font-bold uppercase leading-none tracking-wide text-neutral-950 shadow-sm sm:px-[0.32rem] sm:text-[0.52rem] md:text-[0.56rem]">
                   Action
                 </span>
                 {size === 'lg' ? (
