@@ -104,6 +104,156 @@ function feltEllipsePct(seatIndex: number, radialScale: number): { leftPct: numb
   }
 }
 
+/** Polar angle θ for seat i (matches {@link feltEllipsePct}). */
+function seatThetaRad(seatIndex: number): number {
+  return (seatIndex / VENUE_SEAT_SLOTS) * 2 * Math.PI - Math.PI / 2
+}
+
+/**
+ * Rim point and outward unit normal on the inset felt ellipse (pixel space of wrapper `w×h`).
+ * Normal is Euclidean for the ellipse with semi-axes Rx, Ry derived from frac-space rx, ry.
+ */
+function ellipseRimPxAndOutwardNormal(
+  seatIndex: number,
+  w: number,
+  h: number
+): { rimX: number; rimY: number; ux: number; uy: number; Rx: number; Ry: number } {
+  const θ = seatThetaRad(seatIndex)
+  const { cx, cy, rx, ry } = TABLE_FELT_ELLIPSE
+  const Rx = rx * w
+  const Ry = ry * h
+  const cxx = cx * w
+  const cyy = cy * h
+  const c = Math.cos(θ)
+  const s = Math.sin(θ)
+  const rimX = cxx + Rx * c
+  const rimY = cyy + Ry * s
+  const gx = c / Rx
+  const gy = s / Ry
+  const len = Math.hypot(gx, gy)
+  const ux = gx / len
+  const uy = gy / len
+  return { rimX, rimY, ux, uy, Rx, Ry }
+}
+
+/** Fallback label anchor when wrapper size unknown (SSR / first paint). */
+function fallbackLabelEllipseScale(size: 'md' | 'lg', feltStacks: boolean): number {
+  if (size === 'lg') return feltStacks ? 1.2 : 1.14
+  return feltStacks ? 1.16 : 1.125
+}
+
+/** Dot diameters match Tailwind classes on seat markers ({@link SeatRingWithLabels}). */
+function seatDotDiameterPx(rootRemPx: number, size: 'md' | 'lg'): number {
+  if (size !== 'lg') return 2 * rootRemPx
+  const sm =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(min-width:640px)').matches
+  return (sm ? 3.15 : 2.8375) * rootRemPx
+}
+
+/**
+ * Outward label anchor in wrapper % so labels sit outside seat dots, clear the chip band (lg hero),
+ * avoid other seat markers, and spread along the tangent when adjacent names would crowd.
+ */
+function computeSeatLabelAnchorsPct(args: {
+  w: number
+  h: number
+  size: 'md' | 'lg'
+  feltSeatStacks: boolean
+  seatNames: string[]
+}): ({ leftPct: number; topPct: number } | null)[] {
+  const { w, h, size, feltSeatStacks, seatNames } = args
+  const empty = () =>
+    Array.from({ length: VENUE_SEAT_SLOTS }, () => null as { leftPct: number; topPct: number } | null)
+  if (!(w > 0 && h > 0)) return empty()
+
+  const rootRem =
+    typeof document !== 'undefined'
+      ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+      : 16
+  const dotR = seatDotDiameterPx(rootRem, size) / 2
+  /** Half of approx. name block inward toward the felt so text does not swallow the seat dot. */
+  const labelHalfInwardPx =
+    size === 'lg' ? (feltSeatStacks ? 40 : 44) : 34
+  /** Felt chip PNG + bankroll sits between dot and center on the hero layout. */
+  const chipBandClearancePx = feltSeatStacks && size === 'lg' ? 56 : 0
+  const padPx = 6
+  const neighborDotPadPx = 10
+  const estLabelHalfWidthPx =
+    size === 'lg' ? Math.min(0.34 * w, 12 * rootRem) / 2 : Math.min(0.5 * w, 8.5 * rootRem) / 2
+  const labelPairMinDistPx = 2 * estLabelHalfWidthPx + 10
+
+  const rimCache = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
+    ellipseRimPxAndOutwardNormal(j, w, h)
+  )
+
+  const out = empty()
+  const priors: { x: number; y: number }[] = []
+
+  const orderedSeats = Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => i).filter(
+    (i) => (seatNames[i]?.trim() ?? '').length > 0
+  )
+
+  for (const i of orderedSeats) {
+    const { rimX, rimY, ux, uy } = rimCache[i]!
+    const tux = -uy
+    const tuy = ux
+
+    let dPx = dotR + padPx + labelHalfInwardPx + chipBandClearancePx
+    let kTan = 0
+    let lx = rimX
+    let ly = rimY
+
+    const dotsClear = (xx: number, yy: number) => {
+      for (let j = 0; j < VENUE_SEAT_SLOTS; j++) {
+        const rj = rimCache[j]!
+        if (Math.hypot(xx - rj.rimX, yy - rj.rimY) < dotR + neighborDotPadPx) return false
+      }
+      return true
+    }
+
+    const labelsClear = (xx: number, yy: number) => {
+      for (const p of priors) {
+        if (Math.hypot(xx - p.x, yy - p.y) < labelPairMinDistPx) return false
+      }
+      return true
+    }
+
+    let placed = false
+    for (let step = 0; step < 48 && !placed; step++) {
+      lx = rimX + ux * dPx + tux * kTan
+      ly = rimY + uy * dPx + tuy * kTan
+
+      if (!dotsClear(lx, ly)) {
+        dPx += 5
+        continue
+      }
+      if (labelsClear(lx, ly)) {
+        placed = true
+        break
+      }
+
+      const dir = i % 2 === 0 ? 1 : -1
+      kTan += dir * 12
+      if (Math.abs(kTan) > 88) {
+        kTan = 0
+        dPx += 7
+      }
+    }
+
+    if (!placed) {
+      lx = rimX + ux * dPx + tux * kTan
+      ly = rimY + uy * dPx + tuy * kTan
+    }
+
+    priors.push({ x: lx, y: ly })
+    out[i] = { leftPct: (lx / w) * 100, topPct: (ly / h) * 100 }
+  }
+
+  return out
+}
+
 /**
  * Eight seat positions around the mini felt; optional name chips just outside each chair.
  */
@@ -133,12 +283,44 @@ function SeatRingWithLabels({
       ? 'max-w-[min(12rem,34vw)] text-[1.125rem] leading-tight sm:text-[1.3rem] sm:leading-snug md:text-[1.5625rem]'
       : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
-  const labelOuterScale = size === 'lg' ? 1.1 : 1.125
   /** Bankroll stack on felt: fraction of rim radius toward table center (same ray as seat). */
   const chipInnerScale = 0.56
 
+  const ringElRef = useRef<HTMLDivElement>(null)
+  const [ringPx, setRingPx] = useState({ w: 0, h: 0 })
+
+  useLayoutEffect(() => {
+    const el = ringElRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+
+    const apply = () => {
+      const r = el.getBoundingClientRect()
+      const ww = r.width
+      const hh = r.height
+      if (ww > 0 && hh > 0)
+        setRingPx((prev) => (prev.w === ww && prev.h === hh ? prev : { w: ww, h: hh }))
+    }
+
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const labelAnchorsPct = useMemo(
+    () =>
+      computeSeatLabelAnchorsPct({
+        w: ringPx.w,
+        h: ringPx.h,
+        size,
+        feltSeatStacks,
+        seatNames,
+      }),
+    [feltSeatStacks, ringPx.h, ringPx.w, seatNames, size]
+  )
+
   return (
-    <div className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
+    <div ref={ringElRef} className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
       <div
         className={`absolute rounded-[50%] border-amber-700/70 shadow-inner ${
           size === 'lg' ? 'border-2 sm:border-[3px]' : 'border-2'
@@ -163,7 +345,10 @@ function SeatRingWithLabels({
       {Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
         const seatRim = feltEllipsePct(i, 1)
         const chipPos = feltEllipsePct(i, chipInnerScale)
-        const labelPos = feltEllipsePct(i, labelOuterScale)
+        const anchored = labelAnchorsPct[i]
+        const fb = fallbackLabelEllipseScale(size, Boolean(feltSeatStacks && size === 'lg'))
+        const fallbackPos = feltEllipsePct(i, fb)
+        const labelPos = anchored ?? fallbackPos
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
         const chips = seatBankrolls[i] ?? 0
