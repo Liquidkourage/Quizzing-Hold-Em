@@ -1016,7 +1016,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             >
               <div className="min-w-0 flex-1">
                 {headlineQuestionText ? (
-                  <p className="text-balance text-left text-xl font-bold leading-snug text-yellow-400 sm:text-2xl md:text-3xl lg:text-4xl xl:text-[2.75rem] xl:leading-tight">
+                  <p className="text-balance text-left text-2xl font-bold leading-snug text-yellow-400 sm:text-3xl md:text-4xl lg:text-5xl xl:text-[3.65rem] xl:leading-[1.2] 2xl:text-[4.125rem]">
                     {headlineQuestionText}
                   </p>
                 ) : (
