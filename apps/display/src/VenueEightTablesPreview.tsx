@@ -9,9 +9,14 @@ import {
 } from '@qhe/core'
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
 
-import seatChipStackImg from './assets/seat-chip-stack.svg'
-
 const VENUE_SEAT_SLOTS = 8
+
+/**
+ * There is no single “casino chip stack” emoji — Unicode only has combos.
+ * Overlapped large-colored-circle emojis read like multicolor stacks on Twemoji /
+ * Apple / Noto; tighter than stacking 🪙 (coin), which reads as metallic change.
+ */
+const SEAT_CHIP_STACK_LAYERS = ['🔴', '🟡', '🟢'] as const
 
 /** Fixed crawl strips (Players + All tables): keep widths and page padding in sync */
 const VENUE_CRAWL_STRIP_CLASS = 'w-80 sm:w-[22rem] lg:w-96'
@@ -143,14 +148,21 @@ function SeatRingWithLabels({
                   transform: 'translate(-50%, -50%)',
                 }}
               >
-                <img
-                  src={seatChipStackImg}
-                  alt=""
-                  width={48}
-                  height={56}
-                  draggable={false}
-                  className="pointer-events-none h-11 w-auto select-none object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.45)] sm:h-14"
-                />
+                <span
+                  className="relative mx-auto flex shrink-0 select-none flex-col items-center pb-1 pt-2"
+                  aria-hidden
+                >
+                  {SEAT_CHIP_STACK_LAYERS.map((glyph, idx) => (
+                    <span
+                      key={idx}
+                      className={`block text-[clamp(1.95rem,7.5vw,2.55rem)] leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.55)] ${
+                        idx < SEAT_CHIP_STACK_LAYERS.length - 1 ? '-mb-[0.78rem] sm:-mb-[0.9rem]' : ''
+                      } ${idx === 0 ? '-translate-x-0.5' : idx === 1 ? 'translate-x-[3px]' : '-translate-x-px'}`}
+                    >
+                      {glyph}
+                    </span>
+                  ))}
+                </span>
                 <span className="max-w-[9rem] text-center font-mono text-sm font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-base md:text-lg [text-shadow:0_2px_4px_rgba(0,0,0,0.9)]">
                   {formatVenueBankroll(chips)}
                 </span>
