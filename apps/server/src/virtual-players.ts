@@ -128,7 +128,7 @@ function stepVirtualSimulation(state: GameState): GameState {
     return submitAnswer(state, virtualFirstNeedingAnswer.id, answer)
   }
 
-  if (state.phase !== 'betting' || !state.round.isBettingOpen) return state
+  if (state.phase !== 'betting' || state.round.isBettingOpen === false) return state
 
   const idx = typeof state.round.currentPlayerIndex === 'number' ? state.round.currentPlayerIndex : -1
   if (idx < 0 || idx >= state.players.length) return state

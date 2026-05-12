@@ -388,15 +388,26 @@ export function displayBlindSeatIndices(
 
 /** Seat whose action it is during open wagering (`players[]` / venue `seatNames` index). Null otherwise. */
 export function displayActingSeatIndex(
-  phase: GamePhase,
+  phase: GamePhase | string,
   seatedPlayerCount: number,
-  round: Pick<RoundState, 'currentPlayerIndex' | 'isBettingOpen'>
+  round: Partial<Pick<RoundState, 'currentPlayerIndex' | 'isBettingOpen'>>
 ): number | null {
-  if (phase !== 'betting') return null;
-  if (round.isBettingOpen !== true) return null;
-  const idx = round.currentPlayerIndex;
+  const ph = String(phase ?? '').trim().toLowerCase();
+  if (ph !== 'betting') return null;
+  // Only an explicit `false` means “no one may act”. Missing / undefined must not hide a valid `currentPlayerIndex`
+  // (older snapshots, partial merges, or JSON without the flag).
+  if (round.isBettingOpen === false) return null;
+
+  const raw = round.currentPlayerIndex as unknown;
+  let idx: number | undefined;
+  if (typeof raw === 'number' && Number.isFinite(raw)) idx = raw;
+  else if (typeof raw === 'string' && raw.trim() !== '') {
+    const n = Number(raw);
+    if (Number.isFinite(n)) idx = n;
+  }
+
   const n = Math.max(0, Math.floor(seatedPlayerCount));
-  if (typeof idx !== 'number' || !Number.isFinite(idx)) return null;
+  if (idx === undefined) return null;
   const i = Math.floor(idx);
   if (i < 0 || i >= n) return null;
   return i;

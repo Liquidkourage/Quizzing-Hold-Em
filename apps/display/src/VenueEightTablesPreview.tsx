@@ -5,6 +5,7 @@ import {
   DISPLAY_PREVIEW_BANKROLLS,
   DISPLAY_PREVIEW_SYNCED_PHASE,
   DISPLAY_PREVIEW_TABLES,
+  displayActingSeatIndex,
   displayBlindSeatIndices,
   rehearsalSeatDisplayName,
 } from '@qhe/core'
@@ -170,6 +171,25 @@ function venueTileBlindSeats(row: DisplayVenueTileSnapshot): VenueWallBlindSeats
     smallBlindSeatIndex: row.smallBlindSeatIndex ?? null,
     bigBlindSeatIndex: row.bigBlindSeatIndex ?? null,
   }
+}
+
+/** Engine-derived seat with the wagering action (may differ from stale `actingSeatIndex` alone). */
+function venueTileActingSeat(row: DisplayVenueTileSnapshot): number | null {
+  const fromRound = displayActingSeatIndex(row.phase, row.seated, {
+    currentPlayerIndex: row.currentPlayerIndex ?? undefined,
+    isBettingOpen: row.isBettingOpen ?? undefined,
+  })
+  if (fromRound != null) return fromRound
+  const legacy = row.actingSeatIndex
+  if (
+    typeof legacy === 'number' &&
+    Number.isFinite(legacy) &&
+    legacy >= 0 &&
+    legacy < row.seated
+  ) {
+    return Math.floor(legacy)
+  }
+  return null
 }
 
 /**
@@ -613,7 +633,7 @@ function VenueMosaicTableCard({
   const seatNames = padSeatNames(row.seatNames)
   const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
   const blindSeatSnapshot = venueTileBlindSeats(row)
-  const actingSeat = row.actingSeatIndex ?? null
+  const actingSeat = venueTileActingSeat(row)
 
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true

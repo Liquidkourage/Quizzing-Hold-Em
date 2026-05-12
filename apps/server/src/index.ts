@@ -1160,6 +1160,11 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       seatNames,
       seatBankrolls,
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
+      currentPlayerIndex:
+        typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)
+          ? Math.floor(gs.round.currentPlayerIndex)
+          : null,
+      isBettingOpen: typeof gs.round.isBettingOpen === 'boolean' ? gs.round.isBettingOpen : null,
       actingSeatIndex: displayActingSeatIndex(gs.phase, seated, gs.round),
     })
   }

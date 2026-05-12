@@ -37,6 +37,10 @@ export type DisplayVenueTileSnapshot = {
   bigBlindSeatIndex?: number | null
   /** Seat marker to pulse during open betting (same indexing as `seatNames`). Omitted by older servers. */
   actingSeatIndex?: number | null
+  /** Betting: engine seat index to act (-1 encoded as null). Lets the venue wall recompute acting seat from live round state. */
+  currentPlayerIndex?: number | null
+  /** Betting: false when wagering is explicitly closed between streets. Null when unknown / older payloads. */
+  isBettingOpen?: boolean | null
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */
