@@ -9,6 +9,8 @@ import {
 } from '@qhe/core'
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
 
+import seatChipStackImg from './assets/seat-chip-stack.svg'
+
 const VENUE_SEAT_SLOTS = 8
 
 /** Fixed crawl strips (Players + All tables): keep widths and page padding in sync */
@@ -46,25 +48,6 @@ function totalChipsFromSeats(seatNames: string[], seatBankrolls: number[]): numb
     if (seatNames[i]?.trim()) total += seatBankrolls[i] ?? 0
   }
   return total
-}
-
-/** Tiny stack on the felt by each occupied seat (hero ring only). */
-function SeatFeltMiniStack() {
-  const palette = ['#d1fae5', '#34d399', '#059669'] as const
-  return (
-    <div className="relative h-4 w-5 shrink-0 sm:h-[1.125rem] sm:w-6" aria-hidden>
-      {palette.map((fill, i) => (
-        <div
-          key={i}
-          className="absolute left-1/2 h-[3px] w-[1.05rem] -translate-x-1/2 rounded-full border border-white/30 shadow-sm sm:h-1 sm:w-[1.35rem]"
-          style={{
-            bottom: `${i * 1.25}px`,
-            background: `linear-gradient(145deg, ${fill}, ${fill}bb)`,
-          }}
-        />
-      ))}
-    </div>
-  )
 }
 
 function padSeatNames(raw: string[] | undefined): string[] {
@@ -153,15 +136,22 @@ function SeatRingWithLabels({
             />
             {showFeltStack ? (
               <div
-                className="pointer-events-none absolute z-[3] flex items-center gap-1 rounded-md border border-white/10 bg-black/40 px-1 py-0.5 shadow-[0_2px_10px_rgba(0,0,0,0.45)] backdrop-blur-[2px] sm:gap-1.5 sm:px-1.5 sm:py-1"
+                className="pointer-events-none absolute z-[3] flex flex-col items-center gap-1 rounded-lg border border-white/15 bg-black/55 px-2 py-2 shadow-[0_4px_16px_rgba(0,0,0,0.55)] backdrop-blur-sm sm:gap-1.5 sm:px-2.5 sm:py-2.5"
                 style={{
                   left: `calc(50% + ${fx}%)`,
                   top: `calc(50% + ${fy}%)`,
                   transform: 'translate(-50%, -50%)',
                 }}
               >
-                <SeatFeltMiniStack />
-                <span className="max-w-[4rem] font-mono text-[9px] font-bold leading-none tabular-nums text-amber-100 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] sm:max-w-[5rem] sm:text-[11px]">
+                <img
+                  src={seatChipStackImg}
+                  alt=""
+                  width={48}
+                  height={56}
+                  draggable={false}
+                  className="pointer-events-none h-11 w-auto select-none object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,0.45)] sm:h-14"
+                />
+                <span className="max-w-[9rem] text-center font-mono text-sm font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-base md:text-lg [text-shadow:0_2px_4px_rgba(0,0,0,0.9)]">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
