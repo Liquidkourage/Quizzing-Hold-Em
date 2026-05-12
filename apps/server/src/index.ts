@@ -1156,6 +1156,14 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       const p = gs.players[i]
       return p != null && p.hasFolded === true
     })
+    const seatLastBettingAction = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
+      const arr = gs.round.lastSeatBettingAction
+      if (arr != null && i < arr.length) {
+        const v = arr[i]
+        return v === undefined || v === null ? null : v
+      }
+      return null
+    })
     tiles.push({
       tableNum: n,
       seated,
@@ -1164,6 +1172,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       seatNames,
       seatBankrolls,
       seatFolded,
+      seatLastBettingAction,
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
       currentPlayerIndex:
         typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)

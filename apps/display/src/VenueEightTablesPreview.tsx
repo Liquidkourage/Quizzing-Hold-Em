@@ -9,7 +9,7 @@ import {
   displayBlindSeatIndices,
   rehearsalSeatDisplayName,
 } from '@qhe/core'
-import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
+import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot, SeatBettingAction } from '@qhe/net'
 
 import seatChipStackImg from './assets/seat-chip-stack.png'
 
@@ -75,6 +75,40 @@ function padSeatBankrolls(raw: number[] | undefined): number[] {
 /** Matches server `seatFolded` (or false when absent). */
 function padSeatFolded(raw: boolean[] | undefined): boolean[] {
   return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => raw?.[i] === true)
+}
+
+function padSeatLastBettingAction(
+  raw: (SeatBettingAction | null | undefined)[] | undefined
+): (SeatBettingAction | null)[] {
+  return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
+    const v = raw?.[i]
+    if (v === 'check' || v === 'call' || v === 'raise' || v === 'fold' || v === 'allIn') return v
+    return null
+  })
+}
+
+const SEAT_BETTING_ACTION_LABELS: Record<SeatBettingAction, string> = {
+  check: 'CHECK',
+  call: 'CALL',
+  raise: 'RAISE',
+  fold: 'FOLD',
+  allIn: 'ALL-IN',
+}
+
+const SEAT_BETTING_ACTION_PILL_CLASS: Record<SeatBettingAction, string> = {
+  check: 'border-slate-400/45 bg-slate-900/92 text-slate-100',
+  call: 'border-sky-500/40 bg-sky-950/90 text-sky-100',
+  raise: 'border-amber-500/45 bg-amber-950/90 text-amber-100',
+  fold: 'border-rose-400/45 bg-rose-950/92 text-rose-100',
+  allIn: 'border-violet-500/45 bg-violet-950/90 text-violet-100',
+}
+
+function seatBettingActionLabel(action: SeatBettingAction): string {
+  return SEAT_BETTING_ACTION_LABELS[action]
+}
+
+function seatBettingActionPillClass(action: SeatBettingAction): string {
+  return SEAT_BETTING_ACTION_PILL_CLASS[action]
 }
 
 /**
@@ -375,6 +409,8 @@ function SeatRingWithLabels({
   seatFolded: seatFoldedIn,
   actingSeatIndex = null,
   bettingPaused = false,
+  showSeatBettingActions = false,
+  seatLastBettingAction: seatLastBettingActionIn,
 }: {
   seatedCount: number
   seatNames: string[]
@@ -390,8 +426,13 @@ function SeatRingWithLabels({
   actingSeatIndex?: number | null
   /** Center-of-felt cue when this table is in betting but action is closed (host / next street). */
   bettingPaused?: boolean
+  /** While wagering: show each seat’s latest check / call / raise / fold / all-in this street. */
+  showSeatBettingActions?: boolean
+  /** Parallel to `seatNames`; from server `seatLastBettingAction`. */
+  seatLastBettingAction?: (SeatBettingAction | null)[]
 }) {
   const seatFolded = padSeatFolded(seatFoldedIn)
+  const seatLastBettingAction = padSeatLastBettingAction(seatLastBettingActionIn)
   const prefersReducedMotion = usePrefersReducedMotion()
   const lgRing =
     'mx-auto aspect-[10/8] h-auto max-h-[min(min(68svh,57dvh),39rem)] w-[min(100%,calc(100dvw-2.5rem),54.625rem)] max-w-full shrink-0'
@@ -496,6 +537,9 @@ function SeatRingWithLabels({
         const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
         const labelVy = seatNameLabelVerticalNudgePx(i, size)
         const isFolded = filled && seatFolded[i] === true
+        const lastBetAct =
+          showSeatBettingActions && filled ? seatLastBettingAction[i] ?? null : null
+        const showFoldOut = isFolded && !(showSeatBettingActions && lastBetAct === 'fold')
         const isActing = filled && actingSeatIndex != null && actingSeatIndex === i && !isFolded
         /** Toward table center so the “Action” chip reads on top of green felt, not on the rim dot. */
         const actionChipLeftPct = (seatRim.leftPct + 50) * 0.5
@@ -594,7 +638,7 @@ function SeatRingWithLabels({
                 </div>
               )
             })()}
-            {isFolded && raw ? (
+            {showFoldOut && raw ? (
               <div
                 className="pointer-events-none absolute z-[6] flex flex-col items-center"
                 style={{
@@ -652,6 +696,17 @@ function SeatRingWithLabels({
                 >
                   {raw}
                 </span>
+                {lastBetAct != null ? (
+                  <span
+                    className={`mt-1 block max-w-full truncate border px-[4px] py-px font-black uppercase leading-none tracking-wide shadow-sm ${
+                      size === 'lg'
+                        ? 'text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem]'
+                        : 'text-[0.5625rem] sm:text-[0.625rem]'
+                    } ${seatBettingActionPillClass(lastBetAct)}`}
+                  >
+                    {seatBettingActionLabel(lastBetAct)}
+                  </span>
+                ) : null}
                 {!(feltSeatStacks && size === 'lg') ? (
                   <span
                     className={`mt-0.5 block max-w-full truncate font-mono tabular-nums text-[0.625rem] sm:text-[0.6875rem] md:text-xs lg:text-sm ${
@@ -714,6 +769,8 @@ function VenueMosaicTableCard({
   const blindSeatSnapshot = venueTileBlindSeats(row)
   const actingSeat = venueTileActingSeat(row)
   const bettingPaused = venueTileBettingPausedCenter(row)
+  const seatLastBettingAction = padSeatLastBettingAction(row.seatLastBettingAction)
+  const showSeatBettingActions = ph === 'betting'
 
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true
@@ -858,6 +915,8 @@ function VenueMosaicTableCard({
             seatFolded={seatFolded}
             actingSeatIndex={actingSeat}
             bettingPaused={bettingPaused}
+            showSeatBettingActions={showSeatBettingActions}
+            seatLastBettingAction={seatLastBettingAction}
           />
         </div>
 
@@ -918,6 +977,8 @@ function VenueMosaicTableCard({
           seatFolded={seatFolded}
           actingSeatIndex={actingSeat}
           bettingPaused={bettingPaused}
+          showSeatBettingActions={showSeatBettingActions}
+          seatLastBettingAction={seatLastBettingAction}
         />
       </div>
 

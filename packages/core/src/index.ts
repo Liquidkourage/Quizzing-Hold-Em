@@ -2,6 +2,9 @@
 
 export type PlayerId = string;
 
+/** Last wagering choice this betting street, by roster seat index (parallel to `players[]`). Cleared when a new street opens. */
+export type SeatBettingAction = 'check' | 'call' | 'raise' | 'fold' | 'allIn';
+
 export interface NumericCard { digit: 0|1|2|3|4|5|6|7|8|9 }
 
 export interface PlayerState {
@@ -42,6 +45,8 @@ export interface RoundState {
   currentPlayerIndex?: number; // seat index of player to act, -1 when closed
   isBettingOpen?: boolean; // when false, actions disabled until host advances
   playerBets?: Record<string, number>; // contributions this betting round by playerId
+  /** Indexed by `players[]` seat; cleared at each new wagering street. */
+  lastSeatBettingAction?: (SeatBettingAction | null)[];
 }
 
 export interface GameState {
@@ -359,6 +364,7 @@ export function dealInitialCards(state: GameState): GameState {
       isBettingOpen: true,
       playerBets,
       pot,
+      lastSeatBettingAction: Array.from({ length: playersAfterBlinds.length }, () => null),
     },
   };
 }
@@ -445,6 +451,7 @@ export function dealCommunityCards(state: GameState): GameState {
       currentPlayerIndex: findNextToAct(),
       isBettingOpen: true,
       playerBets: {},
+      lastSeatBettingAction: Array.from({ length: state.players.length }, () => null),
     },
   };
 }
@@ -480,6 +487,20 @@ function amountToCall(state: GameState, playerId: string): number {
   return Math.max(0, current - contributed);
 }
 
+function mergeLastSeatBettingAction(
+  round: RoundState,
+  playerCount: number,
+  seat: number,
+  action: SeatBettingAction
+): (SeatBettingAction | null)[] {
+  const prev = round.lastSeatBettingAction;
+  return Array.from({ length: playerCount }, (_, i) => {
+    if (i === seat) return action;
+    if (prev && i < prev.length) return prev[i] ?? null;
+    return null;
+  });
+}
+
 function advanceToNextPlayer(state: GameState): number {
   const players = state.players;
   if (!players.length || typeof state.round.currentPlayerIndex !== 'number') return -1;
@@ -513,7 +534,14 @@ export function playerCheck(state: GameState, playerId: string): GameState {
   if (seat !== state.round.currentPlayerIndex) return state;
   if ((state.round.currentBet || 0) > ((state.round.playerBets || {})[playerId] || 0)) return state; // cannot check facing a bet
   const nextIndex = advanceToNextPlayer(state);
-  const nextState = { ...state, round: { ...state.round, currentPlayerIndex: nextIndex } };
+  const nextState = {
+    ...state,
+    round: {
+      ...state.round,
+      currentPlayerIndex: nextIndex,
+      lastSeatBettingAction: mergeLastSeatBettingAction(state.round, state.players.length, seat, 'check'),
+    },
+  };
   return isBettingComplete(nextState) ? { ...nextState, round: { ...nextState.round, isBettingOpen: false, currentPlayerIndex: -1 } } : nextState;
 }
 
@@ -526,7 +554,14 @@ export function playerCall(state: GameState, playerId: string): GameState {
   const callAmount = Math.min(toCall, state.players[seat].bankroll);
   let after = placeBet(state, playerId, callAmount);
   const nextIndex = advanceToNextPlayer(after);
-  after = { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+  after = {
+    ...after,
+    round: {
+      ...after.round,
+      currentPlayerIndex: nextIndex,
+      lastSeatBettingAction: mergeLastSeatBettingAction(after.round, after.players.length, seat, 'call'),
+    },
+  };
   return isBettingComplete(after) ? { ...after, round: { ...after.round, isBettingOpen: false, currentPlayerIndex: -1 } } : after;
 }
 
@@ -547,7 +582,14 @@ export function playerRaise(state: GameState, playerId: string, raiseAmount: num
   const contributedNow = (after.round.playerBets || {})[playerId] || 0;
   after = { ...after, round: { ...after.round, currentBet: Math.max(after.round.currentBet || 0, contributedNow) } };
   const nextIndex = advanceToNextPlayer(after);
-  after = { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+  after = {
+    ...after,
+    round: {
+      ...after.round,
+      currentPlayerIndex: nextIndex,
+      lastSeatBettingAction: mergeLastSeatBettingAction(after.round, after.players.length, seat, 'raise'),
+    },
+  };
   return isBettingComplete(after)
     ? { ...after, round: { ...after.round, isBettingOpen: false, currentPlayerIndex: -1 } }
     : after;
@@ -564,7 +606,14 @@ export function playerAllIn(state: GameState, playerId: string): GameState {
   const contributedNow = (after.round.playerBets || {})[playerId] || 0;
   after = { ...after, round: { ...after.round, currentBet: Math.max(after.round.currentBet || 0, contributedNow) } };
   const nextIndex = advanceToNextPlayer(after);
-  after = { ...after, round: { ...after.round, currentPlayerIndex: nextIndex } };
+  after = {
+    ...after,
+    round: {
+      ...after.round,
+      currentPlayerIndex: nextIndex,
+      lastSeatBettingAction: mergeLastSeatBettingAction(after.round, after.players.length, seat, 'allIn'),
+    },
+  };
   return isBettingComplete(after) ? { ...after, round: { ...after.round, isBettingOpen: false, currentPlayerIndex: -1 } } : after;
 }
 
@@ -598,7 +647,18 @@ export function foldPlayer(state: GameState, playerId: string): GameState {
     const tempState: GameState = { ...state, players: updatedPlayers } as GameState;
     nextIndex = advanceToNextPlayer(tempState);
   }
-  const newState: GameState = { ...state, players: updatedPlayers, round: { ...state.round, currentPlayerIndex: nextIndex } };
+  const newState: GameState = {
+    ...state,
+    players: updatedPlayers,
+    round: {
+      ...state.round,
+      currentPlayerIndex: nextIndex,
+      lastSeatBettingAction:
+        folderIndex >= 0
+          ? mergeLastSeatBettingAction(state.round, updatedPlayers.length, folderIndex, 'fold')
+          : state.round.lastSeatBettingAction,
+    },
+  };
   return isBettingComplete(newState) ? { ...newState, round: { ...newState.round, isBettingOpen: false, currentPlayerIndex: -1 } } : newState;
 }
 

@@ -1,7 +1,7 @@
 ﻿import { z } from 'zod'
-import type { GameState, Question, Setlist } from '@qhe/core'
+import type { GameState, Question, Setlist, SeatBettingAction } from '@qhe/core'
 
-export type { GameState, Question, Setlist }
+export type { GameState, Question, Setlist, SeatBettingAction }
 
 /** Full venue library + active rundown playhead (host-only via `hostLibrary`). */
 export type HostLibrarySnapshot = {
@@ -43,6 +43,8 @@ export type DisplayVenueTileSnapshot = {
   isBettingOpen?: boolean | null
   /** Parallel to `seatNames`: true when that roster seat has folded this hand. Omitted by older servers. */
   seatFolded?: boolean[]
+  /** This wagering street only: last check / call / raise / fold / all-in per seat. Omitted by older servers. */
+  seatLastBettingAction?: (SeatBettingAction | null)[]
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */
