@@ -39,6 +39,37 @@ function formatVenueBankroll(amount: number): string {
   return `$${Math.max(0, n).toLocaleString()}`
 }
 
+/** Sum bankrolls for seats that have a player name — matches crawl "Chips on table". */
+function totalChipsFromSeats(seatNames: string[], seatBankrolls: number[]): number {
+  let total = 0
+  for (let i = 0; i < VENUE_SEAT_SLOTS; i++) {
+    if (seatNames[i]?.trim()) total += seatBankrolls[i] ?? 0
+  }
+  return total
+}
+
+/** Stacked disc graphics for hero money rows (pot vs player stacks). */
+function HeroChipStackVisual({ variant }: { variant: 'pot' | 'stacks' }) {
+  const palette =
+    variant === 'pot'
+      ? (['#fde68a', '#fbbf24', '#f59e0b', '#d97706'] as const)
+      : (['#6ee7b7', '#34d399', '#10b981', '#059669'] as const)
+  return (
+    <div className="relative h-10 w-11 shrink-0 sm:h-11 sm:w-12" aria-hidden>
+      {palette.map((fill, i) => (
+        <div
+          key={i}
+          className="absolute left-1/2 h-2.5 w-9 -translate-x-1/2 rounded-full border border-white/35 shadow-[0_2px_5px_rgba(0,0,0,0.5)] sm:h-3 sm:w-10"
+          style={{
+            bottom: `${i * 2.5}px`,
+            background: `linear-gradient(145deg, ${fill}, ${fill}aa)`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function padSeatNames(raw: string[] | undefined): string[] {
   return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
     if (raw != null && raw[i] != null) {
@@ -256,6 +287,8 @@ function VenueMosaicTableCard({
   }
 
   if (mode === 'hero') {
+    const totalChips = totalChipsFromSeats(seatNames, seatBankrolls)
+
     return (
       <motion.article
         data-spotlight-tile={tn}
@@ -292,18 +325,38 @@ function VenueMosaicTableCard({
           />
         </div>
 
-        <dl className="mt-5 space-y-2 border-t border-white/10 pt-5 text-xl leading-snug sm:text-2xl md:text-3xl lg:text-4xl">
-          <div className="flex justify-between gap-3">
-            <dt className="font-semibold text-white/70">Occupied seats</dt>
-            <dd className="font-mono font-bold tabular-nums text-casino-emerald">
+        <div className="mt-5 border-t border-white/10 pt-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <HeroChipStackVisual variant="pot" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold uppercase tracking-wider text-white/55 sm:text-base">
+                  Pot (local)
+                </div>
+                <div className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-yellow-300 sm:text-3xl md:text-4xl">
+                  ${pot.toLocaleString()}
+                </div>
+              </div>
+            </div>
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <HeroChipStackVisual variant="stacks" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold uppercase tracking-wider text-white/55 sm:text-base">
+                  Chips on table
+                </div>
+                <div className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-white/90 sm:text-3xl md:text-4xl">
+                  {formatVenueBankroll(totalChips)}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-white/[0.07] pt-4 text-xl font-semibold text-white/70 sm:text-2xl md:text-3xl">
+            <span>Occupied seats</span>
+            <span className="font-mono font-bold tabular-nums text-casino-emerald">
               {seats} / 8
-            </dd>
+            </span>
           </div>
-          <div className="flex justify-between gap-3">
-            <dt className="font-semibold text-white/70">Pot (local)</dt>
-            <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
-          </div>
-        </dl>
+        </div>
       </motion.article>
     )
   }
