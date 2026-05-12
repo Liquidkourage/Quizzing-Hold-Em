@@ -68,6 +68,43 @@ function padSeatBankrolls(raw: number[] | undefined): number[] {
 }
 
 /**
+ * Felt div uses `inset-[12%_8%_15%_8%]` (top,right,bottom,left) — an axis-aligned ellipse
+ * in %-space of the SeatRing wrapper: x% of width, y% of height.
+ */
+const TABLE_FELT_INSET_TOP = 0.12
+const TABLE_FELT_INSET_RIGHT = 0.08
+const TABLE_FELT_INSET_BOTTOM = 0.15
+const TABLE_FELT_INSET_LEFT = 0.08
+
+const TABLE_FELT_ELLIPSE = (() => {
+  const innerW = 1 - TABLE_FELT_INSET_LEFT - TABLE_FELT_INSET_RIGHT
+  const innerH = 1 - TABLE_FELT_INSET_TOP - TABLE_FELT_INSET_BOTTOM
+  return {
+    cx: TABLE_FELT_INSET_LEFT + innerW / 2,
+    cy: TABLE_FELT_INSET_TOP + innerH / 2,
+    /** Semi-axis in horizontal %-of-width units */
+    rx: innerW / 2,
+    /** Semi-axis in vertical %-of-height units */
+    ry: innerH / 2,
+  }
+})()
+
+/**
+ * Rim of the visible felt ellipse. Seat index 0 centers at clock top; advances CCW when viewed from above.
+ * @param radialScale 1 = on rim, < 1 inward toward table center along the same radial, > 1 outward (name chips).
+ */
+function feltEllipsePct(seatIndex: number, radialScale: number): { leftPct: number; topPct: number } {
+  const θ = (seatIndex / VENUE_SEAT_SLOTS) * 2 * Math.PI - Math.PI / 2
+  const { cx, cy, rx, ry } = TABLE_FELT_ELLIPSE
+  const c = Math.cos(θ)
+  const s = Math.sin(θ)
+  return {
+    leftPct: (cx + rx * radialScale * c) * 100,
+    topPct: (cy + ry * radialScale * s) * 100,
+  }
+}
+
+/**
  * Eight seat positions around the mini felt; optional name chips just outside each chair.
  */
 function SeatRingWithLabels({
@@ -96,13 +133,21 @@ function SeatRingWithLabels({
       ? 'max-w-[min(12rem,34vw)] text-[1.125rem] leading-tight sm:text-[1.3rem] sm:leading-snug md:text-[1.5625rem]'
       : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
+  const labelOuterScale = size === 'lg' ? 1.1 : 1.125
+  /** Bankroll stack on felt: fraction of rim radius toward table center (same ray as seat). */
+  const chipInnerScale = 0.56
+
   return (
     <div className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
       <div
-        className={`absolute inset-[12%_8%_15%_8%] rounded-[50%] border-amber-700/70 shadow-inner ${
+        className={`absolute rounded-[50%] border-amber-700/70 shadow-inner ${
           size === 'lg' ? 'border-2 sm:border-[3px]' : 'border-2'
         }`}
         style={{
+          top: `${TABLE_FELT_INSET_TOP * 100}%`,
+          right: `${TABLE_FELT_INSET_RIGHT * 100}%`,
+          bottom: `${TABLE_FELT_INSET_BOTTOM * 100}%`,
+          left: `${TABLE_FELT_INSET_LEFT * 100}%`,
           background: `
             repeating-linear-gradient(
               45deg,
@@ -115,18 +160,13 @@ function SeatRingWithLabels({
           `,
         }}
       />
-      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-        const a = (i / 8) * 2 * Math.PI - Math.PI / 2
-        const xr = size === 'lg' ? 47 * Math.cos(a) : 48 * Math.cos(a)
-        const yr = size === 'lg' ? 37 * Math.sin(a) : 38 * Math.sin(a)
-        const lx = size === 'lg' ? 48.5 * Math.cos(a) : 54 * Math.cos(a)
-        const ly = size === 'lg' ? 37 * Math.sin(a) : 42 * Math.sin(a)
+      {Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
+        const seatRim = feltEllipsePct(i, 1)
+        const chipPos = feltEllipsePct(i, chipInnerScale)
+        const labelPos = feltEllipsePct(i, labelOuterScale)
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
         const chips = seatBankrolls[i] ?? 0
-        const feltIn = 0.56
-        const fx = xr * feltIn
-        const fy = yr * feltIn
         const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
         return (
           <div key={i}>
@@ -136,14 +176,14 @@ function SeatRingWithLabels({
                   ? 'border-emerald-300/70 bg-black/85'
                   : 'border-white/20 bg-black/35'
               }`}
-              style={{ left: `calc(50% + ${xr}%)`, top: `calc(50% + ${yr}%)` }}
+              style={{ left: `${seatRim.leftPct}%`, top: `${seatRim.topPct}%` }}
             />
             {showFeltStack ? (
               <div
                 className="pointer-events-none absolute z-[3] flex flex-col items-center gap-0.5 px-0.5"
                 style={{
-                  left: `calc(50% + ${fx}%)`,
-                  top: `calc(50% + ${fy}%)`,
+                  left: `${chipPos.leftPct}%`,
+                  top: `${chipPos.topPct}%`,
                   transform: 'translate(-50%, -50%)',
                 }}
               >
@@ -163,7 +203,7 @@ function SeatRingWithLabels({
             {raw ? (
               <div
                 className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-center font-semibold leading-tight text-white/92 shadow-black/80 drop-shadow ${labelClass}`}
-                style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
+                style={{ left: `${labelPos.leftPct}%`, top: `${labelPos.topPct}%` }}
               >
                 <span className="block max-w-full truncate">{raw}</span>
                 {!(feltSeatStacks && size === 'lg') ? (
