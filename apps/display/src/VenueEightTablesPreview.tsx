@@ -85,7 +85,7 @@ function SeatRingWithLabels({
   feltSeatStacks?: boolean
 }) {
   const lgRing =
-    'mx-auto aspect-[10/8] h-auto max-h-full w-[min(100%,64rem)] max-w-full min-h-0 shrink-0'
+    'mx-auto aspect-[10/8] h-auto max-h-[min(74svh,46rem)] w-[min(100%,64rem)] max-w-full shrink-0'
   const wrap =
     size === 'lg'
       ? lgRing
@@ -313,7 +313,7 @@ function VenueMosaicTableCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 pb-4 pt-2 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:pb-5 sm:pt-3 md:px-6"
+        className="flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 pb-4 pt-2 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:pb-5 sm:pt-3 md:px-6"
       >
         <div className="-mt-0.5 shrink-0 pb-1">
           <div className="flex items-start justify-between gap-3">
@@ -333,7 +333,7 @@ function VenueMosaicTableCard({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden pt-1">
+        <div className="flex shrink-0 flex-col items-center justify-start overflow-visible pt-1">
           <SeatRingWithLabels
             seatedCount={seats}
             seatNames={seatNames}
@@ -806,12 +806,12 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
         ) : showSeatingSpotlightCycle && seatingHeroRow ? (
           <section
             aria-label="Seating spotlight tour"
-            className="mx-auto flex max-h-[min(960px,calc(100svh-11rem))] min-h-0 w-full max-w-[min(1296px,100%)] flex-col gap-4 overflow-hidden"
+            className="mx-auto flex max-h-[min(960px,calc(100svh-11rem))] min-h-0 w-full max-w-[min(1296px,100%)] flex-col gap-4 overflow-x-hidden overflow-y-auto"
           >
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Spotlight showing table {seatingHeroRow.tableNum}
             </p>
-            <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+            <div className="w-full shrink-0 overflow-auto">
               <AnimatePresence mode="wait">
                 <VenueMosaicTableCard
                   key={seatingHeroRow.tableNum}
