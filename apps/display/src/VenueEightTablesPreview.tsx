@@ -403,8 +403,9 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
       aria-label="Players and table assignments"
     >
       <div className="shrink-0 border-b border-white/10 px-3 py-3.5 sm:px-4 sm:py-4">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/55 sm:text-sm">Players</h2>
-        <p className="mt-1 text-2xl font-bold leading-none text-white/92 sm:text-3xl">Seating</p>
+        <h2 className="text-2xl font-bold leading-none tracking-tight text-white/92 sm:text-3xl">
+          Seating
+        </h2>
       </div>
       <div
         className="relative min-h-0 flex-1 overflow-hidden px-2 py-1.5 sm:px-3 sm:py-2"
@@ -512,8 +513,9 @@ function VenueAllTablesCrawl({
       aria-label="All tables"
     >
       <div className="shrink-0 border-b border-white/10 px-3 py-3.5 sm:px-4 sm:py-4">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/55 sm:text-sm">Tables</h2>
-        <p className="mt-1 text-2xl font-bold leading-none text-white/92 sm:text-3xl">All tables</p>
+        <h2 className="text-2xl font-bold leading-none tracking-tight text-white/92 sm:text-3xl">
+          All tables
+        </h2>
       </div>
       <div
         ref={viewportRef}
