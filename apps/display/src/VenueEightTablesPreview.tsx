@@ -85,22 +85,22 @@ function SeatRingWithLabels({
   feltSeatStacks?: boolean
 }) {
   const lgRing =
-    'mx-auto aspect-[10/8] h-auto max-h-[min(74svh,46rem)] w-[min(100%,64rem)] max-w-full shrink-0'
+    'mx-auto aspect-[10/8] h-auto max-h-[min(min(52svh,44dvh),30rem)] w-[min(100%,calc(100dvw-2.5rem),42rem)] max-w-full shrink-0'
   const wrap =
     size === 'lg'
       ? lgRing
       : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
-  const dot = size === 'lg' ? 'h-14 w-14' : 'h-8 w-8'
+  const dot = size === 'lg' ? 'h-11 w-11 sm:h-12 sm:w-12' : 'h-8 w-8'
   const labelClass =
     size === 'lg'
-      ? 'max-w-[min(16rem,36vw)] text-2xl sm:text-3xl md:text-[2rem]'
+      ? 'max-w-[min(12rem,34vw)] text-lg leading-tight sm:text-xl sm:leading-snug md:text-2xl'
       : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
     <div className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
       <div
-        className={`absolute inset-[11%_7%_14%_7%] rounded-[50%] border-amber-700/70 shadow-inner ${
-          size === 'lg' ? 'border-[3px]' : 'border-2'
+        className={`absolute inset-[12%_8%_15%_8%] rounded-[50%] border-amber-700/70 shadow-inner ${
+          size === 'lg' ? 'border-2 sm:border-[3px]' : 'border-2'
         }`}
         style={{
           background: `
@@ -119,8 +119,8 @@ function SeatRingWithLabels({
         const a = (i / 8) * 2 * Math.PI - Math.PI / 2
         const xr = size === 'lg' ? 47 * Math.cos(a) : 48 * Math.cos(a)
         const yr = size === 'lg' ? 37 * Math.sin(a) : 38 * Math.sin(a)
-        const lx = size === 'lg' ? 51 * Math.cos(a) : 54 * Math.cos(a)
-        const ly = size === 'lg' ? 38.5 * Math.sin(a) : 42 * Math.sin(a)
+        const lx = size === 'lg' ? 48.5 * Math.cos(a) : 54 * Math.cos(a)
+        const ly = size === 'lg' ? 37 * Math.sin(a) : 42 * Math.sin(a)
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
         const chips = seatBankrolls[i] ?? 0
@@ -153,9 +153,9 @@ function SeatRingWithLabels({
                   width={96}
                   height={72}
                   draggable={false}
-                  className="pointer-events-none h-12 w-auto max-w-[4.35rem] shrink-0 select-none object-contain opacity-95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:h-[3.5rem] sm:max-w-[5.1rem]"
+                  className="pointer-events-none h-9 w-auto max-w-[3.35rem] shrink-0 select-none object-contain opacity-95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:h-10 sm:max-w-[3.95rem]"
                 />
-                <span className="max-w-[13rem] text-center font-mono text-base font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[14rem] sm:text-lg md:text-xl [text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_2px_10px_rgba(0,0,0,0.85)]">
+                <span className="max-w-[10rem] text-center font-mono text-sm font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-base md:text-lg [text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_2px_10px_rgba(0,0,0,0.85)]">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
@@ -313,7 +313,7 @@ function VenueMosaicTableCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 pb-4 pt-2 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:pb-5 sm:pt-3 md:px-6"
+        className="flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-3 pb-3 pt-2 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-4 sm:pb-4 sm:pt-2.5 md:px-5"
       >
         <div className="-mt-0.5 shrink-0 pb-1">
           <div className="flex items-start justify-between gap-3">
@@ -321,7 +321,7 @@ function VenueMosaicTableCard({
               <div className="text-base font-semibold uppercase tracking-[0.14em] text-white/65 sm:text-lg">
                 Table
               </div>
-              <div className="-mt-0.5 text-6xl font-black tabular-nums leading-[0.95] text-yellow-400 sm:text-7xl md:text-8xl lg:text-[5.75rem]">
+              <div className="-mt-0.5 text-5xl font-black tabular-nums leading-[0.92] text-yellow-400 sm:text-6xl md:text-7xl lg:text-[4.35rem]">
                 {tn}
               </div>
             </div>
@@ -333,7 +333,7 @@ function VenueMosaicTableCard({
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col items-center justify-start overflow-visible pt-1">
+        <div className="flex shrink-0 flex-col items-center justify-start overflow-x-hidden px-1 pt-0.5 pb-px">
           <SeatRingWithLabels
             seatedCount={seats}
             seatNames={seatNames}
@@ -343,7 +343,7 @@ function VenueMosaicTableCard({
           />
         </div>
 
-        <dl className="relative z-[4] mt-3 shrink-0 space-y-1.5 border-t border-white/10 bg-black/55 pt-3 text-xl leading-snug backdrop-blur-sm sm:mt-4 sm:space-y-2 sm:pt-4 sm:text-2xl md:text-3xl lg:text-[2.25rem]">
+        <dl className="relative z-[4] mt-2.5 shrink-0 space-y-1 border-t border-white/10 bg-black/55 pt-2.5 text-lg leading-snug backdrop-blur-sm sm:mt-3 sm:space-y-1.5 sm:pt-3 sm:text-xl md:text-2xl lg:text-3xl">
           <div className="flex justify-between gap-3">
             <dt className="font-semibold text-white/70">Occupied seats</dt>
             <dd className="font-mono font-bold tabular-nums text-casino-emerald">
@@ -806,12 +806,12 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
         ) : showSeatingSpotlightCycle && seatingHeroRow ? (
           <section
             aria-label="Seating spotlight tour"
-            className="mx-auto flex max-h-[min(960px,calc(100svh-11rem))] min-h-0 w-full max-w-[min(1296px,100%)] flex-col gap-4 overflow-x-hidden overflow-y-auto"
+            className="mx-auto flex max-h-[calc(100dvh-12rem)] min-h-0 w-full max-w-[min(896px,min(94dvw,100%))] flex-col gap-3 overflow-hidden sm:gap-4"
           >
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Spotlight showing table {seatingHeroRow.tableNum}
             </p>
-            <div className="w-full shrink-0 overflow-auto">
+            <div className="w-full min-w-0 shrink-0 overflow-hidden">
               <AnimatePresence mode="wait">
                 <VenueMosaicTableCard
                   key={seatingHeroRow.tableNum}
@@ -822,8 +822,8 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                 />
               </AnimatePresence>
             </div>
-            <div className="shrink-0 space-y-4">
-              <p className="text-center text-base text-white/50 sm:text-lg">
+            <div className="shrink-0 space-y-3 sm:space-y-4">
+              <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
                 {prefersReducedMotion
                   ? `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
                   : `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length}`}
