@@ -32,6 +32,7 @@ import {
   playerAllIn,
   SAMPLE_QUESTIONS,
   buildDisplayPreviewGameState,
+  displayActingSeatIndex,
   displayBlindSeatIndices,
 } from '@qhe/core'
 import type { Question, GameState } from '@qhe/core'
@@ -1159,6 +1160,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       seatNames,
       seatBankrolls,
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
+      actingSeatIndex: displayActingSeatIndex(gs.phase, seated, gs.round),
     })
   }
 

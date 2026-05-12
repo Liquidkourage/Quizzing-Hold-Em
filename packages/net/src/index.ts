@@ -35,6 +35,8 @@ export type DisplayVenueTileSnapshot = {
   dealerSeatIndex?: number | null
   smallBlindSeatIndex?: number | null
   bigBlindSeatIndex?: number | null
+  /** Seat marker to pulse during open betting (same indexing as `seatNames`). Omitted by older servers. */
+  actingSeatIndex?: number | null
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */

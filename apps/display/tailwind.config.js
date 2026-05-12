@@ -73,6 +73,8 @@ export default {
         'card-deal': 'cardDeal 0.6s ease-out',
         'chip-spin': 'chipSpin 0.8s ease-out',
         'jackpot': 'jackpot 0.8s ease-out',
+        /** Venue wall — seat whose turn it is during open betting */
+        'venue-seat-action': 'venueSeatAction 1.35s ease-in-out infinite',
         /** Display welcome wall — high-stakes Vegas polish */
         'vegas-twinkle-field': 'vegasTwinkleField 5s ease-in-out infinite',
         'vegas-shimmer-cards': 'vegasShimmerCards 4.2s ease-in-out infinite',
@@ -97,6 +99,19 @@ export default {
           '50%': {
             transform: 'scale(1.016)',
             filter: 'brightness(1.12)',
+          },
+        },
+        /** Venue mosaic: pulsing ring on the seat marker with the action */
+        venueSeatAction: {
+          '0%, 100%': {
+            boxShadow:
+              '0 0 0 2px rgba(253, 224, 71, 0.85), 0 0 12px rgba(251, 191, 36, 0.65), 0 0 24px rgba(0, 255, 180, 0.35)',
+            borderColor: 'rgba(253, 224, 71, 0.95)',
+          },
+          '50%': {
+            boxShadow:
+              '0 0 0 3px rgba(252, 211, 77, 1), 0 0 22px rgba(251, 191, 36, 0.95), 0 0 40px rgba(0, 255, 180, 0.55)',
+            borderColor: 'rgba(254, 249, 195, 1)',
           },
         },
         glow: {

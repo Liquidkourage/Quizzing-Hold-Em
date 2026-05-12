@@ -327,6 +327,7 @@ function SeatRingWithLabels({
   size = 'md',
   feltSeatStacks = false,
   blindSeats = null,
+  actingSeatIndex = null,
 }: {
   seatedCount: number
   seatNames: string[]
@@ -336,7 +337,10 @@ function SeatRingWithLabels({
   feltSeatStacks?: boolean
   /** Dealer / blind roles (indexes match `seatNames`). Null when unsupported or omitted by server snapshot. */
   blindSeats?: VenueWallBlindSeats | null
+  /** Pulse this seat rim during open betting; null hides. Matches `seatNames` index. */
+  actingSeatIndex?: number | null
 }) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const lgRing =
     'mx-auto aspect-[10/8] h-auto max-h-[min(min(68svh,57dvh),39rem)] w-[min(100%,calc(100dvw-2.5rem),54.625rem)] max-w-full shrink-0'
   /** Must keep height so %-positioned seats/names resolve; only abs children collapsed to zero without aspect. */
@@ -420,14 +424,21 @@ function SeatRingWithLabels({
         const chips = seatBankrolls[i] ?? 0
         const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
         const labelVy = seatNameLabelVerticalNudgePx(i, size)
+        const isActing = filled && actingSeatIndex != null && actingSeatIndex === i
+        const seatDotClass = (() => {
+          if (isActing && prefersReducedMotion) {
+            return 'z-[5] border-amber-200/95 bg-black/85 shadow-[0_0_0_2px_rgba(253,224,71,0.85),0_0_14px_rgba(251,191,36,0.7)]'
+          }
+          if (isActing) {
+            return 'z-[5] animate-venue-seat-action border-amber-200/90 bg-black/90 motion-reduce:animate-none motion-reduce:shadow-[0_0_0_2px_rgba(253,224,71,0.85),0_0_14px_rgba(251,191,36,0.65)] motion-reduce:border-amber-200/95'
+          }
+          return filled ? 'border-emerald-300/70 bg-black/85' : 'border-white/20 bg-black/35'
+        })()
         return (
           <div key={i}>
             <div
-              className={`absolute ${dot} -translate-x-1/2 -translate-y-1/2 rounded-full border shadow ${
-                filled
-                  ? 'border-emerald-300/70 bg-black/85'
-                  : 'border-white/20 bg-black/35'
-              }`}
+              className={`absolute ${dot} -translate-x-1/2 -translate-y-1/2 rounded-full border shadow ${seatDotClass}`}
+              aria-current={isActing ? true : undefined}
               style={{ left: `${seatRim.leftPct}%`, top: `${seatRim.topPct}%` }}
             />
             {(() => {
@@ -550,6 +561,7 @@ function VenueMosaicTableCard({
   const seatNames = padSeatNames(row.seatNames)
   const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
   const blindSeatSnapshot = venueTileBlindSeats(row)
+  const actingSeat = row.actingSeatIndex ?? null
 
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true
@@ -683,6 +695,7 @@ function VenueMosaicTableCard({
             size="lg"
             feltSeatStacks
             blindSeats={blindSeatSnapshot}
+            actingSeatIndex={actingSeat}
           />
         </div>
 
@@ -739,6 +752,7 @@ function VenueMosaicTableCard({
           seatNames={seatNames}
           seatBankrolls={seatBankrolls}
           blindSeats={blindSeatSnapshot}
+          actingSeatIndex={actingSeat}
         />
       </div>
 

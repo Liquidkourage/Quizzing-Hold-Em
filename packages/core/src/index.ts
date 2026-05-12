@@ -386,6 +386,22 @@ export function displayBlindSeatIndices(
   };
 }
 
+/** Seat whose action it is during open wagering (`players[]` / venue `seatNames` index). Null otherwise. */
+export function displayActingSeatIndex(
+  phase: GamePhase,
+  seatedPlayerCount: number,
+  round: Pick<RoundState, 'currentPlayerIndex' | 'isBettingOpen'>
+): number | null {
+  if (phase !== 'betting') return null;
+  if (round.isBettingOpen !== true) return null;
+  const idx = round.currentPlayerIndex;
+  const n = Math.max(0, Math.floor(seatedPlayerCount));
+  if (typeof idx !== 'number' || !Number.isFinite(idx)) return null;
+  const i = Math.floor(idx);
+  if (i < 0 || i >= n) return null;
+  return i;
+}
+
 /** After round-1 wagering is closed: deal five community cards and open round-2 wagering. */
 export function dealCommunityCards(state: GameState): GameState {
   if (state.phase !== 'betting') return state;
