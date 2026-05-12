@@ -86,18 +86,18 @@ function SeatRingWithLabels({
 }) {
   const wrap =
     size === 'lg'
-      ? 'max-w-[min(440px,92vw)]'
+      ? 'max-w-[min(575px,97vw)]'
       : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
   const dot = size === 'lg' ? 'h-9 w-9' : 'h-8 w-8'
   const labelClass =
     size === 'lg'
-      ? 'max-w-[min(9rem,28vw)] text-xl sm:text-2xl'
+      ? 'max-w-[min(10.5rem,27vw)] text-xl sm:text-2xl'
       : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
     <div className={`relative mx-auto aspect-[10/8] w-full ${wrap}`}>
       <div
-        className="absolute inset-[12%_8%_16%_8%] rounded-[50%] border-2 border-amber-700/70 shadow-inner"
+        className="absolute inset-[10%_6%_13%_6%] rounded-[50%] border-2 border-amber-700/70 shadow-inner"
         style={{
           background: `
             repeating-linear-gradient(
@@ -309,7 +309,7 @@ function VenueMosaicTableCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col rounded-2xl border-2 border-amber-500/45 bg-black/60 p-5 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:p-7"
+        className="flex flex-col rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 py-5 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:py-6 md:px-6"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
