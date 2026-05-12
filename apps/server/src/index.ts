@@ -61,7 +61,9 @@ import type {
 import {
   addVirtualPlayers as spawnVirtualPlayers,
   removeAllVirtualPlayers,
+  advanceVirtualBettingStep,
   runVirtualPlayerSimulation,
+  tableIsCpuOnly,
   liveVirtualCount,
 } from './virtual-players'
 import {
@@ -1215,6 +1217,52 @@ function emitVenueTableState(sessionKey: string, gs: GameState) {
   afterTableStateBroadcast(gs, sessionKey)
 }
 
+/**
+ * Pure `vp:*` felts — run wagering/answering in small bursts via `setImmediate` so TVs get
+ * actionable snapshots (opening seat) instead of synchronously draining the round to “pause”.
+ */
+const cpuVpDrainPending = new Set<string>()
+const CPU_VP_STEPS_PER_CHUNK = 72
+
+function enqueueCpuOnlyVpDrain(sessionKey: string) {
+  if (cpuVpDrainPending.has(sessionKey)) return
+  cpuVpDrainPending.add(sessionKey)
+  setImmediate(() => drainCpuVpSessionChain(sessionKey))
+}
+
+function drainCpuVpSessionChain(sessionKey: string) {
+  let gs = rooms.get(sessionKey)
+  if (!gs || !tableIsCpuOnly(gs)) {
+    cpuVpDrainPending.delete(sessionKey)
+    return
+  }
+
+  let s = gs
+  let steps = 0
+  while (steps < CPU_VP_STEPS_PER_CHUNK) {
+    const next = advanceVirtualBettingStep(s)
+    if (next === s) break
+    s = next
+    steps++
+  }
+
+  rooms.set(sessionKey, s)
+  emitVenueTableState(sessionKey, s)
+
+  gs = rooms.get(sessionKey)
+  if (!gs || !tableIsCpuOnly(gs)) {
+    cpuVpDrainPending.delete(sessionKey)
+    return
+  }
+
+  const hitChunkCap = steps === CPU_VP_STEPS_PER_CHUNK
+  if (hitChunkCap) {
+    setImmediate(() => drainCpuVpSessionChain(sessionKey))
+  } else {
+    cpuVpDrainPending.delete(sessionKey)
+  }
+}
+
 function applyQuestionToAllPlayable(venueCode: string, picked: Question) {
   const playable = allTableSessionsInVenue(venueCode)
   for (const tk of playable) {
@@ -1670,11 +1718,16 @@ io.on('connection', (socket) => {
           for (const tk of playable) {
             let gs = rooms.get(tk)
             gs = dealInitialCards(gs)
-            // Skip runVirtualPlayerSimulation here: draining CPU seats instantly can close
-            // preflop before the venue snapshot renders, hiding the Action seat on every felt.
             rooms.set(tk, gs)
             io.to(tk).emit('dealingCards')
             emitVenueTableState(tk, gs)
+            if (tableIsCpuOnly(gs)) {
+              enqueueCpuOnlyVpDrain(tk)
+            } else {
+              gs = runVirtualPlayerSimulation(gs)
+              rooms.set(tk, gs)
+              emitVenueTableState(tk, gs)
+            }
           }
           socket.emit('toast', 'Hole cards dealt — wagering round 1 (all tables).')
           gameState = rooms.get(sessionKey)!
@@ -1695,9 +1748,15 @@ io.on('connection', (socket) => {
             gs = dealCommunityCards(gs)
             const dealt = gs.round.communityCards.length > communityBefore
             if (dealt) anyDealt = true
-            // Same as hole-card deal — avoid draining an all-CPU table through round-2 instantly.
             rooms.set(tk, gs)
             emitVenueTableState(tk, gs)
+            if (dealt && tableIsCpuOnly(gs)) {
+              enqueueCpuOnlyVpDrain(tk)
+            } else if (dealt) {
+              gs = runVirtualPlayerSimulation(gs)
+              rooms.set(tk, gs)
+              emitVenueTableState(tk, gs)
+            }
             if (dealt) {
               io.to(tk).emit('dealingCommunityCards')
             }

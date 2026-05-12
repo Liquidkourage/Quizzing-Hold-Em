@@ -52,6 +52,11 @@ export function removeAllVirtualPlayers(state: GameState): GameState {
   return s
 }
 
+/** Venue / demo fill: roster is exclusively `vp:*` seats — safe to auto-run wagering between snapshots. */
+export function tableIsCpuOnly(state: GameState): boolean {
+  return state.players.length > 0 && state.players.every((p) => isVirtualPlayerId(p.id))
+}
+
 function vpAmountToCall(state: GameState, playerId: string): number {
   const cur = state.round.currentBet || 0
   const contrib = state.round.playerBets?.[playerId] || 0
@@ -145,6 +150,11 @@ function stepVirtualSimulation(state: GameState): GameState {
 function maxSimulationSteps(gs: GameState): number {
   const n = Math.max(4, gs.players.length)
   return Math.min(10_000, Math.max(2_400, n * 180))
+}
+
+/** Single VP step — answering or virtual seat’s betting action — no-op when idle or when a human must act. */
+export function advanceVirtualBettingStep(state: GameState): GameState {
+  return stepVirtualSimulation(state)
 }
 
 /** Run bots until idle or iteration cap (whole table loop). */
