@@ -457,6 +457,9 @@ function SeatRingWithLabels({
     'mx-auto aspect-[10/8] h-auto w-full max-w-[min(100%,21rem)] shrink-0 sm:max-w-[min(100%,22rem)]'
   const wrap = size === 'lg' ? lgRing : mdRing
   const dot = size === 'lg' ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]' : 'h-8 w-8'
+  /** Larger rim marker for the player on the clock — reads from the back of the room. */
+  const dotActing =
+    size === 'lg' ? 'h-[3.5rem] w-[3.5rem] sm:h-16 sm:w-16 md:h-[4.25rem] md:w-[4.25rem]' : 'h-10 w-10 sm:h-11 sm:w-11'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(12rem,34vw)] text-[1.125rem] leading-tight sm:text-[1.3rem] sm:leading-snug md:text-[1.5625rem]'
@@ -579,8 +582,8 @@ function SeatRingWithLabels({
         })()
         const actingSoftPulse =
           size === 'lg'
-            ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden'
-            : 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-11 w-11 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/10 motion-reduce:hidden'
+            ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-[4.5rem] w-[4.5rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden sm:h-[5rem] sm:w-[5rem]'
+            : 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/10 motion-reduce:hidden sm:h-[3.75rem] sm:w-[3.75rem]'
         return (
           <div key={i}>
             <div
@@ -595,7 +598,7 @@ function SeatRingWithLabels({
                 <span aria-hidden className={`${actingSoftPulse} motion-safe:animate-pulse motion-safe:[animation-duration:2.8s]`} />
               ) : null}
               <div
-                className={`relative z-[2] shrink-0 ${dot} rounded-full border-2 shadow ${seatDotClass}`}
+                className={`relative z-[2] shrink-0 ${isActing ? dotActing : dot} rounded-full border-2 shadow ${seatDotClass}`}
                 aria-current={isActing ? true : undefined}
                 aria-label={
                   isActing
@@ -608,24 +611,30 @@ function SeatRingWithLabels({
             </div>
             {isActing ? (
               <div
-                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 ${
-                  size === 'lg' ? '-mt-4' : ''
+                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 ${
+                  size === 'lg' ? '-mt-3' : '-mt-1'
                 }`}
                 style={{
                   left: `${actionChipLeftPct}%`,
                   top: `${actionChipTopPct}%`,
                 }}
               >
-                <span className="whitespace-nowrap rounded border border-amber-900/35 bg-amber-300/90 px-[0.28rem] py-px text-[0.48rem] font-bold uppercase leading-none tracking-wide text-neutral-950 shadow-sm sm:px-[0.32rem] sm:text-[0.52rem] md:text-[0.56rem]">
+                <span
+                  className={
+                    size === 'lg'
+                      ? 'whitespace-nowrap rounded-xl border-[3px] border-neutral-950/35 bg-amber-300 px-3 py-2 text-base font-black uppercase leading-none tracking-wide text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.55)] sm:px-3.5 sm:py-2.5 sm:text-lg md:px-4 md:text-xl md:leading-none [text-shadow:0_1px_0_rgba(255,255,255,0.35)]'
+                      : 'whitespace-nowrap rounded-lg border-2 border-neutral-950/30 bg-amber-300 px-2.5 py-1.5 text-sm font-black uppercase leading-none tracking-wide text-neutral-950 shadow-[0_3px_10px_rgba(0,0,0,0.45)] sm:px-3 sm:py-2 sm:text-base'
+                  }
+                >
                   Action
                 </span>
                 {showActingCallLine ? (
                   <span
-                    className={`whitespace-nowrap rounded-md border border-white/20 bg-black/70 px-[0.35rem] py-px font-semibold tabular-nums leading-tight text-amber-50 shadow-sm sm:px-[0.4rem] ${
+                    className={
                       size === 'lg'
-                        ? 'text-[0.52rem] sm:text-[0.58rem] md:text-[0.62rem]'
-                        : 'text-[0.45rem] sm:text-[0.5rem]'
-                    }`}
+                        ? 'max-w-[min(100vw-2rem,22rem)] whitespace-normal rounded-xl border-2 border-amber-300/45 bg-neutral-950/95 px-3 py-2 text-center text-base font-bold tabular-nums leading-snug text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.25)] ring-2 ring-amber-400/25 sm:max-w-[24rem] sm:px-3.5 sm:py-2.5 sm:text-lg md:text-xl [text-shadow:0_1px_3px_rgba(0,0,0,1)]'
+                        : 'max-w-[min(90vw,14rem)] whitespace-normal rounded-lg border-2 border-amber-300/35 bg-neutral-950/95 px-2.5 py-1.5 text-center text-xs font-bold tabular-nums leading-snug text-amber-50 shadow-md ring-1 ring-amber-400/30 sm:max-w-[16rem] sm:px-3 sm:py-2 sm:text-sm md:text-base [text-shadow:0_1px_2px_rgba(0,0,0,1)]'
+                    }
                   >
                     {formatActingCallHint(actingCallAmount ?? 0, actingCallPctOfStack)}
                   </span>
@@ -733,10 +742,10 @@ function SeatRingWithLabels({
                 </span>
                 {lastBetAct != null ? (
                   <span
-                    className={`mt-1 block max-w-full truncate border px-[4px] py-px font-black uppercase leading-none tracking-wide shadow-sm ${
+                    className={`mt-1.5 block max-w-full truncate border-2 px-1.5 py-0.5 font-black uppercase leading-tight tracking-wide shadow-md ${
                       size === 'lg'
-                        ? 'text-[0.625rem] sm:text-[0.6875rem] md:text-[0.75rem]'
-                        : 'text-[0.5625rem] sm:text-[0.625rem]'
+                        ? 'text-sm sm:text-base md:text-lg'
+                        : 'text-[0.7rem] sm:text-xs md:text-sm'
                     } ${seatBettingActionPillClass(lastBetAct)}`}
                   >
                     {seatBettingActionLabel(lastBetAct)}
