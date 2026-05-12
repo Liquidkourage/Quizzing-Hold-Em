@@ -479,12 +479,19 @@ function VenueMosaicTableCard({
       }
     }
     const openSeats = Math.max(0, VENUE_SEAT_SLOTS - seats)
-    const rosterPreview =
-      filledNames.length === 0
-        ? 'No players at this table yet'
-        : filledNames.length <= 2
-          ? filledNames.join(' · ')
-          : `${filledNames.slice(0, 2).join(' · ')} · +${filledNames.length - 2} more`
+    const rosterChips =
+      filledNames.length === 0 ? null : (
+        <ul className="list-none flex flex-wrap gap-1.5" aria-label={`Players at table ${tn}`}>
+          {filledNames.map((nm, ri) => (
+            <li
+              key={`${tn}-r-${ri}-${nm}`}
+              className="min-w-0 max-w-[min(100%,14rem)] rounded-full border border-white/[0.14] bg-black/40 px-2.5 py-1 text-[11px] font-semibold leading-snug text-white/90 shadow-sm sm:px-3 sm:text-xs"
+            >
+              <span className="block break-words">{nm}</span>
+            </li>
+          ))}
+        </ul>
+      )
 
     return (
       <div
@@ -537,7 +544,11 @@ function VenueMosaicTableCard({
               {formatVenueBankroll(totalChips)}
             </span>
           </p>
-          <p className="text-xs leading-snug text-white/60 line-clamp-3 sm:text-sm">{rosterPreview}</p>
+          {rosterChips != null ? (
+            <div className="mt-1.5 text-white/92">{rosterChips}</div>
+          ) : (
+            <p className="text-xs leading-snug text-white/50 sm:text-sm">No players at this table yet</p>
+          )}
         </div>
       </div>
     )
