@@ -136,7 +136,7 @@ function SeatRingWithLabels({
             />
             {showFeltStack ? (
               <div
-                className="pointer-events-none absolute z-[3] flex flex-col items-center gap-1 rounded-lg border border-white/15 bg-black/55 px-2 py-2 shadow-[0_4px_16px_rgba(0,0,0,0.55)] backdrop-blur-sm sm:gap-1.5 sm:px-2.5 sm:py-2.5"
+                className="pointer-events-none absolute z-[3] flex flex-col items-center gap-0.5 px-0.5"
                 style={{
                   left: `calc(50% + ${fx}%)`,
                   top: `calc(50% + ${fy}%)`,
@@ -146,12 +146,12 @@ function SeatRingWithLabels({
                 <img
                   src={seatChipStackImg}
                   alt=""
-                  width={120}
-                  height={90}
+                  width={96}
+                  height={72}
                   draggable={false}
-                  className="pointer-events-none mx-auto h-[3.25rem] w-auto max-w-[6rem] select-none object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.55)] sm:h-[4rem] sm:max-w-[7rem]"
+                  className="pointer-events-none h-8 w-auto max-w-[2.85rem] shrink-0 select-none object-contain opacity-95 drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)] sm:h-9 sm:max-w-[3.35rem]"
                 />
-                <span className="max-w-[9rem] text-center font-mono text-sm font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-base md:text-lg [text-shadow:0_2px_4px_rgba(0,0,0,0.9)]">
+                <span className="max-w-[10rem] text-center font-mono text-[0.8125rem] font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-sm md:text-[0.9375rem] [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_8px_rgba(0,0,0,0.85)]">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
