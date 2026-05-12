@@ -188,8 +188,8 @@ function computeSeatLabelAnchorsPct(args: {
   /** Half of approx. name block inward toward the felt (smaller = labels sit tighter to the rim). */
   const labelHalfInwardPx =
     size === 'lg' ? (feltSeatStacks ? 14 : 18) : 12
-  /** lg hero: chip PNG + bankroll radial band — minimal extra push. */
-  const chipBandClearancePx = feltSeatStacks && size === 'lg' ? 14 : 0
+  /** lg hero: chip PNG + bankroll radial band — modest push so names avoid larger stacks nearer the rim. */
+  const chipBandClearancePx = feltSeatStacks && size === 'lg' ? 16 : 0
   const padPx = 1
   const neighborDotPadPx = 2
   const estLabelHalfWidthPx =
@@ -295,8 +295,8 @@ function SeatRingWithLabels({
       ? 'max-w-[min(12rem,34vw)] text-[1.125rem] leading-tight sm:text-[1.3rem] sm:leading-snug md:text-[1.5625rem]'
       : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
-  /** Bankroll stack on felt: fraction of rim radius toward table center (same ray as seat). */
-  const chipInnerScale = 0.56
+  /** Bankroll stack on felt: radial scale toward seat (1 = on rim dot); larger = nearer table edge / seat marker. */
+  const chipInnerScale = 0.635
 
   const ringElRef = useRef<HTMLDivElement>(null)
   const [ringPx, setRingPx] = useState({ w: 0, h: 0 })
@@ -391,9 +391,9 @@ function SeatRingWithLabels({
                   width={96}
                   height={72}
                   draggable={false}
-                  className="pointer-events-none h-10 w-auto max-w-[4.335rem] shrink-0 select-none object-contain opacity-95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:h-[2.8925rem] sm:max-w-[5.045rem]"
+                  className="pointer-events-none h-[2.6925rem] w-auto max-w-[4.6rem] shrink-0 select-none object-contain opacity-95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:h-[3.0875rem] sm:max-w-[5.35rem]"
                 />
-                <span className="max-w-[10rem] text-center font-mono text-[1.0925rem] font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-[1.18rem] md:text-[1.235rem] [text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_2px_10px_rgba(0,0,0,0.85)]">
+                <span className="max-w-[10rem] text-center font-mono text-[1.16rem] font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-[1.26rem] md:text-[1.315rem] [text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_2px_10px_rgba(0,0,0,0.85)]">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
