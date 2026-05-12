@@ -34,6 +34,8 @@ import {
   buildDisplayPreviewGameState,
   displayActingSeatIndex,
   displayBlindSeatIndices,
+  chipsRequiredToCall,
+  pctOfStackToCall,
 } from '@qhe/core'
 import type { Question, GameState } from '@qhe/core'
 import type { 
@@ -1164,6 +1166,21 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       }
       return null
     })
+    let actingCallAmount: number | null = null
+    let actingCallPctOfStack: number | null = null
+    if (gs.phase === 'betting' && gs.round.isBettingOpen !== false) {
+      const idx =
+        typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)
+          ? Math.floor(gs.round.currentPlayerIndex)
+          : -1
+      if (idx >= 0 && idx < gs.players.length) {
+        const actor = gs.players[idx]
+        if (actor && !actor.hasFolded && !actor.isAllIn) {
+          actingCallAmount = chipsRequiredToCall(gs, actor.id)
+          actingCallPctOfStack = pctOfStackToCall(gs, actor.id)
+        }
+      }
+    }
     tiles.push({
       tableNum: n,
       seated,
@@ -1173,6 +1190,8 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       seatBankrolls,
       seatFolded,
       seatLastBettingAction,
+      actingCallAmount,
+      actingCallPctOfStack,
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
       currentPlayerIndex:
         typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)

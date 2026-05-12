@@ -46,6 +46,17 @@ function formatVenueBankroll(amount: number): string {
   return `$${Math.max(0, n).toLocaleString()}`
 }
 
+/** Line under “Action” for venue wall: call size vs stack (active player only). */
+function formatActingCallHint(amount: number, pctOfStack: number | null | undefined): string {
+  if (amount <= 0) return 'No call to match'
+  const callStr = `Call ${formatVenueBankroll(amount)}`
+  if (pctOfStack != null && Number.isFinite(pctOfStack)) {
+    const p = pctOfStack >= 100 - 1e-6 ? 100 : pctOfStack
+    return `${callStr} · ${Math.round(p)}% stack`
+  }
+  return callStr
+}
+
 /** Sum bankrolls for seats that have a player name — matches crawl "Chips on table". */
 function totalChipsFromSeats(seatNames: string[], seatBankrolls: number[]): number {
   let total = 0
@@ -411,6 +422,8 @@ function SeatRingWithLabels({
   bettingPaused = false,
   showSeatBettingActions = false,
   seatLastBettingAction: seatLastBettingActionIn,
+  actingCallAmount,
+  actingCallPctOfStack,
 }: {
   seatedCount: number
   seatNames: string[]
@@ -430,6 +443,9 @@ function SeatRingWithLabels({
   showSeatBettingActions?: boolean
   /** Parallel to `seatNames`; from server `seatLastBettingAction`. */
   seatLastBettingAction?: (SeatBettingAction | null)[]
+  /** Active seat only: chips to call and % of stack (venue snapshot). */
+  actingCallAmount?: number | null
+  actingCallPctOfStack?: number | null
 }) {
   const seatFolded = padSeatFolded(seatFoldedIn)
   const seatLastBettingAction = padSeatLastBettingAction(seatLastBettingActionIn)
@@ -541,6 +557,11 @@ function SeatRingWithLabels({
           showSeatBettingActions && filled ? seatLastBettingAction[i] ?? null : null
         const showFoldOut = isFolded && !(showSeatBettingActions && lastBetAct === 'fold')
         const isActing = filled && actingSeatIndex != null && actingSeatIndex === i && !isFolded
+        const showActingCallLine =
+          isActing &&
+          showSeatBettingActions &&
+          actingCallAmount != null &&
+          typeof actingCallAmount === 'number'
         /** Toward table center so the “Action” chip reads on top of green felt, not on the rim dot. */
         const actionChipLeftPct = (seatRim.leftPct + 50) * 0.5
         const actionChipTopPct = (seatRim.topPct + 50) * 0.5
@@ -587,7 +608,7 @@ function SeatRingWithLabels({
             </div>
             {isActing ? (
               <div
-                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0 ${
+                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 ${
                   size === 'lg' ? '-mt-4' : ''
                 }`}
                 style={{
@@ -598,9 +619,23 @@ function SeatRingWithLabels({
                 <span className="whitespace-nowrap rounded border border-amber-900/35 bg-amber-300/90 px-[0.28rem] py-px text-[0.48rem] font-bold uppercase leading-none tracking-wide text-neutral-950 shadow-sm sm:px-[0.32rem] sm:text-[0.52rem] md:text-[0.56rem]">
                   Action
                 </span>
+                {showActingCallLine ? (
+                  <span
+                    className={`whitespace-nowrap rounded-md border border-white/20 bg-black/70 px-[0.35rem] py-px font-semibold tabular-nums leading-tight text-amber-50 shadow-sm sm:px-[0.4rem] ${
+                      size === 'lg'
+                        ? 'text-[0.52rem] sm:text-[0.58rem] md:text-[0.62rem]'
+                        : 'text-[0.45rem] sm:text-[0.5rem]'
+                    }`}
+                  >
+                    {formatActingCallHint(actingCallAmount ?? 0, actingCallPctOfStack)}
+                  </span>
+                ) : null}
                 {size === 'lg' ? (
                   <span className="sr-only">
                     Seat {i + 1} has the next wager decision for this table.
+                    {showActingCallLine && actingCallAmount != null
+                      ? ` ${formatActingCallHint(actingCallAmount, actingCallPctOfStack)}.`
+                      : ''}
                   </span>
                 ) : null}
               </div>
@@ -917,6 +952,8 @@ function VenueMosaicTableCard({
             bettingPaused={bettingPaused}
             showSeatBettingActions={showSeatBettingActions}
             seatLastBettingAction={seatLastBettingAction}
+            actingCallAmount={row.actingCallAmount}
+            actingCallPctOfStack={row.actingCallPctOfStack}
           />
         </div>
 
@@ -979,6 +1016,8 @@ function VenueMosaicTableCard({
           bettingPaused={bettingPaused}
           showSeatBettingActions={showSeatBettingActions}
           seatLastBettingAction={seatLastBettingAction}
+          actingCallAmount={row.actingCallAmount}
+          actingCallPctOfStack={row.actingCallPctOfStack}
         />
       </div>
 

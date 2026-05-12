@@ -45,6 +45,10 @@ export type DisplayVenueTileSnapshot = {
   seatFolded?: boolean[]
   /** This wagering street only: last check / call / raise / fold / all-in per seat. Omitted by older servers. */
   seatLastBettingAction?: (SeatBettingAction | null)[]
+  /** Player to act: chips to call (min of facing amount and stack). Omitted when no one is up to wager. */
+  actingCallAmount?: number | null
+  /** Same player: % of current stack required for that call. Omitted when unknown or not applicable. */
+  actingCallPctOfStack?: number | null
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */

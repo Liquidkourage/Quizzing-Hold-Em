@@ -487,6 +487,23 @@ function amountToCall(state: GameState, playerId: string): number {
   return Math.max(0, current - contributed);
 }
 
+/** Chips the player must add to call the current bet (capped by their remaining stack). */
+export function chipsRequiredToCall(state: GameState, playerId: string): number {
+  const to = amountToCall(state, playerId);
+  const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat < 0) return 0;
+  return Math.min(to, state.players[seat].bankroll);
+}
+
+/** Share of current stack (0–100) required to call; `null` when stack is zero. */
+export function pctOfStackToCall(state: GameState, playerId: string): number | null {
+  const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat < 0) return null;
+  const br = state.players[seat].bankroll;
+  if (br <= 0) return null;
+  return (chipsRequiredToCall(state, playerId) / br) * 100;
+}
+
 function mergeLastSeatBettingAction(
   round: RoundState,
   playerCount: number,
