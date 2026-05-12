@@ -538,7 +538,7 @@ function VenueMosaicTableCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-3 pb-3 pt-1 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-4 sm:pb-4 sm:pt-1.5 md:px-5"
+        className="mx-auto flex w-full max-w-full shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-3 pb-3 pt-1 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 [zoom:90%] sm:px-4 sm:pb-4 sm:pt-1.5 md:px-5"
       >
         <div className="-mt-1 shrink-0 pb-px">
           <div className="flex items-start justify-between gap-3">
@@ -1036,7 +1036,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Spotlight showing table {seatingHeroRow.tableNum}
             </p>
-            <div className="w-full min-w-0 shrink-0 overflow-hidden">
+            <div className="flex w-full min-w-0 shrink-0 justify-center overflow-hidden">
               <AnimatePresence mode="wait">
                 <VenueMosaicTableCard
                   key={seatingHeroRow.tableNum}
