@@ -46,7 +46,7 @@ function formatVenueBankroll(amount: number): string {
   return `$${Math.max(0, n).toLocaleString()}`
 }
 
-/** Line under “Action” for venue wall: call size vs stack (active player only). */
+/** Toward-table-center hint by the acting seat: call size vs stack (active player only). */
 function formatActingCallHint(amount: number, pctOfStack: number | null | undefined): string {
   if (amount <= 0) return 'No call to match'
   const callStr = `Call ${formatVenueBankroll(amount)}`
@@ -580,7 +580,7 @@ function SeatRingWithLabels({
           showSeatBettingActions &&
           actingCallAmount != null &&
           typeof actingCallAmount === 'number'
-        /** Toward table center so the “Action” chip reads on top of green felt, not on the rim dot. */
+        /** Toward table center: call/size hint reads on felt (no separate Action badge). */
         const actionChipLeftPct = (seatRim.leftPct + 50) * 0.5
         const actionChipTopPct = (seatRim.topPct + 50) * 0.5
         const seatDotClass = (() => {
@@ -617,17 +617,24 @@ function SeatRingWithLabels({
                 aria-current={isActing ? true : undefined}
                 aria-label={
                   isActing
-                    ? 'Seat with the wagering turn'
+                    ? [
+                        'Seat has the wagering turn',
+                        showActingCallLine
+                          ? formatActingCallHint(actingCallAmount ?? 0, actingCallPctOfStack)
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join('. ')
                     : isFolded
                       ? 'Folded — out of this hand'
                       : undefined
                 }
               />
             </div>
-            {isActing ? (
+            {isActing && showActingCallLine ? (
               <div
-                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 ${
-                  size === 'lg' ? '-mt-3' : '-mt-1'
+                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center ${
+                  size === 'lg' ? '-mt-2' : ''
                 }`}
                 style={{
                   left: `${actionChipLeftPct}%`,
@@ -637,31 +644,12 @@ function SeatRingWithLabels({
                 <span
                   className={
                     size === 'lg'
-                      ? 'whitespace-nowrap rounded-xl border-[3px] border-neutral-950/35 bg-amber-300 px-3 py-2 text-base font-black uppercase leading-none tracking-wide text-neutral-950 shadow-[0_4px_14px_rgba(0,0,0,0.55)] sm:px-3.5 sm:py-2.5 sm:text-lg md:px-4 md:text-xl md:leading-none [text-shadow:0_1px_0_rgba(255,255,255,0.35)]'
-                      : 'whitespace-nowrap rounded-lg border-2 border-neutral-950/30 bg-amber-300 px-2.5 py-1.5 text-sm font-black uppercase leading-none tracking-wide text-neutral-950 shadow-[0_3px_10px_rgba(0,0,0,0.45)] sm:px-3 sm:py-2 sm:text-base'
+                      ? 'max-w-[min(100vw-2rem,22rem)] whitespace-normal rounded-xl border-2 border-amber-300/45 bg-neutral-950/95 px-3 py-2 text-center text-base font-bold tabular-nums leading-snug text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.25)] ring-2 ring-amber-400/25 sm:max-w-[24rem] sm:px-3.5 sm:py-2.5 sm:text-lg md:text-xl [text-shadow:0_1px_3px_rgba(0,0,0,1)]'
+                      : 'max-w-[min(90vw,14rem)] whitespace-normal rounded-lg border-2 border-amber-300/35 bg-neutral-950/95 px-2.5 py-1.5 text-center text-xs font-bold tabular-nums leading-snug text-amber-50 shadow-md ring-1 ring-amber-400/30 sm:max-w-[16rem] sm:px-3 sm:py-2 sm:text-sm md:text-base [text-shadow:0_1px_2px_rgba(0,0,0,1)]'
                   }
                 >
-                  Action
+                  {formatActingCallHint(actingCallAmount ?? 0, actingCallPctOfStack)}
                 </span>
-                {showActingCallLine ? (
-                  <span
-                    className={
-                      size === 'lg'
-                        ? 'max-w-[min(100vw-2rem,22rem)] whitespace-normal rounded-xl border-2 border-amber-300/45 bg-neutral-950/95 px-3 py-2 text-center text-base font-bold tabular-nums leading-snug text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.25)] ring-2 ring-amber-400/25 sm:max-w-[24rem] sm:px-3.5 sm:py-2.5 sm:text-lg md:text-xl [text-shadow:0_1px_3px_rgba(0,0,0,1)]'
-                        : 'max-w-[min(90vw,14rem)] whitespace-normal rounded-lg border-2 border-amber-300/35 bg-neutral-950/95 px-2.5 py-1.5 text-center text-xs font-bold tabular-nums leading-snug text-amber-50 shadow-md ring-1 ring-amber-400/30 sm:max-w-[16rem] sm:px-3 sm:py-2 sm:text-sm md:text-base [text-shadow:0_1px_2px_rgba(0,0,0,1)]'
-                    }
-                  >
-                    {formatActingCallHint(actingCallAmount ?? 0, actingCallPctOfStack)}
-                  </span>
-                ) : null}
-                {size === 'lg' ? (
-                  <span className="sr-only">
-                    Seat {i + 1} has the next wager decision for this table.
-                    {showActingCallLine && actingCallAmount != null
-                      ? ` ${formatActingCallHint(actingCallAmount, actingCallPctOfStack)}.`
-                      : ''}
-                  </span>
-                ) : null}
               </div>
             ) : null}
             {(() => {
