@@ -954,7 +954,7 @@ function wireDisplaySocketToVenue(socket: Socket, venueCodeRaw: string, data: Cl
     sockData.sessionKey = undefined
     const ackWall: ServerAck = { ok: true, message: 'Connected successfully' }
     socket.emit('ack', ackWall)
-    scheduleDisplayVenueSnapshot(vn)
+    emitDisplayVenueSnapshotNow(vn)
     return
   }
 
@@ -972,7 +972,7 @@ function wireDisplaySocketToVenue(socket: Socket, venueCodeRaw: string, data: Cl
         : createEmptyGame(vn, '', tid)
     socket.emit('ack', { ok: true, message: 'Connected successfully' } satisfies ServerAck)
     socket.emit('state', runVirtualPlayerSimulation(synthetic))
-    scheduleDisplayVenueSnapshot(vn)
+    emitDisplayVenueSnapshotNow(vn)
     return
   }
 
@@ -1082,8 +1082,6 @@ function allTableSessionsInVenue(venueCode: string): string[] {
 /** Seats labeled on the public venue-wall mosaic (matches felt chair count in UI). */
 const VENUE_WALL_SEAT_COUNT = 8
 
-const displayVenueSnapshotTimers = new Map<string, ReturnType<typeof setTimeout>>()
-
 /** Seats wired into the venue wall / welcome mosaic (human + rehearsal CPU vp:*). */
 function welcomeWallSeatCount(gs: GameState): number {
   return gs.players.length
@@ -1096,7 +1094,7 @@ function markVenueShowStarted(code: string): void {
   const vn = normalizeVenueCode(code)
   if (!venueAudienceWelcomeExpired.has(vn)) {
     venueAudienceWelcomeExpired.add(vn)
-    scheduleDisplayVenueSnapshot(vn)
+    emitDisplayVenueSnapshotNow(vn)
   }
 }
 
@@ -1194,37 +1192,14 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
   io.to(displayVenueRoom(vn)).emit('displayVenueSnapshot', payload)
 }
 
-function scheduleDisplayVenueSnapshot(venueCode: string) {
-  const k = normalizeVenueCode(venueCode)
-  const prev = displayVenueSnapshotTimers.get(k)
-  if (prev !== undefined) clearTimeout(prev)
-  displayVenueSnapshotTimers.set(
-    k,
-    setTimeout(() => {
-      displayVenueSnapshotTimers.delete(k)
-      emitDisplayVenueSnapshotNow(k)
-    }, 140)
-  )
-}
-
 function afterTableStateBroadcast(gs: GameState, _sessionKey: string) {
-  scheduleDisplayVenueSnapshot(gs.code)
+  /** Immediate refresh — debouncing was dropping every intermediate state during VP sims. */
+  emitDisplayVenueSnapshotNow(gs.code)
 }
 
 /** Emit felt state then refresh DISPLAY:{venue} wall summaries for numbered felts */
 function emitVenueTableState(sessionKey: string, gs: GameState) {
   io.to(sessionKey).emit('state', gs)
-  afterTableStateBroadcast(gs, sessionKey)
-}
-
-/**
- * `emitVenueTableState` schedules the venue wall after 140ms; rapid VP chunks only reset that
- * timer, so TVs never see intermediate pots/action. Flush the mosaic immediately whenever we need
- * watchable CPU sim or the first frame right after a deal.
- */
-function emitVenueTableStateFlushWall(sessionKey: string, gs: GameState) {
-  io.to(sessionKey).emit('state', gs)
-  emitDisplayVenueSnapshotNow(normalizeVenueCode(gs.code))
   afterTableStateBroadcast(gs, sessionKey)
 }
 
@@ -1260,7 +1235,7 @@ function drainCpuVpSessionChain(sessionKey: string) {
   }
 
   rooms.set(sessionKey, s)
-  emitVenueTableStateFlushWall(sessionKey, s)
+  emitVenueTableState(sessionKey, s)
 
   gs = rooms.get(sessionKey)
   if (!gs || !tableIsCpuOnly(gs)) {
@@ -1428,7 +1403,7 @@ io.on('connection', (socket) => {
       }
       venueDisplayLayouts.set(normalizeVenueCode(gsCtl.code), nextLayout)
       io.to(displayVenueRoom(gsCtl.code)).emit('displayLayout', nextLayout)
-      scheduleDisplayVenueSnapshot(gsCtl.code)
+      emitDisplayVenueSnapshotNow(gsCtl.code)
       socket.emit('toast', 'TV / display layout updated for the venue.')
       return
     }
@@ -1733,7 +1708,7 @@ io.on('connection', (socket) => {
             gs = dealInitialCards(gs)
             rooms.set(tk, gs)
             io.to(tk).emit('dealingCards')
-            emitVenueTableStateFlushWall(tk, gs)
+            emitVenueTableState(tk, gs)
             if (tableIsCpuOnly(gs)) {
               enqueueCpuOnlyVpDrain(tk)
             } else {
@@ -1763,7 +1738,7 @@ io.on('connection', (socket) => {
             if (dealt) anyDealt = true
             rooms.set(tk, gs)
             if (dealt) {
-              emitVenueTableStateFlushWall(tk, gs)
+              emitVenueTableState(tk, gs)
               if (tableIsCpuOnly(gs)) {
                 enqueueCpuOnlyVpDrain(tk)
               } else {
@@ -2029,7 +2004,7 @@ io.on('connection', (socket) => {
           emitVenueTableState(lobbyKey, freshLobby)
           socket.emit('toast', 'New game — numbered tables cleared; lobby reset.')
           venueAudienceWelcomeExpired.delete(vn)
-          scheduleDisplayVenueSnapshot(gameState.code)
+          emitDisplayVenueSnapshotNow(gameState.code)
           gameState = rooms.get(lobbyKey)!
           break
         }
