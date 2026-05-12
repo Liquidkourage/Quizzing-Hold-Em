@@ -1204,13 +1204,18 @@ function emitVenueTableState(sessionKey: string, gs: GameState) {
 }
 
 /**
- * Pure `vp:*` felts — run wagering/answering in small bursts so TVs get
- * actionable snapshots (opening seat) instead of synchronously draining the round to “pause”.
+ * Pure `vp:*` felts — advance one bot step at a time with a human-visible pause so the
+ * venue wall can be read between decisions (demo / watch mode).
  */
 const cpuVpDrainPending = new Set<string>()
-const CPU_VP_STEPS_PER_CHUNK = 72
-/** Space chunks so the display can render between updates (ms). */
-const CPU_VP_INTER_CHUNK_DELAY_MS = 120
+/** One wagering/answering VP step per timer tick (not 72 micro-steps at once). */
+const CPU_VP_STEPS_PER_CHUNK = 1
+
+function cpuVpDelayMsBetweenActions(): number {
+  const min = 3000
+  const max = 7000
+  return min + Math.floor(Math.random() * (max - min + 1))
+}
 
 function enqueueCpuOnlyVpDrain(sessionKey: string) {
   if (cpuVpDrainPending.has(sessionKey)) return
@@ -1245,7 +1250,7 @@ function drainCpuVpSessionChain(sessionKey: string) {
 
   const hitChunkCap = steps === CPU_VP_STEPS_PER_CHUNK
   if (hitChunkCap) {
-    setTimeout(() => drainCpuVpSessionChain(sessionKey), CPU_VP_INTER_CHUNK_DELAY_MS)
+    setTimeout(() => drainCpuVpSessionChain(sessionKey), cpuVpDelayMsBetweenActions())
   } else {
     cpuVpDrainPending.delete(sessionKey)
   }
