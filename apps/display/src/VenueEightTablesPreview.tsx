@@ -333,7 +333,7 @@ function VenueMosaicTableCard({
           </div>
         </div>
 
-        className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden pt-1"
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-hidden pt-1">
           <SeatRingWithLabels
             seatedCount={seats}
             seatNames={seatNames}
