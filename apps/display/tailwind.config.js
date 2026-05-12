@@ -75,6 +75,8 @@ export default {
         'jackpot': 'jackpot 0.8s ease-out',
         /** Venue wall — seat whose turn it is during open betting */
         'venue-seat-action': 'venueSeatAction 1.35s ease-in-out infinite',
+        /** Stronger halo for compact mosaic felts (~3-column grid tiles) — readable at TV distance */
+        'venue-seat-action-card': 'venueSeatActionCard 1.35s ease-in-out infinite',
         /** Display welcome wall — high-stakes Vegas polish */
         'vegas-twinkle-field': 'vegasTwinkleField 5s ease-in-out infinite',
         'vegas-shimmer-cards': 'vegasShimmerCards 4.2s ease-in-out infinite',
@@ -104,14 +106,34 @@ export default {
         /** Venue mosaic: pulsing ring on the seat marker with the action */
         venueSeatAction: {
           '0%, 100%': {
+            filter:
+              'brightness(1.06) drop-shadow(0 0 3px rgba(253, 224, 71, 0.75)) drop-shadow(0 0 10px rgba(251, 191, 36, 0.45))',
             boxShadow:
               'inset 0 0 10px rgba(251, 191, 36, 0.45), inset 0 0 22px rgba(0, 255, 180, 0.14), 0 0 0 2px rgba(253, 224, 71, 0.85), 0 0 12px rgba(251, 191, 36, 0.65), 0 0 24px rgba(0, 255, 180, 0.35)',
             borderColor: 'rgba(253, 224, 71, 0.95)',
           },
           '50%': {
+            filter:
+              'brightness(1.18) drop-shadow(0 0 6px rgba(252, 211, 77, 0.98)) drop-shadow(0 0 18px rgba(253, 224, 71, 0.65))',
             boxShadow:
               'inset 0 0 14px rgba(252, 211, 77, 0.65), inset 0 0 30px rgba(0, 255, 180, 0.22), 0 0 0 3px rgba(252, 211, 77, 1), 0 0 22px rgba(251, 191, 36, 0.95), 0 0 40px rgba(0, 255, 180, 0.55)',
             borderColor: 'rgba(254, 249, 195, 1)',
+          },
+        },
+        venueSeatActionCard: {
+          '0%, 100%': {
+            filter:
+              'brightness(1.14) drop-shadow(0 0 4px rgba(253, 224, 71, 0.98)) drop-shadow(0 0 16px rgba(251, 191, 36, 0.9)) drop-shadow(0 0 32px rgba(0, 255, 180, 0.5))',
+            boxShadow:
+              'inset 0 0 12px rgba(251, 191, 36, 0.55), inset 0 0 28px rgba(0, 255, 180, 0.2), 0 0 0 3px rgba(253, 224, 71, 0.95), 0 0 16px rgba(251, 191, 36, 0.85), 0 0 36px rgba(0, 255, 180, 0.5), 0 0 56px rgba(251, 191, 36, 0.22)',
+            borderColor: 'rgba(254, 249, 195, 0.98)',
+          },
+          '50%': {
+            filter:
+              'brightness(1.28) drop-shadow(0 0 10px rgba(252, 211, 77, 1)) drop-shadow(0 0 26px rgba(253, 224, 71, 0.88)) drop-shadow(0 0 48px rgba(0, 255, 180, 0.55))',
+            boxShadow:
+              'inset 0 0 18px rgba(252, 211, 77, 0.75), inset 0 0 36px rgba(0, 255, 180, 0.28), 0 0 0 4px rgba(252, 211, 77, 1), 0 0 26px rgba(251, 191, 36, 1), 0 0 52px rgba(0, 255, 180, 0.65), 0 0 76px rgba(251, 191, 36, 0.35)',
+            borderColor: 'rgba(254, 252, 232, 1)',
           },
         },
         glow: {

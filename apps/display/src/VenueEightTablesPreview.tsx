@@ -390,7 +390,7 @@ function SeatRingWithLabels({
   )
 
   return (
-    <div ref={ringElRef} className={`relative ${wrap}`}>
+    <div ref={ringElRef} className={`relative overflow-visible ${wrap}`}>
       <div
         className={`absolute rounded-[50%] border-amber-700/70 shadow-inner ${
           size === 'lg' ? 'border-2 sm:border-[3px]' : 'border-2'
@@ -425,12 +425,16 @@ function SeatRingWithLabels({
         const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
         const labelVy = seatNameLabelVerticalNudgePx(i, size)
         const isActing = filled && actingSeatIndex != null && actingSeatIndex === i
+        const actingAnimClass =
+          size === 'md' ? 'animate-venue-seat-action-card' : 'animate-venue-seat-action'
         const seatDotClass = (() => {
           if (isActing && prefersReducedMotion) {
-            return 'z-[5] border-amber-200/95 bg-black/85 shadow-[0_0_0_2px_rgba(253,224,71,0.85),0_0_14px_rgba(251,191,36,0.7)]'
+            return size === 'md'
+              ? 'z-[5] border-amber-200/95 bg-black/85 shadow-[0_0_0_3px_rgba(253,224,71,1),0_0_22px_rgba(251,191,36,0.95),0_0_40px_rgba(0,255,180,0.5)] [filter:brightness(1.12)_drop-shadow(0_0_10px_rgba(251,191,36,0.9))]'
+              : 'z-[5] border-amber-200/95 bg-black/85 shadow-[0_0_0_2px_rgba(253,224,71,0.85),0_0_14px_rgba(251,191,36,0.7)]'
           }
           if (isActing) {
-            return 'z-[5] animate-venue-seat-action border-amber-200/90 bg-black/90 motion-reduce:animate-none motion-reduce:shadow-[0_0_0_2px_rgba(253,224,71,0.85),0_0_14px_rgba(251,191,36,0.65)] motion-reduce:border-amber-200/95'
+            return `z-[5] ${actingAnimClass} border-amber-200/95 bg-black/92 motion-reduce:animate-none motion-reduce:shadow-[0_0_0_3px_rgba(253,224,71,1),0_0_22px_rgba(251,191,36,0.85)] motion-reduce:[filter:brightness(1.1)_drop-shadow(0_0_12px_rgba(251,191,36,0.85))] motion-reduce:border-amber-100`
           }
           return filled ? 'border-emerald-300/70 bg-black/85' : 'border-white/20 bg-black/35'
         })()
@@ -728,7 +732,8 @@ function VenueMosaicTableCard({
         delay: skipMountIntro ? 0 : idx * 0.045,
         duration: skipMountIntro ? 0 : 0.35,
       }}
-      className="flex flex-col rounded-xl border-2 border-yellow-700/35 bg-black/55 p-4 shadow-lg backdrop-blur-md sm:p-5"
+      style={{ overflow: 'visible' }}
+      className="flex flex-col overflow-visible rounded-xl border-2 border-yellow-700/35 bg-black/55 p-4 shadow-lg backdrop-blur-md sm:p-5"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -746,7 +751,7 @@ function VenueMosaicTableCard({
         </span>
       </div>
 
-      <div className="mt-3 flex-shrink-0">
+      <div className="relative z-[1] mt-3 flex-shrink-0 overflow-visible">
         <SeatRingWithLabels
           seatedCount={seats}
           seatNames={seatNames}
