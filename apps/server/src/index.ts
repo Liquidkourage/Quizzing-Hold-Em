@@ -1218,11 +1218,24 @@ function emitVenueTableState(sessionKey: string, gs: GameState) {
 }
 
 /**
- * Pure `vp:*` felts — run wagering/answering in small bursts via `setImmediate` so TVs get
+ * `emitVenueTableState` schedules the venue wall after 140ms; rapid VP chunks only reset that
+ * timer, so TVs never see intermediate pots/action. Flush the mosaic immediately whenever we need
+ * watchable CPU sim or the first frame right after a deal.
+ */
+function emitVenueTableStateFlushWall(sessionKey: string, gs: GameState) {
+  io.to(sessionKey).emit('state', gs)
+  emitDisplayVenueSnapshotNow(normalizeVenueCode(gs.code))
+  afterTableStateBroadcast(gs, sessionKey)
+}
+
+/**
+ * Pure `vp:*` felts — run wagering/answering in small bursts so TVs get
  * actionable snapshots (opening seat) instead of synchronously draining the round to “pause”.
  */
 const cpuVpDrainPending = new Set<string>()
 const CPU_VP_STEPS_PER_CHUNK = 72
+/** Space chunks so the display can render between updates (ms). */
+const CPU_VP_INTER_CHUNK_DELAY_MS = 120
 
 function enqueueCpuOnlyVpDrain(sessionKey: string) {
   if (cpuVpDrainPending.has(sessionKey)) return
@@ -1247,7 +1260,7 @@ function drainCpuVpSessionChain(sessionKey: string) {
   }
 
   rooms.set(sessionKey, s)
-  emitVenueTableState(sessionKey, s)
+  emitVenueTableStateFlushWall(sessionKey, s)
 
   gs = rooms.get(sessionKey)
   if (!gs || !tableIsCpuOnly(gs)) {
@@ -1257,7 +1270,7 @@ function drainCpuVpSessionChain(sessionKey: string) {
 
   const hitChunkCap = steps === CPU_VP_STEPS_PER_CHUNK
   if (hitChunkCap) {
-    setImmediate(() => drainCpuVpSessionChain(sessionKey))
+    setTimeout(() => drainCpuVpSessionChain(sessionKey), CPU_VP_INTER_CHUNK_DELAY_MS)
   } else {
     cpuVpDrainPending.delete(sessionKey)
   }
@@ -1720,7 +1733,7 @@ io.on('connection', (socket) => {
             gs = dealInitialCards(gs)
             rooms.set(tk, gs)
             io.to(tk).emit('dealingCards')
-            emitVenueTableState(tk, gs)
+            emitVenueTableStateFlushWall(tk, gs)
             if (tableIsCpuOnly(gs)) {
               enqueueCpuOnlyVpDrain(tk)
             } else {
@@ -1749,16 +1762,18 @@ io.on('connection', (socket) => {
             const dealt = gs.round.communityCards.length > communityBefore
             if (dealt) anyDealt = true
             rooms.set(tk, gs)
-            emitVenueTableState(tk, gs)
-            if (dealt && tableIsCpuOnly(gs)) {
-              enqueueCpuOnlyVpDrain(tk)
-            } else if (dealt) {
-              gs = runVirtualPlayerSimulation(gs)
-              rooms.set(tk, gs)
-              emitVenueTableState(tk, gs)
-            }
             if (dealt) {
+              emitVenueTableStateFlushWall(tk, gs)
+              if (tableIsCpuOnly(gs)) {
+                enqueueCpuOnlyVpDrain(tk)
+              } else {
+                gs = runVirtualPlayerSimulation(gs)
+                rooms.set(tk, gs)
+                emitVenueTableState(tk, gs)
+              }
               io.to(tk).emit('dealingCommunityCards')
+            } else {
+              emitVenueTableState(tk, gs)
             }
           }
           if (anyDealt) {
