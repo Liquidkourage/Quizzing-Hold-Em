@@ -425,26 +425,74 @@ function SeatRingWithLabels({
         const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
         const labelVy = seatNameLabelVerticalNudgePx(i, size)
         const isActing = filled && actingSeatIndex != null && actingSeatIndex === i
-        const actingAnimClass =
-          size === 'md' ? 'animate-venue-seat-action-card' : 'animate-venue-seat-action'
+        /** Toward table center so the “Action” chip reads on top of green felt, not on the rim dot. */
+        const actionChipLeftPct = (seatRim.leftPct + 50) * 0.5
+        const actionChipTopPct = (seatRim.topPct + 50) * 0.5
         const seatDotClass = (() => {
           if (isActing && prefersReducedMotion) {
-            return size === 'md'
-              ? 'z-[5] border-amber-200/95 bg-black/85 shadow-[0_0_0_3px_rgba(253,224,71,1),0_0_22px_rgba(251,191,36,0.95),0_0_40px_rgba(0,255,180,0.5)] [filter:brightness(1.12)_drop-shadow(0_0_10px_rgba(251,191,36,0.9))]'
-              : 'z-[5] border-amber-200/95 bg-black/85 shadow-[0_0_0_2px_rgba(253,224,71,0.85),0_0_14px_rgba(251,191,36,0.7)]'
+            return 'border-[6px] border-white bg-neutral-950 shadow-[0_0_36px_8px_rgba(250,204,21,0.95),inset_0_0_14px_rgba(253,224,71,0.35)]'
           }
           if (isActing) {
-            return `z-[5] ${actingAnimClass} border-amber-200/95 bg-black/92 motion-reduce:animate-none motion-reduce:shadow-[0_0_0_3px_rgba(253,224,71,1),0_0_22px_rgba(251,191,36,0.85)] motion-reduce:[filter:brightness(1.1)_drop-shadow(0_0_12px_rgba(251,191,36,0.85))] motion-reduce:border-amber-100`
+            return 'border-[5px] border-yellow-50 bg-neutral-950 shadow-[0_0_28px_rgba(250,204,21,0.95),0_0_48px_rgba(251,191,36,0.55),inset_0_0_14px_rgba(254,252,232,0.12)] motion-reduce:border-[6px] motion-reduce:border-white motion-reduce:shadow-[0_0_36px_8px_rgba(250,204,21,0.95)] motion-reduce:animate-none'
           }
           return filled ? 'border-emerald-300/70 bg-black/85' : 'border-white/20 bg-black/35'
         })()
+        const pingOuterClasses =
+          size === 'lg'
+            ? 'h-28 w-28 bg-amber-200/85 shadow-[0_0_52px_rgba(250,204,21,0.92)] sm:h-32 sm:w-32'
+            : 'h-[7rem] w-[7rem] bg-amber-200/85 shadow-[0_0_52px_rgba(250,204,21,0.92)]'
+        const pingInnerClasses =
+          size === 'lg'
+            ? 'h-24 w-24 animate-ping [animation-duration:2.2s] bg-yellow-300/72 shadow-[0_0_44px_rgba(253,224,71,0.88)] sm:h-28 sm:w-28'
+            : 'h-[5.5rem] w-[5.5rem] animate-ping [animation-duration:2.2s] bg-yellow-300/72 shadow-[0_0_40px_rgba(253,224,71,0.88)]'
         return (
           <div key={i}>
             <div
-              className={`absolute ${dot} -translate-x-1/2 -translate-y-1/2 rounded-full border shadow ${seatDotClass}`}
-              aria-current={isActing ? true : undefined}
-              style={{ left: `${seatRim.leftPct}%`, top: `${seatRim.topPct}%` }}
-            />
+              className={`absolute flex items-center justify-center ${isActing ? 'z-[14]' : ''}`}
+              style={{
+                left: `${seatRim.leftPct}%`,
+                top: `${seatRim.topPct}%`,
+                transform: 'translate(-50%, -50%)',
+              }}
+            >
+              {isActing && !prefersReducedMotion ? (
+                <>
+                  <span
+                    aria-hidden
+                    className={`pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 rounded-full ${pingOuterClasses} animate-ping`}
+                  />
+                  <span
+                    aria-hidden
+                    className={`pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 rounded-full [animation-delay:480ms] ${pingInnerClasses}`}
+                  />
+                </>
+              ) : null}
+              <div
+                className={`relative z-[2] shrink-0 ${dot} rounded-full border-2 shadow ${seatDotClass}`}
+                aria-current={isActing ? true : undefined}
+                aria-label={isActing ? 'Seat with the wagering turn' : undefined}
+              />
+            </div>
+            {isActing ? (
+              <div
+                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0 ${
+                  size === 'lg' ? '-mt-4' : ''
+                }`}
+                style={{
+                  left: `${actionChipLeftPct}%`,
+                  top: `${actionChipTopPct}%`,
+                }}
+              >
+                <span className="whitespace-nowrap rounded-md border-[3px] border-black bg-yellow-400 px-[0.42rem] py-[3px] text-[0.55rem] font-black uppercase leading-none tracking-wide text-black shadow-[0_2px_0_0_rgb(9,9,11),0_0_24px_rgba(253,224,71,1)] sm:px-[0.5rem] sm:text-[0.62rem] md:text-[0.74rem]">
+                  Action
+                </span>
+                {size === 'lg' ? (
+                  <span className="sr-only">
+                    Seat {i + 1} has the next wager decision for this table.
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
             {(() => {
               if (blindSeats == null) return null
               const tags = blindTagsForSeat(i, blindSeats)
