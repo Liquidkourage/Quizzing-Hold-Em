@@ -85,21 +85,23 @@ function SeatRingWithLabels({
   feltSeatStacks?: boolean
 }) {
   const lgRing =
-    'mx-auto aspect-[10/8] h-auto w-[min(100%,43rem)] max-w-full max-h-[min(58svh,32rem)] shrink-0'
+    'mx-auto aspect-[10/8] h-auto w-[min(100%,64rem)] max-w-full max-h-[min(72svh,48rem)] shrink-0'
   const wrap =
     size === 'lg'
       ? lgRing
       : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
-  const dot = size === 'lg' ? 'h-9 w-9' : 'h-8 w-8'
+  const dot = size === 'lg' ? 'h-14 w-14' : 'h-8 w-8'
   const labelClass =
     size === 'lg'
-      ? 'max-w-[min(10.5rem,27vw)] text-xl sm:text-2xl'
+      ? 'max-w-[min(16rem,36vw)] text-2xl sm:text-3xl md:text-[2rem]'
       : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
 
   return (
     <div className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
       <div
-        className="absolute inset-[10%_6%_13%_6%] rounded-[50%] border-2 border-amber-700/70 shadow-inner"
+        className={`absolute inset-[10%_6%_13%_6%] rounded-[50%] border-amber-700/70 shadow-inner ${
+          size === 'lg' ? 'border-[3px]' : 'border-2'
+        }`}
         style={{
           background: `
             repeating-linear-gradient(
@@ -151,9 +153,9 @@ function SeatRingWithLabels({
                   width={96}
                   height={72}
                   draggable={false}
-                  className="pointer-events-none h-8 w-auto max-w-[2.85rem] shrink-0 select-none object-contain opacity-95 drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)] sm:h-9 sm:max-w-[3.35rem]"
+                  className="pointer-events-none h-12 w-auto max-w-[4.35rem] shrink-0 select-none object-contain opacity-95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:h-[3.5rem] sm:max-w-[5.1rem]"
                 />
-                <span className="max-w-[10rem] text-center font-mono text-[0.8125rem] font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[11rem] sm:text-sm md:text-[0.9375rem] [text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_8px_rgba(0,0,0,0.85)]">
+                <span className="max-w-[13rem] text-center font-mono text-base font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[14rem] sm:text-lg md:text-xl [text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_2px_10px_rgba(0,0,0,0.85)]">
                   {formatVenueBankroll(chips)}
                 </span>
               </div>
@@ -311,27 +313,27 @@ function VenueMosaicTableCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 py-4 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:py-6 md:px-6"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border-2 border-amber-500/45 bg-black/60 px-4 pb-5 pt-3 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-5 sm:pb-6 sm:pt-4 md:px-6"
       >
-        <div className="shrink-0">
+        <div className="-mt-1 shrink-0 pb-2">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="text-lg font-semibold uppercase tracking-[0.12em] text-white/60 sm:text-xl">
+              <div className="text-base font-semibold uppercase tracking-[0.14em] text-white/65 sm:text-lg">
                 Table
               </div>
-              <div className="text-7xl font-black tabular-nums leading-none text-yellow-400 sm:text-8xl lg:text-9xl">
+              <div className="-mt-0.5 text-6xl font-black tabular-nums leading-[0.95] text-yellow-400 sm:text-7xl md:text-8xl lg:text-[5.75rem]">
                 {tn}
               </div>
             </div>
             <span
-              className={`max-w-[min(12rem,45%)] shrink-0 truncate rounded-xl px-3 py-2 text-base font-bold uppercase leading-tight sm:px-4 sm:py-2.5 sm:text-lg md:text-xl ${phaseAccent(ph)}`}
+              className={`max-w-[min(11rem,46%)] shrink-0 truncate rounded-lg px-2.5 py-1.5 text-sm font-bold uppercase leading-snug sm:max-w-[12rem] sm:rounded-xl sm:px-3 sm:py-2 sm:text-base md:text-lg ${phaseAccent(ph)}`}
             >
               {phaseLabel(ph)}
             </span>
           </div>
         </div>
 
-        <div className="mt-3 flex min-h-0 flex-1 flex-col items-center justify-center sm:mt-4">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-start pt-0">
           <SeatRingWithLabels
             seatedCount={seats}
             seatNames={seatNames}
@@ -341,7 +343,7 @@ function VenueMosaicTableCard({
           />
         </div>
 
-        <dl className="mt-4 shrink-0 space-y-2 border-t border-white/10 pt-4 text-xl leading-snug sm:mt-5 sm:pt-5 sm:text-2xl md:text-3xl lg:text-4xl">
+        <dl className="mt-auto shrink-0 space-y-1.5 border-t border-white/10 pt-3 text-xl leading-snug sm:space-y-2 sm:pt-4 sm:text-2xl md:text-3xl lg:text-[2.25rem]">
           <div className="flex justify-between gap-3">
             <dt className="font-semibold text-white/70">Occupied seats</dt>
             <dd className="font-mono font-bold tabular-nums text-casino-emerald">
