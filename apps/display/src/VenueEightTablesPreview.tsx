@@ -138,8 +138,8 @@ function ellipseRimPxAndOutwardNormal(
 
 /** Fallback label anchor when wrapper size unknown (SSR / first paint). */
 function fallbackLabelEllipseScale(size: 'md' | 'lg', feltStacks: boolean): number {
-  if (size === 'lg') return feltStacks ? 1.2 : 1.14
-  return feltStacks ? 1.16 : 1.125
+  if (size === 'lg') return feltStacks ? 1.085 : 1.065
+  return feltStacks ? 1.075 : 1.055
 }
 
 /** Dot diameters match Tailwind classes on seat markers ({@link SeatRingWithLabels}). */
@@ -173,16 +173,16 @@ function computeSeatLabelAnchorsPct(args: {
       ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
       : 16
   const dotR = seatDotDiameterPx(rootRem, size) / 2
-  /** Half of approx. name block inward toward the felt so text does not swallow the seat dot. */
+  /** Half of approx. name block inward toward the felt (smaller = labels sit tighter to the rim). */
   const labelHalfInwardPx =
-    size === 'lg' ? (feltSeatStacks ? 40 : 44) : 34
-  /** Felt chip PNG + bankroll sits between dot and center on the hero layout. */
-  const chipBandClearancePx = feltSeatStacks && size === 'lg' ? 56 : 0
-  const padPx = 6
-  const neighborDotPadPx = 10
+    size === 'lg' ? (feltSeatStacks ? 22 : 26) : 18
+  /** lg hero: chip PNG + bankroll radial band — keep modest clearance only. */
+  const chipBandClearancePx = feltSeatStacks && size === 'lg' ? 26 : 0
+  const padPx = 2
+  const neighborDotPadPx = 4
   const estLabelHalfWidthPx =
     size === 'lg' ? Math.min(0.34 * w, 12 * rootRem) / 2 : Math.min(0.5 * w, 8.5 * rootRem) / 2
-  const labelPairMinDistPx = 2 * estLabelHalfWidthPx + 10
+  const labelPairMinDistPx = 2 * estLabelHalfWidthPx * 0.78 + 4
 
   const rimCache = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
     ellipseRimPxAndOutwardNormal(j, w, h)
@@ -226,7 +226,7 @@ function computeSeatLabelAnchorsPct(args: {
       ly = rimY + uy * dPx + tuy * kTan
 
       if (!dotsClear(lx, ly)) {
-        dPx += 5
+        dPx += 3
         continue
       }
       if (labelsClear(lx, ly)) {
@@ -235,10 +235,10 @@ function computeSeatLabelAnchorsPct(args: {
       }
 
       const dir = i % 2 === 0 ? 1 : -1
-      kTan += dir * 12
-      if (Math.abs(kTan) > 88) {
+      kTan += dir * 8
+      if (Math.abs(kTan) > 64) {
         kTan = 0
-        dPx += 7
+        dPx += 4
       }
     }
 
