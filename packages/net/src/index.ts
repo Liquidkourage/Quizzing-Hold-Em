@@ -41,6 +41,8 @@ export type DisplayVenueTileSnapshot = {
   currentPlayerIndex?: number | null
   /** Betting: false when wagering is explicitly closed between streets. Null when unknown / older payloads. */
   isBettingOpen?: boolean | null
+  /** Parallel to `seatNames`: true when that roster seat has folded this hand. Omitted by older servers. */
+  seatFolded?: boolean[]
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */
