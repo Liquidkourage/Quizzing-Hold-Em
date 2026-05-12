@@ -5,6 +5,7 @@ import {
   DISPLAY_PREVIEW_BANKROLLS,
   DISPLAY_PREVIEW_SYNCED_PHASE,
   DISPLAY_PREVIEW_TABLES,
+  displayBlindSeatIndices,
   rehearsalSeatDisplayName,
 } from '@qhe/core'
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot } from '@qhe/net'
@@ -119,6 +120,56 @@ const SEAT_NAME_LABEL_VERTICAL_NUDGE_PX_LG = 7
 function seatNameLabelVerticalNudgePx(seatIndex: number, size: 'md' | 'lg'): number {
   const amp = size === 'lg' ? SEAT_NAME_LABEL_VERTICAL_NUDGE_PX_LG : SEAT_NAME_LABEL_VERTICAL_NUDGE_PX_MD
   return -Math.sin(seatThetaRad(seatIndex)) * amp
+}
+
+type VenueWallBlindSeats = {
+  dealerSeatIndex: number | null
+  smallBlindSeatIndex: number | null
+  bigBlindSeatIndex: number | null
+}
+
+function blindTagsForSeat(seatIndex: number, blindSeats: VenueWallBlindSeats) {
+  const out: { key: string; label: string; short: string; pill: string }[] = []
+  if (blindSeats.dealerSeatIndex === seatIndex) {
+    out.push({
+      key: 'btn',
+      label: 'Dealer button',
+      short: 'BTN',
+      pill: 'border-amber-700/40 bg-amber-400 text-black shadow-sm',
+    })
+  }
+  if (blindSeats.smallBlindSeatIndex === seatIndex) {
+    out.push({
+      key: 'sb',
+      label: 'Small blind',
+      short: 'SB',
+      pill: 'border-sky-900/35 bg-sky-500 text-white shadow-sm',
+    })
+  }
+  if (blindSeats.bigBlindSeatIndex === seatIndex) {
+    out.push({
+      key: 'bb',
+      label: 'Big blind',
+      short: 'BB',
+      pill: 'border-rose-900/40 bg-rose-600 text-white shadow-sm',
+    })
+  }
+  return out
+}
+
+function venueTileBlindSeats(row: DisplayVenueTileSnapshot): VenueWallBlindSeats | null {
+  if (
+    row.dealerSeatIndex === undefined &&
+    row.smallBlindSeatIndex === undefined &&
+    row.bigBlindSeatIndex === undefined
+  ) {
+    return null
+  }
+  return {
+    dealerSeatIndex: row.dealerSeatIndex ?? null,
+    smallBlindSeatIndex: row.smallBlindSeatIndex ?? null,
+    bigBlindSeatIndex: row.bigBlindSeatIndex ?? null,
+  }
 }
 
 /**
@@ -275,6 +326,7 @@ function SeatRingWithLabels({
   seatBankrolls,
   size = 'md',
   feltSeatStacks = false,
+  blindSeats = null,
 }: {
   seatedCount: number
   seatNames: string[]
@@ -282,6 +334,8 @@ function SeatRingWithLabels({
   size?: 'md' | 'lg'
   /** Spotlight hero: draw mini chip stack + bankroll on the felt by each seated player. */
   feltSeatStacks?: boolean
+  /** Dealer / blind roles (indexes match `seatNames`). Null when unsupported or omitted by server snapshot. */
+  blindSeats?: VenueWallBlindSeats | null
 }) {
   const lgRing =
     'mx-auto aspect-[10/8] h-auto max-h-[min(min(68svh,57dvh),39rem)] w-[min(100%,calc(100dvw-2.5rem),54.625rem)] max-w-full shrink-0'
@@ -376,6 +430,39 @@ function SeatRingWithLabels({
               }`}
               style={{ left: `${seatRim.leftPct}%`, top: `${seatRim.topPct}%` }}
             />
+            {(() => {
+              if (blindSeats == null) return null
+              const tags = blindTagsForSeat(i, blindSeats)
+              if (tags.length === 0) return null
+              const blindInset =
+                feltSeatStacks && size === 'lg' ? 0.71 : size === 'lg' ? 0.8 : 0.76
+              const rp = feltEllipsePct(i, blindInset)
+              const badgeText =
+                size === 'lg'
+                  ? 'text-[8px] font-black leading-none tracking-tight sm:text-[9px]'
+                  : 'text-[7px] font-black leading-none tracking-tight sm:text-[8px]'
+              return (
+                <div
+                  className="pointer-events-none absolute z-[4] flex flex-col items-center gap-px"
+                  style={{
+                    left: `${rp.leftPct}%`,
+                    top: `${rp.topPct}%`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  {tags.map((t) => (
+                    <span
+                      key={t.key}
+                      title={t.label}
+                      aria-label={t.label}
+                      className={`rounded border px-[3px] py-px uppercase ${badgeText} ${t.pill}`}
+                    >
+                      {t.short}
+                    </span>
+                  ))}
+                </div>
+              )
+            })()}
             {showFeltStack ? (
               <div
                 className="pointer-events-none absolute z-[3] flex flex-col items-center gap-0.5 px-0.5"
@@ -462,6 +549,7 @@ function VenueMosaicTableCard({
   const ph = row.phase
   const seatNames = padSeatNames(row.seatNames)
   const seatBankrolls = padSeatBankrolls(row.seatBankrolls)
+  const blindSeatSnapshot = venueTileBlindSeats(row)
 
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true
@@ -594,6 +682,7 @@ function VenueMosaicTableCard({
             seatBankrolls={seatBankrolls}
             size="lg"
             feltSeatStacks
+            blindSeats={blindSeatSnapshot}
           />
         </div>
 
@@ -649,6 +738,7 @@ function VenueMosaicTableCard({
           seatedCount={seats}
           seatNames={seatNames}
           seatBankrolls={seatBankrolls}
+          blindSeats={blindSeatSnapshot}
         />
       </div>
 
@@ -926,6 +1016,7 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               phase: DISPLAY_PREVIEW_SYNCED_PHASE,
               seatNames,
               seatBankrolls,
+              ...displayBlindSeatIndices(seated, i % Math.max(seated, 1)),
             }
           })
 

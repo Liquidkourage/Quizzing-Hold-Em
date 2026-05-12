@@ -28,6 +28,13 @@ export type DisplayVenueTileSnapshot = {
   seatNames: string[]
   /** Chip stacks per seat, parallel to `seatNames`; `0` when empty. Omitted by older servers. */
   seatBankrolls?: number[]
+  /**
+   * Blind roles on the venue mosaic (indexes into `seatNames`, same contiguous roster as core `players[]`).
+   * Omitted by older servers; when present, nullable fields indicate no seated table / HU without SB.
+   */
+  dealerSeatIndex?: number | null
+  smallBlindSeatIndex?: number | null
+  bigBlindSeatIndex?: number | null
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */

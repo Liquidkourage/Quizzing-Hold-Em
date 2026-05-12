@@ -363,6 +363,29 @@ export function dealInitialCards(state: GameState): GameState {
   };
 }
 
+/**
+ * Seat indices for dealer + blinds mapped to contiguous `players[0 .. n-1]`, identical to `{@link dealInitialCards}` modulo math.
+ * Use on venue-wall displays with `seatNames[]` indexed the same way; null when absent (no players / one player has no blinds).
+ */
+export function displayBlindSeatIndices(
+  seatedPlayerCount: number,
+  dealerIndex: number
+): {
+  dealerSeatIndex: number | null;
+  smallBlindSeatIndex: number | null;
+  bigBlindSeatIndex: number | null;
+} {
+  const n = Math.max(0, Math.floor(seatedPlayerCount));
+  if (n <= 0) return { dealerSeatIndex: null, smallBlindSeatIndex: null, bigBlindSeatIndex: null };
+  const d = ((Math.floor(dealerIndex) % n) + n) % n;
+  if (n === 1) return { dealerSeatIndex: d, smallBlindSeatIndex: null, bigBlindSeatIndex: null };
+  return {
+    dealerSeatIndex: d,
+    smallBlindSeatIndex: (d + 1) % n,
+    bigBlindSeatIndex: (d + 2) % n,
+  };
+}
+
 /** After round-1 wagering is closed: deal five community cards and open round-2 wagering. */
 export function dealCommunityCards(state: GameState): GameState {
   if (state.phase !== 'betting') return state;
