@@ -48,21 +48,18 @@ function totalChipsFromSeats(seatNames: string[], seatBankrolls: number[]): numb
   return total
 }
 
-/** Stacked disc graphics for hero money rows (pot vs player stacks). */
-function HeroChipStackVisual({ variant }: { variant: 'pot' | 'stacks' }) {
-  const palette =
-    variant === 'pot'
-      ? (['#fde68a', '#fbbf24', '#f59e0b', '#d97706'] as const)
-      : (['#6ee7b7', '#34d399', '#10b981', '#059669'] as const)
+/** Tiny stack on the felt by each occupied seat (hero ring only). */
+function SeatFeltMiniStack() {
+  const palette = ['#d1fae5', '#34d399', '#059669'] as const
   return (
-    <div className="relative h-10 w-11 shrink-0 sm:h-11 sm:w-12" aria-hidden>
+    <div className="relative h-4 w-5 shrink-0 sm:h-[1.125rem] sm:w-6" aria-hidden>
       {palette.map((fill, i) => (
         <div
           key={i}
-          className="absolute left-1/2 h-2.5 w-9 -translate-x-1/2 rounded-full border border-white/35 shadow-[0_2px_5px_rgba(0,0,0,0.5)] sm:h-3 sm:w-10"
+          className="absolute left-1/2 h-[3px] w-[1.05rem] -translate-x-1/2 rounded-full border border-white/30 shadow-sm sm:h-1 sm:w-[1.35rem]"
           style={{
-            bottom: `${i * 2.5}px`,
-            background: `linear-gradient(145deg, ${fill}, ${fill}aa)`,
+            bottom: `${i * 1.25}px`,
+            background: `linear-gradient(145deg, ${fill}, ${fill}bb)`,
           }}
         />
       ))}
@@ -95,11 +92,14 @@ function SeatRingWithLabels({
   seatNames,
   seatBankrolls,
   size = 'md',
+  feltSeatStacks = false,
 }: {
   seatedCount: number
   seatNames: string[]
   seatBankrolls: number[]
   size?: 'md' | 'lg'
+  /** Spotlight hero: draw mini chip stack + bankroll on the felt by each seated player. */
+  feltSeatStacks?: boolean
 }) {
   const wrap =
     size === 'lg'
@@ -137,6 +137,10 @@ function SeatRingWithLabels({
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
         const chips = seatBankrolls[i] ?? 0
+        const feltIn = 0.56
+        const fx = xr * feltIn
+        const fy = yr * feltIn
+        const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
         return (
           <div key={i}>
             <div
@@ -147,15 +151,32 @@ function SeatRingWithLabels({
               }`}
               style={{ left: `calc(50% + ${xr}%)`, top: `calc(50% + ${yr}%)` }}
             />
+            {showFeltStack ? (
+              <div
+                className="pointer-events-none absolute z-[3] flex items-center gap-1 rounded-md border border-white/10 bg-black/40 px-1 py-0.5 shadow-[0_2px_10px_rgba(0,0,0,0.45)] backdrop-blur-[2px] sm:gap-1.5 sm:px-1.5 sm:py-1"
+                style={{
+                  left: `calc(50% + ${fx}%)`,
+                  top: `calc(50% + ${fy}%)`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                <SeatFeltMiniStack />
+                <span className="max-w-[4rem] font-mono text-[9px] font-bold leading-none tabular-nums text-amber-100 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] sm:max-w-[5rem] sm:text-[11px]">
+                  {formatVenueBankroll(chips)}
+                </span>
+              </div>
+            ) : null}
             {raw ? (
               <div
                 className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-center font-semibold leading-tight text-white/92 shadow-black/80 drop-shadow ${labelClass}`}
                 style={{ left: `calc(50% + ${lx}%)`, top: `calc(50% + ${ly}%)` }}
               >
                 <span className="block max-w-full truncate">{raw}</span>
-                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-xs sm:text-sm md:text-base lg:text-lg">
-                  {formatVenueBankroll(chips)}
-                </span>
+                {!(feltSeatStacks && size === 'lg') ? (
+                  <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-xs sm:text-sm md:text-base lg:text-lg">
+                    {formatVenueBankroll(chips)}
+                  </span>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -322,41 +343,26 @@ function VenueMosaicTableCard({
             seatNames={seatNames}
             seatBankrolls={seatBankrolls}
             size="lg"
+            feltSeatStacks
           />
         </div>
 
-        <div className="mt-5 border-t border-white/10 pt-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <HeroChipStackVisual variant="pot" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold uppercase tracking-wider text-white/55 sm:text-base">
-                  Pot (local)
-                </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-yellow-300 sm:text-3xl md:text-4xl">
-                  ${pot.toLocaleString()}
-                </div>
-              </div>
-            </div>
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <HeroChipStackVisual variant="stacks" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold uppercase tracking-wider text-white/55 sm:text-base">
-                  Chips on table
-                </div>
-                <div className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-white/90 sm:text-3xl md:text-4xl">
-                  {formatVenueBankroll(totalChips)}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-white/[0.07] pt-4 text-xl font-semibold text-white/70 sm:text-2xl md:text-3xl">
-            <span>Occupied seats</span>
-            <span className="font-mono font-bold tabular-nums text-casino-emerald">
+        <dl className="mt-5 space-y-2 border-t border-white/10 pt-5 text-xl leading-snug sm:text-2xl md:text-3xl lg:text-4xl">
+          <div className="flex justify-between gap-3">
+            <dt className="font-semibold text-white/70">Occupied seats</dt>
+            <dd className="font-mono font-bold tabular-nums text-casino-emerald">
               {seats} / 8
-            </span>
+            </dd>
           </div>
-        </div>
+          <div className="flex justify-between gap-3">
+            <dt className="font-semibold text-white/70">Pot (local)</dt>
+            <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="font-semibold text-white/70">Chips on table</dt>
+            <dd className="font-mono font-bold tabular-nums text-white/90">{formatVenueBankroll(totalChips)}</dd>
+          </div>
+        </dl>
       </motion.article>
     )
   }
