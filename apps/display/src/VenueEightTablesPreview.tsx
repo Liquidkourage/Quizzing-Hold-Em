@@ -112,6 +112,15 @@ function seatThetaRad(seatIndex: number): number {
   return (seatIndex / VENUE_SEAT_SLOTS) * 2 * Math.PI - Math.PI / 2
 }
 
+/** Nudge pole labels toward beltline (top downward, bottom upward); east/west stay put. */
+const SEAT_NAME_LABEL_VERTICAL_NUDGE_PX_MD = 5
+const SEAT_NAME_LABEL_VERTICAL_NUDGE_PX_LG = 7
+
+function seatNameLabelVerticalNudgePx(seatIndex: number, size: 'md' | 'lg'): number {
+  const amp = size === 'lg' ? SEAT_NAME_LABEL_VERTICAL_NUDGE_PX_LG : SEAT_NAME_LABEL_VERTICAL_NUDGE_PX_MD
+  return -Math.sin(seatThetaRad(seatIndex)) * amp
+}
+
 /**
  * Rim point and outward unit normal on the inset felt ellipse (pixel space of wrapper `w×h`).
  * Normal is Euclidean for the ellipse with semi-axes Rx, Ry derived from frac-space rx, ry.
@@ -356,6 +365,7 @@ function SeatRingWithLabels({
         const raw = seatNames[i]?.trim() ?? ''
         const chips = seatBankrolls[i] ?? 0
         const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
+        const labelVy = seatNameLabelVerticalNudgePx(i, size)
         return (
           <div key={i}>
             <div
@@ -390,8 +400,12 @@ function SeatRingWithLabels({
             ) : null}
             {raw ? (
               <div
-                className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 text-center font-semibold leading-tight text-white/92 shadow-black/80 drop-shadow ${labelClass}`}
-                style={{ left: `${labelPos.leftPct}%`, top: `${labelPos.topPct}%` }}
+                className={`pointer-events-none absolute text-center font-semibold leading-tight text-white/92 shadow-black/80 drop-shadow ${labelClass}`}
+                style={{
+                  left: `${labelPos.leftPct}%`,
+                  top: `${labelPos.topPct}%`,
+                  transform: `translate(-50%, calc(-50% + ${labelVy}px))`,
+                }}
               >
                 <span className="block max-w-full truncate">{raw}</span>
                 {!(feltSeatStacks && size === 'lg') ? (
