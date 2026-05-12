@@ -23,8 +23,8 @@ const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
 const SEATING_SPOTLIGHT_CYCLE_SEC = 10
 
-/** Viewport scale for spotlight hero card (0.9 × 0.9 ≈ 19% smaller than unscaled layout). */
-const VENUE_SEATING_SPOTLIGHT_HERO_ZOOM = 0.81
+/** Viewport scale for spotlight hero card (×0.9³ ≈ 27% inset from unscaled layout). */
+const VENUE_SEATING_SPOTLIGHT_HERO_ZOOM = 0.729
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false)
