@@ -57,6 +57,21 @@ function formatActingCallHint(amount: number, pctOfStack: number | null | undefi
   return callStr
 }
 
+/** Caption under Pot (local) on mosaic tiles — e.g. “Pat Q. to call: $40”. */
+function mosaicPotSubtitleActingToCall(args: {
+  actingSeatIndex: number | null
+  seatNames: string[]
+  actingCallAmount: number | null | undefined
+}): string | null {
+  if (args.actingSeatIndex == null) return null
+  if (args.actingCallAmount == null || typeof args.actingCallAmount !== 'number') return null
+  const seat = args.actingSeatIndex
+  if (seat < 0 || seat >= VENUE_SEAT_SLOTS) return null
+  const raw = args.seatNames[seat]?.trim() ?? ''
+  const name = raw || `Seat ${seat + 1}`
+  return `${name} to call: ${formatVenueBankroll(args.actingCallAmount)}`
+}
+
 /** Sum bankrolls for seats that have a player name — matches crawl "Chips on table". */
 function totalChipsFromSeats(seatNames: string[], seatBankrolls: number[]): number {
   let total = 0
@@ -815,6 +830,11 @@ function VenueMosaicTableCard({
   const bettingPaused = venueTileBettingPausedCenter(row)
   const seatLastBettingAction = padSeatLastBettingAction(row.seatLastBettingAction)
   const showSeatBettingActions = ph === 'betting'
+  const mosaicPotSubtitle = mosaicPotSubtitleActingToCall({
+    actingSeatIndex: actingSeat,
+    seatNames,
+    actingCallAmount: row.actingCallAmount,
+  })
 
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true
@@ -977,6 +997,13 @@ function VenueMosaicTableCard({
             <dt className="font-semibold text-white/70">Pot (local)</dt>
             <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
           </div>
+          {mosaicPotSubtitle != null ? (
+            <div className="rounded-lg border border-amber-400/30 bg-black/35 px-2 py-1.5 sm:px-2.5 sm:py-2">
+              <p className="min-w-0 break-words text-center text-[0.98rem] font-bold leading-snug text-amber-100 shadow-black/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.85)] sm:text-[1.12rem] md:text-[1.28rem] lg:text-[1.38rem]">
+                {mosaicPotSubtitle}
+              </p>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-3">
             <dt className="font-semibold text-white/70">Chips on table</dt>
             <dd className="font-mono font-bold tabular-nums text-white/90">{formatVenueBankroll(totalChips)}</dd>
@@ -1041,6 +1068,13 @@ function VenueMosaicTableCard({
           <dt className="font-semibold text-white/70">Pot (local)</dt>
           <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
         </div>
+        {mosaicPotSubtitle != null ? (
+          <div className="rounded-lg border border-amber-400/30 bg-black/35 px-2 py-1.5 sm:px-2.5 sm:py-2">
+            <p className="min-w-0 break-words text-center text-base font-bold leading-snug text-amber-100 shadow-black/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.85)] sm:text-lg md:text-xl lg:text-2xl">
+              {mosaicPotSubtitle}
+            </p>
+          </div>
+        ) : null}
       </dl>
     </motion.article>
   )
