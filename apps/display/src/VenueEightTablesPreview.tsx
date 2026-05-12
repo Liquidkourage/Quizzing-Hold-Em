@@ -285,15 +285,15 @@ function SeatRingWithLabels({
 }) {
   const lgRing =
     'mx-auto aspect-[10/8] h-auto max-h-[min(min(68svh,57dvh),39rem)] w-[min(100%,calc(100dvw-2.5rem),54.625rem)] max-w-full shrink-0'
-  const wrap =
-    size === 'lg'
-      ? lgRing
-      : 'w-full max-w-[min(100%,21rem)] sm:max-w-[min(100%,22rem)]'
+  /** Must keep height so %-positioned seats/names resolve; only abs children collapsed to zero without aspect. */
+  const mdRing =
+    'mx-auto aspect-[10/8] h-auto w-full max-w-[min(100%,21rem)] shrink-0 sm:max-w-[min(100%,22rem)]'
+  const wrap = size === 'lg' ? lgRing : mdRing
   const dot = size === 'lg' ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]' : 'h-8 w-8'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(12rem,34vw)] text-[1.125rem] leading-tight sm:text-[1.3rem] sm:leading-snug md:text-[1.5625rem]'
-      : 'max-w-[min(8.5rem,50%)] text-base sm:text-lg md:text-xl lg:text-2xl'
+      : 'max-w-[min(7.125rem,46%)] text-[0.6875rem] leading-tight sm:max-w-[min(7.75rem,48%)] sm:text-xs md:text-sm'
 
   /** Bankroll stack on felt: radial scale toward seat (1 = on rim dot); larger = nearer table edge / seat marker. */
   const chipInnerScale = 0.635
@@ -332,7 +332,7 @@ function SeatRingWithLabels({
   )
 
   return (
-    <div ref={ringElRef} className={`relative ${size === 'lg' ? '' : 'w-full'} ${wrap}`}>
+    <div ref={ringElRef} className={`relative ${wrap}`}>
       <div
         className={`absolute rounded-[50%] border-amber-700/70 shadow-inner ${
           size === 'lg' ? 'border-2 sm:border-[3px]' : 'border-2'
@@ -409,7 +409,7 @@ function SeatRingWithLabels({
               >
                 <span className="block max-w-full truncate">{raw}</span>
                 {!(feltSeatStacks && size === 'lg') ? (
-                  <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-xs sm:text-sm md:text-base lg:text-lg">
+                  <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums text-casino-emerald text-[0.625rem] sm:text-[0.6875rem] md:text-xs lg:text-sm">
                     {formatVenueBankroll(chips)}
                   </span>
                 ) : null}
