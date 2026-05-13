@@ -18,27 +18,19 @@
     "serve": "npm start --workspace apps/server",
     "open": "powershell -Command Start-Process http://localhost:7777",
     "one": "npm run build && powershell -Command Start-Process http://localhost:7777 && npm start --workspace apps/server",
-    "lint": "eslint . --ext .ts,.tsx,.js,.cjs --max-warnings 0",
-    "typecheck": "tsc -b",
+    "lint": "npm run lint --workspace apps/host && npm run lint --workspace apps/player && npm run lint --workspace apps/display",
+    "typecheck": "tsc -b packages/core/tsconfig.json packages/net/tsconfig.json packages/ui/tsconfig.json apps/server/tsconfig.json apps/host/tsconfig.json apps/player/tsconfig.json apps/display/tsconfig.json",
     "test": "npm run test --workspace @qhe/core",
     "format": "prettier --write .",
-    "prepare": "husky install",
     "trim-logo": "node scripts/trim-quizzem-logo.mjs",
     "sim:lobby": "node scripts/sim-venue-lobby-joiners.mjs"
   },
   "devDependencies": {
-    "socket.io-client": "^4.8.1",
     "@types/node": "^20.14.11",
     "concurrently": "^9.0.1",
     "eslint": "^9.7.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-react": "^7.35.0",
-    "husky": "^9.1.5",
     "prettier": "^3.3.3",
     "sharp": "^0.34.2",
     "typescript": "^5.6.2"
-  },
-  "dependencies": {
-    "@tailwindcss/forms": "^0.5.10"
   }
 }

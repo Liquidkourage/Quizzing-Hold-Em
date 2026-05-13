@@ -1,25 +1,34 @@
 ---
-description: Push changes always after implementation—local commits alone are incomplete; mirror to origin unless the user opts out.
+description: After editing project files, commit and push before ending the turn unless the user opted out in that message.
 alwaysApply: true
 ---
 
 # Git closeout after implementation
 
-**Push changes always.** When you **edit tracked project files** (code, config, or rules) to satisfy **this user’s active request**, treating the task as “done” **without** updating the remote wastes their time on the next machine or deploy.
+**Push changes always.** Whenever you edit, add, move, remove, or format project source or config (anything that should live in git), **that turn is not finished** until changes are **committed and pushed**. Local edits are not “the project” until they are **committed and pushed**—that wastes time on the next machine or deploy.
+
+If `git status` is clean **and** the current branch has **nothing to push** to its upstream, you are done. **Do not leave the branch ahead of origin** after completing work—the default is **`git push` immediately after `git commit`**.
 
 ## Required before you end your turn
 
 1. Run **`git status`** in the repo root.
 2. If there are **meaningful uncommitted changes** (not only editor noise the user will discard):
-   - **`git add`** the files that belong to the request.
-   - **`git commit`** with a clear message (full sentences).
-   - **`git push`** to the current branch’s upstream (e.g. `origin/master`). If push fails, say so and paste the error; do **not** imply the change is on GitHub.
+   - **`git add`** the files that belong to the request (`git add -A` unless leaving unrelated dirty files per user direction).
+   - **`git commit`** with a clear message (full sentences: **what** and **why**).
+   - **`git push`** to the current branch’s upstream. If push fails, say so and paste the error; **do not** imply the change is on the remote.
+3. Resolve push failures yourself when safe (pull/rebase **only if** appropriate); otherwise report the blocker clearly.
 
 ## When this does *not* apply
 
-- The user **explicitly** asked to keep changes local, skip commit, or skip push.
+- The user **explicitly** asked to keep changes local, skip commit, or skip push **for that turn**.
 - You only **read** files or ran **read-only** diagnostics and made **no** edits.
 
-## Why
+Do **not** commit generated secrets or local-only artifacts; obey `.gitignore` and never force-add `.env`.
 
-Local edits are not “the project” until they are **committed and pushed**. Cursor user rules are easy to miss after long tool runs; this file is **in-repo** so agents working in this workspace see it every session.
+## Example
+
+```bash
+git add -A
+git commit -m "fix(display): show question and answering countdown together"
+git push
+```

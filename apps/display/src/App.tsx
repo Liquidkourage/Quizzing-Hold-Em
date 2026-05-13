@@ -138,7 +138,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
       let bestId: string | undefined
       let bestDist = Infinity
       for (const p of displayGameState.players) {
-        const sa = (p as any).submittedAnswer as number | undefined
+        const sa = p.submittedAnswer
         if (p.hasFolded || typeof sa !== 'number') continue
         const d = Math.abs(sa - correct)
         if (d < bestDist) { bestDist = d; bestId = p.id }
@@ -1076,26 +1076,6 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                 )
               })}
               
-              {/* Original cupholders (hidden for now) */}
-              {false && displayGameState.players.map((_, index) => {
-                const angle = (index / displayGameState.players.length) * 2 * Math.PI - Math.PI / 2
-                const railCenterRadiusX = 248
-                const railCenterRadiusY = 180
-                const x = Math.cos(angle) * railCenterRadiusX
-                const y = Math.sin(angle) * railCenterRadiusY
-                
-                return (
-                  <div 
-                    key={`original-cupholder-${index}`}
-                    className="absolute w-6 h-6 bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2"
-                    style={{ 
-                      left: `${243 + x}px`, 
-                      top: `${181 + y}px` 
-                    }}
-                  ></div>
-                )
-              })}
-              
               {/* Pot display - positioned higher */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-36 text-center">
                 <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2 relative overflow-visible">
@@ -1217,8 +1197,10 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
               const correct = displayGameState.round.question?.answer
               const rows = displayGameState.players
                 .map((p, seatIdx) => {
-                  const has = typeof (p as any).submittedAnswer === 'number' && !p.hasFolded
-                  const distance = has && typeof correct === 'number' ? Math.abs(((p as any).submittedAnswer as number) - correct) : Infinity
+                  const sa = p.submittedAnswer
+                  const has = typeof sa === 'number' && !p.hasFolded
+                  const distance =
+                    has && typeof correct === 'number' ? Math.abs(sa - correct) : Infinity
                   return { player: p, seat: seatIdx + 1, has, distance }
                 })
                 .sort((a, b) => a.distance - b.distance)
@@ -1255,7 +1237,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                                 transition={{ type: 'spring', stiffness: 300, damping: 18 }}
                                 className="inline-block"
                               >
-                                {(player as any).submittedAnswer}
+                                {player.submittedAnswer}
                               </motion.span>
                             ) : '—'}
                           </td>

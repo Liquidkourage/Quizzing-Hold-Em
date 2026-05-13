@@ -3,6 +3,9 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import Database from 'better-sqlite3'
 import { Pool } from 'pg'
+
+/** Instance type for the default-export constructor (works with `@types/better-sqlite3`). */
+type BetterSqliteDatabase = InstanceType<typeof Database>
 import type { Question, Setlist } from '@qhe/core'
 import {
   loadVenueLibrariesFromJsonDisk,
@@ -212,9 +215,9 @@ async function persistPostgres(map: Map<string, VenueLibraryData>): Promise<void
 
 // --- SQLite (local fallback when DATABASE_URL unset) ----------------------------
 
-let sqliteSingleton: Database | null = null
+let sqliteSingleton: BetterSqliteDatabase | null = null
 
-function openSqliteDatabase(): Database {
+function openSqliteDatabase(): BetterSqliteDatabase {
   if (sqliteSingleton) return sqliteSingleton
   const resolved = resolveSqlitePath()
   fs.mkdirSync(path.dirname(resolved), { recursive: true })
@@ -227,7 +230,7 @@ function openSqliteDatabase(): Database {
   return db
 }
 
-function initSqliteSchema(db: Database): void {
+function initSqliteSchema(db: BetterSqliteDatabase): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS venue_questions (
       venue_code TEXT NOT NULL,
@@ -251,7 +254,7 @@ function initSqliteSchema(db: Database): void {
   `)
 }
 
-function migrateLegacySqliteIfEmpty(db: Database): void {
+function migrateLegacySqliteIfEmpty(db: BetterSqliteDatabase): void {
   const row = db.prepare('SELECT COUNT(*) AS c FROM venue_questions').get() as { c: number }
   if (row.c > 0) return
   const fromDisk = loadVenueLibrariesFromJsonDisk()
@@ -259,7 +262,7 @@ function migrateLegacySqliteIfEmpty(db: Database): void {
   persistAllSqlite(db, fromDisk)
 }
 
-function persistAllSqlite(db: Database, map: Map<string, VenueLibraryData>): void {
+function persistAllSqlite(db: BetterSqliteDatabase, map: Map<string, VenueLibraryData>): void {
   const delQ = db.prepare('DELETE FROM venue_questions')
   const delS = db.prepare('DELETE FROM venue_setlists')
   const insQ = db.prepare(`

@@ -1584,7 +1584,7 @@ function HostApp() {
                   variant="gold"
                   size="large"
                   onClick={() => adminAdvanceTurn()}
-                  disabled={gameState.phase !== 'betting' || !(gameState.round as any).isBettingOpen}
+                  disabled={gameState.phase !== 'betting' || !gameState.round.isBettingOpen}
                   className="w-full"
                 >
                   Force Next Player
@@ -1593,7 +1593,7 @@ function HostApp() {
                   variant="red"
                   size="large"
                   onClick={() => adminCloseBetting()}
-                  disabled={gameState.phase !== 'betting' || !(gameState.round as any).isBettingOpen}
+                  disabled={gameState.phase !== 'betting' || !gameState.round.isBettingOpen}
                   className="w-full"
                 >
                   Close Betting

@@ -1,3 +1,5 @@
+> Layout sketch for the public **8-player** table view. For show flow and phases, see [round-machine.md](./round-machine.md).
+
 # 8 Players Layout on Public Display
 
 ## Visual Markup

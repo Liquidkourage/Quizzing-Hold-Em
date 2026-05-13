@@ -301,11 +301,17 @@ function PlayerApp() {
   const myIndex = myId ? gameState.players.findIndex(p => p.id === myId) : gameState.players.findIndex(p => p.name === playerName)
   const showSeatNumbers = (gameState.tableId ?? '') !== LOBBY_TABLE_ID
   const isBettingPhase = gameState.phase === 'betting'
-  const isBettingOpen = !!(gameState.round as any).isBettingOpen
-  const isMyTurn = isBettingPhase && isBettingOpen && typeof (gameState.round as any).currentPlayerIndex === 'number' && (gameState.round as any).currentPlayerIndex === myIndex && currentPlayer && !currentPlayer.hasFolded
-  const playerBets = (gameState.round as any).playerBets as Record<string, number> | undefined
+  const isBettingOpen = !!gameState.round.isBettingOpen
+  const isMyTurn =
+    isBettingPhase &&
+    isBettingOpen &&
+    typeof gameState.round.currentPlayerIndex === 'number' &&
+    gameState.round.currentPlayerIndex === myIndex &&
+    currentPlayer &&
+    !currentPlayer.hasFolded
+  const playerBets = gameState.round.playerBets
   const myContribution = currentPlayer ? (playerBets?.[currentPlayer.id] || 0) : 0
-  const currentBet = (gameState.round as any).currentBet || 0
+  const currentBet = gameState.round.currentBet || 0
   const toCall = Math.max(0, currentBet - myContribution)
   const canBet = isBettingPhase && currentPlayer && !currentPlayer.hasFolded
   const canCheck = isMyTurn && toCall === 0
@@ -316,8 +322,7 @@ function PlayerApp() {
   const answerDeadline = gameState.round.answerDeadline ?? 0
   const remainingMs = Math.max(0, answerDeadline - Date.now())
   const remainingSec = Math.ceil(remainingMs / 1000)
-  const wageringRound =
-    (gameState.round as { bettingRound?: 1 | 2 }).bettingRound ?? 0
+  const wageringRound = gameState.round.bettingRound ?? 0
   const boardHiddenDuringBetting =
     gameState.phase === 'betting' &&
     wageringRound === 1 &&
@@ -666,7 +671,7 @@ function PlayerApp() {
             <div className="space-y-4">
               {gameState.phase === 'betting' && (
                 <div className="grid grid-cols-2 gap-3 text-white text-sm">
-                  <div>Betting Round: <span className="font-bold">{(gameState.round as any).bettingRound ?? 1}</span></div>
+                  <div>Betting Round: <span className="font-bold">{gameState.round.bettingRound ?? 1}</span></div>
                   <div>Your Bankroll: <span className="font-bold">${currentPlayer?.bankroll ?? 0}</span></div>
                   <div>Current Bet: <span className="font-bold">${currentBet}</span></div>
                   <div>Your Contribution: <span className="font-bold">${myContribution}</span></div>
