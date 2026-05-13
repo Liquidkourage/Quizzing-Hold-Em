@@ -546,7 +546,16 @@ function HostApp() {
                   }`}
                   onClick={() => setHostTab(t.id)}
                 >
-                  <span className="block leading-snug">{t.label}</span>
+                  <span className="inline-flex items-center justify-center gap-1.5 leading-snug">
+                    <span>{t.label}</span>
+                    {t.id === 'venue' && livelyGameplayTableNums.length > 0 ? (
+                      <span
+                        className={`relative flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 px-1.5 text-[11px] font-black tabular-nums text-black shadow-[0_0_12px_rgba(251,191,36,0.85)] ${hostTab !== 'venue' ? 'motion-safe:animate-pulse' : ''}`}
+                      >
+                        {livelyGameplayTableNums.length > 99 ? '99+' : livelyGameplayTableNums.length}
+                      </span>
+                    ) : null}
+                  </span>
                   {active ? (
                     <span className="mt-0.5 block text-[10px] font-normal capitalize tracking-wide text-casino-emerald/85">
                       {t.hint}
@@ -557,6 +566,72 @@ function HostApp() {
             })}
           </div>
         </nav>
+
+        {livelyGameplayTableNums.length > 0 ? (
+          <motion.div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            layout
+            className="relative mb-6 overflow-hidden rounded-2xl border-2 border-amber-400/90 bg-gradient-to-br from-amber-600/[0.22] via-orange-950/80 to-neutral-950/95 shadow-[0_0_36px_rgba(251,191,36,0.45)]"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(253,224,71,0.25),transparent_55%)]"
+              animate={{ opacity: [0.45, 0.85, 0.45] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <div className="relative px-4 py-4 sm:px-5 sm:py-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="relative inline-flex h-3 w-3 shrink-0">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
+                      <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-200 shadow-[0_0_10px_rgba(253,224,71,0.9)]" />
+                    </span>
+                    <span className="text-xl font-black uppercase tracking-[0.18em] text-amber-200 sm:text-2xl">
+                      Action on the floor
+                    </span>
+                  </div>
+                  <p className="text-lg font-bold leading-snug text-white sm:text-xl">
+                    Table{livelyGameplayTableNums.length !== 1 ? 's' : ''}{' '}
+                    <span className="font-mono tabular-nums tracking-tight text-amber-100">
+                      {livelyGameplayTableNums.join(', ')}
+                    </span>{' '}
+                    <span className="font-semibold text-white/85">
+                      {livelyGameplayTableNums.length !== 1 ? 'have' : 'has'} play in motion — spotlight one on the TVs.
+                    </span>
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                  <NeonButton variant="purple" size="small" type="button" onClick={() => setHostTab('venue')}>
+                    Spotlight controls
+                  </NeonButton>
+                  <div className="flex flex-wrap gap-2">
+                    {livelyGameplayTableNums.map((n) => (
+                      <NeonButton
+                        key={n}
+                        variant="gold"
+                        size="small"
+                        type="button"
+                        title={`Send every paired TV to Table ${n} (full felt)`}
+                        onClick={() => {
+                          displaySetLayout({ layout: 'venueWall', focusTable: n })
+                          setHostTab('venue')
+                        }}
+                      >
+                        TV → {n}
+                      </NeonButton>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
 
         {hostTab === 'content' && (
         <>
@@ -1517,10 +1592,11 @@ function HostApp() {
           </p>
           <div className="mx-auto mb-8 max-w-5xl rounded-xl bg-black/30 p-5">
             <div className="mb-8 text-[11px] font-bold uppercase tracking-[0.12em] text-white/38">Venue wall</div>
-            <p className="mb-3 text-center text-[11px] leading-relaxed text-amber-200/70">
-              Amber ring on a number = that felt has play in motion (open wagering or live trivia hand)—quick cue to spotlight.
+            <p className="mb-4 text-center text-sm font-semibold leading-relaxed text-amber-100/95">
+              Glow + <span className="font-black uppercase tracking-wide text-amber-200">Live</span> tag = action on that mosaic
+              (open wagering clock or trivia in hand). Prefer the amber banner above for one-tap TV routing.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-wrap items-start justify-center gap-x-2 gap-y-6 py-3">
               <NeonButton
                 variant="emerald"
                 onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: null })}
@@ -1528,20 +1604,44 @@ function HostApp() {
                 All 8 felts
               </NeonButton>
               <span className="mx-2 text-xs text-white/40">Spotlight (live felt)</span>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <NeonButton
-                  key={n}
-                  variant="gold"
-                  className={`!px-3 !py-2 min-w-[2.75rem]${
-                    livelyGameplayTableNums.includes(n)
-                      ? ' ring-2 ring-amber-400/85 ring-offset-2 ring-offset-[#0f0f18]'
-                      : ''
-                  }`}
-                  onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: n })}
-                >
-                  {n}
-                </NeonButton>
-              ))}
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+                const lively = livelyGameplayTableNums.includes(n)
+                const btn = (
+                  <NeonButton
+                    variant="gold"
+                    className={`relative !px-3 !py-2 min-w-[2.75rem] ${
+                      lively
+                        ? 'ring-[3px] ring-amber-300 ring-offset-4 ring-offset-[#0f0f18] shadow-[0_0_28px_rgba(251,191,36,0.55)]'
+                        : ''
+                    }`}
+                    onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: n })}
+                  >
+                    {n}
+                  </NeonButton>
+                )
+                return lively ? (
+                  <motion.span
+                    key={n}
+                    className="relative inline-block rounded-xl"
+                    animate={{
+                      filter: ['brightness(1)', 'brightness(1.35)', 'brightness(1)'],
+                      boxShadow: [
+                        '0 0 0px rgba(251,191,36,0)',
+                        '0 0 26px rgba(251,191,36,0.55)',
+                        '0 0 0px rgba(251,191,36,0)',
+                      ],
+                    }}
+                    transition={{ duration: 1.25, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <span className="absolute -top-2 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-black uppercase leading-none tracking-wider text-black shadow-[0_0_12px_rgba(251,191,36,0.9)]">
+                      Live
+                    </span>
+                    {btn}
+                  </motion.span>
+                ) : (
+                  <span key={n}>{btn}</span>
+                )
+              })}
             </div>
             <p className="mt-4 text-center text-[12px] leading-relaxed text-white/48">
               Spotlight numbers zoom that table’s <strong className="text-white/65">live</strong> game to the whole display — and{' '}
