@@ -751,6 +751,23 @@ function playerIdsStillInHand(state: GameState): string[] {
   return state.players.filter((p) => !p.hasFolded).map((p) => p.id);
 }
 
+function nextDealerIndexAfterElimination(
+  survivors: PlayerState[],
+  prevOrderIds: string[],
+  prevDealerIndex: number,
+): number {
+  if (survivors.length <= 0) return 0;
+  const prevN = prevOrderIds.length;
+  if (prevN <= 0) return 0;
+  const start = (prevDealerIndex + 1) % prevN;
+  for (let step = 0; step < prevN; step++) {
+    const oid = prevOrderIds[(start + step) % prevN]!;
+    const si = survivors.findIndex((p) => p.id === oid);
+    if (si >= 0) return si;
+  }
+  return 0;
+}
+
 /** Run only from showdown (after reveal): pays pot, resets to lobby. Wrong phase → unchanged. */
 export function endRound(state: GameState): GameState {
   if (state.phase !== 'showdown') return state;
@@ -775,6 +792,21 @@ export function endRound(state: GameState): GameState {
     afterPayout = { ...state, round: { ...state.round, pot: 0 } };
   }
 
+  const prevOrderIds = afterPayout.players.map((p) => p.id);
+  const clearedPlayers: PlayerState[] = afterPayout.players.map((p) => ({
+    ...p,
+    hand: [],
+    hasFolded: false,
+    isAllIn: false,
+    submittedAnswer: undefined,
+  }));
+  const survivors = clearedPlayers.filter((p) => p.bankroll > 0);
+  const newDealerIndex = nextDealerIndexAfterElimination(
+    survivors,
+    prevOrderIds,
+    afterPayout.round.dealerIndex,
+  );
+
   return {
     ...afterPayout,
     phase: 'lobby',
@@ -783,20 +815,14 @@ export function endRound(state: GameState): GameState {
       question: null,
       communityCards: [],
       pot: 0,
-      dealerIndex: (afterPayout.round.dealerIndex + 1) % Math.max(1, afterPayout.players.length),
+      dealerIndex: newDealerIndex,
       bettingRound: 1,
       currentBet: 0,
       currentPlayerIndex: -1,
       isBettingOpen: false,
       playerBets: {},
     },
-    players: afterPayout.players.map((p) => ({
-      ...p,
-      hand: [],
-      hasFolded: false,
-      isAllIn: false,
-      submittedAnswer: undefined,
-    })),
+    players: survivors,
   };
 }
 

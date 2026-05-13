@@ -833,6 +833,13 @@ const answerTimers = new Map<string, NodeJS.Timeout>()
 let venueLibraries!: Map<string, VenueLibraryData>
 const venuePlayhead = new Map<string, { setlistId: string | null; nextIndex: number }>()
 
+/** Display names (trimmed, lowercased) eliminated this event — cannot re-hello as `player` until host `newGame`. */
+const venueEliminatedLowerNames = new Map<string, Set<string>>()
+
+function normalizePlayerEliminationName(name: string): string {
+  return name.trim().toLowerCase()
+}
+
 async function persistVenues() {
   await persistVenueLibraries(venueLibraries)
 }
@@ -1545,6 +1552,18 @@ io.on('connection', (socket) => {
     const tableId = normalizeTableId(data.tableId)
     const helloSessionKey = tableSessionKey(venueCode, tableId)
 
+    if (role === 'player') {
+      const elimNorm = normalizePlayerEliminationName(name)
+      if (venueEliminatedLowerNames.get(venueCode)?.has(elimNorm)) {
+        socket.emit('ack', {
+          ok: false,
+          message: "You're out for the night — no chips left. Thanks for playing!",
+        })
+        socket.emit('toast', "You're out for the night — no chips left.")
+        return
+      }
+    }
+
     if (role !== 'display') {
       const candidateExists = !!rooms.get(helloSessionKey)
       if (
@@ -2196,11 +2215,23 @@ io.on('connection', (socket) => {
             'bring every felt to showdown (reveal trivia) before paying / resetting the wave',
           )
           if (!lockEnd) break
+          const vnElim = normalizeVenueCode(gameState.code)
+          let elimSet = venueEliminatedLowerNames.get(vnElim)
           for (const { tk } of lockEnd) {
             const gs = rooms.get(tk)
+            const prevPlayers = [...(gs?.players ?? [])]
             const next = endRound(gs!)
             rooms.set(tk, next)
             emitVenueTableState(tk, next)
+            for (const p of prevPlayers) {
+              if (!next.players.some((np) => np.id === p.id)) {
+                if (!elimSet) {
+                  elimSet = new Set<string>()
+                  venueEliminatedLowerNames.set(vnElim, elimSet)
+                }
+                elimSet.add(normalizePlayerEliminationName(p.name))
+              }
+            }
           }
           socket.emit('toast', `Round cleared — lobby on all ${lockEnd.length} felts at this venue.`)
           gameState = rooms.get(sessionKey)!
@@ -2210,6 +2241,7 @@ io.on('connection', (socket) => {
         case 'newGame': {
           if (!assertVenueHost(socket, gameState)) break
           const vn = normalizeVenueCode(gameState.code)
+          venueEliminatedLowerNames.delete(vn)
           const hostIdSnap = gameState.hostId
           const lobbyKey = tableSessionKey(vn, LOBBY_TABLE_ID)
           for (const tk of allTableSessionsInVenue(vn)) {

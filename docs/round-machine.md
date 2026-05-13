@@ -10,6 +10,7 @@ This document is the **authoritative show-flow contract** between engine (`@qhe/
 2. **One shared trivia question per wave** — `setQuestion` (and venue-synced equivalents) aligns the active `round.question` across tables before deals; **`determineWinner` / `endRound`** use **`Question.answer`** vs each player’s **`submittedAnswer`**.
 3. **Two betting waves** — `bettingRound: 1` = after hole cards, **before** board. `bettingRound: 2` = **after five community cards are dealt in one atomic step** (not flop → turn → river as separate streets in v1).
 4. **Phases declared but not all exercised** — `GamePhase` includes `'reveal' | 'payout' | 'intermission'`. The **live loop today** spends most time in `lobby` → `question` → `betting` → `answering` → `showdown`, then **`endRound`** returns everyone to **`lobby`**. Unused phases are reserved for richer UX later unless wired.
+5. **Busted players are removed for the event** — When `endRound` runs (`phase === showdown`), **`@qhe/core` drops anyone with `bankroll <= 0`** from **`players`** (they cannot play further hands until the venue resets). The server records **trimmed, lowercased display names** in a venue-scoped set and **refuses subsequent `hello` as `player`** with that name until the host **`newGame`** clears it (so reconnecting cannot mint a fresh $1,000 stack as the same moniker). Duplicate display names therefore share elimination status until reset.
 
 ---
 

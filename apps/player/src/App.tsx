@@ -296,8 +296,33 @@ function PlayerApp() {
     )
   }
 
-  const currentPlayer = gameState.players.find(p => p.name === playerName)
   const myId = socket?.id
+  const inRoster =
+    playerName.trim() !== '' &&
+    gameState.players.some(
+      (p) =>
+        (myId != null && p.id === myId) || p.name.trim().toLowerCase() === playerName.trim().toLowerCase(),
+    )
+
+  if (!inRoster) {
+    return (
+      <div className="min-h-screen bg-casino-gradient relative flex items-center justify-center overflow-hidden p-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-red-950/40 to-gray-900" />
+        <Card variant="glass" className="relative z-10 max-w-md border border-white/15 p-8 text-center space-y-5">
+          <h1 className="text-3xl font-black text-white/90 tracking-tight">You&apos;re out for the night</h1>
+          <p className="text-base leading-relaxed text-white/70">
+            Your stack hit <span className="font-bold text-white/90">$0</span> after the last round payout. Hang tight and cheer the
+            room on — thanks for playing.
+          </p>
+          <p className="text-sm text-white/45">
+            If the host resets the venue (<span className="font-semibold text-white/60">New game</span>), you&apos;ll be able to join again.
+          </p>
+        </Card>
+      </div>
+    )
+  }
+
+  const currentPlayer = gameState.players.find(p => p.name === playerName)
   const myIndex = myId ? gameState.players.findIndex(p => p.id === myId) : gameState.players.findIndex(p => p.name === playerName)
   const showSeatNumbers = (gameState.tableId ?? '') !== LOBBY_TABLE_ID
   const isBettingPhase = gameState.phase === 'betting'
