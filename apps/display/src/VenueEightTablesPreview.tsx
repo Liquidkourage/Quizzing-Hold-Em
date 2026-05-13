@@ -37,6 +37,10 @@ const VENUE_CRAWL_STRIP_CLASS = 'w-80 sm:w-[22rem] lg:w-96'
 const VENUE_CRAWL_PL_CLASS = 'pl-80 sm:pl-[22rem] lg:pl-96'
 const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 
+/** Matches fixed aside edges — constrain full-bleed footers/tour dock to center column only. */
+const VENUE_CENTER_BAND_LEFT_EDGE = 'left-80 sm:left-[22rem] lg:left-96'
+const VENUE_CENTER_BAND_RIGHT_EDGE = 'right-80 sm:right-[22rem] lg:right-96'
+
 /** Fixed viewport dock height (caption + next-table row + progress); HUD inset clears this stripe. */
 const VENUE_SPOTLIGHT_VIEWPORT_PROGRESS_RESERVED_PX = 108
 
@@ -1188,7 +1192,11 @@ export default function VenueEightTablesPreview({
         />
       </div>
 
-      <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 pt-2 sm:px-6 sm:pt-3">
+      <main
+        className={`relative z-10 mx-auto w-full max-w-[1600px] pb-12 pt-2 sm:pt-3 ${
+          seatingHeroRow && (padLeftForTablesCrawl || showRoster) ? 'px-0 sm:px-0' : 'px-4 sm:px-6'
+        }`}
+      >
         {wall != null && tileRows.length === 0 ? (
           <motion.div
             className="rounded-2xl border border-yellow-700/35 bg-black/55 p-10 text-center shadow-xl backdrop-blur-md sm:p-14"
@@ -1207,7 +1215,7 @@ export default function VenueEightTablesPreview({
             aria-label={
               showRotatingTour ? 'Seating spotlight tour; live felt in focus' : 'Venue floor featured table'
             }
-            className="mx-auto flex w-full max-w-[min(1120px,min(96dvw,100%))] flex-col gap-3 overflow-visible sm:gap-4"
+            className="mx-auto flex w-full max-w-none flex-col gap-3 overflow-visible sm:gap-4"
           >
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Featured table {seatingHeroRow.tableNum}
@@ -1306,14 +1314,14 @@ export default function VenueEightTablesPreview({
 
       {seatingHeroRow && dockSeatingTourProgress ? (
         <div
-          className={`fixed bottom-0 left-0 right-0 z-[60] border-t border-yellow-700/50 bg-black/90 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-md ${
-            padLeftForTablesCrawl ? VENUE_CRAWL_PL_CLASS : ''
-          } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}`}
+          className={`fixed bottom-0 z-[60] border-t border-yellow-700/50 bg-black/90 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-md ${
+            padLeftForTablesCrawl ? VENUE_CENTER_BAND_LEFT_EDGE : 'left-0'
+          } ${showRoster ? VENUE_CENTER_BAND_RIGHT_EDGE : 'right-0'}`}
           role="region"
           aria-label="Seating spotlight tour"
         >
-          <div className="mx-auto max-w-[min(1120px,min(96dvw,100%))] px-4 sm:px-5 md:px-6">
-            <div className="mx-auto max-w-3xl">
+          <div className="w-full px-4 sm:px-5 md:px-6">
+            <div className="mx-auto w-full max-w-3xl">
               <p
                 className="mb-3 text-center text-xs text-white/55 sm:text-sm md:text-base"
                 aria-live="polite"

@@ -50,10 +50,22 @@ function displayTableLabel(tableId: string): string {
   return tableId === LOBBY_TABLE_ID ? 'Lobby' : `Table ${tableId}`
 }
 
-function DisplayTableInfoBar({ gameState }: { gameState: GameState }) {
+function DisplayTableInfoBar({
+  gameState,
+  layout = 'default',
+}: {
+  gameState: GameState
+  /** Full-width strip for embedded venue heroes (fills center band between crawls). */
+  layout?: 'default' | 'venueHero'
+}) {
+  const venueHero = layout === 'venueHero'
   return (
-    <div className="max-w-4xl mx-auto px-4">
-      <div className="bg-black/90 backdrop-blur-md border border-yellow-600 px-4 py-4 md:rounded-t-lg md:py-5">
+    <div className={venueHero ? 'w-full min-w-0' : 'max-w-4xl mx-auto px-4'}>
+      <div
+        className={`bg-black/90 backdrop-blur-md border border-yellow-600 md:rounded-t-lg md:py-5 ${
+          venueHero ? 'w-full px-3 py-3 sm:px-5 sm:py-4' : 'px-4 py-4'
+        }`}
+      >
         <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4 md:gap-5">
           <div>
             <div className="text-white text-base md:text-xl">Felt</div>
@@ -749,7 +761,7 @@ function DisplayTableLive({
           className={
             isEmbedded
               ? embeddedHudOverlay
-                ? 'absolute inset-0 z-10 mx-auto flex min-h-0 min-w-0 w-full max-w-7xl overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
+                ? 'absolute inset-0 z-10 flex min-h-0 min-w-0 w-full max-w-none overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
                 : 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
               : `relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
                   showQuestionStrip ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
@@ -1295,14 +1307,17 @@ function DisplayTableLive({
           <div
             className={
               embeddedHudOverlay
-                ? 'pointer-events-auto absolute inset-x-0 z-40 border-t border-yellow-700/35 bg-black/45 backdrop-blur-sm'
+                ? 'pointer-events-auto absolute inset-x-0 z-40 rounded-b-xl border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm'
                 : 'relative z-30 shrink-0 border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm'
             }
             style={
               embeddedHudOverlay ? { bottom: `${venueBottomHudInsetPx}px` } : undefined
             }
           >
-            <DisplayTableInfoBar gameState={displayGameState} />
+            <DisplayTableInfoBar
+              gameState={displayGameState}
+              layout={embeddedHudOverlay ? 'venueHero' : 'default'}
+            />
           </div>
         ) : null}
 
