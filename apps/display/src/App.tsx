@@ -607,8 +607,8 @@ function DisplayTableLive({
 
   /** Full-bleed game plane under a bottom docked HUD (venue wall hides question banner). */
   const embeddedHudOverlay = isEmbedded && !showQuestionStrip
-  /** Negative moves tableau up in embedded hero; align with lifted HUD + viewport tour dock. */
-  const embeddedScaledLayerNudgeYPx = embeddedHudOverlay ? -20 : 0
+  /** Fine vertical offset for scaled authoring rect inside the measured game plane (`px`). */
+  const embeddedScaledLayerNudgeYPx = 0
 
   return (
     <div
@@ -617,6 +617,14 @@ function DisplayTableLive({
         isEmbedded
           ? 'relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ring-2 ring-inset ring-fuchsia-400/90'
           : 'relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
+      }
+      style={
+        isEmbedded &&
+        embeddedHudOverlay &&
+        venueBottomHudInsetPx != null &&
+        venueBottomHudInsetPx > 0
+          ? { paddingBottom: venueBottomHudInsetPx }
+          : undefined
       }
     >
       {/* Casino Floor Background */}
@@ -761,7 +769,7 @@ function DisplayTableLive({
           className={
             isEmbedded
               ? embeddedHudOverlay
-                ? 'absolute inset-0 z-10 flex min-h-0 min-w-0 w-full max-w-none overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
+                ? 'relative z-10 flex min-h-0 min-w-0 w-full max-w-none flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
                 : 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
               : `relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
                   showQuestionStrip ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
@@ -1301,17 +1309,12 @@ function DisplayTableLive({
           </div>
         </div>
 
-        </div>
-
         {isEmbedded ? (
           <div
             className={
               embeddedHudOverlay
-                ? 'pointer-events-auto absolute inset-x-0 z-40 rounded-b-xl border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm'
+                ? 'relative z-40 w-full shrink-0 rounded-b-xl border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm'
                 : 'relative z-30 shrink-0 border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm'
-            }
-            style={
-              embeddedHudOverlay ? { bottom: `${venueBottomHudInsetPx}px` } : undefined
             }
           >
             <DisplayTableInfoBar
@@ -1320,6 +1323,8 @@ function DisplayTableLive({
             />
           </div>
         ) : null}
+
+      </div>
 
       {/* Showdown Overlay */}
       {displayGameState.phase === 'showdown' && (
