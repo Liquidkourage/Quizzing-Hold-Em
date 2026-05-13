@@ -123,15 +123,12 @@ type DisplayTableLiveProps = {
   variant?: 'fullscreen' | 'embedded'
   /** When the parent already renders the headline question/timer (venue wall header). */
   hideQuestionBanner?: boolean
-  /** Venue seating tour: lifts the bottom HUD above a fixed viewport progress strip (`px`). */
-  venueBottomHudInsetPx?: number
 }
 
 function DisplayTableLive({
   feltTableHint,
   variant = 'fullscreen',
   hideQuestionBanner = false,
-  venueBottomHudInsetPx = 0,
 }: DisplayTableLiveProps) {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -615,16 +612,8 @@ function DisplayTableLive({
       ref={shellRef}
       className={
         isEmbedded
-          ? 'relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ring-2 ring-inset ring-fuchsia-400/90'
+          ? 'relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
           : 'relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
-      }
-      style={
-        isEmbedded &&
-        embeddedHudOverlay &&
-        venueBottomHudInsetPx != null &&
-        venueBottomHudInsetPx > 0
-          ? { paddingBottom: venueBottomHudInsetPx }
-          : undefined
       }
     >
       {/* Casino Floor Background */}
@@ -769,8 +758,8 @@ function DisplayTableLive({
           className={
             isEmbedded
               ? embeddedHudOverlay
-                ? 'relative z-10 flex min-h-0 min-w-0 w-full max-w-none flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
-                : 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
+                ? 'relative flex min-h-0 min-w-0 w-full max-w-none flex-1 overflow-hidden'
+                : 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden'
               : `relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
                   showQuestionStrip ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
                 }`

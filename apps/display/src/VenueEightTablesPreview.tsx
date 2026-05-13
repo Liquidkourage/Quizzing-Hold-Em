@@ -41,9 +41,6 @@ const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 const VENUE_CENTER_BAND_LEFT_EDGE = 'left-80 sm:left-[22rem] lg:left-96'
 const VENUE_CENTER_BAND_RIGHT_EDGE = 'right-80 sm:right-[22rem] lg:right-96'
 
-/** Fixed viewport dock height (caption + next-table row + progress); HUD inset clears this stripe. */
-const VENUE_SPOTLIGHT_VIEWPORT_PROGRESS_RESERVED_PX = 108
-
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
 
 function usePrefersReducedMotion(): boolean {
@@ -1271,19 +1268,14 @@ export default function VenueEightTablesPreview({
                 </div>
               ) : null}
 
-              {/* Orange dashed = felt staging row inside article; cyan fills it top-to-bottom (wordmark overlays; no spacer above carpet). */}
-              <div className="relative z-10 min-h-0 w-full border-2 border-dashed border-orange-400/80">
-                <div className="relative box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-b-xl rounded-t-none border-2 border-cyan-400/85">
-                  <DisplayTableLive
-                    key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
-                    feltTableHint={String(seatingHeroRow.tableNum)}
-                    variant="embedded"
-                    hideQuestionBanner
-                    venueBottomHudInsetPx={
-                      dockSeatingTourProgress ? VENUE_SPOTLIGHT_VIEWPORT_PROGRESS_RESERVED_PX : 0
-                    }
-                  />
-                </div>
+              {/* Live felt fills this slot; viewport bottom dock is sibling to `<main>` (padding on shell), not padded inside embed. */}
+              <div className="relative z-10 box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 overflow-hidden rounded-b-xl rounded-t-none border border-yellow-700/45">
+                <DisplayTableLive
+                  key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
+                  feltTableHint={String(seatingHeroRow.tableNum)}
+                  variant="embedded"
+                  hideQuestionBanner
+                />
               </div>
 
               {!dockSeatingTourProgress ? (
