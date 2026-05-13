@@ -15,6 +15,18 @@ export interface PlayerState {
   hasFolded: boolean;
   isAllIn: boolean;
   submittedAnswer?: number;
+  /** Cumulative trivia score across answered rounds (even when busted off chips). */
+  answerPoints?: number;
+  /**
+   * Busted off the chip rails: no blinds, wagering, or pot share; may still compose answers each wave for `{@link answerPoints}`.
+   * Set once `bankroll <= 0` after a round settles (`endRound`); cleared only when a fresh game adds the player anew.
+   */
+  pointsOnly?: boolean;
+}
+
+/** Chips: blinds, action, pot. Trivia submissions still allowed when false. */
+export function inChipContest(p: Pick<PlayerState, 'pointsOnly'>): boolean {
+  return !p.pointsOnly;
 }
 
 export interface Question {
@@ -247,7 +259,16 @@ export function addPlayer(state: GameState, id: string, name: string, startingBa
   if (state.players.find(p => p.id === id)) return state;
   return {
     ...state,
-    players: state.players.concat({ id, name, bankroll: startingBankroll, hand: [], hasFolded: false, isAllIn: false })
+    players: state.players.concat({
+      id,
+      name,
+      bankroll: startingBankroll,
+      hand: [],
+      hasFolded: false,
+      isAllIn: false,
+      answerPoints: 0,
+      pointsOnly: false,
+    }),
   };
 }
 
@@ -313,7 +334,7 @@ export function pickRandomQuestion(bank: Question[]): Question | undefined {
 
 /** Hole cards only + blinds; first wagering round (no community yet). */
 export function dealInitialCards(state: GameState): GameState {
-  const updatedPlayers = state.players.map(player => ({
+  const updatedPlayers = state.players.map((player) => ({
     ...player,
     hand: [dealCard(), dealCard()],
   }));
@@ -329,8 +350,11 @@ export function dealInitialCards(state: GameState): GameState {
   const postBlind = (idx: number, amount: number) => {
     if (idx < 0 || idx >= playersAfterBlinds.length || amount <= 0) return;
     const player = playersAfterBlinds[idx];
+    if (player.pointsOnly) return;
     const contribution = Math.min(player.bankroll, amount);
-    playersAfterBlinds = playersAfterBlinds.map((p, i) => i === idx ? { ...p, bankroll: p.bankroll - contribution, isAllIn: p.bankroll - contribution === 0 } : p);
+    playersAfterBlinds = playersAfterBlinds.map((p, i) =>
+      i === idx ? { ...p, bankroll: p.bankroll - contribution, isAllIn: p.bankroll - contribution === 0 } : p,
+    );
     pot += contribution;
     playerBets[player.id] = (playerBets[player.id] || 0) + contribution;
   };
@@ -344,7 +368,7 @@ export function dealInitialCards(state: GameState): GameState {
     for (let step = 0; step < playersAfterBlinds.length; step++) {
       const idx = (start + step) % playersAfterBlinds.length;
       const p = playersAfterBlinds[idx];
-      if (!p.hasFolded && !p.isAllIn) return idx;
+      if (inChipContest(p) && !p.hasFolded && !p.isAllIn) return idx;
     }
     return -1;
   };
@@ -435,7 +459,7 @@ export function dealCommunityCards(state: GameState): GameState {
     for (let step = 0; step < players.length; step++) {
       const idx = (start + step) % players.length;
       const p = players[idx];
-      if (!p.hasFolded && !p.isAllIn) return idx;
+      if (inChipContest(p) && !p.hasFolded && !p.isAllIn) return idx;
     }
     return -1;
   };
@@ -499,6 +523,7 @@ export function chipsRequiredToCall(state: GameState, playerId: string): number 
 export function pctOfStackToCall(state: GameState, playerId: string): number | null {
   const seat = getSeatIndexByPlayerId(state, playerId);
   if (seat < 0) return null;
+  if (state.players[seat]?.pointsOnly) return null;
   const br = state.players[seat].bankroll;
   if (br <= 0) return null;
   return (chipsRequiredToCall(state, playerId) / br) * 100;
@@ -524,7 +549,7 @@ function advanceToNextPlayer(state: GameState): number {
   for (let step = 1; step <= players.length; step++) {
     const idx = ((state.round.currentPlayerIndex as number) + step) % players.length;
     const p = players[idx];
-    if (!p.hasFolded && !p.isAllIn) return idx;
+    if (inChipContest(p) && !p.hasFolded && !p.isAllIn) return idx;
   }
   return -1;
 }
@@ -537,6 +562,7 @@ function isBettingComplete(state: GameState): boolean {
   for (const p of state.players) {
     if (p.hasFolded) continue;
     if (p.isAllIn) continue;
+    if (!inChipContest(p)) continue;
     activeCount++;
     const contributed = bets[p.id] || 0;
     if (contributed !== cur) return false;
@@ -548,6 +574,7 @@ function isBettingComplete(state: GameState): boolean {
 export function playerCheck(state: GameState, playerId: string): GameState {
   if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
   const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat < 0 || state.players[seat]?.pointsOnly) return state;
   if (seat !== state.round.currentPlayerIndex) return state;
   if ((state.round.currentBet || 0) > ((state.round.playerBets || {})[playerId] || 0)) return state; // cannot check facing a bet
   const nextIndex = advanceToNextPlayer(state);
@@ -565,6 +592,7 @@ export function playerCheck(state: GameState, playerId: string): GameState {
 export function playerCall(state: GameState, playerId: string): GameState {
   if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
   const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat < 0 || state.players[seat]?.pointsOnly) return state;
   if (seat !== state.round.currentPlayerIndex) return state;
   const toCall = amountToCall(state, playerId);
   if (toCall <= 0) return playerCheck(state, playerId);
@@ -586,6 +614,7 @@ export function playerRaise(state: GameState, playerId: string, raiseAmount: num
   if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
   if (raiseAmount <= 0) return state;
   const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat < 0 || state.players[seat]?.pointsOnly) return state;
   if (seat !== state.round.currentPlayerIndex) return state;
   const toCall = amountToCall(state, playerId);
   // Enforce min raise equal to big blind
@@ -615,6 +644,7 @@ export function playerRaise(state: GameState, playerId: string, raiseAmount: num
 export function playerAllIn(state: GameState, playerId: string): GameState {
   if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
   const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat < 0 || state.players[seat]?.pointsOnly) return state;
   if (seat !== state.round.currentPlayerIndex) return state;
   const bankroll = state.players[seat].bankroll;
   if (bankroll <= 0) return state;
@@ -656,6 +686,8 @@ export function adminSetBlinds(state: GameState, smallBlind: number, bigBlind: n
 }
 
 export function foldPlayer(state: GameState, playerId: string): GameState {
+  const seat = getSeatIndexByPlayerId(state, playerId);
+  if (seat >= 0 && state.players[seat]?.pointsOnly) return state;
   const updatedPlayers = state.players.map(player => (player.id === playerId ? { ...player, hasFolded: true } : player));
   // Advance turn if the folder was the one to act
   let nextIndex = state.round.currentPlayerIndex ?? -1;
@@ -712,9 +744,32 @@ export function determineTriviaWinners(state: GameState): { winnerIds: string[];
   return winnerIds.length === 0 ? null : { winnerIds, distance: bestDistance };
 }
 
+/** Winners eligible to receive `{@link payoutPotSplitAmong}` this wave (closest answer among chip contestants only). */
+export function determineChipPotTriviaWinners(state: GameState): { winnerIds: string[]; distance: number } | null {
+  const q = state.round.question;
+  if (!q) return null;
+  let bestDistance = Infinity;
+  for (const player of state.players) {
+    if (!inChipContest(player) || player.hasFolded || player.submittedAnswer === undefined) continue;
+    const distance = Math.abs(player.submittedAnswer - q.answer);
+    if (distance < bestDistance) bestDistance = distance;
+  }
+  if (bestDistance === Infinity) return null;
+  const winnerIds = state.players
+    .filter(
+      (p) =>
+        inChipContest(p) &&
+        !p.hasFolded &&
+        p.submittedAnswer !== undefined &&
+        Math.abs(p.submittedAnswer - q.answer) === bestDistance,
+    )
+    .map((p) => p.id);
+  return winnerIds.length === 0 ? null : { winnerIds, distance: bestDistance };
+}
+
 /** @deprecated Prefer determineTriviaWinners — this returns only the first tied seat in roster order. */
 export function determineWinner(state: GameState): { winnerId: string; distance: number } | null {
-  const tw = determineTriviaWinners(state);
+  const tw = determineChipPotTriviaWinners(state);
   if (!tw || tw.winnerIds.length === 0) return null;
   return { winnerId: tw.winnerIds[0]!, distance: tw.distance };
 }
@@ -722,7 +777,10 @@ export function determineWinner(state: GameState): { winnerId: string; distance:
 /** Split whole pot evenly in whole dollars; remainder $1 chips go to earliest ids in `winnerIds`. */
 export function payoutPotSplitAmong(state: GameState, winnerIds: string[]): GameState {
   const pot = state.round.pot;
-  const ids = [...new Set(winnerIds)].filter((id) => state.players.some((p) => p.id === id));
+  const ids = [...new Set(winnerIds)].filter((id) => {
+    const p = state.players.find((x) => x.id === id);
+    return p != null && inChipContest(p);
+  });
   if (pot <= 0 || ids.length === 0) {
     return { ...state, round: { ...state.round, pot: 0 } };
   }
@@ -747,25 +805,14 @@ export function payoutWinner(state: GameState, winnerId: string): GameState {
   return payoutPotSplitAmong(state, [winnerId]);
 }
 
-function playerIdsStillInHand(state: GameState): string[] {
-  return state.players.filter((p) => !p.hasFolded).map((p) => p.id);
+function playerIdsStillInChipContest(state: GameState): string[] {
+  return state.players.filter((p) => inChipContest(p) && !p.hasFolded).map((p) => p.id);
 }
 
-function nextDealerIndexAfterElimination(
-  survivors: PlayerState[],
-  prevOrderIds: string[],
-  prevDealerIndex: number,
-): number {
-  if (survivors.length <= 0) return 0;
-  const prevN = prevOrderIds.length;
-  if (prevN <= 0) return 0;
-  const start = (prevDealerIndex + 1) % prevN;
-  for (let step = 0; step < prevN; step++) {
-    const oid = prevOrderIds[(start + step) % prevN]!;
-    const si = survivors.findIndex((p) => p.id === oid);
-    if (si >= 0) return si;
-  }
-  return 0;
+function answerRoundPointsGained(snapshotPlayer: Pick<PlayerState, 'submittedAnswer' | 'hasFolded'>, correct: number): number {
+  if (snapshotPlayer.hasFolded || snapshotPlayer.submittedAnswer === undefined) return 0;
+  const distance = Math.abs(snapshotPlayer.submittedAnswer - correct);
+  return Math.max(0, 100 - Math.min(distance, 100));
 }
 
 /** Run only from showdown (after reveal): pays pot, resets to lobby. Wrong phase → unchanged. */
@@ -774,38 +821,41 @@ export function endRound(state: GameState): GameState {
 
   const pendingPot = state.round.pot;
   let afterPayout = state;
+  const snapById = new Map(state.players.map((p) => [p.id, p]));
 
-  const trivia = determineTriviaWinners(state);
-  if (trivia && trivia.winnerIds.length > 0 && pendingPot > 0) {
-    afterPayout = payoutPotSplitAmong(state, trivia.winnerIds);
+  const triviaChip = determineChipPotTriviaWinners(state);
+  if (triviaChip && triviaChip.winnerIds.length > 0 && pendingPot > 0) {
+    afterPayout = payoutPotSplitAmong(state, triviaChip.winnerIds);
   } else if (pendingPot > 0) {
-    const alive = playerIdsStillInHand(state);
+    const alive = playerIdsStillInChipContest(state);
     if (alive.length === 1) {
       afterPayout = payoutPotSplitAmong(state, alive);
     } else if (alive.length >= 2) {
       afterPayout = payoutPotSplitAmong(state, alive);
     } else {
-      const seated = state.players.map((p) => p.id);
+      const seated = state.players.filter((p) => inChipContest(p)).map((p) => p.id);
       afterPayout = seated.length > 0 ? payoutPotSplitAmong(state, seated) : { ...state, round: { ...state.round, pot: 0 } };
     }
   } else {
     afterPayout = { ...state, round: { ...state.round, pot: 0 } };
   }
 
-  const prevOrderIds = afterPayout.players.map((p) => p.id);
-  const clearedPlayers: PlayerState[] = afterPayout.players.map((p) => ({
-    ...p,
-    hand: [],
-    hasFolded: false,
-    isAllIn: false,
-    submittedAnswer: undefined,
-  }));
-  const survivors = clearedPlayers.filter((p) => p.bankroll > 0);
-  const newDealerIndex = nextDealerIndexAfterElimination(
-    survivors,
-    prevOrderIds,
-    afterPayout.round.dealerIndex,
-  );
+  const q = state.round.question;
+  const clearedPlayers: PlayerState[] = afterPayout.players.map((p) => {
+    const snap = snapById.get(p.id);
+    const gained = q != null && snap != null ? answerRoundPointsGained(snap, q.answer) : 0;
+    const answerPoints = (p.answerPoints ?? 0) + gained;
+    const pointsOnly = p.pointsOnly === true || p.bankroll <= 0;
+    return {
+      ...p,
+      answerPoints,
+      pointsOnly,
+      hand: [],
+      hasFolded: false,
+      isAllIn: false,
+      submittedAnswer: undefined,
+    };
+  });
 
   return {
     ...afterPayout,
@@ -815,14 +865,14 @@ export function endRound(state: GameState): GameState {
       question: null,
       communityCards: [],
       pot: 0,
-      dealerIndex: newDealerIndex,
+      dealerIndex: (afterPayout.round.dealerIndex + 1) % Math.max(1, afterPayout.players.length),
       bettingRound: 1,
       currentBet: 0,
       currentPlayerIndex: -1,
       isBettingOpen: false,
       playerBets: {},
     },
-    players: survivors,
+    players: clearedPlayers,
   };
 }
 

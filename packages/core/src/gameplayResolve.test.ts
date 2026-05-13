@@ -3,6 +3,7 @@ import {
   addPlayer,
   composeNumericAnswersFromSevenDigitCards,
   createEmptyGame,
+  determineChipPotTriviaWinners,
   determineTriviaWinners,
   endRound,
   isSubmittedAnswerComposableFromDeal,
@@ -137,28 +138,46 @@ describe('endRound', () => {
     expect(gs.players.find((p) => p.id === 'a')!.bankroll).toBe(brSurvivor + 77)
   })
 
-  it('removes $0 players from the roster after showdown (busted for the night)', () => {
+  it('excludes points-only players from chip pot winners while crediting trivia points', () => {
     let gs = createEmptyGame('V', 'h')
-    gs = addPlayer(gs, 'a', 'A', 0)
+    gs = addPlayer(gs, 'a', 'A', 500)
     gs = addPlayer(gs, 'b', 'B', 500)
     gs = {
       ...gs,
       phase: 'showdown',
       round: {
         ...gs.round,
-        pot: 0,
+        pot: 100,
         question: { id: 'q', text: '?', answer: 42 },
       },
       players: [
-        { ...gs.players[0]!, submittedAnswer: 10, hasFolded: false, isAllIn: false },
-        { ...gs.players[1]!, submittedAnswer: 42, hasFolded: false, isAllIn: false },
+        {
+          ...gs.players[0]!,
+          pointsOnly: true,
+          bankroll: 0,
+          submittedAnswer: 42,
+          hasFolded: false,
+          isAllIn: false,
+          answerPoints: 0,
+        },
+        {
+          ...gs.players[1]!,
+          submittedAnswer: 42,
+          hasFolded: false,
+          isAllIn: false,
+        },
       ],
     }
-    const beforeWealth = gs.players.reduce((s, p) => s + p.bankroll, 0) + gs.round.pot
+    expect(determineChipPotTriviaWinners(gs)?.winnerIds.sort()).toEqual(['b'])
+    expect(determineTriviaWinners(gs)?.winnerIds.sort()).toEqual(['a', 'b'])
+
+    const before = totalWealth(gs)
     gs = endRound(gs)
     expect(gs.phase).toBe('lobby')
-    expect(gs.players.map((p) => p.id)).toEqual(['b'])
-    expect(gs.players[0]!.bankroll).toBe(500)
-    expect(gs.players.reduce((s, p) => s + p.bankroll, 0) + gs.round.pot).toBe(beforeWealth)
+    expect(totalWealth(gs)).toBe(before)
+    expect(gs.players.find((p) => p.id === 'b')!.bankroll).toBe(600)
+    expect(gs.players.find((p) => p.id === 'a')!.answerPoints).toBe(100)
+    expect(gs.players.find((p) => p.id === 'b')!.answerPoints).toBe(100)
+    expect(gs.players.find((p) => p.id === 'a')!.pointsOnly).toBe(true)
   })
 })

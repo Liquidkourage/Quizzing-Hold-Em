@@ -10,7 +10,7 @@ This document is the **authoritative show-flow contract** between engine (`@qhe/
 2. **One shared trivia question per wave** — `setQuestion` (and venue-synced equivalents) aligns the active `round.question` across tables before deals; **`determineWinner` / `endRound`** use **`Question.answer`** vs each player’s **`submittedAnswer`**.
 3. **Two betting waves** — `bettingRound: 1` = after hole cards, **before** board. `bettingRound: 2` = **after five community cards are dealt in one atomic step** (not flop → turn → river as separate streets in v1).
 4. **Phases declared but not all exercised** — `GamePhase` includes `'reveal' | 'payout' | 'intermission'`. The **live loop today** spends most time in `lobby` → `question` → `betting` → `answering` → `showdown`, then **`endRound`** returns everyone to **`lobby`**. Unused phases are reserved for richer UX later unless wired.
-5. **Busted players are removed for the event** — When `endRound` runs (`phase === showdown`), **`@qhe/core` drops anyone with `bankroll <= 0`** from **`players`** (they cannot play further hands until the venue resets). The server records **trimmed, lowercased display names** in a venue-scoped set and **refuses subsequent `hello` as `player`** with that name until the host **`newGame`** clears it (so reconnecting cannot mint a fresh $1,000 stack as the same moniker). Duplicate display names therefore share elimination status until reset.
+5. **Busted = off the chip rails, not off the trivia** — When `bankroll` hits **`0`** after a round settles, **`pointsOnly`** latches (`endRound`): no blinds or wagering orbit, **no chip pot share**. They **stay in `players`**, accumulate **`answerPoints`** each wave they submit (closest-answer grading is the same formula for everyone non-folded who submitted), and can keep answering from the **five community** digits whenever the board is up.
 
 ---
 
@@ -74,10 +74,12 @@ stateDiagram-v2
 
 After **`phase === 'answering'`** (or logically after timer), **`revealAnswer`** moves to **`showdown`**.
 
-- **`determineTriviaWinners`** (and legacy **`determineWinner`**, first seat only): Among non-folder players with **`submittedAnswer`** and a **`round.question`**, minimum `|answer − question.answer|`; **ties split the pot** evenly (whole dollars; remainder to earlier roster order among winner ids).
-- **`endRound`**: Only runs from **`phase === 'showdown'`** (wrong phase → no-op in core). Pays **`round.pot`**: trivia winners if any eligible submission exists; else **sole survivor** (only one non-folder); else **split among all non-folders** (no valid trivia); else **split among all seated** if everyone folded (edge). Then increments **`roundId`**, clears cards/betting, rotates **`dealerIndex`**, **`phase: lobby`**. **Chip total (bankrolls + pot) is conserved** going into the next lobby.
+- **`determineChipPotTriviaWinners`**: Among chip contestants (**`pointsOnly`** rows skipped), minimum `|answer − question.answer|`; **ties split the pot** evenly (whole dollars; remainder to earlier roster order among winner ids). **`determineWinner`** (deprecated, first tied id only) now mirrors chip eligibility.
+- **`determineTriviaWinners`**: Same distance rule computed over **every** non-folder with a submission — includes spectators so you can visualize how everyone guessed versus chips-only settlement.
 
-Folding removes a player from **answer contention** (`hasFolded` skip in trivia resolution).
+- **`endRound`**: Only runs from **`phase === 'showdown'`** (wrong phase → no-op in core). Pays **`round.pot`** via **`determineChipPotTriviaWinners`** when valid chip contestants exist; else surviving chip-only logic from core (falls back through sole chip contestant → multi-way chip split → seated chip contestants; all exclude **`pointsOnly`**). Accumulates **`answerPoints`** (`max(0, 100 − min(distance,100))`) for each roster row that **submitted** while **not folded** (**spectators included**). Latches **`pointsOnly`** wherever **`bankroll <= 0`** after payouts. Then increments **`roundId`**, clears cards/betting, rotates **`dealerIndex` modulo full roster length**, **`phase: lobby`**. **Chip total (bankrolls + pot)** is conserved; trivia points never mint chips.
+
+Folding removes a player from chip **and** trivia scoring that wave (`hasFolded`).
 
 **`submitAnswer` (server)** rejects values that **cannot** be built from that player’s **two holes + five board** digits using **exactly five** digit cards in order with **at most one** decimal (matches player UI).
 

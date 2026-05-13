@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { connect, onState, onToast, fold, submitAnswer, check as checkAction, callBet as callAction, raiseBet as raiseAction, allIn as allInAction, useSocket, onSeated } from '@qhe/net'
 import { Card, NeonButton, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
-import { LOBBY_TABLE_ID } from '@qhe/core'
+import { LOBBY_TABLE_ID, inChipContest } from '@qhe/core'
 
 /** Hands are built from exactly five digit cards (holes + community); optional decimal in the player UI. */
 const ANSWER_CARD_COUNT = 5
@@ -297,32 +297,8 @@ function PlayerApp() {
   }
 
   const myId = socket?.id
-  const inRoster =
-    playerName.trim() !== '' &&
-    gameState.players.some(
-      (p) =>
-        (myId != null && p.id === myId) || p.name.trim().toLowerCase() === playerName.trim().toLowerCase(),
-    )
 
-  if (!inRoster) {
-    return (
-      <div className="min-h-screen bg-casino-gradient relative flex items-center justify-center overflow-hidden p-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-red-950/40 to-gray-900" />
-        <Card variant="glass" className="relative z-10 max-w-md border border-white/15 p-8 text-center space-y-5">
-          <h1 className="text-3xl font-black text-white/90 tracking-tight">You&apos;re out for the night</h1>
-          <p className="text-base leading-relaxed text-white/70">
-            Your stack hit <span className="font-bold text-white/90">$0</span> after the last round payout. Hang tight and cheer the
-            room on — thanks for playing.
-          </p>
-          <p className="text-sm text-white/45">
-            If the host resets the venue (<span className="font-semibold text-white/60">New game</span>), you&apos;ll be able to join again.
-          </p>
-        </Card>
-      </div>
-    )
-  }
-
-  const currentPlayer = gameState.players.find(p => p.name === playerName)
+  const currentPlayer = gameState.players.find((p) => p.name === playerName)
   const myIndex = myId ? gameState.players.findIndex(p => p.id === myId) : gameState.players.findIndex(p => p.name === playerName)
   const showSeatNumbers = (gameState.tableId ?? '') !== LOBBY_TABLE_ID
   const isBettingPhase = gameState.phase === 'betting'
@@ -333,12 +309,13 @@ function PlayerApp() {
     typeof gameState.round.currentPlayerIndex === 'number' &&
     gameState.round.currentPlayerIndex === myIndex &&
     currentPlayer &&
+    inChipContest(currentPlayer) &&
     !currentPlayer.hasFolded
   const playerBets = gameState.round.playerBets
   const myContribution = currentPlayer ? (playerBets?.[currentPlayer.id] || 0) : 0
   const currentBet = gameState.round.currentBet || 0
   const toCall = Math.max(0, currentBet - myContribution)
-  const canBet = isBettingPhase && currentPlayer && !currentPlayer.hasFolded
+  const canBet = isBettingPhase && currentPlayer && inChipContest(currentPlayer) && !currentPlayer.hasFolded
   const canCheck = isMyTurn && toCall === 0
   const canCall = isMyTurn && toCall > 0 && (currentPlayer?.bankroll || 0) > 0
   const minRaise = (gameState.bigBlind || 0)
@@ -355,7 +332,7 @@ function PlayerApp() {
 
   /** Fixed bottom docks on phones; desktop keeps controls in-flow (lg+) */
   const needsMobileBetDock =
-    gameState.phase === 'betting' && currentPlayer && !currentPlayer.hasFolded
+    gameState.phase === 'betting' && currentPlayer && inChipContest(currentPlayer) && !currentPlayer.hasFolded
   const needsMobileAnswerDock =
     gameState.phase === 'answering' && currentPlayer && !currentPlayer.hasFolded
 
@@ -423,6 +400,15 @@ function PlayerApp() {
                 </span>
               </>
             )}
+            {typeof currentPlayer?.answerPoints === 'number' && (
+              <>
+                <span className="text-white/35 sm:w-full hidden sm:inline" aria-hidden>·</span>
+                <span className="w-full basis-full text-center text-white/75 sm:inline sm:w-auto sm:basis-auto">
+                  Trivia points{' '}
+                  <span className="font-bold text-casino-emerald">{currentPlayer.answerPoints ?? 0}</span>
+                </span>
+              </>
+            )}
             <span className="text-white/35 w-full sm:hidden" aria-hidden />
             <span className="sm:before:content-['·'] sm:before:px-2 sm:before:text-white/35">
               <span className="text-white/65 sm:hidden">You: </span>
@@ -431,6 +417,12 @@ function PlayerApp() {
               </span>
             </span>
           </div>
+          {currentPlayer?.pointsOnly && (
+            <div className="mx-auto mb-4 max-w-xl rounded-lg border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-center text-xs leading-snug text-amber-100 sm:text-sm">
+              <strong className="text-amber-200">Point trail only</strong> — your stack&apos;s busted ($0 chips), so seats and felts hide you from
+              wagering, but each wave you can still build an answer here for trivia points.
+            </div>
+          )}
           <div className="mt-2 inline-block rounded-lg border border-white/20 bg-white/10 p-2 backdrop-blur-md sm:mt-4 sm:p-3">
             <div className="text-[11px] text-white/80 uppercase tracking-wide sm:text-sm">Phase</div>
             <div className="text-base font-bold capitalize text-casino-emerald sm:text-lg">{gameState.phase}</div>
@@ -472,7 +464,9 @@ function PlayerApp() {
         </Card>
 
         {/* Answer Composition Interface */}
-        {(gameState.phase === 'betting' || gameState.phase === 'answering') && currentPlayer && !currentPlayer.hasFolded && (
+        {currentPlayer &&
+          !currentPlayer.hasFolded &&
+          ((gameState.phase === 'betting' && inChipContest(currentPlayer)) || gameState.phase === 'answering') && (
           <Card variant="glass" className="mb-4 space-y-4 p-4 sm:mb-8 sm:p-8">
             <h2 className="mb-4 text-center text-2xl font-bold text-casino-emerald sm:mb-8 sm:text-3xl">
               Compose your answer
@@ -682,6 +676,9 @@ function PlayerApp() {
             <div className="text-center mb-6">
               <div className="text-sm text-white/80">Bankroll</div>
               <div className="text-3xl font-bold text-casino-gold">${currentPlayer?.bankroll || 0}</div>
+              <div className="mt-2 text-sm text-white/70">
+                Trivia points <span className="font-semibold text-casino-emerald">{currentPlayer?.answerPoints ?? 0}</span>
+              </div>
             </div>
             {currentPlayer?.hasFolded && (
               <div className="text-center">
@@ -694,6 +691,12 @@ function PlayerApp() {
           <Card variant="glass" className="p-4 sm:p-6">
             <h2 className="text-2xl font-bold text-casino-emerald mb-6 text-center">Game Actions</h2>
             <div className="space-y-4">
+              {currentPlayer?.pointsOnly ? (
+                <p className="text-center text-sm leading-relaxed text-white/65">
+                  Chip actions aren&apos;t available on the point trail — wait for answering to play the trivia wave.
+                </p>
+              ) : (
+              <>
               {gameState.phase === 'betting' && (
                 <div className="grid grid-cols-2 gap-3 text-white text-sm">
                   <div>Betting Round: <span className="font-bold">{gameState.round.bettingRound ?? 1}</span></div>
@@ -769,6 +772,8 @@ function PlayerApp() {
                   All-In
                 </NeonButton>
               </div>
+              </>
+              )}
             </div>
           </Card>
         </div>
