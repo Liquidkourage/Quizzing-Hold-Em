@@ -1243,12 +1243,8 @@ export default function VenueEightTablesPreview({
                 </div>
               ) : null}
 
-              {/* Table stack: dashed orange = staging row (includes logo top pad → dark gaps above carpet are intentional); cyan solid = fixed pixel slot passed to embedded felt. */}
-              <div
-                className={`relative z-10 min-h-0 w-full border-2 border-dashed border-orange-400/80 ${
-                  showHeadline ? '' : 'pt-[4.95rem] sm:pt-[4.95rem]'
-                }`}
-              >
+              {/* Orange dashed = felt staging row inside article; cyan fills it top-to-bottom (wordmark overlays; no spacer above carpet). */}
+              <div className="relative z-10 min-h-0 w-full border-2 border-dashed border-orange-400/80">
                 <div className="relative box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-xl border-2 border-cyan-400/85">
                   <DisplayTableLive
                     key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
