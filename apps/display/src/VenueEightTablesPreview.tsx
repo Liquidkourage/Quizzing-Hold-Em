@@ -15,6 +15,13 @@ import seatChipStackImg from './assets/seat-chip-stack.png'
 
 const VENUE_SEAT_SLOTS = 8
 
+/** Stacking inside each mini felt ({@link SeatRingWithLabels}): name + bankroll beside name always top; then center hint, badges, pile, rim. */
+const SEAT_LAYER_DOT = 'z-[20]'
+const SEAT_LAYER_FELT_CHIP_PILE = 'z-[115]'
+const SEAT_LAYER_BLIND_OUT = 'z-[117]'
+const SEAT_LAYER_CENTER_CALL_HINT = 'z-[118]'
+const SEAT_LAYER_NAME_CLUSTER = 'z-[120]'
+
 /** Fixed crawl strips (Players + All tables): keep widths and page padding in sync */
 const VENUE_CRAWL_STRIP_CLASS = 'w-80 sm:w-[22rem] lg:w-96'
 
@@ -580,7 +587,7 @@ function SeatRingWithLabels({
         return (
           <div key={i}>
             <div
-              className={`absolute flex items-center justify-center ${isActing ? 'z-[14]' : ''}`}
+              className={`absolute flex items-center justify-center ${SEAT_LAYER_DOT}`}
               style={{
                 left: `${seatRim.leftPct}%`,
                 top: `${seatRim.topPct}%`,
@@ -611,7 +618,7 @@ function SeatRingWithLabels({
             </div>
             {isActing && showActingCallLine ? (
               <div
-                className={`pointer-events-none absolute z-[18] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center ${
+                className={`pointer-events-none absolute ${SEAT_LAYER_CENTER_CALL_HINT} flex -translate-x-1/2 -translate-y-1/2 flex-col items-center ${
                   size === 'lg' ? '-mt-2' : ''
                 }`}
                 style={{
@@ -643,7 +650,7 @@ function SeatRingWithLabels({
                   : 'text-[7px] font-black leading-none tracking-tight sm:text-[8px]'
               return (
                 <div
-                  className="pointer-events-none absolute z-[4] flex flex-col items-center gap-px"
+                  className={`pointer-events-none absolute ${SEAT_LAYER_BLIND_OUT} flex flex-col items-center gap-px`}
                   style={{
                     left: `${rp.leftPct}%`,
                     top: `${rp.topPct}%`,
@@ -665,7 +672,7 @@ function SeatRingWithLabels({
             })()}
             {showFoldOut && raw ? (
               <div
-                className="pointer-events-none absolute z-[6] flex flex-col items-center"
+                className={`pointer-events-none absolute ${SEAT_LAYER_BLIND_OUT} flex flex-col items-center`}
                 style={{
                   left: `${feltEllipsePct(i, 0.58).leftPct}%`,
                   top: `${feltEllipsePct(i, 0.58).topPct}%`,
@@ -683,7 +690,7 @@ function SeatRingWithLabels({
             ) : null}
             {showFeltStack ? (
               <div
-                className={`pointer-events-none absolute z-[3] flex flex-col items-center gap-0.5 px-0.5 ${
+                className={`pointer-events-none absolute ${SEAT_LAYER_FELT_CHIP_PILE} flex flex-col items-center gap-0.5 px-0.5 ${
                   isFolded ? 'opacity-45' : 'opacity-95'
                 }`}
                 style={{
@@ -707,7 +714,7 @@ function SeatRingWithLabels({
             ) : null}
             {raw ? (
               <div
-                className={`pointer-events-none absolute text-center font-semibold leading-tight shadow-black/80 drop-shadow ${labelClass} ${
+                className={`pointer-events-none absolute ${SEAT_LAYER_NAME_CLUSTER} text-center font-semibold leading-tight shadow-black/80 drop-shadow ${labelClass} ${
                   isFolded ? 'text-white/60' : 'text-white/92'
                 }`}
                 style={{
