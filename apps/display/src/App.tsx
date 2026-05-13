@@ -8,6 +8,10 @@ import { LOBBY_TABLE_ID, buildDisplayPreviewGameState } from '@qhe/core'
 import confetti from 'canvas-confetti'
 import { readDisplayVenueCode } from './displayUrlParams'
 
+/** Authoring viewport (logical px). Embedded venue heroes scale uniformly to fit the measured game plane; fullscreen uses live `gw/gh`. */
+const EMBEDDED_FELT_LAYOUT_W = 1280
+const EMBEDDED_FELT_LAYOUT_H = 940
+
 function displayPhaseLabel(phase: GamePhase): string {
   switch (phase) {
     case 'lobby':
@@ -536,6 +540,14 @@ function DisplayTableLive({
   const sh = shellSize.h > 0 ? shellSize.h : ghFallback
 
   const isEmbedded = variant === 'embedded'
+  /** Coordinate space for dealing/community math (matches the positioned subtree). */
+  const fdW = isEmbedded ? EMBEDDED_FELT_LAYOUT_W : gw
+  const fdH = isEmbedded ? EMBEDDED_FELT_LAYOUT_H : gh
+  const embeddedFeltPad = 28
+  const embeddedFeltScale =
+    isEmbedded && gw > 1 && gh > 1
+      ? Math.min(1, (gw - embeddedFeltPad) / EMBEDDED_FELT_LAYOUT_W, (gh - embeddedFeltPad) / EMBEDDED_FELT_LAYOUT_H)
+      : 1
   /** Viewport overlays in fullscreen mode; hero-clipped overlays when embedded. */
   const dockCls = isEmbedded ? 'absolute' : 'fixed'
 
@@ -691,15 +703,27 @@ function DisplayTableLive({
           ref={gamePlaneRef}
           className={
             isEmbedded
-              ? 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1'
+              ? 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden'
               : `relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
                   showQuestionStrip ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
                 }`
           }
         >
-          
-
-          
+          <div
+            className={isEmbedded ? 'absolute' : 'absolute inset-0'}
+            style={
+              isEmbedded
+                ? {
+                    left: '50%',
+                    top: '50%',
+                    width: EMBEDDED_FELT_LAYOUT_W,
+                    height: EMBEDDED_FELT_LAYOUT_H,
+                    transform: `translate(-50%, -50%) scale(${embeddedFeltScale})`,
+                    transformOrigin: 'center center',
+                  }
+                : { inset: 0 }
+            }
+          >
           {/* Dealing Animation */}
           <AnimatePresence>
             {isDealing && (
@@ -760,8 +784,8 @@ function DisplayTableLive({
                     const targetY = parseFloat(playerPosition.y.replace('calc(50% + ', '').replace('px)', ''))
                     
                     // Calculate center relative to container
-                    const containerWidth = gw
-                    const viewportHeight = gh
+                    const containerWidth = fdW
+                    const viewportHeight = fdH
                     const centerX = containerWidth / 2
                     const centerY = viewportHeight / 2
                     
@@ -795,7 +819,7 @@ function DisplayTableLive({
                     // Cards are centered horizontally (left-1/2 transform -translate-x-1/2)
                     // Add small offset to move cards slightly right and up
                                           const horizontalOffset = 16 // px adjustment to move right (decreased by 2px)
-                    const verticalOffset = 9 - (gh * 0.08) // px adjustment — scale with measured game plane height
+                    const verticalOffset = 9 - (fdH * 0.08) // px adjustment — scale with felt coordinate height
                     let cardX
                     
                     if (cardIndex === 0) {
@@ -817,8 +841,8 @@ function DisplayTableLive({
                   const endpoint = calculateCardEndpoint(dealingCard.playerIndex, dealingCard.cardIndex)
                   
                   // Calculate exact center for animation start (same as deck position)
-                  const centerX = (gw / 2) - 50 // Match deck position
-                  const centerY = (gh / 2 + 100 + displayTableLiftPx) - gh * 0.1 // Match deck position, move up 10%
+                  const centerX = (fdW / 2) - 50 // Match deck position
+                  const centerY = (fdH / 2 + 100 + displayTableLiftPx) - fdH * 0.1 // Match deck position, move up 10%
                   
                   const finalX = endpoint.x
                   const finalY = endpoint.y
@@ -926,8 +950,8 @@ function DisplayTableLive({
                   // Calculate exact endpoint for community card positioning (relative to table center)
                   const calculateCommunityCardEndpoint = (cardIndex: number) => {
                     // Community cards are positioned at the center of the measured game plane (original layout used viewport).
-                    const tableCenterX = (gw / 2) + (gw * 0.02) - 18
-                    const tableCenterY = (gh / 2) + (gh * 0.05) - gh * 0.12 + 3 + displayTableLiftPx
+                    const tableCenterX = (fdW / 2) + (fdW * 0.02) - 18
+                    const tableCenterY = (fdH / 2) + (fdH * 0.05) - fdH * 0.12 + 3 + displayTableLiftPx
                     
                                       // Calculate position for each community card in a horizontal row
                   const cardWidth = 64 // small card width (64px)
@@ -945,8 +969,8 @@ function DisplayTableLive({
                   const { x: finalX, y: finalY, scale: finalScale } = calculateCommunityCardEndpoint(dealingCard.cardIndex)
                   
                   // Calculate center for animation start (same as deck position)
-                  const centerX = (gw / 2) - 50 // Match deck position
-                  const centerY = gh / 2 + 100 + displayTableLiftPx
+                  const centerX = (fdW / 2) - 50 // Match deck position
+                  const centerY = fdH / 2 + 100 + displayTableLiftPx
                   
                   return (
                     <motion.div
@@ -1156,8 +1180,8 @@ function DisplayTableLive({
                       className="absolute"
                       initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
                       animate={{
-                        x: (gw / 2) - (gw / 2),
-                        y: (gh / 2 - 144) - (gh / 2 - 144),
+                        x: (fdW / 2) - (fdW / 2),
+                        y: (fdH / 2 - 144) - (fdH / 2 - 144),
                         opacity: 1,
                       }}
                     >
@@ -1214,6 +1238,7 @@ function DisplayTableLive({
 
 
             </div>
+          </div>
           </div>
         </div>
 
@@ -1346,12 +1371,18 @@ function DisplayTableLive({
       {displayGameState.phase === 'showdown' && showdownWinnerId && chipFlights.length > 0 && (
         <div className={`${dockCls} inset-0 z-[55] pointer-events-none`}>
           {(() => {
+            const chipScale = isEmbedded ? embeddedFeltScale : 1
             const potX = sw / 2
-            const potY = sh / 2 - 144 + displayTableLiftPx
+            const potY = sh / 2 + (-144 + displayTableLiftPx) * chipScale
             const idx = displayGameState.players.findIndex((p) => p.id === showdownWinnerId)
             const seat = getPlayerPosition(Math.max(0, idx), displayGameState.players.length)
-            const seatX = sw / 2 + parseFloat(seat.x.replace('calc(50% + ', '').replace('px - 55px)', '')) + 55
-            const seatY = sh / 2 + parseFloat(seat.y.replace('calc(50% + ', '').replace('px - 60px)', '')) + 10
+            const seatX =
+              sw / 2 +
+              (parseFloat(seat.x.replace('calc(50% + ', '').replace('px - 55px)', '')) + 55) *
+                chipScale
+            const seatY =
+              sh / 2 +
+              (parseFloat(seat.y.replace('calc(50% + ', '').replace('px - 60px)', '')) + 10) * chipScale
             return chipFlights.map(chip => (
               <motion.div
                 key={chip.id}
