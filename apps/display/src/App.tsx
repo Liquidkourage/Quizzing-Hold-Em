@@ -111,12 +111,15 @@ type DisplayTableLiveProps = {
   variant?: 'fullscreen' | 'embedded'
   /** When the parent already renders the headline question/timer (venue wall header). */
   hideQuestionBanner?: boolean
+  /** Venue seating tour: lifts the bottom HUD above a fixed viewport progress strip (`px`). */
+  venueBottomHudInsetPx?: number
 }
 
 function DisplayTableLive({
   feltTableHint,
   variant = 'fullscreen',
   hideQuestionBanner = false,
+  venueBottomHudInsetPx = 0,
 }: DisplayTableLiveProps) {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -592,8 +595,8 @@ function DisplayTableLive({
 
   /** Full-bleed game plane under a bottom docked HUD (venue wall hides question banner). */
   const embeddedHudOverlay = isEmbedded && !showQuestionStrip
-  /** Nudge tableau down slightly so oval reads centered vs the overlay HUD (geometric mid can read high live). */
-  const embeddedScaledLayerNudgeYPx = embeddedHudOverlay ? 54 : 0
+  /** Small downward nudge of scaled tableau vs overlay HUD; reduced when HUD is lifted above a viewport dock strip. */
+  const embeddedScaledLayerNudgeYPx = embeddedHudOverlay ? 24 : 0
 
   return (
     <div
@@ -1292,8 +1295,11 @@ function DisplayTableLive({
           <div
             className={
               embeddedHudOverlay
-                ? 'pointer-events-auto absolute inset-x-0 bottom-0 z-40 border-t border-yellow-700/35 bg-black/45 backdrop-blur-sm'
+                ? 'pointer-events-auto absolute inset-x-0 z-40 border-t border-yellow-700/35 bg-black/45 backdrop-blur-sm'
                 : 'relative z-30 shrink-0 border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm'
+            }
+            style={
+              embeddedHudOverlay ? { bottom: `${venueBottomHudInsetPx}px` } : undefined
             }
           >
             <DisplayTableInfoBar gameState={displayGameState} />

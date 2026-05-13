@@ -37,6 +37,9 @@ const VENUE_CRAWL_STRIP_CLASS = 'w-80 sm:w-[22rem] lg:w-96'
 const VENUE_CRAWL_PL_CLASS = 'pl-80 sm:pl-[22rem] lg:pl-96'
 const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 
+/** Fixed bottom seating-tour dock — matches label + track stack; lifts embedded felt HUD in {@link DisplayTableLive}. */
+const VENUE_SPOTLIGHT_VIEWPORT_PROGRESS_RESERVED_PX = 88
+
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
 
 function usePrefersReducedMotion(): boolean {
@@ -1161,11 +1164,16 @@ export default function VenueEightTablesPreview({
   /** Reserve space for the fixed **All tables** crawl whenever numbered tiles render. */
   const padLeftForTablesCrawl = tileRows.length > 0
 
+  const dockSeatingTourProgress =
+    showRotatingTour && !prefersReducedMotion && tileRows.length > 1
+
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
         padLeftForTablesCrawl ? VENUE_CRAWL_PL_CLASS : ''
-      } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}`}
+      } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}${
+        dockSeatingTourProgress ? ' pb-[calc(6rem+env(safe-area-inset-bottom,0px))]' : ''
+      }`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
         <div
@@ -1263,6 +1271,9 @@ export default function VenueEightTablesPreview({
                     feltTableHint={String(seatingHeroRow.tableNum)}
                     variant="embedded"
                     hideQuestionBanner
+                    venueBottomHudInsetPx={
+                      dockSeatingTourProgress ? VENUE_SPOTLIGHT_VIEWPORT_PROGRESS_RESERVED_PX : 0
+                    }
                   />
                 </div>
               </div>
@@ -1272,7 +1283,7 @@ export default function VenueEightTablesPreview({
                 <div className="pointer-events-none absolute inset-0 opacity-55">
                   <div className="h-full w-full" style={VENUE_HERO_CARPET_STYLE} />
                 </div>
-                <div className="relative z-10 space-y-3 sm:space-y-4">
+                <div className="relative z-10 space-y-2 sm:space-y-3">
                   <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
                     {showRotatingTour ? (
                       prefersReducedMotion ? (
@@ -1284,41 +1295,51 @@ export default function VenueEightTablesPreview({
                       `Featured table · Table ${seatingHeroRow.tableNum}`
                     )}
                   </p>
-                  {showRotatingTour && !prefersReducedMotion && tileRows.length > 1 ? (
-                    <div className="mx-auto max-w-3xl">
-                      <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
-                        <span className="font-semibold uppercase tracking-wider text-white/45">
-                          Next table
-                        </span>
-                        <span className="font-mono tabular-nums text-amber-200/90">
-                          {Math.max(
-                            0,
-                            Math.ceil((1 - seatingCycleProgress) * SEATING_SPOTLIGHT_CYCLE_SEC)
-                          )}
-                          s
-                        </span>
-                      </div>
-                      <div
-                        className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
-                        role="progressbar"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={Math.round(seatingCycleProgress * 100)}
-                        aria-label="Seating tour progress until the next table"
-                      >
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-amber-700/95 to-amber-300/95"
-                          style={{ width: `${seatingCycleProgress * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               </div>
             </motion.article>
           </section>
         ) : null}
       </main>
+
+      {seatingHeroRow && dockSeatingTourProgress ? (
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-[60] border-t border-yellow-700/50 bg-black/90 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2 backdrop-blur-md ${
+            padLeftForTablesCrawl ? VENUE_CRAWL_PL_CLASS : ''
+          } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}`}
+          role="presentation"
+        >
+          <div className="mx-auto max-w-[min(1120px,min(96dvw,100%))] px-4 sm:px-5 md:px-6">
+            <div className="mx-auto max-w-3xl">
+              <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
+                <span className="font-semibold uppercase tracking-wider text-white/45">
+                  Next table
+                </span>
+                <span className="font-mono tabular-nums text-amber-200/90">
+                  {Math.max(
+                    0,
+                    Math.ceil((1 - seatingCycleProgress) * SEATING_SPOTLIGHT_CYCLE_SEC)
+                  )}
+                  s
+                </span>
+              </div>
+              <div
+                className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(seatingCycleProgress * 100)}
+                aria-label="Seating tour progress until the next table"
+              >
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-700/95 to-amber-300/95"
+                  style={{ width: `${seatingCycleProgress * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {tileRows.length > 0 && seatingHeroRow ? (
         <VenueAllTablesCrawl
           tiles={tileRows}
