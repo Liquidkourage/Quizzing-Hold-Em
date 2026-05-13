@@ -1252,7 +1252,7 @@ export default function VenueEightTablesPreview({
                 key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
                 feltTableHint={String(seatingHeroRow.tableNum)}
                 variant="embedded"
-                hideQuestionBanner={showHeadline}
+                hideQuestionBanner
               />
             </div>
             <div className="shrink-0 space-y-3 sm:space-y-4">

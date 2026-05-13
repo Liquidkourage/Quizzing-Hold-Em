@@ -1227,9 +1227,47 @@ function requireVenueLockstepTables(
   return rows
 }
 
-/** First numbered felt with seated players — venue-synced trivia uses the same round on all tables. */
-function pickHeadlineGameState(venueCode: string): GameState | null {
+/** Wall headline trivia should mirror an active trivia phase, not a stale persisted question from lobby or betting. */
+const VENUE_WALL_HEADLINE_PHASES = new Set<string>([
+  'question',
+  'answering',
+  'reveal',
+  'showdown',
+  'payout',
+])
+
+/**
+ * Prefer the most “interesting” numbered felt for the shared TV headline bar:
+ * answering (with deadline) → question setup → showdown family → fallback first seated table (may be lobby).
+ */
+function pickVenueHeadlineGameState(venueCode: string): GameState | null {
   const vn = normalizeVenueCode(venueCode)
+
+  function firstSeated(predicate: (gs: GameState) => boolean): GameState | null {
+    for (let n = 1; n <= 8; n++) {
+      const key = tableSessionKey(vn, String(n))
+      const gs = rooms.get(key)
+      if (gs != null && gs.players.length > 0 && predicate(gs)) return gs
+    }
+    return null
+  }
+
+  const answering = firstSeated(
+    (gs) =>
+      gs.phase === 'answering' &&
+      gs.round?.answerDeadline != null &&
+      Number.isFinite(gs.round.answerDeadline)
+  )
+  if (answering) return answering
+
+  const question = firstSeated((gs) => gs.phase === 'question')
+  if (question) return question
+
+  const post = firstSeated(
+    (gs) => gs.phase === 'reveal' || gs.phase === 'showdown' || gs.phase === 'payout'
+  )
+  if (post) return post
+
   for (let n = 1; n <= 8; n++) {
     const key = tableSessionKey(vn, String(n))
     const gs = rooms.get(key)
@@ -1390,17 +1428,22 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     })
   }
 
-  const headlineGs = pickHeadlineGameState(vn)
-  const headlineQuestionText =
-    headlineGs?.round?.question != null &&
-    typeof headlineGs.round.question.text === 'string' &&
-    headlineGs.round.question.text.trim() !== ''
-      ? headlineGs.round.question.text.trim()
-      : null
-  const answerDeadlineMs =
-    headlineGs?.phase === 'answering' && headlineGs.round?.answerDeadline != null
-      ? headlineGs.round.answerDeadline
-      : null
+  const headlineGs = pickVenueHeadlineGameState(vn)
+  let headlineQuestionText: string | null = null
+  let answerDeadlineMs: number | null = null
+  if (headlineGs != null && VENUE_WALL_HEADLINE_PHASES.has(headlineGs.phase)) {
+    const q = headlineGs.round?.question
+    if (q != null && typeof q.text === 'string' && q.text.trim() !== '') {
+      headlineQuestionText = q.text.trim()
+    }
+    if (
+      headlineGs.phase === 'answering' &&
+      headlineGs.round?.answerDeadline != null &&
+      Number.isFinite(headlineGs.round.answerDeadline)
+    ) {
+      answerDeadlineMs = headlineGs.round.answerDeadline
+    }
+  }
 
   const payload: DisplayVenueWallSnapshot = {
     tiles,
@@ -2279,7 +2322,10 @@ io.on('connection', (socket) => {
               bigBlind: lobbyGs.bigBlind,
               players: slice,
             }
-            gsNew = runVirtualPlayerSimulation(gsNew)
+            /** Humans expect lobby after assign until the host starts play — VP auto-run skips unless the table is CPU-only. */
+            if (tableIsCpuOnly(gsNew)) {
+              gsNew = runVirtualPlayerSimulation(gsNew)
+            }
             rooms.set(tk, gsNew)
             for (const p of slice) {
               if (p.id.startsWith('vp:')) continue
