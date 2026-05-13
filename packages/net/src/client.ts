@@ -386,12 +386,36 @@ export function endRound(callback?: (ack: ServerAck) => void) {
   }
 }
 
-export function startAnswering(callback?: (ack: ServerAck) => void) {
+export function startAnswering(callback?: (ack: ServerAck) => void): void
+export function startAnswering(
+  opts: { answerWindowSeconds?: number },
+  callback?: (ack: ServerAck) => void
+): void
+export function startAnswering(
+  optsOrCallback?: { answerWindowSeconds?: number } | ((ack: ServerAck) => void),
+  maybeCallback?: (ack: ServerAck) => void
+) {
   if (!socket) return
-  socket.emit('action', { type: 'startAnswering' })
-  if (callback) {
-    socket.once('ack', callback)
+  let cb = maybeCallback
+  let seconds: number | undefined
+  if (typeof optsOrCallback === 'function') {
+    cb = optsOrCallback
+  } else if (optsOrCallback && typeof optsOrCallback === 'object') {
+    const s = optsOrCallback.answerWindowSeconds
+    if (typeof s === 'number' && Number.isFinite(s)) seconds = s
   }
+  socket.emit('action', {
+    type: 'startAnswering',
+    ...(seconds !== undefined ? { payload: { answerWindowSeconds: seconds } } : {}),
+  })
+  if (cb) socket.once('ack', cb)
+}
+
+/** Host-only: persist default answer countdown (seconds) for this venue; also in `hostLibrary`. */
+export function setVenueAnswerWindowSeconds(seconds: number, callback?: (ack: ServerAck) => void) {
+  if (!socket) return
+  socket.emit('action', { type: 'setVenueAnswerWindow', payload: { seconds } })
+  if (callback) socket.once('ack', callback)
 }
 
 // Player actions

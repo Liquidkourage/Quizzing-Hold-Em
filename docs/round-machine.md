@@ -41,7 +41,8 @@ stateDiagram-v2
   betting --> answering: host startAnswering\n(requires betting closed +\n5 community cards +\nphase betting)
   note right of answering
     Server sets shared answerDeadline
-    and arms 45s auto revealAnswer\nper table timer.
+    from venue default (env `ANSWER_WINDOW_SECONDS` or persisted override)
+    and arms auto `revealAnswer` per table for that same wall-clock span.
   end note
 
   answering --> showdown: host revealAnswer\nOR timer expiry
@@ -105,7 +106,7 @@ Venue-wide mutations (`startGame`, `setQuestion`, deals, `adminCloseBetting` whe
 |------------|-------------------|
 | **`startGame`**, **`setQuestion`**, setlist advance | All felts **aligned**; `startGame` requires **lobby** everywhere; question pushes require **lobby** or **question** everywhere. |
 | **`dealCommunityCards`** | `phase === 'betting'`, **`bettingRound === 1`**, **`isBettingOpen === false`**, **`communityCards.length < 5`**. Deals **five** cards and opens **`bettingRound: 2`**. |
-| **`startAnswering`** | **`phase === 'betting'`**, **`bettingRound === 2`**, **`!isBettingOpen`**, **`communityCards.length ≥ 5`**. Same **`answerDeadline`** on every felt; venue-wide **`revealAnswer`** timer per table aligned to that deadline. |
+| **`startAnswering`** | **`phase === 'betting'`**, **`bettingRound === 2`**, **`!isBettingOpen`**, **`communityCards.length ≥ 5`**. Same **`answerDeadline`** on every felt; duration = **`answerWindowSeconds`** payload if provided, else venue default (host **Save default** + `hostLibrary`, or **`ANSWER_WINDOW_SECONDS`** / **`ANSWER_WINDOW_SEC`** on bootstrap), clamped **15–300**s. Venue-wide **`revealAnswer`** timer per table matches that duration. |
 | **`submitAnswer`** | **`answering`** and before **`answerDeadline`**; value must be **constructible** from holes + board (exactly five digit positions, optional decimal). |
 | **`endRound`** | All tables in **`showdown`** together; wrong mix → host toast, **no payouts**. |
 

@@ -9,6 +9,8 @@ export type HostLibrarySnapshot = {
   setlists: Setlist[]
   activeSetlistId: string | null
   activeSetlistNextIndex: number
+  /** Default trivia answer countdown for this venue (seconds). Omitted by older servers. */
+  answerWindowSeconds?: number
 }
 
 export const ClientRole = z.enum(['host', 'player', 'display'])

@@ -19,3 +19,4 @@ packages/*/node_modules/
 apps/server/data/question-banks.json
 apps/server/data/venue-libraries.json
 apps/server/data/venue-libraries.sqlite*
+apps/server/data/venue-answer-settings.json

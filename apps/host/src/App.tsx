@@ -17,6 +17,7 @@ import {
   assignTablesFromLobby,
   displaySetLayout,
   pairDisplayWithHost,
+  setVenueAnswerWindowSeconds,
   setQuestion as pushQuestionToVenue,
   questionBankAdd,
   questionBankUpdate,
@@ -71,6 +72,11 @@ function hostPlayerLabel(raw: string): string {
   return L ? `${first} ${L}.` : first
 }
 
+/** Match server clamp in apps/server venue-answer-window-settings. */
+function clampVenueAnswerWindow(v: number): number {
+  return Math.min(300, Math.max(15, Math.floor(Number.isFinite(v) ? v : 45)))
+}
+
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -106,6 +112,7 @@ function HostApp() {
   const importReplaceRef = useRef(false)
   const [tvPairCode, setTvPairCode] = useState('')
   const [livelyGameplayTableNums, setLivelyGameplayTableNums] = useState<number[]>([])
+  const [answerWindowSeconds, setAnswerWindowSeconds] = useState(45)
 
   const viteHostSecret =
     typeof import.meta.env.VITE_HOST_SECRET === 'string' ? import.meta.env.VITE_HOST_SECRET.trim() : ''
@@ -150,6 +157,9 @@ function HostApp() {
       setSetlists(snap.setlists)
       setActiveSetlistId(snap.activeSetlistId)
       setActiveSetlistNextIndex(snap.activeSetlistNextIndex)
+      if (typeof snap.answerWindowSeconds === 'number' && Number.isFinite(snap.answerWindowSeconds)) {
+        setAnswerWindowSeconds(clampVenueAnswerWindow(snap.answerWindowSeconds))
+      }
     })
     return off
   }, [])
@@ -272,7 +282,9 @@ function HostApp() {
   }
 
   const handleStartAnswering = () => {
-    startAnswering()
+    const sec = clampVenueAnswerWindow(answerWindowSeconds)
+    setAnswerWindowSeconds(sec)
+    startAnswering({ answerWindowSeconds: sec })
   }
 
   const handleEndRound = () => {
@@ -1382,7 +1394,37 @@ function HostApp() {
                 <p className="text-sm text-amber-200/90">{dealCommunityHint}</p>
               )}
                 </div>
-                <div className="flex flex-col gap-2 sm:col-span-2">
+                <div className="flex flex-col gap-3 sm:col-span-2">
+                  <div className="flex flex-wrap items-end gap-3 rounded-lg border border-purple-400/30 bg-purple-950/25 px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="answer-window-sec" className="text-xs font-semibold uppercase tracking-wide text-white/48">
+                        Trivia answer countdown
+                      </label>
+                      <input
+                        id="answer-window-sec"
+                        type="number"
+                        min={15}
+                        max={300}
+                        step={5}
+                        value={answerWindowSeconds}
+                        onChange={(e) => setAnswerWindowSeconds(clampVenueAnswerWindow(Number(e.target.value)))}
+                        className="w-[5.5rem] rounded-md border border-white/25 bg-black/50 px-2 py-2 text-center text-lg font-bold tabular-nums text-white"
+                      />
+                    </div>
+                    <span className="pb-2 text-sm text-white/52">
+                      seconds (15–300). Save default stores this venue under <code className="rounded bg-white/10 px-1 font-mono text-xs">data/venue-answer-settings.json</code> on the
+                      server (and in <strong className="text-white/72">hostLibrary</strong>). This button always sends the countdown you set.
+                    </span>
+                    <NeonButton
+                      variant="blue"
+                      size="small"
+                      type="button"
+                      className="!px-4"
+                      onClick={() => setVenueAnswerWindowSeconds(clampVenueAnswerWindow(answerWindowSeconds))}
+                    >
+                      Save default
+                    </NeonButton>
+                  </div>
               <NeonButton
                 variant="purple"
                 size="large"
@@ -1390,7 +1432,7 @@ function HostApp() {
                 disabled={startAnswerBlocked}
                 className="w-full min-h-[52px]"
               >
-                Start Answering (45s)
+                Start answering ({clampVenueAnswerWindow(answerWindowSeconds)}s)
               </NeonButton>
               {startAnswerBlocked && gameState.phase === 'betting' && (
                 <p className="text-sm text-white/52">

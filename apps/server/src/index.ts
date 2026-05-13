@@ -74,6 +74,15 @@ import {
   type VenueLibraryData,
 } from './venue-library-persist'
 import { loadVenueLibraries, persistVenueLibraries } from './venue-library-db'
+import {
+  loadVenueAnswerWindowSettingsFromDisk,
+  initAnswerWindowEnvDefault,
+  getVenueAnswerWindowSeconds,
+  setVenueAnswerWindowSecondsPersist,
+  resolveAnswerWindowSecondsForStart,
+  ANSWER_WINDOW_MIN_SEC,
+  ANSWER_WINDOW_MAX_SEC,
+} from './venue-answer-window-settings'
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url)
@@ -1019,6 +1028,7 @@ async function buildHostLibraryPayload(venueCode: string) {
     })),
     activeSetlistId: ph.setlistId,
     activeSetlistNextIndex: ph.nextIndex,
+    answerWindowSeconds: getVenueAnswerWindowSeconds(k),
   }
 }
 
@@ -1929,7 +1939,10 @@ io.on('connection', (socket) => {
             'finish post-board wagering (clock closed) with a complete board before trivia answers open',
           )
           if (!lockAns) break
-          const deadlineMs2 = Date.now() + 45_000
+          const vn = normalizeVenueCode(gameState.code)
+          const durationSec = resolveAnswerWindowSecondsForStart(vn, payload)
+          const durationMs = durationSec * 1000
+          const deadlineMs2 = Date.now() + durationMs
           for (const { tk } of lockAns) {
             let gs = rooms.get(tk)
             gs = {
@@ -1949,14 +1962,35 @@ io.on('connection', (socket) => {
                 emitVenueTableState(tk, revealed)
                 io.to(tk).emit('toast', '⏱️ Time up! Revealing answers...')
               }
-            }, 45_000)
+            }, durationMs)
             answerTimers.set(tk, timer2)
             rooms.set(tk, gs)
             emitVenueTableState(tk, gs)
           }
           socket.emit(
             'toast',
-            `Answering opened — ${lockAns.length} table(s); same countdown at each felt.`,
+            `Answering opened — ${lockAns.length} table(s); ${durationSec}s countdown at each felt.`,
+          )
+          gameState = rooms.get(sessionKey)!
+          break
+        }
+
+        case 'setVenueAnswerWindow': {
+          if (!assertVenueHost(socket, gameState)) break
+          const vn = normalizeVenueCode(gameState.code)
+          const raw = Number((payload as { seconds?: unknown })?.seconds)
+          if (!Number.isFinite(raw)) {
+            socket.emit(
+              'toast',
+              `Set answer window to a number between ${ANSWER_WINDOW_MIN_SEC} and ${ANSWER_WINDOW_MAX_SEC} seconds.`,
+            )
+            break
+          }
+          const sec = setVenueAnswerWindowSecondsPersist(vn, raw)
+          await emitHostLibrary(vn)
+          socket.emit(
+            'toast',
+            `Default trivia answer window for ${vn} is now ${sec}s (${ANSWER_WINDOW_MIN_SEC}–${ANSWER_WINDOW_MAX_SEC}).`,
           )
           gameState = rooms.get(sessionKey)!
           break
@@ -2444,15 +2478,20 @@ async function bootstrap(): Promise<void> {
   venueLibraries = await loadVenueLibraries()
   const dbMode = process.env.DATABASE_URL?.trim() ? 'PostgreSQL (DATABASE_URL)' : 'SQLite file (VENUE_DATABASE_PATH or default under apps/server/data)'
   console.log(`📚 Venue libraries: ${dbMode}`)
+  initAnswerWindowEnvDefault()
+  loadVenueAnswerWindowSettingsFromDisk()
+  console.log(
+    '⏱️ Trivia answer window: default from ANSWER_WINDOW_SECONDS (see server); venue overrides in data/venue-answer-settings.json.',
+  )
 
-httpServer.listen(PORT, HOST, () => {
-  console.log(`🎰 Quizz\u2019em server running on ${HOST}:${PORT}`)
-  console.log(`🌐 WebSocket server ready for connections`)
-  const base = publicOrigin ?? `http://localhost:${PORT}`
-  console.log(`📱 Host: ${base}/host`)
-  console.log(`👤 Player: ${base}/player`)
-  console.log(`📺 Display: ${base}/display`)
-})
+  httpServer.listen(PORT, HOST, () => {
+    console.log(`🎰 Quizz\u2019em server running on ${HOST}:${PORT}`)
+    console.log(`🌐 WebSocket server ready for connections`)
+    const base = publicOrigin ?? `http://localhost:${PORT}`
+    console.log(`📱 Host: ${base}/host`)
+    console.log(`👤 Player: ${base}/player`)
+    console.log(`📺 Display: ${base}/display`)
+  })
 }
 
 bootstrap().catch((err) => {
