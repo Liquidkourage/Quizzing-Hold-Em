@@ -595,7 +595,7 @@ function DisplayTableLive({
       ref={shellRef}
       className={
         isEmbedded
-          ? 'relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
+          ? 'relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ring-2 ring-inset ring-fuchsia-400/90'
           : 'relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
       }
     >
@@ -740,7 +740,7 @@ function DisplayTableLive({
           ref={gamePlaneRef}
           className={
             isEmbedded
-              ? 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden'
+              ? 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
               : `relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
                   showQuestionStrip ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
                 }`
