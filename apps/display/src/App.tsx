@@ -50,6 +50,37 @@ function displayTableLabel(tableId: string): string {
   return tableId === LOBBY_TABLE_ID ? 'Lobby' : `Table ${tableId}`
 }
 
+function DisplayTableInfoBar({ gameState }: { gameState: GameState }) {
+  return (
+    <div className="max-w-4xl mx-auto px-4">
+      <div className="bg-black/90 backdrop-blur-md border border-yellow-600 px-4 py-4 md:rounded-t-lg md:py-5">
+        <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4 md:gap-5">
+          <div>
+            <div className="text-white text-base md:text-xl">Felt</div>
+            <div className="text-yellow-400 font-bold text-xl md:text-3xl">
+              {displayTableLabel(gameState.tableId ?? '1')}
+            </div>
+          </div>
+          <div>
+            <div className="text-white text-base md:text-xl">Blinds</div>
+            <div className="text-yellow-400 font-bold text-xl tabular-nums md:text-3xl">
+              ${gameState.smallBlind} / ${gameState.bigBlind}
+            </div>
+          </div>
+          <div>
+            <div className="text-white text-base md:text-xl">Phase</div>
+            <div className="text-yellow-400 font-bold text-xl md:text-3xl">{displayPhaseLabel(gameState.phase)}</div>
+          </div>
+          <div>
+            <div className="text-white text-base md:text-xl">Street</div>
+            <div className="text-yellow-400 font-bold text-xl md:text-3xl">{displayStreetLabel(gameState)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function useObservedClientSize(ref: RefObject<HTMLElement | null>): { w: number; h: number } {
   const [s, setS] = useState({ w: 0, h: 0 })
   useLayoutEffect(() => {
@@ -543,10 +574,16 @@ function DisplayTableLive({
   /** Coordinate space for dealing/community math (matches the positioned subtree). */
   const fdW = isEmbedded ? EMBEDDED_FELT_LAYOUT_W : gw
   const fdH = isEmbedded ? EMBEDDED_FELT_LAYOUT_H : gh
-  const embeddedFeltPad = 28
+  const embeddedHorizPad = 36
+  /** Seats/cards protrude vertically beyond nominal layout px; shrinking scale avoids top/bottom clip. */
+  const embeddedSeatOverhangY = 120
   const embeddedFeltScale =
     isEmbedded && gw > 1 && gh > 1
-      ? Math.min(1, (gw - embeddedFeltPad) / EMBEDDED_FELT_LAYOUT_W, (gh - embeddedFeltPad) / EMBEDDED_FELT_LAYOUT_H)
+      ? Math.min(
+          1,
+          (gw - embeddedHorizPad) / EMBEDDED_FELT_LAYOUT_W,
+          (gh - embeddedSeatOverhangY) / EMBEDDED_FELT_LAYOUT_H
+        ) * 0.96
       : 1
   /** Viewport overlays in fullscreen mode; hero-clipped overlays when embedded. */
   const dockCls = isEmbedded ? 'absolute' : 'fixed'
@@ -1242,7 +1279,13 @@ function DisplayTableLive({
           </div>
         </div>
 
-      </div>
+        </div>
+
+        {isEmbedded ? (
+          <div className="relative z-30 shrink-0 border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm">
+            <DisplayTableInfoBar gameState={displayGameState} />
+          </div>
+        ) : null}
 
       {/* Showdown Overlay */}
       {displayGameState.phase === 'showdown' && (
@@ -1415,37 +1458,11 @@ function DisplayTableLive({
         />
       )}
 
-      {/* Game Info Panel - Docked to bottom of screen */}
-      <div className={`${dockCls} bottom-0 left-0 right-0 z-30`}>
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-t-lg px-4 py-5">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-center">
-              <div>
-                <div className="text-white text-lg md:text-xl">Felt</div>
-                <div className="text-yellow-400 font-bold text-2xl md:text-3xl">
-                  {displayTableLabel(displayGameState.tableId ?? '1')}
-                </div>
-              </div>
-              <div>
-                <div className="text-white text-lg md:text-xl">Blinds</div>
-                <div className="text-yellow-400 font-bold text-2xl tabular-nums md:text-3xl">
-                  ${displayGameState.smallBlind} / ${displayGameState.bigBlind}
-                </div>
-              </div>
-              <div>
-                <div className="text-white text-lg md:text-xl">Phase</div>
-                <div className="text-yellow-400 font-bold text-2xl md:text-3xl">
-                  {displayPhaseLabel(displayGameState.phase)}
-                </div>
-              </div>
-              <div>
-                <div className="text-white text-lg md:text-xl">Street</div>
-                <div className="text-yellow-400 font-bold text-2xl md:text-3xl">{displayStreetLabel(displayGameState)}</div>
-              </div>
-            </div>
-          </div>
+      {!isEmbedded ? (
+        <div className="fixed bottom-0 left-0 right-0 z-30">
+          <DisplayTableInfoBar gameState={displayGameState} />
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }
