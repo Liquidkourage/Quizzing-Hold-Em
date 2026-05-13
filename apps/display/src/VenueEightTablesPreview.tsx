@@ -32,8 +32,8 @@ const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
 const SEATING_SPOTLIGHT_CYCLE_SEC = 10
 
-/** Viewport scale for spotlight hero card (×0.9³ ≈ 27% inset from unscaled layout). */
-const VENUE_SEATING_SPOTLIGHT_HERO_ZOOM = 0.729
+/** Viewport scale for spotlight hero card — larger focal read for auditorium sightlines */
+const VENUE_SEATING_SPOTLIGHT_HERO_ZOOM = 0.82
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false)
@@ -822,100 +822,73 @@ function VenueMosaicTableCard({
 
   if (mode === 'crawl') {
     const spotlight = isSpotlightThumb === true
-    const rowShell = spotlight
-      ? 'border-amber-400/70 bg-black/55 ring-2 ring-amber-400/45 shadow-[0_0_20px_rgba(251,191,36,0.12)]'
-      : 'border-white/[0.12] bg-black/35'
-
-    let totalChips = 0
-    const chipRoster = crawlTableChipRoster(seatNames, seatBankrolls, ph)
-    for (const p of chipRoster) {
-      totalChips += p.bankroll
-    }
-    const openSeats = Math.max(0, VENUE_SEAT_SLOTS - seats)
-    const rosterChips =
-      chipRoster.length === 0 ? null : (
-        <ul
-          className="list-none flex flex-wrap gap-1.5"
-          aria-label={
-            ph === 'lobby'
-              ? `Players at table ${tn}`
-              : `Players at table ${tn} ranked by bankroll`
-          }
-        >
-          {chipRoster.map(({ name: nm, bankroll: brChip }, ri) => (
-            <li
-              key={`${tn}-r-${ri}-${nm}-${brChip}`}
-              className="min-w-0 max-w-[min(100%,14rem)] rounded-full border border-white/[0.14] bg-black/40 px-2.5 py-1 text-[11px] font-semibold leading-snug text-white/90 shadow-sm sm:px-3 sm:text-xs"
-            >
-              <span className="block break-words">{nm}</span>
-              {ph !== 'lobby' ? (
-                <span className="mt-0.5 block max-w-full truncate font-mono tabular-nums font-bold text-casino-emerald">
-                  {formatVenueBankroll(brChip)}
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )
+    const totalChips = totalChipsFromSeats(seatNames, seatBankrolls)
+    const cardShell = spotlight
+      ? 'rounded-xl border-2 border-amber-400/70 bg-black/65 shadow-[0_0_32px_rgba(251,191,36,0.22)] ring-2 ring-amber-400/35'
+      : 'rounded-xl border-2 border-yellow-700/40 bg-black/55 shadow-lg'
 
     return (
-      <div
+      <article
         data-spotlight-tile={tn}
         role="group"
         aria-current={spotlight ? 'true' : undefined}
-        className={`flex w-full min-w-0 gap-3 rounded-xl border p-3 backdrop-blur-md sm:gap-3.5 sm:p-3.5 ${rowShell}`}
+        aria-label={`Table ${tn}, mosaic tile`}
+        className={`flex w-full min-w-0 flex-col gap-2 overflow-visible p-3 backdrop-blur-md sm:gap-2.5 sm:p-3.5 ${cardShell}`}
       >
-        <div
-          className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl sm:h-14 sm:w-14 ${
-            spotlight
-              ? 'bg-amber-500/35 text-amber-50'
-              : 'bg-white/[0.08] text-yellow-400'
-          }`}
-        >
-          <span className="text-[9px] font-semibold uppercase leading-none tracking-wider text-white/55 sm:text-[10px]">
-            Tbl
-          </span>
-          <span
-            className={`font-black tabular-nums leading-none ${spotlight ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}
-          >
-            {tn}
-          </span>
-        </div>
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <span className="text-base font-bold leading-snug text-white/95 sm:text-lg">Table {tn}</span>
-            <span
-              className={`shrink-0 rounded-md px-2 py-1 text-[10px] sm:text-xs ${mosaicPhaseCornerTypography(row)} ${mosaicPhaseAccent(row)}`}
-            >
-              {mosaicPhaseLabel(row)}
-            </span>
+        <div className="flex shrink-0 items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/58 sm:text-xs">
+              Table
+            </div>
+            <div className="-mt-0.5 text-3xl font-black tabular-nums leading-none text-yellow-400 sm:text-4xl">
+              {tn}
+            </div>
           </div>
-          <p className="text-sm leading-snug text-white/75 sm:text-base">
-            <span className="font-mono font-semibold tabular-nums text-casino-emerald">
-              {seats} / {VENUE_SEAT_SLOTS} seated
-            </span>
-            {openSeats > 0 ? (
-              <span className="text-white/45"> · {openSeats} seat{openSeats !== 1 ? 's' : ''} open</span>
-            ) : (
-              <span className="text-white/45"> · full</span>
-            )}
-          </p>
-          <p className="text-sm text-white/80 sm:text-base">
-            <span className="text-white/55">Local pot</span>{' '}
-            <span className="font-mono font-semibold tabular-nums text-yellow-200">${pot.toLocaleString()}</span>
-            <span className="mx-1.5 text-white/30 sm:mx-2">·</span>
-            <span className="text-white/55">Chips on table</span>{' '}
-            <span className="font-mono font-semibold tabular-nums text-white/90">
-              {formatVenueBankroll(totalChips)}
-            </span>
-          </p>
-          {rosterChips != null ? (
-            <div className="mt-1.5 text-white/92">{rosterChips}</div>
-          ) : (
-            <p className="text-xs leading-snug text-white/50 sm:text-sm">No players at this table yet</p>
-          )}
+          <span
+            className={`max-w-[min(9rem,46%)] shrink-0 rounded-md px-2 py-1 text-[10px] font-semibold leading-tight sm:max-w-[10rem] sm:px-2.5 sm:py-1.5 sm:text-xs ${mosaicPhaseCornerTypography(row)} ${mosaicPhaseAccent(row)}`}
+          >
+            {mosaicPhaseLabel(row)}
+          </span>
         </div>
-      </div>
+
+        <div className="relative z-[1] flex shrink-0 justify-center overflow-visible">
+          <SeatRingWithLabels
+            seatedCount={seats}
+            seatNames={seatNames}
+            seatBankrolls={seatBankrolls}
+            blindSeats={blindSeatSnapshot}
+            seatFolded={seatFolded}
+            actingSeatIndex={actingSeat}
+            showSeatBettingActions={showSeatBettingActions}
+            seatLastBettingAction={seatLastBettingAction}
+            actingCallAmount={row.actingCallAmount}
+          />
+        </div>
+
+        <dl className="min-w-0 space-y-1 border-t border-white/10 pt-2 text-[0.6875rem] leading-snug text-white/88 sm:text-sm">
+          <div className="flex justify-between gap-2">
+            <dt className="font-semibold text-white/65">Occupied</dt>
+            <dd className="font-mono font-bold tabular-nums text-casino-emerald">
+              {seats} / 8
+            </dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt className="font-semibold text-white/65">Pot</dt>
+            <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
+          </div>
+          {mosaicPotSubtitle != null ? (
+            <div className="rounded-md border border-amber-400/25 bg-black/40 px-1.5 py-1">
+              <p className="min-w-0 text-center text-[0.6875rem] font-bold leading-snug text-amber-100 sm:text-xs">
+                {mosaicPotSubtitle}
+              </p>
+            </div>
+          ) : null}
+          <div className="flex justify-between gap-2">
+            <dt className="font-semibold text-white/65">Chips on table</dt>
+            <dd className="font-mono font-bold tabular-nums text-white/90">{formatVenueBankroll(totalChips)}</dd>
+          </div>
+        </dl>
+      </article>
     )
   }
 
@@ -932,7 +905,7 @@ function VenueMosaicTableCard({
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         style={{ zoom: VENUE_SEATING_SPOTLIGHT_HERO_ZOOM }}
-        className="mx-auto flex w-full max-w-full shrink-0 flex-col overflow-visible rounded-2xl border-2 border-amber-500/45 bg-black/60 px-3 pb-3 pt-1 shadow-2xl backdrop-blur-md ring-2 ring-amber-400/20 sm:px-4 sm:pb-4 sm:pt-1.5 md:px-5"
+        className="mx-auto flex w-full max-w-full shrink-0 flex-col overflow-visible rounded-2xl border-2 border-yellow-400/55 bg-black/70 px-3 pb-3 pt-1 shadow-[0_0_60px_rgba(0,0,0,0.55)] backdrop-blur-md ring-2 ring-amber-300/40 ring-offset-4 ring-offset-slate-950 sm:px-4 sm:pb-4 sm:pt-1.5 md:px-6"
       >
         <div className="-mt-1 shrink-0 pb-px">
           <div className="flex items-start justify-between gap-3">
@@ -1117,30 +1090,6 @@ function rosterRowsFromTiles(
     return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
   })
   return out
-}
-
-/** Sorted player chips line for mosaic crawl tiles (seat order preserved on felts elsewhere). */
-function crawlTableChipRoster(
-  seatNames: string[],
-  seatBankrolls: number[],
-  tablePhase: string
-): { name: string; bankroll: number }[] {
-  const pairs: { name: string; bankroll: number }[] = []
-  for (let i = 0; i < VENUE_SEAT_SLOTS; i++) {
-    const nm = seatNames[i]?.trim()
-    if (nm) pairs.push({ name: nm, bankroll: seatBankrolls[i] ?? 0 })
-  }
-  if (tablePhase === 'lobby') {
-    pairs.sort((a, b) => comparePlayersByFirstNameThenFullName(a, b))
-  } else {
-    pairs.sort((a, b) => {
-      if (b.bankroll !== a.bankroll) return b.bankroll - a.bankroll
-      const c = comparePlayersByFirstNameThenFullName(a, b)
-      if (c !== 0) return c
-      return 0
-    })
-  }
-  return pairs
 }
 
 function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) {
