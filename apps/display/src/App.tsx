@@ -1,4 +1,5 @@
-﻿import { useEffect, useState, useCallback, useRef } from 'react'
+﻿import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react'
+import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
@@ -45,12 +46,43 @@ function displayTableLabel(tableId: string): string {
   return tableId === LOBBY_TABLE_ID ? 'Lobby' : `Table ${tableId}`
 }
 
+function useObservedClientSize(ref: RefObject<HTMLElement | null>): { w: number; h: number } {
+  const [s, setS] = useState({ w: 0, h: 0 })
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const publish = () =>
+      setS({ w: Math.max(1, el.clientWidth), h: Math.max(1, el.clientHeight) })
+    publish()
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', publish)
+      return () => window.removeEventListener('resize', publish)
+    }
+    const ro = new ResizeObserver(publish)
+    ro.observe(el)
+    window.addEventListener('resize', publish)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', publish)
+    }
+  }, [ref])
+  return s
+}
+
 type DisplayTableLiveProps = {
   /** Target felt 1–8 (or alphanumeric single-table URL) — drives demo scaffolding when socket state has not arrived. */
   feltTableHint: string
+  /** `embedded` docks overlays inside the mounting container (venue-wall hero/single-TV card). */
+  variant?: 'fullscreen' | 'embedded'
+  /** When the parent already renders the headline question/timer (venue wall header). */
+  hideQuestionBanner?: boolean
 }
 
-function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
+function DisplayTableLive({
+  feltTableHint,
+  variant = 'fullscreen',
+  hideQuestionBanner = false,
+}: DisplayTableLiveProps) {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [isDealing, setIsDealing] = useState(false)
@@ -392,6 +424,11 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
     demoGameState.round?.answerDeadline,
   ])
 
+  const shellRef = useRef<HTMLDivElement>(null)
+  const gamePlaneRef = useRef<HTMLDivElement>(null)
+  const shellSize = useObservedClientSize(shellRef)
+  const gamePlaneSize = useObservedClientSize(gamePlaneRef)
+
   if (!displayGameState) {
     return (
       <div className="min-h-screen bg-casino-gradient flex items-center justify-center">
@@ -489,8 +526,30 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
     }
   }
 
+  const gwFallback = typeof window !== 'undefined' ? window.innerWidth : 1280
+  const ghFallback = typeof window !== 'undefined' ? window.innerHeight : 720
+  /** Game plane px — animations are authored against this rectangle. */
+  const gw = gamePlaneSize.w > 0 ? gamePlaneSize.w : gwFallback
+  const gh = gamePlaneSize.h > 0 ? gamePlaneSize.h : ghFallback
+  /** Shell px — overlays (chips/toasts) anchored to layout root (viewport in fullscreen mode). */
+  const sw = shellSize.w > 0 ? shellSize.w : gwFallback
+  const sh = shellSize.h > 0 ? shellSize.h : ghFallback
+
+  const isEmbedded = variant === 'embedded'
+  /** Viewport overlays in fullscreen mode; hero-clipped overlays when embedded. */
+  const dockCls = isEmbedded ? 'absolute' : 'fixed'
+
+  const showQuestionStrip = Boolean(displayGameState.round.question) && !hideQuestionBanner
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+    <div
+      ref={shellRef}
+      className={
+        isEmbedded
+          ? 'relative flex h-full min-h-0 min-w-0 w-full flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
+          : 'relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
+      }
+    >
       {/* Casino Floor Background */}
       <div className="absolute inset-0">
         {/* Base casino floor */}
@@ -535,7 +594,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            className="fixed top-4 right-4 z-50 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-5 text-lg text-white"
+            className={`${dockCls} top-4 right-4 z-50 bg-black/80 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-5 text-lg text-white`}
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
@@ -548,28 +607,40 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
 
 
 
-      <div className="relative z-10 p-2">
-        {/* Header */}
-        <motion.div 
-          className="text-center mb-1"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1 className="text-5xl font-black text-yellow-400 mb-1 flex items-center justify-center gap-2 md:text-6xl">
-            🎰 <PokerChip size="lg" className="mx-1" />
-            {'Quizz\u2019em'}
-          </h1>
-          <div className="text-xl text-white md:text-2xl">
-            Phase: <span className="text-yellow-400 font-bold">{displayGameState.phase}</span>
-            {!gameState && <span className="text-red-400 ml-2">(DEMO MODE - 8 Players)</span>}
-          </div>
-        </motion.div>
+      <div
+        className={
+          isEmbedded
+            ? 'relative z-10 flex min-h-0 min-w-0 flex-1 flex-col p-2'
+            : 'relative z-10 p-2'
+        }
+      >
+        {!isEmbedded ? (
+          <motion.div
+            className="mb-1 text-center"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="mb-1 flex items-center justify-center gap-2 text-5xl font-black text-yellow-400 md:text-6xl">
+              🎰 <PokerChip size="lg" className="mx-1" />
+              {'Quizz\u2019em'}
+            </h1>
+            <div className="text-xl text-white md:text-2xl">
+              Phase:{' '}
+              <span className="font-bold text-yellow-400">{displayGameState.phase}</span>
+              {!gameState && <span className="ml-2 text-red-400">(DEMO MODE - 8 Players)</span>}
+            </div>
+          </motion.div>
+        ) : null}
 
         {/* Question + answering timer — readable from the whole room */}
-        {displayGameState.round.question && (
+        {showQuestionStrip ? (
           <motion.div
-            className="fixed top-28 left-0 right-0 z-40 px-3 sm:px-6"
+            className={
+              isEmbedded
+                ? 'relative z-40 mb-2 shrink-0 px-1 sm:px-2'
+                : 'fixed top-28 left-0 right-0 z-40 px-3 sm:px-6'
+            }
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -578,7 +649,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
               <div className="min-w-0 flex-1 text-center">
                 <div className="mb-2 text-2xl font-semibold text-white md:text-3xl">🎯 Current question</div>
                 <div className="text-balance text-4xl font-bold leading-snug text-yellow-400 sm:text-5xl md:text-6xl">
-                  {displayGameState.round.question.text}
+                  {displayGameState.round.question!.text}
                 </div>
               </div>
 
@@ -613,13 +684,18 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
               ) : null}
             </div>
           </motion.div>
-        )}
+        ) : null}
 
         {/* Main Game Area */}
         <div
-          className={`relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
-            displayGameState.round.question ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
-          }`}
+          ref={gamePlaneRef}
+          className={
+            isEmbedded
+              ? 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1'
+              : `relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
+                  showQuestionStrip ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
+                }`
+          }
         >
           
 
@@ -684,8 +760,8 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                     const targetY = parseFloat(playerPosition.y.replace('calc(50% + ', '').replace('px)', ''))
                     
                     // Calculate center relative to container
-                    const containerWidth = window.innerWidth
-                    const viewportHeight = window.innerHeight
+                    const containerWidth = gw
+                    const viewportHeight = gh
                     const centerX = containerWidth / 2
                     const centerY = viewportHeight / 2
                     
@@ -719,7 +795,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                     // Cards are centered horizontally (left-1/2 transform -translate-x-1/2)
                     // Add small offset to move cards slightly right and up
                                           const horizontalOffset = 16 // px adjustment to move right (decreased by 2px)
-                    const verticalOffset = 9 - (window.innerHeight * 0.08) // px adjustment to move down by 2px (from +7 to +9)
+                    const verticalOffset = 9 - (gh * 0.08) // px adjustment — scale with measured game plane height
                     let cardX
                     
                     if (cardIndex === 0) {
@@ -741,10 +817,8 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                   const endpoint = calculateCardEndpoint(dealingCard.playerIndex, dealingCard.cardIndex)
                   
                   // Calculate exact center for animation start (same as deck position)
-                  const centerX = (window.innerWidth / 2) - 50 // Match deck position
-                  const centerY =
-                    (window.innerHeight / 2 + 100 + displayTableLiftPx) -
-                    window.innerHeight * 0.1 // Match deck position, move up 10%
+                  const centerX = (gw / 2) - 50 // Match deck position
+                  const centerY = (gh / 2 + 100 + displayTableLiftPx) - gh * 0.1 // Match deck position, move up 10%
                   
                   const finalX = endpoint.x
                   const finalY = endpoint.y
@@ -851,14 +925,9 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                 {dealingCommunityCards.map((dealingCard) => {
                   // Calculate exact endpoint for community card positioning (relative to table center)
                   const calculateCommunityCardEndpoint = (cardIndex: number) => {
-                    // Community cards are positioned at the center of the table (accounting for 5vh margin, then moved up 12% and right 2%, then fine-tuned)
-                    const tableCenterX = (window.innerWidth / 2) + (window.innerWidth * 0.02) - 18 // Move right 2%, then left 18px (1px more left)
-                    const tableCenterY =
-                      (window.innerHeight / 2) +
-                      (window.innerHeight * 0.05) -
-                      window.innerHeight * 0.12 +
-                      3 +
-                      displayTableLiftPx // match static felt lift
+                    // Community cards are positioned at the center of the measured game plane (original layout used viewport).
+                    const tableCenterX = (gw / 2) + (gw * 0.02) - 18
+                    const tableCenterY = (gh / 2) + (gh * 0.05) - gh * 0.12 + 3 + displayTableLiftPx
                     
                                       // Calculate position for each community card in a horizontal row
                   const cardWidth = 64 // small card width (64px)
@@ -876,8 +945,8 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                   const { x: finalX, y: finalY, scale: finalScale } = calculateCommunityCardEndpoint(dealingCard.cardIndex)
                   
                   // Calculate center for animation start (same as deck position)
-                  const centerX = (window.innerWidth / 2) - 50 // Match deck position
-                  const centerY = window.innerHeight / 2 + 100 + displayTableLiftPx // Match deck position (no margin added)
+                  const centerX = (gw / 2) - 50 // Match deck position
+                  const centerY = gh / 2 + 100 + displayTableLiftPx
                   
                   return (
                     <motion.div
@@ -1086,10 +1155,10 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
                       key={chip.id}
                       className="absolute"
                       initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
-                      animate={{ 
-                        x: (window.innerWidth / 2) - (window.innerWidth / 2),
-                        y: (window.innerHeight / 2 - 144) - (window.innerHeight / 2 - 144),
-                        opacity: 1
+                      animate={{
+                        x: (gw / 2) - (gw / 2),
+                        y: (gh / 2 - 144) - (gh / 2 - 144),
+                        opacity: 1,
                       }}
                     >
                       {/* We animate via a separate layer positioned globally below */}
@@ -1152,7 +1221,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
 
       {/* Showdown Overlay */}
       {displayGameState.phase === 'showdown' && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+        <div className={`${dockCls} inset-0 z-[60] flex items-center justify-center`}>
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
           <motion.div
             className="relative bg-black/90 border-2 border-yellow-500/60 rounded-2xl shadow-2xl max-w-4xl w-[90%] p-10 text-lg text-white"
@@ -1275,14 +1344,14 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
 
       {/* Chips flying layer (pot -> winner) */}
       {displayGameState.phase === 'showdown' && showdownWinnerId && chipFlights.length > 0 && (
-        <div className="fixed inset-0 z-[55] pointer-events-none">
+        <div className={`${dockCls} inset-0 z-[55] pointer-events-none`}>
           {(() => {
-            const potX = window.innerWidth / 2
-            const potY = window.innerHeight / 2 - 144 + displayTableLiftPx
-            const idx = displayGameState.players.findIndex(p => p.id === showdownWinnerId)
+            const potX = sw / 2
+            const potY = sh / 2 - 144 + displayTableLiftPx
+            const idx = displayGameState.players.findIndex((p) => p.id === showdownWinnerId)
             const seat = getPlayerPosition(Math.max(0, idx), displayGameState.players.length)
-            const seatX = window.innerWidth / 2 + parseFloat(seat.x.replace('calc(50% + ', '').replace('px - 55px)', '')) + 55
-            const seatY = window.innerHeight / 2 + parseFloat(seat.y.replace('calc(50% + ', '').replace('px - 60px)', '')) + 10
+            const seatX = sw / 2 + parseFloat(seat.x.replace('calc(50% + ', '').replace('px - 55px)', '')) + 55
+            const seatY = sh / 2 + parseFloat(seat.y.replace('calc(50% + ', '').replace('px - 60px)', '')) + 10
             return chipFlights.map(chip => (
               <motion.div
                 key={chip.id}
@@ -1304,7 +1373,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
       {/* Spotlight sweep across table during showdown */}
       {displayGameState.phase === 'showdown' && (
         <motion.div
-          className="fixed inset-y-0 left-0 right-0 z-[52] pointer-events-none"
+          className={`${dockCls} inset-y-0 left-0 right-0 z-[52] pointer-events-none`}
           initial={{ x: '-60vw', opacity: 0.0 }}
           animate={{ x: '60vw', opacity: [0.0, 0.65, 0.0] }}
           transition={{ duration: 2.8, ease: 'easeInOut' }}
@@ -1316,7 +1385,7 @@ function DisplayTableLive({ feltTableHint }: DisplayTableLiveProps) {
       )}
 
       {/* Game Info Panel - Docked to bottom of screen */}
-      <div className="fixed bottom-0 left-0 right-0 z-30">
+      <div className={`${dockCls} bottom-0 left-0 right-0 z-30`}>
         <div className="max-w-4xl mx-auto px-4">
           <div className="bg-black/90 backdrop-blur-md border border-yellow-600 rounded-t-lg px-4 py-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-center">

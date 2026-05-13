@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
-import {
-  DISPLAY_PREVIEW_BANKROLLS,
-  DISPLAY_PREVIEW_SYNCED_PHASE,
-  DISPLAY_PREVIEW_TABLES,
-  displayActingSeatIndex,
-  displayBlindSeatIndices,
-  rehearsalSeatDisplayName,
-} from '@qhe/core'
+import { displayActingSeatIndex } from '@qhe/core'
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot, SeatBettingAction } from '@qhe/net'
 
 import seatChipStackImg from './assets/seat-chip-stack.png'
+import DisplayTableLive from './App.tsx'
+import type { VenueFeaturedWatch } from './useVenueWallFeaturedWatch.ts'
+import { buildVenueWallTileRows, SEATING_SPOTLIGHT_CYCLE_SEC, VENUE_WALL_SEAT_SLOTS } from './venueWallModel'
 
-const VENUE_SEAT_SLOTS = 8
+const VENUE_SEAT_SLOTS = VENUE_WALL_SEAT_SLOTS
 
 /** Stacking inside each mini felt ({@link SeatRingWithLabels}): name + bankroll beside name always top; then center hint, badges, pile, rim. */
 const SEAT_LAYER_DOT = 'z-[20]'
@@ -30,10 +26,6 @@ const VENUE_CRAWL_PL_CLASS = 'pl-80 sm:pl-[22rem] lg:pl-96'
 const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
-const SEATING_SPOTLIGHT_CYCLE_SEC = 10
-
-/** Viewport scale for spotlight hero card — larger focal read for auditorium sightlines */
-const VENUE_SEATING_SPOTLIGHT_HERO_ZOOM = 0.82
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false)
@@ -788,17 +780,12 @@ function phaseAccent(ph: string) {
   return 'text-white/85'
 }
 
-type VenueMosaicTileMode = 'hero' | 'crawl'
-
-function VenueMosaicTableCard({
-  row,
-  mode,
-  isSpotlightThumb,
-}: {
+type VenueMosaicTableCardProps = {
   row: DisplayVenueTileSnapshot
-  mode: VenueMosaicTileMode
   isSpotlightThumb?: boolean
-}) {
+}
+
+function VenueMosaicTableCard({ row, isSpotlightThumb }: VenueMosaicTableCardProps) {
   const tn = row.tableNum
   const seats = row.seated
   const pot = row.pot
@@ -816,14 +803,13 @@ function VenueMosaicTableCard({
     actingCallAmount: row.actingCallAmount,
   })
 
-  if (mode === 'crawl') {
-    const spotlight = isSpotlightThumb === true
-    const totalChips = totalChipsFromSeats(seatNames, seatBankrolls)
-    const cardShell = spotlight
-      ? 'rounded-xl border-2 border-amber-400/70 bg-black/65 shadow-[0_0_32px_rgba(251,191,36,0.22)] ring-2 ring-amber-400/35'
-      : 'rounded-xl border-2 border-yellow-700/40 bg-black/55 shadow-lg'
+  const spotlight = isSpotlightThumb === true
+  const totalChips = totalChipsFromSeats(seatNames, seatBankrolls)
+  const cardShell = spotlight
+    ? 'rounded-xl border-2 border-amber-400/70 bg-black/65 shadow-[0_0_32px_rgba(251,191,36,0.22)] ring-2 ring-amber-400/35'
+    : 'rounded-xl border-2 border-yellow-700/40 bg-black/55 shadow-lg'
 
-    return (
+  return (
       <article
         data-spotlight-tile={tn}
         role="group"
@@ -885,88 +871,7 @@ function VenueMosaicTableCard({
           </div>
         </dl>
       </article>
-    )
-  }
-
-  if (mode === 'hero') {
-    const totalChips = totalChipsFromSeats(seatNames, seatBankrolls)
-
-    return (
-      <motion.article
-        data-spotlight-tile={tn}
-        role="region"
-        aria-label={`Table ${tn}, seating`}
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        style={{ zoom: VENUE_SEATING_SPOTLIGHT_HERO_ZOOM }}
-        className="mx-auto flex w-full max-w-full shrink-0 flex-col overflow-visible rounded-2xl border-2 border-yellow-400/55 bg-black/70 px-3 pb-3 pt-1 shadow-[0_0_60px_rgba(0,0,0,0.55)] backdrop-blur-md ring-2 ring-amber-300/40 ring-offset-4 ring-offset-slate-950 sm:px-4 sm:pb-4 sm:pt-1.5 md:px-6"
-      >
-        <div className="-mt-1 shrink-0 pb-px">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-base font-semibold uppercase tracking-[0.14em] text-white/65 sm:text-lg">
-                Table
-              </div>
-              <div className="-mt-1 text-[2.8925rem] font-black tabular-nums leading-[0.88] text-yellow-400 sm:text-[3.415rem] md:text-[3.8925rem] lg:text-[5.655rem]">
-                {tn}
-              </div>
-            </div>
-            <span
-              className={`${
-                venueTileBettingPausedCenter(row)
-                  ? 'max-w-[min(15rem,56%)] sm:max-w-[17rem]'
-                  : 'max-w-[min(11rem,46%)] sm:max-w-[12rem]'
-              } shrink-0 rounded-lg px-2.5 py-1.5 text-sm sm:rounded-xl sm:px-3 sm:py-2 sm:text-base md:text-lg ${mosaicPhaseCornerTypography(row)} ${mosaicPhaseAccent(row)}`}
-            >
-              {mosaicPhaseLabel(row)}
-            </span>
-          </div>
-        </div>
-
-        <div className="-translate-y-3 flex shrink-0 flex-col items-center justify-start overflow-visible px-1 pb-px pt-0 sm:-translate-y-4 md:-translate-y-5">
-          <SeatRingWithLabels
-            seatedCount={seats}
-            seatNames={seatNames}
-            seatBankrolls={seatBankrolls}
-            size="lg"
-            feltSeatStacks
-            blindSeats={blindSeatSnapshot}
-            seatFolded={seatFolded}
-            actingSeatIndex={actingSeat}
-            showSeatBettingActions={showSeatBettingActions}
-            seatLastBettingAction={seatLastBettingAction}
-            actingCallAmount={row.actingCallAmount}
-          />
-        </div>
-
-        <dl className="relative z-[4] mt-1.5 shrink-0 space-y-1 border-t border-white/10 bg-black/55 pt-2 text-[1.125rem] leading-snug backdrop-blur-sm sm:mt-2 sm:space-y-1.5 sm:pt-2.5 sm:text-xl md:text-2xl lg:text-[2.08rem]">
-          <div className="flex justify-between gap-3">
-            <dt className="font-semibold text-white/70">Occupied seats</dt>
-            <dd className="font-mono font-bold tabular-nums text-casino-emerald">
-              {seats} / 8
-            </dd>
-          </div>
-          <div className="flex justify-between gap-3">
-            <dt className="font-semibold text-white/70">Pot (local)</dt>
-            <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
-          </div>
-          {mosaicPotSubtitle != null ? (
-            <div className="rounded-lg border border-amber-400/30 bg-black/35 px-2 py-1.5 sm:px-2.5 sm:py-2">
-              <p className="min-w-0 break-words text-center text-[0.98rem] font-bold leading-snug text-amber-100 shadow-black/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.85)] sm:text-[1.12rem] md:text-[1.28rem] lg:text-[1.38rem]">
-                {mosaicPotSubtitle}
-              </p>
-            </div>
-          ) : null}
-          <div className="flex justify-between gap-3">
-            <dt className="font-semibold text-white/70">Chips on table</dt>
-            <dd className="font-mono font-bold tabular-nums text-white/90">{formatVenueBankroll(totalChips)}</dd>
-          </div>
-        </dl>
-      </motion.article>
-    )
-  }
+  )
 }
 
 /** Latin-first sort key: leading word of the display name (first name). */
@@ -1135,7 +1040,6 @@ function VenueAllTablesCrawl({
     <VenueMosaicTableCard
       key={key}
       row={row}
-      mode="crawl"
       isSpotlightThumb={row.tableNum === spotlightTableNum}
     />
   )
@@ -1186,58 +1090,27 @@ function VenueAllTablesCrawl({
   )
 }
 
-/**
- * When the lobby tour timer is off, the center column follows one “featured” table by phase
- * (wagering beats answering beats question, …); ties break toward the lower table number.
- */
-function floorFeaturedTileIndex(tileRows: DisplayVenueTileSnapshot[]): number {
-  if (tileRows.length === 0) return 0
-  const rank: Record<string, number> = {
-    betting: 0,
-    answering: 1,
-    question: 2,
-    showdown: 3,
-    reveal: 4,
-    payout: 5,
-    intermission: 6,
-    lobby: 99,
-  }
-  let bestI = 0
-  let bestRank = 999
-  let bestTn = 999
-  for (let i = 0; i < tileRows.length; i++) {
-    const t = tileRows[i]!
-    const r = rank[t.phase] ?? 50
-    if (r < bestRank || (r === bestRank && t.tableNum < bestTn)) {
-      bestRank = r
-      bestTn = t.tableNum
-      bestI = i
-    }
-  }
-  return bestI
-}
-
 type VenueEightTablesPreviewProps = {
   /** null until first `displayVenueSnapshot` from socket */
   wall: DisplayVenueWallSnapshot | null
   /**
-   * Skip Framer entrance on header / headline / tiles (mosaic briefly unmounts when
-   * fullscreen felt covers it — replaying fades looks like a glitch).
+   * Skip Framer entrance on header / headline (brief unmounts across layout transitions should not replay fades).
    */
   skipMountIntro?: boolean
+  featuredWatch: VenueFeaturedWatch
 }
 
 /**
- * Venue overview wall: center **featured table** (large mini-felt + stats) plus fixed **All tables** crawl.
- * Before play (every live tile still **`lobby`**) or rehearsal preview without a snapshot, tables **rotate** on a timer.
- * During mixed phases, rotation stops and the hero **tracks the hottest phase** deterministically until the snapshot changes shape.
+ * Venue wall shell: venue headline plus **embedded** live felt (`DisplayTableLive`), crawl strips, and roster chrome.
+ * Hero selection is driven by **`useVenueWallFeaturedWatch`** so the UI matches **`displayFocusTable`** pairing.
  */
-export default function VenueEightTablesPreview({ wall, skipMountIntro = false }: VenueEightTablesPreviewProps) {
+export default function VenueEightTablesPreview({
+  wall,
+  skipMountIntro = false,
+  featuredWatch,
+}: VenueEightTablesPreviewProps) {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
-  const [seatingHeroIdx, setSeatingHeroIdx] = useState(0)
-  const [seatingCycleTick, setSeatingCycleTick] = useState(0)
   const prefersReducedMotion = usePrefersReducedMotion()
-  const seatingCycleStartRef = useRef(0)
 
   const headlineQuestionText = wall?.headlineQuestionText ?? null
   const answerDeadlineMs = wall?.answerDeadlineMs ?? null
@@ -1254,83 +1127,22 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
     return () => window.clearInterval(id)
   }, [answerDeadlineMs])
 
-  const tileRows: DisplayVenueTileSnapshot[] =
-    wall?.tiles != null && wall.tiles.length > 0
-      ? [...wall.tiles].sort((a, b) => a.tableNum - b.tableNum)
-      : wall?.tiles != null && wall.tiles.length === 0
-        ? []
-        : DISPLAY_PREVIEW_TABLES.map((snap, i) => {
-            const seated = snap.seated
-            const base = i * VENUE_SEAT_SLOTS
-            const seatNames = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
-              j < seated ? rehearsalSeatDisplayName(base + j) : ''
-            )
-            const seatBankrolls = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
-              j < seated
-                ? DISPLAY_PREVIEW_BANKROLLS[j % DISPLAY_PREVIEW_BANKROLLS.length]!
-                : 0
-            )
-            return {
-              tableNum: i + 1,
-              seated,
-              pot: snap.pot,
-              phase: DISPLAY_PREVIEW_SYNCED_PHASE,
-              seatNames,
-              seatBankrolls,
-              ...displayBlindSeatIndices(seated, i % Math.max(seated, 1)),
-            }
-          })
+  const tileRows = useMemo(() => buildVenueWallTileRows(wall), [wall])
 
-  const hasLiveWall =
-    wall != null && wall.tiles != null && wall.tiles.length > 0
+  const hasLiveWall = wall != null && wall.tiles != null && wall.tiles.length > 0
   const showHeadline =
     hasLiveWall && (headlineQuestionText != null || answerDeadlineMs != null)
 
-  const allTablesInLobby =
-    tileRows.length > 0 && tileRows.every((t) => t.phase === 'lobby')
-  /** Pre-start: all felts still in lobby, or rehearsal preview without a live snapshot. */
-  const showSeatingSpotlightCycle =
-    tileRows.length > 0 && (hasLiveWall ? allTablesInLobby : true)
+  const seatingHeroRow = useMemo(() => {
+    const n = featuredWatch.featuredTableNum
+    if (tileRows.length === 0) return undefined
+    if (n == null) return tileRows[0]
+    return tileRows.find((t) => t.tableNum === n) ?? tileRows[0]
+  }, [tileRows, featuredWatch.featuredTableNum])
 
-  const tilePhaseFingerprint = tileRows.map((t) => `${t.tableNum}:${t.phase}`).join('|')
-  const floorFeaturedIdx = useMemo(
-    () => floorFeaturedTileIndex(tileRows),
-    [tilePhaseFingerprint]
-  )
-
-  /** Index into tileRows driving the hero + crawl highlight — driven by lobby tour or hottest felt. */
-  const spotlightTileIdx = showSeatingSpotlightCycle ? seatingHeroIdx : floorFeaturedIdx
-  const seatingHeroRow = tileRows[spotlightTileIdx] ?? tileRows[0]
-
-  useEffect(() => {
-    setSeatingHeroIdx((i) => Math.min(i, Math.max(0, tileRows.length - 1)))
-  }, [tileRows.length])
-
-  useEffect(() => {
-    if (!showSeatingSpotlightCycle || prefersReducedMotion || tileRows.length <= 1)
-      return undefined
-    const id = window.setInterval(() => {
-      setSeatingHeroIdx((i) => (i + 1) % tileRows.length)
-    }, SEATING_SPOTLIGHT_CYCLE_SEC * 1000)
-    return () => window.clearInterval(id)
-  }, [showSeatingSpotlightCycle, prefersReducedMotion, tileRows.length])
-
-  useLayoutEffect(() => {
-    seatingCycleStartRef.current = Date.now()
-  }, [seatingHeroIdx])
-
-  useEffect(() => {
-    if (!showSeatingSpotlightCycle || prefersReducedMotion || tileRows.length <= 1)
-      return undefined
-    const id = window.setInterval(() => setSeatingCycleTick((n) => n + 1), 50)
-    return () => window.clearInterval(id)
-  }, [showSeatingSpotlightCycle, prefersReducedMotion, tileRows.length, seatingHeroIdx])
-
-  const seatingCycleProgress = useMemo(() => {
-    if (prefersReducedMotion || tileRows.length <= 1) return 0
-    const elapsed = Date.now() - seatingCycleStartRef.current
-    return Math.min(1, elapsed / (SEATING_SPOTLIGHT_CYCLE_SEC * 1000))
-  }, [seatingCycleTick, seatingHeroIdx, prefersReducedMotion, tileRows.length])
+  const showRotatingTour = featuredWatch.showRotatingTour
+  const seatingCycleProgress = featuredWatch.seatingCycleProgress
+  const seatingTourIndex = featuredWatch.seatingTourIndex
 
   const showRoster = rosterRowsFromTiles(tileRows).length > 0
 
@@ -1428,35 +1240,34 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
         ) : seatingHeroRow ? (
           <section
             aria-label={
-              showSeatingSpotlightCycle ? 'Seating spotlight tour' : 'Venue floor featured table'
+              showRotatingTour ? 'Seating spotlight tour; live felt in focus' : 'Venue floor featured table'
             }
-            className="mx-auto flex max-h-[calc(100dvh-10rem)] min-h-0 w-full max-w-[min(1024px,min(96dvw,100%))] flex-col gap-3 overflow-visible sm:gap-4"
+            className="mx-auto flex w-full max-w-[min(1120px,min(96dvw,100%))] flex-col gap-3 overflow-visible sm:gap-4"
           >
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Featured table {seatingHeroRow.tableNum}
             </p>
-            <div className="flex w-full min-w-0 shrink-0 justify-center overflow-visible px-3 py-2 sm:px-4 sm:py-3">
-              <AnimatePresence mode="wait">
-                <VenueMosaicTableCard
-                  key={seatingHeroRow.tableNum}
-                  row={seatingHeroRow}
-                  mode="hero"
-                />
-              </AnimatePresence>
+            <div className="flex h-[min(78dvh,860px)] min-h-[min(380px,42dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-2xl border border-yellow-600/35 bg-black/45 shadow-xl">
+              <DisplayTableLive
+                key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
+                feltTableHint={String(seatingHeroRow.tableNum)}
+                variant="embedded"
+                hideQuestionBanner={showHeadline}
+              />
             </div>
             <div className="shrink-0 space-y-3 sm:space-y-4">
               <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
-                {showSeatingSpotlightCycle ? (
+                {showRotatingTour ? (
                   prefersReducedMotion ? (
                     `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
                   ) : (
-                    `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length}`
+                    `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingTourIndex + 1} of ${tileRows.length}`
                   )
                 ) : (
-                  `Featured table · Table ${seatingHeroRow.tableNum} (by live phase)`
+                  `Featured table · Table ${seatingHeroRow.tableNum}`
                 )}
               </p>
-              {showSeatingSpotlightCycle && !prefersReducedMotion && tileRows.length > 1 ? (
+              {showRotatingTour && !prefersReducedMotion && tileRows.length > 1 ? (
                 <div className="mx-auto max-w-3xl">
                   <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
                     <span className="font-semibold uppercase tracking-wider text-white/45">
