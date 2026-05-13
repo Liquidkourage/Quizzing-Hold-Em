@@ -80,6 +80,23 @@ export type HostVenueGameplayHintsPayload = {
   livelyTableNums: number[]
 }
 
+/** Host-only: one row per felt 1–8 for lockstep alignment (updates with venue wall refresh). */
+export type HostVenueFeltBeatRow = {
+  tableNum: number
+  /** False when no `VENUE:N` session exists yet. */
+  active: boolean
+  seated: number
+  /** Core `phase`, or `inactive` when no session. */
+  phase: string
+  street: string
+  clock: string
+  answerDeadlineMs: number | null
+}
+
+export type HostVenueFeltBeatPayload = {
+  felts: HostVenueFeltBeatRow[]
+}
+
 export const ClientHello = z.object({
   role: ClientRole,
   name: z.string(),
@@ -188,6 +205,8 @@ export interface ServerToClientEvents {
   hostLibrary: (snapshot: HostLibrarySnapshot) => void
   /** Host cue: felts worth checking for public spotlight (cheap heuristic; updates with venue wall). */
   hostVenueGameplayHints: (payload: HostVenueGameplayHintsPayload) => void
+  /** Host cue: structured 1–8 beat rows (updates with venue wall). */
+  hostVenueFeltBeat: (payload: HostVenueFeltBeatPayload) => void
   /** Venue displays (DISPLAY:{venue}); host drives via displaySetLayout */
   displayLayout: (layout: DisplayLayoutPayload) => void
   /** Venue wall mosaic + current question / answer timer */

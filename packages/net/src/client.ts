@@ -9,6 +9,7 @@ import type {
   DisplayLayoutPayload,
   DisplayVenueWallSnapshot,
   HostVenueGameplayHintsPayload,
+  HostVenueFeltBeatPayload,
 } from './index'
 
 let socket: Socket | null = null
@@ -192,6 +193,15 @@ export function onHostVenueGameplayHints(callback: (payload: HostVenueGameplayHi
   socket.on('hostVenueGameplayHints', callback)
   return () => {
     if (socket) socket.off('hostVenueGameplayHints', callback)
+  }
+}
+
+export function onHostVenueFeltBeat(callback: (payload: HostVenueFeltBeatPayload) => void) {
+  if (!socket) return () => {}
+
+  socket.on('hostVenueFeltBeat', callback)
+  return () => {
+    if (socket) socket.off('hostVenueFeltBeat', callback)
   }
 }
 

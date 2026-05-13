@@ -7,6 +7,7 @@ import {
   onToast,
   onHostLibrary,
   onHostVenueGameplayHints,
+  onHostVenueFeltBeat,
   useSocket,
   startAnswering,
   adminAdvanceTurn,
@@ -32,6 +33,7 @@ import {
   setlistDelete,
 } from '@qhe/net'
 import type { GameState, GamePhase, Question } from '@qhe/core'
+import type { HostVenueFeltBeatRow } from '@qhe/net'
 import { LOBBY_TABLE_ID } from '@qhe/core'
 import { parseQuestionsCsv, parseQuestionsJson } from './questionImport'
 
@@ -77,6 +79,74 @@ function clampVenueAnswerWindow(v: number): number {
   return Math.min(300, Math.max(15, Math.floor(Number.isFinite(v) ? v : 45)))
 }
 
+/** Full-venue 1–8 strip; updates from `hostVenueFeltBeat`. */
+function HostVenueFeltBeatStrip({
+  rows,
+  hostTableId,
+}: {
+  rows: HostVenueFeltBeatRow[] | null
+  hostTableId: string
+}) {
+  const hasLiveCountdown =
+    rows?.some((r) => r.phase === 'answering' && r.answerDeadlineMs != null) ?? false
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!hasLiveCountdown) return
+    const id = window.setInterval(() => setTick((n) => n + 1), 1000)
+    return () => clearInterval(id)
+  }, [hasLiveCountdown])
+
+  return (
+    <Card variant="glass" hover={false} className="mb-6 border border-white/12 p-4 sm:p-5">
+      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/42">Venue felts · beat</h2>
+        <p className="text-xs leading-snug text-white/45">
+          Same refresh as the public mosaic — use this to see why a lockstep toast fired. Cyan ring = your host control table.
+        </p>
+      </div>
+      {rows == null ? (
+        <p className="text-sm text-white/50">Waiting for first venue sync…</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+          {rows.map((row) => {
+            const watching =
+              hostTableId.trim() !== LOBBY_TABLE_ID && String(row.tableNum) === hostTableId.trim()
+            const phaseLabel =
+              row.phase === 'inactive' ? '—' : HOST_PHASE_LABEL[row.phase as GamePhase] ?? row.phase
+            const countdownSec =
+              row.phase === 'answering' && row.answerDeadlineMs != null
+                ? Math.max(0, Math.ceil((row.answerDeadlineMs - Date.now()) / 1000))
+                : null
+            return (
+              <div
+                key={row.tableNum}
+                className={`rounded-lg border px-2 py-2 text-center transition-colors sm:min-h-[7.25rem] ${
+                  row.active
+                    ? 'border-white/20 bg-black/35'
+                    : 'border-white/10 bg-black/22 opacity-80'
+                } ${watching ? 'ring-2 ring-cyan-400/65 ring-offset-2 ring-offset-[#0d0d14]' : ''}`}
+              >
+                <div className="text-[11px] font-bold uppercase tracking-wide text-white/38">Tbl {row.tableNum}</div>
+                <div className="mt-1 text-[13px] font-bold tabular-nums text-white/88">{phaseLabel}</div>
+                <div className="mt-1 text-[11px] leading-snug text-white/50">{row.active ? `${row.seated} seat(s)` : 'unused'}</div>
+                <div className="mt-2 border-t border-white/10 pt-1.5 text-[11px] leading-snug text-amber-100/85">
+                  {row.active ? row.street : '—'}
+                </div>
+                <div className="text-[11px] leading-snug text-casino-emerald/90">
+                  {row.active ? row.clock : '—'}
+                  {countdownSec != null ? (
+                    <span className="mt-0.5 block font-mono tabular-nums text-casino-gold">{countdownSec}s</span>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </Card>
+  )
+}
+
 function HostApp() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -113,6 +183,7 @@ function HostApp() {
   const [tvPairCode, setTvPairCode] = useState('')
   const [livelyGameplayTableNums, setLivelyGameplayTableNums] = useState<number[]>([])
   const [answerWindowSeconds, setAnswerWindowSeconds] = useState(45)
+  const [venueFeltBeat, setVenueFeltBeat] = useState<HostVenueFeltBeatRow[] | null>(null)
 
   const viteHostSecret =
     typeof import.meta.env.VITE_HOST_SECRET === 'string' ? import.meta.env.VITE_HOST_SECRET.trim() : ''
@@ -167,6 +238,13 @@ function HostApp() {
   useEffect(() => {
     const off = onHostVenueGameplayHints((p) => {
       setLivelyGameplayTableNums(p.livelyTableNums)
+    })
+    return off
+  }, [])
+
+  useEffect(() => {
+    const off = onHostVenueFeltBeat((p) => {
+      setVenueFeltBeat(p.felts)
     })
     return off
   }, [])
@@ -1047,6 +1125,7 @@ function HostApp() {
 
         {hostTab === 'live' && (
         <>
+        <HostVenueFeltBeatStrip rows={venueFeltBeat} hostTableId={hostTableId} />
         <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(272px,340px)_1fr] lg:items-start">
           <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
             <Card variant="glass" hover={false} className="p-6">

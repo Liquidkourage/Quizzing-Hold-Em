@@ -160,8 +160,9 @@ After deploy, **`index.html`** is sent with **`Cache-Control: no-store`** so bro
 | Layer | Files |
 |--------|--------|
 | Types + transitions | `packages/core/src/index.ts` (`GameState`, **`startGame`, `setQuestion`, `dealInitialCards`, `dealCommunityCards`, `player*`**, **`submitAnswer`, `revealAnswer`, `endRound`**, **`createEmptyGame`**) |
-| IO + timers + venue fan-out | `apps/server/src/index.ts` (**`action`** switch**, **`VENUE_SYNC_ACTION_TYPES`**, **`startAnswering`** deadline timer**, **`applyQuestionToAllPlayable`**)** |
-| Host UX | `apps/host/src/App.tsx` (hints, guards, **`pushQuestionToVenue`**, deals, admins) |
+| IO + timers + venue fan-out | `apps/server/src/index.ts` (**`action`** switch**, **`VENUE_SYNC_ACTION_TYPES`**, **`startAnswering`**, **`emitDisplayVenueSnapshotNow`** → **`hostVenueGameplayHints`** + **`hostVenueFeltBeat`**) |
+| Host UX | `apps/host/src/App.tsx` (library, gameplay hints, **venue 1–8 felt beat strip**, deals, admins) |
+| Net | `packages/net` (**`hostVenueFeltBeat`**, **`HostVenueFeltBeatPayload`**) |
 | Player UX | `apps/player` emits **`action`** payloads constrained by **`GameState`** subscriptions |
 | Display | Read-only **`state`** + optional **`DISPLAY` snapshots** |
 

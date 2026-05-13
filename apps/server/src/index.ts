@@ -43,6 +43,7 @@ import type {
   DisplayLayoutPayload,
   DisplayVenueTileSnapshot,
   DisplayVenueWallSnapshot,
+  HostVenueFeltBeatRow,
   ServerAck, 
   DealCardsAction,
   BetAction,
@@ -1237,6 +1238,69 @@ function pickHeadlineGameState(venueCode: string): GameState | null {
   return null
 }
 
+function buildHostVenueFeltBeatPayload(vnRaw: string): { felts: HostVenueFeltBeatRow[] } {
+  const vn = normalizeVenueCode(vnRaw)
+  const felts: HostVenueFeltBeatRow[] = []
+  for (let n = 1; n <= 8; n++) {
+    const key = tableSessionKey(vn, String(n))
+    const gs = rooms.get(key) as GameState | undefined
+    if (!gs) {
+      felts.push({
+        tableNum: n,
+        active: false,
+        seated: 0,
+        phase: 'inactive',
+        street: '—',
+        clock: '—',
+        answerDeadlineMs: null,
+      })
+      continue
+    }
+    const seated = welcomeWallSeatCount(gs)
+    const phase = gs.phase
+    let street = '—'
+    let clock = '—'
+    let answerDeadlineMs: number | null = null
+
+    if (phase === 'betting') {
+      const br = typeof gs.round.bettingRound === 'number' ? Math.floor(gs.round.bettingRound) : 0
+      const cc = gs.round.communityCards?.length ?? 0
+      street = br === 1 ? 'Pre-board' : br === 2 ? `Board ${cc}/5` : `Bet rnd ${br}`
+      if (gs.round.isBettingOpen === true) clock = 'Clock open'
+      else if (gs.round.isBettingOpen === false) clock = 'Clock closed'
+      else clock = 'Clock unclear'
+    } else if (phase === 'answering') {
+      street = 'Trivia lock-in'
+      const dl = gs.round.answerDeadline
+      answerDeadlineMs =
+        typeof dl === 'number' && Number.isFinite(dl) ? Math.floor(dl) : null
+      clock = answerDeadlineMs != null ? 'Countdown' : '—'
+    } else if (phase === 'showdown') {
+      street = 'Showdown'
+      clock = '—'
+    } else if (phase === 'lobby') {
+      street = 'Between hands'
+      clock = '—'
+    } else if (phase === 'question') {
+      street = 'Deal setup'
+      clock = '—'
+    } else {
+      street = phase
+    }
+
+    felts.push({
+      tableNum: n,
+      active: true,
+      seated,
+      phase,
+      street,
+      clock,
+      answerDeadlineMs,
+    })
+  }
+  return { felts }
+}
+
 function emitDisplayVenueSnapshotNow(vnRaw: string) {
   const vn = normalizeVenueCode(vnRaw)
   const lobbyKey = tableSessionKey(vn, LOBBY_TABLE_ID)
@@ -1350,6 +1414,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     .map((t) => t.tableNum)
     .sort((a, b) => a - b)
   io.to(hostVenueRoom(vn)).emit('hostVenueGameplayHints', { livelyTableNums })
+  io.to(hostVenueRoom(vn)).emit('hostVenueFeltBeat', buildHostVenueFeltBeatPayload(vn))
 }
 
 function afterTableStateBroadcast(gs: GameState, _sessionKey: string) {
