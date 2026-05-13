@@ -17,7 +17,7 @@ TV and wall **display** builds (`apps/display/**`) are **never** operated by som
 
 The **host** and **player** apps (or future remote control / CMS) own:
 
-- Choosing layout (venue wall vs single felt, spotlight) via the host app (**`displaySetLayout`** → server **`displayLayout`** to all TVs on the venue code), legacy URL/query for ops setups, or future CMS
+- Choosing layout (venue wall vs spotlight vs `singleTable`) via the host app (**`displaySetLayout`** → server **`displayLayout`** to all TVs on the venue code), optional **`?room=` / `?table=`** for bookmarked displays, or future CMS
 
 ## Allowed on display
 

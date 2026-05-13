@@ -58,7 +58,7 @@ function feltTableIdForFullscreen(l: DisplayLayoutPayload): string {
   return readDisplayTableIdFromUrl()
 }
 
-/** Fullscreen live felt — venue spotlight table or legacy single-table URL. */
+/** Fullscreen live felt — venue spotlight or server `singleTable` layout. */
 function showFullscreenLiveFelt(l: DisplayLayoutPayload): boolean {
   return venueSpotlightTable(l) != null || l.layout === 'singleTable'
 }
@@ -112,9 +112,9 @@ type DisplayRouterProps = {
 }
 
 /**
- * Host-driven layout from the Venue tab.
+ * Host-driven layout via `displayLayout` (and server hello defaults).
  * Venue wall (no spotlight): grid preview only — no felt `state`.
- * Spotlight or single-table: full `DisplayTableLive` subscribed to one felt session.
+ * Spotlight or `singleTable`: full `DisplayTableLive` on one felt session.
  */
 export default function DisplayRouter({ venueCode, pairingBootstrap = false }: DisplayRouterProps) {
   const pairingWarmBootstrapConsumedRef = useRef(false)
@@ -125,7 +125,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     }
     return typeof window !== 'undefined'
       ? readUrlLayoutBootstrap()
-      : ({ layout: 'venueWall', focusTable: 1 } satisfies DisplayLayoutPayload)
+      : ({ layout: 'venueWall', focusTable: null } satisfies DisplayLayoutPayload)
   })
 
   const layoutRef = useRef(layout)

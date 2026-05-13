@@ -7,64 +7,34 @@ export function readDisplayRoomFromUrl(): string | null {
   return r && r.length > 0 ? r : null
 }
 
-/** When true, show a fixed diagnostic panel (deploy / cache / bundle id). */
-export function readDisplayDiagFromUrl(): boolean {
-  if (typeof window === 'undefined') return false
-  const v = new URLSearchParams(window.location.search).get('diag')?.trim().toLowerCase()
-  return v === '1' || v === 'true' || v === 'yes'
-}
-
-/** Shared URL parsing for display bootstrap (router + offline demo parity). */
+/** Shared URL parsing for display demo / offline parity. */
 export function readDisplayVenueCode(): string {
   if (typeof window === 'undefined') return 'HOST01'
   return new URLSearchParams(window.location.search).get('room')?.trim().toUpperCase() || 'HOST01'
 }
 
-/** Table currently shown on fullscreen live felt (spotlight / single URL). */
+/** Fallback table id when layout does not pin a felt (e.g. demo shell). Honors `?table=1`–`8`. */
 export function readDisplayTableIdFromUrl(): string {
   if (typeof window === 'undefined') return '1'
-  const s = new URLSearchParams(window.location.search)
-  const tp = (s.get('tablesPreview') ?? '').trim().toLowerCase()
-  const wallFromUrl =
-    s.has('tablesPreview') &&
-    tp !== '' &&
-    !['0', 'false', 'no', 'off'].includes(tp)
-  if (wallFromUrl) {
-    const raw = s.get('focusTable') ?? s.get('tableFocus')
-    if (raw != null && raw.trim() !== '') {
-      const n = Number(raw)
-      if (Number.isInteger(n) && n >= 1 && n <= 8) return String(n)
-    }
-    return '1'
+  const tableParam = new URLSearchParams(window.location.search).get('table')?.trim()
+  if (tableParam) {
+    const n = Number(tableParam)
+    if (Number.isInteger(n) && n >= 1 && n <= 8) return String(n)
   }
-  const tableParam = s.get('table')?.trim()
-  if (tableParam) return tableParam
   return '1'
 }
 
+/** Initial layout before the first `displayLayout` from the server. `?table=N` (1–8) opens in spotlight. */
 export function readUrlLayoutBootstrap(): DisplayLayoutPayload {
   if (typeof window === 'undefined') {
-    return { layout: 'venueWall', focusTable: 1 }
+    return { layout: 'venueWall', focusTable: null }
   }
-  const s = new URLSearchParams(window.location.search)
-  const tp = (s.get('tablesPreview') ?? '').trim().toLowerCase()
-  const wallFromUrl =
-    s.has('tablesPreview') &&
-    tp !== '' &&
-    !['0', 'false', 'no', 'off'].includes(tp)
-  if (wallFromUrl) {
-    const raw = s.get('focusTable') ?? s.get('tableFocus')
-    let focusTable: number | null = null
-    if (raw != null && raw.trim() !== '') {
-      const n = Number(raw)
-      if (Number.isInteger(n) && n >= 1 && n <= 8) focusTable = n
+  const tableParam = new URLSearchParams(window.location.search).get('table')?.trim()
+  if (tableParam) {
+    const n = Number(tableParam)
+    if (Number.isInteger(n) && n >= 1 && n <= 8) {
+      return { layout: 'venueWall', focusTable: n }
     }
-    return { layout: 'venueWall', focusTable }
   }
-  const tableParam = s.get('table')?.trim() || '1'
-  const n = Number(tableParam)
-  if (Number.isInteger(n) && n >= 1 && n <= 8) {
-    return { layout: 'venueWall', focusTable: n }
-  }
-  return { layout: 'singleTable', tableId: tableParam }
+  return { layout: 'venueWall', focusTable: null }
 }
