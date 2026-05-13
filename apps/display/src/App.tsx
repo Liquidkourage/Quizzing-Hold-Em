@@ -489,8 +489,8 @@ function DisplayTableLive({
     )
   }
 
-  /** Negative = move felt + seats up together in the main panel (see table wrapper `top`). */
-  const displayTableLiftPx = -88
+  /** Negative = move felt + seats up in fullscreen; embedded venue uses overlay HUD + full-height plane, so keep 0 to center vertically. */
+  const displayTableLiftPx = variant === 'embedded' ? 0 : -88
 
   // Calculate player positions around the table (perfectly aligned with cupholders)
   const getPlayerPosition = (index: number, total: number) => {
@@ -589,6 +589,9 @@ function DisplayTableLive({
   const dockCls = isEmbedded ? 'absolute' : 'fixed'
 
   const showQuestionStrip = Boolean(displayGameState.round.question) && !hideQuestionBanner
+
+  /** Full-bleed game plane under a bottom docked HUD (venue wall hides question banner). */
+  const embeddedHudOverlay = isEmbedded && !showQuestionStrip
 
   return (
     <div
@@ -740,7 +743,9 @@ function DisplayTableLive({
           ref={gamePlaneRef}
           className={
             isEmbedded
-              ? 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
+              ? embeddedHudOverlay
+                ? 'absolute inset-0 z-10 mx-auto flex min-h-0 min-w-0 w-full max-w-7xl overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
+                : 'relative mx-auto flex min-h-0 min-w-0 w-full max-w-7xl flex-1 overflow-hidden outline outline-2 -outline-offset-1 outline-dashed outline-sky-300/85'
               : `relative mx-auto max-w-7xl h-[calc(100vh-200px)] ${
                   showQuestionStrip ? 'mt-[min(188px,19.5vh)]' : 'mt-[5vh]'
                 }`
@@ -1282,7 +1287,13 @@ function DisplayTableLive({
         </div>
 
         {isEmbedded ? (
-          <div className="relative z-30 shrink-0 border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm">
+          <div
+            className={
+              embeddedHudOverlay
+                ? 'pointer-events-auto absolute inset-x-0 bottom-0 z-40 border-t border-yellow-700/35 bg-black/45 backdrop-blur-sm'
+                : 'relative z-30 shrink-0 border-t border-yellow-700/35 bg-black/55 backdrop-blur-sm'
+            }
+          >
             <DisplayTableInfoBar gameState={displayGameState} />
           </div>
         ) : null}
