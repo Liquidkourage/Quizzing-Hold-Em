@@ -93,18 +93,21 @@ Folding removes a player from **answer contention** (`hasFolded` skip in trivia 
 
 Actions that mutate **only** **`sessionKey`** (typical **`bet`, `fold`, `check`, `call`, `raise`, `allIn`, `submitAnswer`**) affect **that table only**.
 
-**Practical implication:** Mixed readiness across tables yields **partial skips** (e.g. `startAnswering` increments `count` only for tables satisfying preconditions).
+Venue-wide host cues are **lockstep**: the server refuses a step unless **every existing numbered felt** shares the same **phase street** (betting wave, clock, board depth, trivia deadline where applicable). There are **no partial venue advances** — fix any straggler felt (or use **`newGame`** cautiously as a catastrophic reset).
 
 ---
 
 ## Server guardrails worth preserving
 
+Venue-wide mutations (`startGame`, `setQuestion`, deals, `adminCloseBetting` when used as a host hammer, `startAnswering`, `revealAnswer`, `endRound`, …) run only when **every numbered table** passes the same precondition **and** shares the same **strict phase signature** — otherwise the host gets a **sync** toast and **no table** advances.
+
 | Transition | Guards (summary) |
 |------------|-------------------|
+| **`startGame`**, **`setQuestion`**, setlist advance | All felts **aligned**; `startGame` requires **lobby** everywhere; question pushes require **lobby** or **question** everywhere. |
 | **`dealCommunityCards`** | `phase === 'betting'`, **`bettingRound === 1`**, **`isBettingOpen === false`**, **`communityCards.length < 5`**. Deals **five** cards and opens **`bettingRound: 2`**. |
-| **`startAnswering`** | **`phase === 'betting'`**, **`!isBettingOpen`**, **`communityCards.length >= 5`**. Sets **`answerDeadline`**, **`phase: answering`**, 45 s **`revealAnswer`** timer per qualifying table. |
+| **`startAnswering`** | **`phase === 'betting'`**, **`bettingRound === 2`**, **`!isBettingOpen`**, **`communityCards.length ≥ 5`**. Same **`answerDeadline`** on every felt; venue-wide **`revealAnswer`** timer per table aligned to that deadline. |
 | **`submitAnswer`** | **`answering`** and before **`answerDeadline`**; value must be **constructible** from holes + board (exactly five digit positions, optional decimal). |
-| **`endRound`** | Server only applies to tables in **`showdown`**; others skipped with a host toast. |
+| **`endRound`** | All tables in **`showdown`** together; wrong mix → host toast, **no payouts**. |
 
 ---
 
@@ -112,10 +115,10 @@ Actions that mutate **only** **`sessionKey`** (typical **`bet`, `fold`, `check`,
 
 | Action | Effect |
 |--------|--------|
-| **adminCloseBetting** | Force-closes current betting wave so **`dealCommunityCards`** or **`startAnswering`** preconditions can be met if players stall. Venue-wide iteration on server where implemented. |
+| **adminCloseBetting** | Force-closes **open** wagering (**every table** must agree on the same street first). Use when players stall closing a wave so **`dealCommunityCards`** / **`startAnswering`** can unlock. Venue-wide lockstep enforced on the server. |
 | **adminAdvanceTurn** | Advances **`currentPlayerIndex`** without validating player action — escape hatch only. |
 | **revealAnswer** | Manual premature exit from **`answering`** to **`showdown`** (matches auto-timer semantics). Venue-wide fan-out where implemented. |
-| **endRound** | Payout + full round cleanup → **`lobby`** (core no-op unless **`showdown`**). Venue-wide fan-out; tables not in showdown are skipped. |
+| **endRound** | Payout + full round cleanup → **`lobby`** venue-wide — only when **every** table is **`showdown`** together. |
 | **newGame** | Fresh **`createEmptyGame`** per venue session — **destructive**. |
 
 ---

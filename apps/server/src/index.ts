@@ -1111,6 +1111,111 @@ function tableNumFromSessionKey(venueCode: string, sessionKey: string): number |
   return n
 }
 
+/**
+ * Phase / street fingerprint for lockstep venues: every playable table session must match
+ * before cross-table host actions advance the show together.
+ */
+function phaseStrictSignature(gs: GameState): string {
+  const r = gs.round
+  const phase = gs.phase
+  if (phase === 'betting') {
+    const br = typeof r?.bettingRound === 'number' && Number.isFinite(r.bettingRound) ? Math.floor(r.bettingRound) : '?'
+    const openRaw = r?.isBettingOpen
+    const open = openRaw === true ? 'T' : openRaw === false ? 'F' : '?'
+    const cc = Array.isArray(r?.communityCards) ? r.communityCards.length : 0
+    return `bet|${br}|${open}|cc${cc}`
+  }
+  if (phase === 'answering') {
+    const dl = typeof r?.answerDeadline === 'number' && Number.isFinite(r.answerDeadline) ? Math.floor(r.answerDeadline) : '?'
+    return `answer|dl${dl}`
+  }
+  return String(phase)
+}
+
+function humanReadableStrictState(gs: GameState): string {
+  const ph = gs.phase
+  const r = gs.round
+  if (ph === 'betting') {
+    const rnd = typeof r?.bettingRound === 'number' ? r.bettingRound : '?'
+    const street = rnd === 1 ? 'pre-board' : rnd === 2 ? 'after board' : `round ${String(rnd)}`
+    const clock = r?.isBettingOpen === true ? 'clock open' : r?.isBettingOpen === false ? 'clock closed' : 'clock unclear'
+    const cc = r?.communityCards?.length ?? 0
+    return `${street}, ${clock}, ${cc}/5 board`
+  }
+  if (ph === 'answering') return 'answer window'
+  if (ph === 'showdown') return 'showdown'
+  if (ph === 'question') return 'deal setup'
+  if (ph === 'lobby') return 'lobby between hands'
+  return ph
+}
+
+function venuePlayableSnapshots(venueCode: string): { tk: string; n: number; gs: GameState }[] {
+  const vn = normalizeVenueCode(venueCode)
+  const playable = allTableSessionsInVenue(vn)
+  const out: { tk: string; n: number; gs: GameState }[] = []
+  for (const tk of playable) {
+    const gs = rooms.get(tk)
+    if (!gs) continue
+    const tn = tableNumFromSessionKey(vn, tk)
+    out.push({ tk, n: tn ?? NaN, gs })
+  }
+  out.sort((a, b) => {
+    const ax = Number.isFinite(a.n) ? a.n : 99
+    const bx = Number.isFinite(b.n) ? b.n : 99
+    return ax - bx || a.tk.localeCompare(b.tk)
+  })
+  return out
+}
+
+function toastVenueMisaligned(socket: Socket, rows: { n: number; gs: GameState }[]): void {
+  const seenSig = new Set<string>()
+  const parts: string[] = []
+  for (const row of rows) {
+    const sig = phaseStrictSignature(row.gs)
+    if (seenSig.has(sig)) continue
+    seenSig.add(sig)
+    const nums = rows
+      .filter((r) => phaseStrictSignature(r.gs) === sig)
+      .map((r) => (Number.isFinite(r.n) ? String(r.n) : '?'))
+      .sort()
+    parts.push(`${nums.join(',')}→${humanReadableStrictState(row.gs)}`)
+  }
+  socket.emit(
+    'toast',
+    `Tables are out of sync (${parts.join(' · ')}). Fix the stragglers so every felt matches before advancing.`,
+  )
+}
+
+/**
+ * Ensures every existing numbered session in `venueCode` shares the same strict phase fingerprint
+ * and satisfies `predicate` for the initiating action — otherwise emits a toast and returns null.
+ */
+function requireVenueLockstepTables(
+  socket: Socket,
+  venueCode: string,
+  predicate: (gs: GameState) => boolean,
+  readinessHint: string
+): { tk: string; n: number; gs: GameState }[] | null {
+  const rows = venuePlayableSnapshots(venueCode)
+  if (rows.length === 0) {
+    socket.emit('toast', 'No playable tables yet — assign the lobby first.')
+    return null
+  }
+  const sig0 = phaseStrictSignature(rows[0].gs)
+  for (let i = 1; i < rows.length; i++) {
+    if (phaseStrictSignature(rows[i].gs) !== sig0) {
+      toastVenueMisaligned(socket, rows)
+      return null
+    }
+  }
+  if (!predicate(rows[0].gs)) {
+    const found = humanReadableStrictState(rows[0].gs)
+    socket.emit('toast', `Every table must ${readinessHint} (yours collectively: ${found}).`)
+    return null
+  }
+  return rows
+}
+
 /** First numbered felt with seated players — venue-synced trivia uses the same round on all tables. */
 function pickHeadlineGameState(venueCode: string): GameState | null {
   const vn = normalizeVenueCode(venueCode)
@@ -1541,15 +1646,9 @@ io.on('connection', (socket) => {
       switch (type) {
         case 'startGame': {
           if (!assertVenueHost(socket, gameState)) break
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit(
-              'toast',
-              'No numbered tables yet. Seat the lobby first (Assign from lobby), then start the game.'
-            )
-            break
-          }
-          for (const tk of playable) {
+          const lockStart = requireVenueLockstepTables(socket, gameState.code, (gs) => gs.phase === 'lobby', 'be in lobby before starting the trivia wave')
+          if (!lockStart) break
+          for (const { tk } of lockStart) {
             let gs = rooms.get(tk)
             gs = startGame(gs)
             gs = runVirtualPlayerSimulation(gs)
@@ -1563,12 +1662,14 @@ io.on('connection', (socket) => {
         }
 
         case 'setQuestion': {
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
-            break
-          }
           if (!assertVenueHost(socket, gameState)) break
+          const lockQ = requireVenueLockstepTables(
+            socket,
+            gameState.code,
+            (gs) => gs.phase === 'lobby' || gs.phase === 'question',
+            'stay together in lobby or deal setup before changing the question'
+          )
+          if (!lockQ) break
           const lib = await ensureVenueLibrary(gameState.code)
           const bank = lib.questions
           const questionIdRaw = payload?.questionId
@@ -1595,12 +1696,14 @@ io.on('connection', (socket) => {
         }
 
         case 'nextQuestionFromSetlist': {
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
-            break
-          }
           if (!assertVenueHost(socket, gameState)) break
+          const lockSl = requireVenueLockstepTables(
+            socket,
+            gameState.code,
+            (gs) => gs.phase === 'lobby' || gs.phase === 'question',
+            'stay together in lobby or deal setup before the next setlist cue'
+          )
+          if (!lockSl) break
           const venue = normalizeVenueCode(gameState.code)
           const lib = await ensureVenueLibrary(gameState.code)
           let ph = getPlayhead(venue)
@@ -1748,12 +1851,9 @@ io.on('connection', (socket) => {
 
         case 'dealInitialCards': {
           if (!assertVenueHost(socket, gameState)) break
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
-            break
-          }
-          for (const tk of playable) {
+          const lockDeal = requireVenueLockstepTables(socket, gameState.code, (gs) => gs.phase === 'question', 'wait in deal setup before hole cards + blinds')
+          if (!lockDeal) break
+          for (const { tk } of lockDeal) {
             let gs = rooms.get(tk)
             gs = dealInitialCards(gs)
             rooms.set(tk, gs)
@@ -1774,13 +1874,19 @@ io.on('connection', (socket) => {
 
         case 'dealCommunityCards': {
           if (!assertVenueHost(socket, gameState)) break
-          const playable = allTableSessionsInVenue(gameState.code)
+          const lockBoard = requireVenueLockstepTables(
+            socket,
+            gameState.code,
+            (gs) =>
+              gs.phase === 'betting' &&
+              gs.round.bettingRound === 1 &&
+              gs.round.isBettingOpen === false &&
+              (gs.round.communityCards?.length ?? 0) < 5,
+            'finish pre-board wagering (clock closed) so all felts match before dealing the board',
+          )
+          if (!lockBoard) break
           let anyDealt = false
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
-            break
-          }
-          for (const tk of playable) {
+          for (const { tk } of lockBoard) {
             let gs = rooms.get(tk)
             const communityBefore = gs.round.communityCards.length
             gs = dealCommunityCards(gs)
@@ -1802,10 +1908,9 @@ io.on('connection', (socket) => {
             }
           }
           if (anyDealt) {
-            socket.emit('toast', 'Board complete — wagering round 2 (all ready tables).')
+            socket.emit('toast', 'Board complete — wagering round 2 (every table at this venue).')
           } else {
-            socket.emit('toast',
-              'No table advanced: close wagering round 1 on each table, then try again.')
+            socket.emit('toast', 'Board failed to deal — reload from host if this persists.')
           }
           gameState = rooms.get(sessionKey)!
           break
@@ -1813,27 +1918,20 @@ io.on('connection', (socket) => {
 
         case 'startAnswering': {
           if (!assertVenueHost(socket, gameState)) break
-          if (gameState.phase !== 'betting' || gameState.round.isBettingOpen) {
-            socket.emit('toast', 'Betting must be closed before answering.')
-            break
-          }
-          if ((gameState.round.communityCards?.length ?? 0) < 5) {
-            socket.emit('toast', 'Deal five community cards and close wagering round 2 first.')
-            break
-          }
+          const lockAns = requireVenueLockstepTables(
+            socket,
+            gameState.code,
+            (gs) =>
+              gs.phase === 'betting' &&
+              gs.round.isBettingOpen === false &&
+              gs.round.bettingRound === 2 &&
+              (gs.round.communityCards?.length ?? 0) >= 5,
+            'finish post-board wagering (clock closed) with a complete board before trivia answers open',
+          )
+          if (!lockAns) break
           const deadlineMs2 = Date.now() + 45_000
-          let count = 0
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet — assign the lobby first.')
-            break
-          }
-          for (const tk of playable) {
+          for (const { tk } of lockAns) {
             let gs = rooms.get(tk)
-            if (gs.phase !== 'betting' || gs.round.isBettingOpen || (gs.round.communityCards?.length ?? 0) < 5) {
-              continue
-            }
-            count++
             gs = {
               ...gs,
               phase: 'answering',
@@ -1856,11 +1954,10 @@ io.on('connection', (socket) => {
             rooms.set(tk, gs)
             emitVenueTableState(tk, gs)
           }
-          if (count === 0) {
-            socket.emit('toast', 'No other tables matched this venue’s ready state.')
-          } else {
-            socket.emit('toast', `Answering started — ${count} table(s); same countdown at each.`)
-          }
+          socket.emit(
+            'toast',
+            `Answering opened — ${lockAns.length} table(s); same countdown at each felt.`,
+          )
           gameState = rooms.get(sessionKey)!
           break
         }
@@ -1888,19 +1985,21 @@ io.on('connection', (socket) => {
           break
         case 'adminCloseBetting': {
           if (!assertVenueHost(socket, gameState)) break
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet.')
-            break
-          }
-          for (const tk of playable) {
+          const lockClose = requireVenueLockstepTables(
+            socket,
+            gameState.code,
+            (gs) => gs.phase === 'betting' && gs.round.isBettingOpen === true,
+            'have wagering open on every felt so closing the street applies to the whole room together',
+          )
+          if (!lockClose) break
+          for (const { tk } of lockClose) {
             let gs = rooms.get(tk)
             gs = adminCloseBetting(gs)
             gs = runVirtualPlayerSimulation(gs)
             rooms.set(tk, gs)
             emitVenueTableState(tk, gs)
           }
-          socket.emit('toast', 'Betting closed — all tables at this venue.')
+          socket.emit('toast', 'Betting closed — entire venue in sync.')
           gameState = rooms.get(sessionKey)!
           break
         }
@@ -1969,58 +2068,40 @@ io.on('connection', (socket) => {
           
         case 'revealAnswer': {
           if (!assertVenueHost(socket, gameState)) break
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet.')
-            break
-          }
-          for (const tk of playable) {
+          const lockRev = requireVenueLockstepTables(
+            socket,
+            gameState.code,
+            (gs) => gs.phase === 'answering',
+            'wait until every table is in the same trivia answer window before revealing',
+          )
+          if (!lockRev) break
+          for (const { tk } of lockRev) {
             let gs = rooms.get(tk)
             gs = revealAnswer(gs)
             rooms.set(tk, gs)
             emitVenueTableState(tk, gs)
           }
-          socket.emit('toast', 'Answers revealed — all tables at this venue.')
+          socket.emit('toast', 'Answers revealed — every table at this venue.')
           gameState = rooms.get(sessionKey)!
           break
         }
 
         case 'endRound': {
           if (!assertVenueHost(socket, gameState)) break
-          const playable = allTableSessionsInVenue(gameState.code)
-          if (playable.length === 0) {
-            socket.emit('toast', 'No playable tables yet.')
-            break
-          }
-          let ended = 0
-          let skipped = 0
-          for (const tk of playable) {
+          const lockEnd = requireVenueLockstepTables(
+            socket,
+            gameState.code,
+            (gs) => gs.phase === 'showdown',
+            'bring every felt to showdown (reveal trivia) before paying / resetting the wave',
+          )
+          if (!lockEnd) break
+          for (const { tk } of lockEnd) {
             const gs = rooms.get(tk)
-            if (!gs) continue
-            if (gs.phase !== 'showdown') {
-              skipped++
-              continue
-            }
-            const next = endRound(gs)
+            const next = endRound(gs!)
             rooms.set(tk, next)
             emitVenueTableState(tk, next)
-            ended++
           }
-          if (ended === 0) {
-            socket.emit(
-              'toast',
-              skipped > 0
-                ? 'Reveal answers first — end round only works while tables are in showdown.'
-                : 'No tables were ended.'
-            )
-          } else {
-            socket.emit(
-              'toast',
-              skipped > 0
-                ? `Round ended on ${ended} table(s); ${skipped} skipped (not in showdown).`
-                : `Round ended — ${ended} table(s) at this venue.`
-            )
-          }
+          socket.emit('toast', `Round cleared — lobby on all ${lockEnd.length} felts at this venue.`)
           gameState = rooms.get(sessionKey)!
           break
         }
