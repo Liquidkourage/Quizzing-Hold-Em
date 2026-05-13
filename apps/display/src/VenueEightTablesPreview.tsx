@@ -1243,12 +1243,13 @@ export default function VenueEightTablesPreview({
                 </div>
               ) : null}
 
+              {/* Felt mounts flush — casino carpet fills the card under the headline/logo; inline frame padding caused the patterned floor to appear inset. */}
               <div
-                className={`relative z-10 min-h-0 w-full px-2 pb-2 sm:px-3 sm:pb-3 ${
-                  showHeadline ? 'pt-2 sm:pt-3' : 'pt-[4.95rem] sm:pt-[4.95rem]'
+                className={`relative z-10 min-h-0 w-full ${
+                  showHeadline ? '' : 'pt-[4.95rem] sm:pt-[4.95rem]'
                 }`}
               >
-                <div className="flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-xl border border-yellow-700/25 bg-black/35">
+                <div className="relative flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden">
                   <DisplayTableLive
                     key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
                     feltTableHint={String(seatingHeroRow.tableNum)}

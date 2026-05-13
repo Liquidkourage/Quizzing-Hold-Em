@@ -659,7 +659,7 @@ function DisplayTableLive({
       <div
         className={
           isEmbedded
-            ? 'relative z-10 flex min-h-0 min-w-0 flex-1 flex-col p-2'
+            ? 'relative z-10 flex min-h-0 min-w-0 flex-1 flex-col p-0'
             : 'relative z-10 p-2'
         }
       >
