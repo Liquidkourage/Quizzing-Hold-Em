@@ -141,14 +141,14 @@ Implemented in **`@qhe/core`**: **`check`, `call`, `raise`, `allIn`, `fold`**, p
 
 ---
 
-## Display: join briefing vs 8-table wall
+## Display: join briefing vs venue wall overview
 
 `/display` in **venue overview** shows **either**:
 
 1. **`AudienceWelcomeWall`** (QR + URL + room code + “how to play”) — only while the server snapshot includes **`showAudienceWelcome: true`**. That flips to **`false`** after the host runs **`Assign from lobby`** (`markVenueShowStarted`), or after venue-wide **Start Game** if you never use lobby assign (single-table setups). It becomes **`true`** again only after host runs **New Game**, which clears that set entry and re-emits the venue snapshot.
-2. **`VenueEightTablesPreview`** (numbered table mosaic + headline strip) — whenever briefing is off, **or** before the first snapshot arrives, **or** if this tab received a **local** layout relay (`BroadcastChannel`) from a host tab on the **same origin** (“mosaic forced”), **or** whenever any live tile’s phase has left **`lobby`** (display client safety). Numbered felts on the mosaic only appear **after** the host runs **`Assign from lobby`**: wall snapshot **`tiles`** is empty until then; the idle mosaic shows copy instead of eight placeholder felts once a snapshot has arrived without rows (pre-snapshot still uses the cinematic preview grid until the first **`displayVenueSnapshot`** arrives).
+2. **`VenueEightTablesPreview`** — a **featured table** hero (large mini-felt) plus fixed **All tables** crawl (`VenueAllTablesCrawl`) and optional **Stacks/Seating** roster strip. Until every live numbered tile remains **`lobby`**, felts **auto-rotate** for pre-start pacing; afterward the hero pins to the hottest **phase** across tables (wagering beats answering beats question, …). Numbered crawl tiles appear **after** **`Assign from lobby`** fills snapshot **`tiles`**; before that or on first-load preview, rehearsal tiles stand in until the first **`displayVenueSnapshot`**.
 
-So: UI changes in **`AudienceWelcomeWall.tsx`** do not affect the mosaic; after **Assign from lobby** (or **Start Game** without assign) you will **not** see the join hero until **New Game** restores briefing.
+So: UI changes in **`AudienceWelcomeWall.tsx`** do not affect **`VenueEightTablesPreview`**; after **Assign from lobby** (or **Start Game** without assign) you will **not** see the join hero until **New Game** restores briefing.
 
 **Production:** Express serves **`/display`** from **`apps/display/dist`**. Deploy must run **`npm run build`** at the **repo root** so the display bundle updates; building only **`apps/server`** leaves stale or missing TV assets. **`railway.toml`** runs **`scripts/railway-build.sh`**, which only runs **`npm run build`** (**`NPM_CONFIG_PRODUCTION=false`**). Railway **Railpack** runs dependency install in a **separate** step; running **`npm ci`** or **`rm -rf`** inside the **build** step conflicts with Railpack **BuildKit cache mounts** at **`/app/apps/<workspace>/node_modules/.vite`** and surfaces as **`EBUSY: rmdir`** (those paths are not deletable from the build script). Each app’s **`vite.config`** sets **`cacheDir`** under **`os.tmpdir()`** (**`quizzem-vite/<app>`**) so Vite’s own cache does not depend on **`node_modules/.vite`**. If you change this flow, read [Railpack caches](https://railpack.com/config/file#caches) first.
 

@@ -144,7 +144,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const [venueWall, setVenueWall] = useState<DisplayVenueWallSnapshot | null>(null)
   /** Host clicked “All 8 felts” (local relay) — show mosaic even if snapshot still has showAudienceWelcome. */
   const [mosaicForcedByHost, setMosaicForcedByHost] = useState(false)
-  /** After first time the 8-panel grid mounts, suppress re-entry fades (mosaic remounts when felt goes fullscreen). */
+  /** After first venue wall overview mounts, suppress re-entry fades (overview unmounts when felt goes fullscreen). */
   const venueMosaicWasShownRef = useRef(false)
   /** Tracks showAudienceWelcome across venueWall snapshot updates */
   const prevAudienceWelcomeRef = useRef<boolean | undefined>(undefined)
@@ -334,7 +334,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
 
   /** Full join hero (`AudienceWelcomeWall`). Requires venue snapshot + server `showAudienceWelcome` — see server `venueAudienceWelcomeExpired`. Hidden after host **Start Game** until **New Game** clears the venue. Also suppressed while `mosaicForcedByHost` is true (e.g. same-browser host layout relay via `BroadcastChannel`). Otherwise viewers see **`VenueEightTablesPreview`** with different chrome — UI tweaks must touch both components if both should match. */
   const showBriefingHero = wallOverview && audienceBriefing && shrinkingExit === null
-  /** Numbered-table mosaic visible after briefing ends — or peeking beneath spotlight exit iris. */
+  /** Numbered-table wall visible after briefing ends — or peeking beneath spotlight exit iris. */
   const showVenueMosaic = (!audienceBriefing && wallOverview) || shrinkingExit !== null
 
   const spotTable = spotlightN

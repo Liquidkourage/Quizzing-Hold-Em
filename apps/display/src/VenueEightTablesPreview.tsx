@@ -788,19 +788,15 @@ function phaseAccent(ph: string) {
   return 'text-white/85'
 }
 
-type VenueMosaicTileMode = 'grid' | 'hero' | 'crawl'
+type VenueMosaicTileMode = 'hero' | 'crawl'
 
 function VenueMosaicTableCard({
   row,
   mode,
-  idx,
-  skipMountIntro,
   isSpotlightThumb,
 }: {
   row: DisplayVenueTileSnapshot
   mode: VenueMosaicTileMode
-  idx: number
-  skipMountIntro?: boolean
   isSpotlightThumb?: boolean
 }) {
   const tn = row.tableNum
@@ -971,74 +967,6 @@ function VenueMosaicTableCard({
       </motion.article>
     )
   }
-
-  return (
-    <motion.article
-      data-spotlight-tile={tn}
-      initial={skipMountIntro ? false : { opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: skipMountIntro ? 0 : idx * 0.045,
-        duration: skipMountIntro ? 0 : 0.35,
-      }}
-      style={{ overflow: 'visible' }}
-      className="flex flex-col overflow-visible rounded-xl border-2 border-yellow-700/35 bg-black/55 p-4 shadow-lg backdrop-blur-md sm:p-5"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="text-base font-semibold uppercase tracking-[0.12em] text-white/60 sm:text-lg md:text-xl">
-            Table
-          </div>
-          <div className="text-6xl font-black tabular-nums leading-none text-yellow-400 sm:text-7xl lg:text-8xl">
-            {tn}
-          </div>
-        </div>
-        <span
-          className={`${
-            venueTileBettingPausedCenter(row)
-              ? 'max-w-[15rem] sm:max-w-[17rem]'
-              : 'max-w-[min(10rem,48%)] sm:max-w-none'
-          } shrink-0 rounded-lg px-2.5 py-1.5 text-sm sm:px-3.5 sm:py-2 sm:text-base md:text-lg ${mosaicPhaseCornerTypography(row)} ${mosaicPhaseAccent(row)}`}
-        >
-          {mosaicPhaseLabel(row)}
-        </span>
-      </div>
-
-      <div className="relative z-[1] mt-3 flex-shrink-0 overflow-visible">
-        <SeatRingWithLabels
-          seatedCount={seats}
-          seatNames={seatNames}
-          seatBankrolls={seatBankrolls}
-          blindSeats={blindSeatSnapshot}
-          seatFolded={seatFolded}
-          actingSeatIndex={actingSeat}
-          showSeatBettingActions={showSeatBettingActions}
-          seatLastBettingAction={seatLastBettingAction}
-          actingCallAmount={row.actingCallAmount}
-        />
-      </div>
-
-      <dl className="mt-4 space-y-2 border-t border-white/10 pt-4 text-lg leading-snug sm:text-xl md:text-2xl lg:text-3xl">
-        <div className="flex justify-between gap-3">
-          <dt className="font-semibold text-white/70">Occupied seats</dt>
-          <dd className="font-mono font-bold tabular-nums text-casino-emerald">
-            {seats} / 8
-          </dd>
-        </div>
-        <div className="flex justify-between gap-3">
-          <dt className="font-semibold text-white/70">Pot (local)</dt>
-          <dd className="font-mono font-bold tabular-nums text-yellow-300">${pot.toLocaleString()}</dd>
-        </div>
-        {mosaicPotSubtitle != null ? (
-          <div className="rounded-lg border border-amber-400/30 bg-black/35 px-2 py-1.5 sm:px-2.5 sm:py-2">
-            <p className="min-w-0 break-words text-center text-base font-bold leading-snug text-amber-100 shadow-black/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.85)] sm:text-lg md:text-xl lg:text-2xl">
-              {mosaicPotSubtitle}
-            </p>
-          </div>
-        ) : null}
-      </dl>
-    </motion.article>
-  )
 }
 
 /** Latin-first sort key: leading word of the display name (first name). */
@@ -1203,13 +1131,11 @@ function VenueAllTablesCrawl({
         }
       : undefined
 
-  const tableRow = (row: (typeof tiles)[0], idx: number, key: string) => (
+  const tableRow = (row: (typeof tiles)[0], key: string) => (
     <VenueMosaicTableCard
       key={key}
       row={row}
       mode="crawl"
-      idx={idx}
-      skipMountIntro
       isSpotlightThumb={row.tableNum === spotlightTableNum}
     />
   )
@@ -1235,31 +1161,60 @@ function VenueAllTablesCrawl({
           aria-hidden
         >
           <div ref={measureRef} className="flex flex-col gap-3">
-            {tiles.map((row, idx) => tableRow(row, idx, `measure-${row.tableNum}`))}
+            {tiles.map((row) => tableRow(row, `measure-${row.tableNum}`))}
           </div>
         </div>
 
         {prefersReducedMotion ? (
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain py-1">
-            {tiles.map((row, idx) => tableRow(row, idx, `a11y-${row.tableNum}`))}
+            {tiles.map((row) => tableRow(row, `a11y-${row.tableNum}`))}
           </div>
         ) : showCrawlAnimation ? (
           <div
             className="venue-roster-animate flex flex-col gap-3"
             style={{ ['--venue-roster-secs' as string]: `${durationSec}s` }}
           >
-            {doubled.map((row, idx) =>
-              tableRow(row, idx, `crawl-${row.tableNum}-${idx}`)
-            )}
+            {doubled.map((row, idx) => tableRow(row, `crawl-${row.tableNum}-${idx}`))}
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 py-1">
-            {tiles.map((row, idx) => tableRow(row, idx, `fit-${row.tableNum}`))}
+            {tiles.map((row) => tableRow(row, `fit-${row.tableNum}`))}
           </div>
         )}
       </div>
     </aside>
   )
+}
+
+/**
+ * When the lobby tour timer is off, the center column follows one “featured” table by phase
+ * (wagering beats answering beats question, …); ties break toward the lower table number.
+ */
+function floorFeaturedTileIndex(tileRows: DisplayVenueTileSnapshot[]): number {
+  if (tileRows.length === 0) return 0
+  const rank: Record<string, number> = {
+    betting: 0,
+    answering: 1,
+    question: 2,
+    showdown: 3,
+    reveal: 4,
+    payout: 5,
+    intermission: 6,
+    lobby: 99,
+  }
+  let bestI = 0
+  let bestRank = 999
+  let bestTn = 999
+  for (let i = 0; i < tileRows.length; i++) {
+    const t = tileRows[i]!
+    const r = rank[t.phase] ?? 50
+    if (r < bestRank || (r === bestRank && t.tableNum < bestTn)) {
+      bestRank = r
+      bestTn = t.tableNum
+      bestI = i
+    }
+  }
+  return bestI
 }
 
 type VenueEightTablesPreviewProps = {
@@ -1273,11 +1228,9 @@ type VenueEightTablesPreviewProps = {
 }
 
 /**
- * Mosaic rows mirror each table session on the server; spotlight opens the matching full felt.
- * Headline shows only live question text + countdown from the server snapshot.
- * While **every** felt is still in **lobby** (pre-start), or when showing the **rehearsal** preview
- * without a live wall, the grid becomes a **seating spotlight tour**: one enlarged table on a timer
- * **All tables** is a fixed left crawl (same strip width/height as the players roster) when in this mode.
+ * Venue overview wall: center **featured table** (large mini-felt + stats) plus fixed **All tables** crawl.
+ * Before play (every live tile still **`lobby`**) or rehearsal preview without a snapshot, tables **rotate** on a timer.
+ * During mixed phases, rotation stops and the hero **tracks the hottest phase** deterministically until the snapshot changes shape.
  */
 export default function VenueEightTablesPreview({ wall, skipMountIntro = false }: VenueEightTablesPreviewProps) {
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
@@ -1339,7 +1292,15 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
   const showSeatingSpotlightCycle =
     tileRows.length > 0 && (hasLiveWall ? allTablesInLobby : true)
 
-  const seatingHeroRow = tileRows[seatingHeroIdx] ?? tileRows[0]
+  const tilePhaseFingerprint = tileRows.map((t) => `${t.tableNum}:${t.phase}`).join('|')
+  const floorFeaturedIdx = useMemo(
+    () => floorFeaturedTileIndex(tileRows),
+    [tilePhaseFingerprint]
+  )
+
+  /** Index into tileRows driving the hero + crawl highlight — driven by lobby tour or hottest felt. */
+  const spotlightTileIdx = showSeatingSpotlightCycle ? seatingHeroIdx : floorFeaturedIdx
+  const seatingHeroRow = tileRows[spotlightTileIdx] ?? tileRows[0]
 
   useEffect(() => {
     setSeatingHeroIdx((i) => Math.min(i, Math.max(0, tileRows.length - 1)))
@@ -1373,10 +1334,13 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
 
   const showRoster = rosterRowsFromTiles(tileRows).length > 0
 
+  /** Reserve space for the fixed **All tables** crawl whenever numbered tiles render. */
+  const padLeftForTablesCrawl = tileRows.length > 0
+
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
-        showSeatingSpotlightCycle ? VENUE_CRAWL_PL_CLASS : ''
+        padLeftForTablesCrawl ? VENUE_CRAWL_PL_CLASS : ''
       } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
@@ -1461,13 +1425,15 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               Guests can keep joining from the briefing screen until seating runs.
             </p>
           </motion.div>
-        ) : showSeatingSpotlightCycle && seatingHeroRow ? (
+        ) : seatingHeroRow ? (
           <section
-            aria-label="Seating spotlight tour"
+            aria-label={
+              showSeatingSpotlightCycle ? 'Seating spotlight tour' : 'Venue floor featured table'
+            }
             className="mx-auto flex max-h-[calc(100dvh-10rem)] min-h-0 w-full max-w-[min(1024px,min(96dvw,100%))] flex-col gap-3 overflow-visible sm:gap-4"
           >
             <p className="sr-only" aria-live="polite" aria-atomic="true">
-              Spotlight showing table {seatingHeroRow.tableNum}
+              Featured table {seatingHeroRow.tableNum}
             </p>
             <div className="flex w-full min-w-0 shrink-0 justify-center overflow-visible px-3 py-2 sm:px-4 sm:py-3">
               <AnimatePresence mode="wait">
@@ -1475,21 +1441,27 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
                   key={seatingHeroRow.tableNum}
                   row={seatingHeroRow}
                   mode="hero"
-                  idx={0}
-                  skipMountIntro={skipMountIntro}
                 />
               </AnimatePresence>
             </div>
             <div className="shrink-0 space-y-3 sm:space-y-4">
               <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
-                {prefersReducedMotion
-                  ? `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
-                  : `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length}`}
+                {showSeatingSpotlightCycle ? (
+                  prefersReducedMotion ? (
+                    `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
+                  ) : (
+                    `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingHeroIdx + 1} of ${tileRows.length}`
+                  )
+                ) : (
+                  `Featured table · Table ${seatingHeroRow.tableNum} (by live phase)`
+                )}
               </p>
-              {!prefersReducedMotion && tileRows.length > 1 ? (
+              {showSeatingSpotlightCycle && !prefersReducedMotion && tileRows.length > 1 ? (
                 <div className="mx-auto max-w-3xl">
                   <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
-                    <span className="font-semibold uppercase tracking-wider text-white/45">Next table</span>
+                    <span className="font-semibold uppercase tracking-wider text-white/45">
+                      Next table
+                    </span>
                     <span className="font-mono tabular-nums text-amber-200/90">
                       {Math.max(
                         0,
@@ -1515,21 +1487,9 @@ export default function VenueEightTablesPreview({ wall, skipMountIntro = false }
               ) : null}
             </div>
           </section>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5 md:grid-cols-3 md:gap-4 lg:grid-cols-4 lg:gap-4">
-            {tileRows.map((row, idx) => (
-              <VenueMosaicTableCard
-                key={row.tableNum}
-                row={row}
-                mode="grid"
-                idx={idx}
-                skipMountIntro={skipMountIntro}
-              />
-            ))}
-          </div>
-        )}
+        ) : null}
       </main>
-      {showSeatingSpotlightCycle && seatingHeroRow ? (
+      {tileRows.length > 0 && seatingHeroRow ? (
         <VenueAllTablesCrawl
           tiles={tileRows}
           spotlightTableNum={seatingHeroRow.tableNum}
