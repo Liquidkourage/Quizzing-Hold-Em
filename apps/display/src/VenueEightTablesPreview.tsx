@@ -1168,62 +1168,7 @@ export default function VenueEightTablesPreview({
         />
       </div>
 
-      <header className="relative z-10 border-b border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm sm:px-5 sm:py-2.5 lg:py-3">
-        <motion.div
-          className={`mx-auto flex w-full max-w-[1600px] items-start gap-3 sm:items-center sm:gap-5 ${
-            showHeadline ? 'min-h-[3.75rem]' : ''
-          } sm:min-h-0`}
-          initial={skipMountIntro ? false : { opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div
-            className="shrink-0 self-center w-[clamp(8.75rem,min(38vw,12rem),14rem)] sm:w-[clamp(10rem,min(34vw,14rem),16rem)]"
-            style={{ aspectRatio: '958 / 592' }}
-          >
-            <QuizzEmWordmark layout="fill" />
-          </div>
-
-          {showHeadline ? (
-            <motion.div
-              className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-xl border border-casino-emerald/35 bg-black/40 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(0,255,180,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:gap-5 sm:px-4 sm:py-3"
-              initial={skipMountIntro ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="min-w-0 flex-1">
-                {headlineQuestionText ? (
-                  <p className="text-balance text-left text-2xl font-bold leading-snug text-yellow-400 sm:text-3xl md:text-4xl lg:text-5xl xl:text-[3.65rem] xl:leading-[1.2] 2xl:text-[4.125rem]">
-                    {headlineQuestionText}
-                  </p>
-                ) : (
-                  <p className="sr-only">Answering in progress.</p>
-                )}
-              </div>
-              {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
-                <div
-                  className={`flex shrink-0 flex-row items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 sm:flex-col sm:px-4 sm:py-2 sm:tabular-nums ${
-                    timerSeconds <= 10
-                      ? 'border-amber-400/55 bg-amber-950/45 shadow-[0_0_20px_rgba(251,191,36,0.1)]'
-                      : 'border-amber-600/35 bg-amber-950/25'
-                  }`}
-                  aria-live="polite"
-                  aria-label={`Time remaining ${timerSeconds} seconds`}
-                >
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-white/50 sm:hidden">
-                    Time
-                  </span>
-                  <div className="font-mono text-4xl font-black tracking-tight text-amber-200 sm:text-5xl md:text-6xl lg:text-7xl">
-                    {timerSeconds}s
-                  </div>
-                </div>
-              ) : null}
-            </motion.div>
-          ) : (
-            <div className="min-w-0 flex-1" aria-hidden />
-          )}
-        </motion.div>
-      </header>
-
-      <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 pt-3 sm:px-6 sm:pt-4">
+      <main className="relative z-10 mx-auto max-w-[1600px] px-4 pb-12 pt-2 sm:px-6 sm:pt-3">
         {wall != null && tileRows.length === 0 ? (
           <motion.div
             className="rounded-2xl border border-yellow-700/35 bg-black/55 p-10 text-center shadow-xl backdrop-blur-md sm:p-14"
@@ -1247,14 +1192,73 @@ export default function VenueEightTablesPreview({
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Featured table {seatingHeroRow.tableNum}
             </p>
-            <div className="flex h-[min(78dvh,860px)] min-h-[min(380px,42dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-2xl border border-yellow-600/35 bg-black/45 shadow-xl">
-              <DisplayTableLive
-                key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
-                feltTableHint={String(seatingHeroRow.tableNum)}
-                variant="embedded"
-                hideQuestionBanner
-              />
-            </div>
+
+            {/* Single center card: wordmark overlays top; headline row when live; taller hero felt below. */}
+            <motion.article
+              className="relative w-full overflow-hidden rounded-2xl border border-yellow-600/35 bg-black/55 shadow-xl backdrop-blur-md"
+              initial={skipMountIntro ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="pointer-events-none absolute left-3 top-2 z-30 w-[clamp(9rem,min(34vw,12rem),15rem)] sm:left-5 sm:top-3 sm:w-[clamp(10rem,min(30vw,14rem),16rem)]">
+                <div className="w-full shadow-black/70 drop-shadow-xl" style={{ aspectRatio: '958 / 592' }}>
+                  <QuizzEmWordmark layout="fill" />
+                </div>
+              </div>
+
+              {showHeadline ? (
+                <div className="relative z-20 border-b border-white/15 bg-black/40 px-3 pb-3 pl-[clamp(11rem,min(41vw,15.25rem),17rem)] pr-4 pt-[4.85rem] sm:px-4 sm:pb-4 sm:pl-[clamp(12.75rem,min(41vw,16.25rem),18rem)] sm:pt-[4.85rem]">
+                  <motion.div
+                    className="flex min-h-0 min-w-0 flex-col gap-2 rounded-xl border border-casino-emerald/35 bg-black/35 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(0,255,180,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:gap-5 sm:px-4 sm:py-3"
+                    initial={skipMountIntro ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      {headlineQuestionText ? (
+                        <p className="text-balance text-left text-2xl font-bold leading-snug text-yellow-400 sm:text-3xl md:text-4xl lg:text-5xl xl:text-[3.25rem] xl:leading-[1.2] 2xl:text-[3.75rem]">
+                          {headlineQuestionText}
+                        </p>
+                      ) : (
+                        <p className="sr-only">Answering in progress.</p>
+                      )}
+                    </div>
+                    {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
+                      <div
+                        className={`flex shrink-0 flex-row items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 sm:flex-col sm:px-4 sm:py-2 sm:tabular-nums ${
+                          timerSeconds <= 10
+                            ? 'border-amber-400/55 bg-amber-950/45 shadow-[0_0_20px_rgba(251,191,36,0.1)]'
+                            : 'border-amber-600/35 bg-amber-950/25'
+                        }`}
+                        aria-live="polite"
+                        aria-label={`Time remaining ${timerSeconds} seconds`}
+                      >
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-white/50 sm:hidden">
+                          Time
+                        </span>
+                        <div className="font-mono text-4xl font-black tracking-tight text-amber-200 sm:text-5xl md:text-6xl lg:text-7xl">
+                          {timerSeconds}s
+                        </div>
+                      </div>
+                    ) : null}
+                  </motion.div>
+                </div>
+              ) : null}
+
+              <div
+                className={`relative z-10 min-h-0 w-full px-2 pb-2 sm:px-3 sm:pb-3 ${
+                  showHeadline ? 'pt-2 sm:pt-3' : 'pt-[4.95rem] sm:pt-[4.95rem]'
+                }`}
+              >
+                <div className="flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-xl border border-yellow-700/25 bg-black/35">
+                  <DisplayTableLive
+                    key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
+                    feltTableHint={String(seatingHeroRow.tableNum)}
+                    variant="embedded"
+                    hideQuestionBanner
+                  />
+                </div>
+              </div>
+            </motion.article>
+
             <div className="shrink-0 space-y-3 sm:space-y-4">
               <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
                 {showRotatingTour ? (
