@@ -46,15 +46,10 @@ function formatVenueBankroll(amount: number): string {
   return `$${Math.max(0, n).toLocaleString()}`
 }
 
-/** Toward-table-center hint by the acting seat: call size vs stack (active player only). */
-function formatActingCallHint(amount: number, pctOfStack: number | null | undefined): string {
+/** Toward-table-center hint by the acting seat: call amount only (active player only). */
+function formatActingCallHint(amount: number): string {
   if (amount <= 0) return 'No call to match'
-  const callStr = `Call ${formatVenueBankroll(amount)}`
-  if (pctOfStack != null && Number.isFinite(pctOfStack)) {
-    const p = pctOfStack >= 100 - 1e-6 ? 100 : pctOfStack
-    return `${callStr} · ${Math.round(p)}% stack`
-  }
-  return callStr
+  return `Call ${formatVenueBankroll(amount)}`
 }
 
 /** Caption under Pot (local) on mosaic tiles — e.g. “Pat Q. to call: $40”. */
@@ -444,7 +439,6 @@ function SeatRingWithLabels({
   showSeatBettingActions = false,
   seatLastBettingAction: seatLastBettingActionIn,
   actingCallAmount,
-  actingCallPctOfStack,
 }: {
   seatedCount: number
   seatNames: string[]
@@ -462,9 +456,8 @@ function SeatRingWithLabels({
   showSeatBettingActions?: boolean
   /** Parallel to `seatNames`; from server `seatLastBettingAction`. */
   seatLastBettingAction?: (SeatBettingAction | null)[]
-  /** Active seat only: chips to call and % of stack (venue snapshot). */
+  /** Active seat only: chips to call (venue snapshot). */
   actingCallAmount?: number | null
-  actingCallPctOfStack?: number | null
 }) {
   const seatFolded = padSeatFolded(seatFoldedIn)
   const seatLastBettingAction = padSeatLastBettingAction(seatLastBettingActionIn)
@@ -605,7 +598,7 @@ function SeatRingWithLabels({
                     ? [
                         'Seat has the wagering turn',
                         showActingCallLine
-                          ? formatActingCallHint(actingCallAmount ?? 0, actingCallPctOfStack)
+                          ? formatActingCallHint(actingCallAmount ?? 0)
                           : null,
                       ]
                         .filter(Boolean)
@@ -633,7 +626,7 @@ function SeatRingWithLabels({
                       : 'max-w-[min(90vw,14rem)] whitespace-normal rounded-lg border-2 border-amber-300/35 bg-neutral-950/95 px-2.5 py-1.5 text-center text-xs font-bold tabular-nums leading-snug text-amber-50 shadow-md ring-1 ring-amber-400/30 sm:max-w-[16rem] sm:px-3 sm:py-2 sm:text-sm md:text-base [text-shadow:0_1px_2px_rgba(0,0,0,1)]'
                   }
                 >
-                  {formatActingCallHint(actingCallAmount ?? 0, actingCallPctOfStack)}
+                  {formatActingCallHint(actingCallAmount ?? 0)}
                 </span>
               </div>
             ) : null}
@@ -728,26 +721,38 @@ function SeatRingWithLabels({
                 >
                   {raw}
                 </span>
-                {lastBetAct != null ? (
-                  <span
-                    className={`mt-1.5 block max-w-full truncate border-2 px-1.5 py-0.5 font-black uppercase leading-tight tracking-wide shadow-md ${
-                      size === 'lg'
-                        ? 'text-sm sm:text-base md:text-lg'
-                        : 'text-[0.7rem] sm:text-xs md:text-sm'
-                    } ${seatBettingActionPillClass(lastBetAct)}`}
-                  >
-                    {seatBettingActionLabel(lastBetAct)}
-                  </span>
-                ) : null}
-                {!(feltSeatStacks && size === 'lg') ? (
-                  <span
-                    className={`mt-0.5 block max-w-full truncate font-mono tabular-nums text-[0.625rem] sm:text-[0.6875rem] md:text-xs lg:text-sm ${
-                      isFolded ? 'text-white/40' : 'text-casino-emerald'
-                    }`}
-                  >
-                    {formatVenueBankroll(chips)}
-                  </span>
-                ) : null}
+                {(() => {
+                  const showDupStackForBettingTag =
+                    showSeatBettingActions &&
+                    lastBetAct != null &&
+                    Boolean(feltSeatStacks && size === 'lg' && raw)
+                  const showMonoStackUnderName =
+                    !(feltSeatStacks && size === 'lg') || showDupStackForBettingTag
+                  return (
+                    <>
+                      {showMonoStackUnderName ? (
+                        <span
+                          className={`mt-0.5 block max-w-full truncate font-mono tabular-nums text-[0.625rem] sm:text-[0.6875rem] md:text-xs lg:text-sm ${
+                            isFolded ? 'text-white/40' : 'text-casino-emerald'
+                          }`}
+                        >
+                          {formatVenueBankroll(chips)}
+                        </span>
+                      ) : null}
+                      {lastBetAct != null ? (
+                        <span
+                          className={`mt-1 block max-w-full truncate border-2 px-1.5 py-0.5 font-black uppercase leading-tight tracking-wide shadow-md ${
+                            size === 'lg'
+                              ? 'text-sm sm:text-base md:text-lg'
+                              : 'text-[0.7rem] sm:text-xs md:text-sm'
+                          } ${seatBettingActionPillClass(lastBetAct)}`}
+                        >
+                          {seatBettingActionLabel(lastBetAct)}
+                        </span>
+                      ) : null}
+                    </>
+                  )
+                })()}
               </div>
             ) : null}
           </div>
@@ -957,7 +962,6 @@ function VenueMosaicTableCard({
             showSeatBettingActions={showSeatBettingActions}
             seatLastBettingAction={seatLastBettingAction}
             actingCallAmount={row.actingCallAmount}
-            actingCallPctOfStack={row.actingCallPctOfStack}
           />
         </div>
 
@@ -1031,7 +1035,6 @@ function VenueMosaicTableCard({
           showSeatBettingActions={showSeatBettingActions}
           seatLastBettingAction={seatLastBettingAction}
           actingCallAmount={row.actingCallAmount}
-          actingCallPctOfStack={row.actingCallPctOfStack}
         />
       </div>
 
