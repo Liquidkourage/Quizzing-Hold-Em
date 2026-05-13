@@ -87,6 +87,32 @@ function HostVenueFeltBeatStrip({
   rows: HostVenueFeltBeatRow[] | null
   hostTableId: string
 }) {
+  const activeWithSig = rows?.filter((r) => r.active && r.phaseStrictSig != null && r.phaseStrictSig !== '') ?? []
+  const outlierTableNums = (() => {
+    if (activeWithSig.length < 2) return new Set<number>()
+    const bySig = new Map<string, number[]>()
+    for (const r of activeWithSig) {
+      const s = r.phaseStrictSig!
+      if (!bySig.has(s)) bySig.set(s, [])
+      bySig.get(s)!.push(r.tableNum)
+    }
+    if (bySig.size <= 1) return new Set<number>()
+    let bestSig = ''
+    let bestLen = -1
+    for (const [sig, nums] of bySig) {
+      if (nums.length > bestLen || (nums.length === bestLen && sig < bestSig)) {
+        bestLen = nums.length
+        bestSig = sig
+      }
+    }
+    const out = new Set<number>()
+    for (const [sig, nums] of bySig) {
+      if (sig !== bestSig) nums.forEach((t) => out.add(t))
+    }
+    return out
+  })()
+  const lockstepMisaligned = outlierTableNums.size > 0
+
   const hasLiveCountdown =
     rows?.some((r) => r.phase === 'answering' && r.answerDeadlineMs != null) ?? false
   const [, setTick] = useState(0)
@@ -101,9 +127,18 @@ function HostVenueFeltBeatStrip({
       <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/42">Venue felts · beat</h2>
         <p className="text-xs leading-snug text-white/45">
-          Same refresh as the public mosaic — use this to see why a lockstep toast fired. Cyan ring = your host control table.
+          Same refresh as the public mosaic — diagnose lockstep toasts here. Cyan ring = your host control table; amber
+          border = this felt’s signature is in the <strong className="text-white/70">minority</strong> vs other active felts.
         </p>
       </div>
+      {lockstepMisaligned ? (
+        <div
+          role="status"
+          className="mb-3 rounded-lg border border-amber-400/55 bg-amber-950/35 px-3 py-2 text-sm font-semibold text-amber-100"
+        >
+          Lockstep mismatch: amber felts use a different engine signature than the plurality. Fix them before a venue-wide cue.
+        </div>
+      ) : null}
       {rows == null ? (
         <p className="text-sm text-white/50">Waiting for first venue sync…</p>
       ) : (
@@ -117,12 +152,23 @@ function HostVenueFeltBeatStrip({
               row.phase === 'answering' && row.answerDeadlineMs != null
                 ? Math.max(0, Math.ceil((row.answerDeadlineMs - Date.now()) / 1000))
                 : null
+            const sig = row.phaseStrictSig ?? null
+            const drift = row.active && outlierTableNums.has(row.tableNum)
             return (
               <div
                 key={row.tableNum}
+                title={
+                  drift && sig
+                    ? `Straggler vs majority — lockstep sig: ${sig}`
+                    : lockstepMisaligned && row.active && sig
+                      ? `Lockstep sig: ${sig}`
+                      : undefined
+                }
                 className={`rounded-lg border px-2 py-2 text-center transition-colors sm:min-h-[7.25rem] ${
                   row.active
-                    ? 'border-white/20 bg-black/35'
+                    ? drift
+                      ? 'border-amber-400/85 bg-amber-950/25 shadow-[0_0_14px_rgba(251,191,36,0.25)]'
+                      : 'border-white/20 bg-black/35'
                     : 'border-white/10 bg-black/22 opacity-80'
                 } ${watching ? 'ring-2 ring-cyan-400/65 ring-offset-2 ring-offset-[#0d0d14]' : ''}`}
               >

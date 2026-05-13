@@ -91,6 +91,11 @@ export type HostVenueFeltBeatRow = {
   street: string
   clock: string
   answerDeadlineMs: number | null
+  /**
+   * Server lockstep fingerprint (`phaseStrictSignature`); `null` when inactive.
+   * Host compares across active felts to flag drift.
+   */
+  phaseStrictSig: string | null
 }
 
 export type HostVenueFeltBeatPayload = {

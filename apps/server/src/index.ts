@@ -1253,6 +1253,7 @@ function buildHostVenueFeltBeatPayload(vnRaw: string): { felts: HostVenueFeltBea
         street: '—',
         clock: '—',
         answerDeadlineMs: null,
+        phaseStrictSig: null,
       })
       continue
     }
@@ -1296,6 +1297,7 @@ function buildHostVenueFeltBeatPayload(vnRaw: string): { felts: HostVenueFeltBea
       street,
       clock,
       answerDeadlineMs,
+      phaseStrictSig: phaseStrictSignature(gs),
     })
   }
   return { felts }
