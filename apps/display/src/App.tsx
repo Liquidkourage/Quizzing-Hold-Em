@@ -592,6 +592,8 @@ function DisplayTableLive({
 
   /** Full-bleed game plane under a bottom docked HUD (venue wall hides question banner). */
   const embeddedHudOverlay = isEmbedded && !showQuestionStrip
+  /** Nudge tableau down slightly so oval reads centered vs the overlay HUD (geometric mid can read high live). */
+  const embeddedScaledLayerNudgeYPx = embeddedHudOverlay ? 54 : 0
 
   return (
     <div
@@ -760,7 +762,7 @@ function DisplayTableLive({
                     top: '50%',
                     width: EMBEDDED_FELT_LAYOUT_W,
                     height: EMBEDDED_FELT_LAYOUT_H,
-                    transform: `translate(-50%, -50%) scale(${embeddedFeltScale})`,
+                    transform: `translate(-50%, calc(-50% + ${embeddedScaledLayerNudgeYPx}px)) scale(${embeddedFeltScale})`,
                     transformOrigin: 'center center',
                   }
                 : { inset: 0 }

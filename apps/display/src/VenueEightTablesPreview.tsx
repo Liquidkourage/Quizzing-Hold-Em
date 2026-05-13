@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
 import { displayActingSeatIndex } from '@qhe/core'
@@ -10,6 +10,18 @@ import type { VenueFeaturedWatch } from './useVenueWallFeaturedWatch.ts'
 import { buildVenueWallTileRows, SEATING_SPOTLIGHT_CYCLE_SEC, VENUE_WALL_SEAT_SLOTS } from './venueWallModel'
 
 const VENUE_SEAT_SLOTS = VENUE_WALL_SEAT_SLOTS
+
+/** Same diamond floor as {@link DisplayTableLive} — keeps felt + tour chrome visually one panel. */
+const VENUE_HERO_CARPET_STYLE: CSSProperties = {
+  backgroundImage: `
+      radial-gradient(circle at 25% 25%, rgba(139, 69, 19, 0.3) 3px, transparent 3px),
+      radial-gradient(circle at 75% 75%, rgba(160, 82, 45, 0.3) 3px, transparent 3px),
+      linear-gradient(45deg, transparent 48%, rgba(139, 69, 19, 0.15) 49%, rgba(139, 69, 19, 0.15) 51%, transparent 52%),
+      linear-gradient(-45deg, transparent 48%, rgba(160, 82, 45, 0.15) 49%, rgba(160, 82, 45, 0.15) 51%, transparent 52%)
+    `,
+  backgroundSize: '40px 40px, 40px 40px, 80px 80px, 80px 80px',
+  backgroundPosition: '0 0, 20px 20px, 0 0, 0 0',
+}
 
 /** Stacking inside each mini felt ({@link SeatRingWithLabels}): name + bankroll beside name always top; then center hint, badges, pile, rim. */
 const SEAT_LAYER_DOT = 'z-[20]'
@@ -1245,7 +1257,7 @@ export default function VenueEightTablesPreview({
 
               {/* Orange dashed = felt staging row inside article; cyan fills it top-to-bottom (wordmark overlays; no spacer above carpet). */}
               <div className="relative z-10 min-h-0 w-full border-2 border-dashed border-orange-400/80">
-                <div className="relative box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-xl border-2 border-cyan-400/85">
+                <div className="relative box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 justify-stretch overflow-hidden rounded-b-xl rounded-t-none border-2 border-cyan-400/85">
                   <DisplayTableLive
                     key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
                     feltTableHint={String(seatingHeroRow.tableNum)}
@@ -1254,50 +1266,56 @@ export default function VenueEightTablesPreview({
                   />
                 </div>
               </div>
-            </motion.article>
 
-            <div className="shrink-0 space-y-3 sm:space-y-4">
-              <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
-                {showRotatingTour ? (
-                  prefersReducedMotion ? (
-                    `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
-                  ) : (
-                    `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingTourIndex + 1} of ${tileRows.length}`
-                  )
-                ) : (
-                  `Featured table · Table ${seatingHeroRow.tableNum}`
-                )}
-              </p>
-              {showRotatingTour && !prefersReducedMotion && tileRows.length > 1 ? (
-                <div className="mx-auto max-w-3xl">
-                  <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
-                    <span className="font-semibold uppercase tracking-wider text-white/45">
-                      Next table
-                    </span>
-                    <span className="font-mono tabular-nums text-amber-200/90">
-                      {Math.max(
-                        0,
-                        Math.ceil((1 - seatingCycleProgress) * SEATING_SPOTLIGHT_CYCLE_SEC)
-                      )}
-                      s
-                    </span>
-                  </div>
-                  <div
-                    className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={Math.round(seatingCycleProgress * 100)}
-                    aria-label="Seating tour progress until the next table"
-                  >
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-700/95 to-amber-300/95"
-                      style={{ width: `${seatingCycleProgress * 100}%` }}
-                    />
-                  </div>
+              <div className="relative z-20 overflow-hidden border-t border-yellow-700/40 px-4 py-3 pb-4 sm:px-5 sm:py-4">
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+                <div className="pointer-events-none absolute inset-0 opacity-55">
+                  <div className="h-full w-full" style={VENUE_HERO_CARPET_STYLE} />
                 </div>
-              ) : null}
-            </div>
+                <div className="relative z-10 space-y-3 sm:space-y-4">
+                  <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
+                    {showRotatingTour ? (
+                      prefersReducedMotion ? (
+                        `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
+                      ) : (
+                        `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingTourIndex + 1} of ${tileRows.length}`
+                      )
+                    ) : (
+                      `Featured table · Table ${seatingHeroRow.tableNum}`
+                    )}
+                  </p>
+                  {showRotatingTour && !prefersReducedMotion && tileRows.length > 1 ? (
+                    <div className="mx-auto max-w-3xl">
+                      <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
+                        <span className="font-semibold uppercase tracking-wider text-white/45">
+                          Next table
+                        </span>
+                        <span className="font-mono tabular-nums text-amber-200/90">
+                          {Math.max(
+                            0,
+                            Math.ceil((1 - seatingCycleProgress) * SEATING_SPOTLIGHT_CYCLE_SEC)
+                          )}
+                          s
+                        </span>
+                      </div>
+                      <div
+                        className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(seatingCycleProgress * 100)}
+                        aria-label="Seating tour progress until the next table"
+                      >
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-amber-700/95 to-amber-300/95"
+                          style={{ width: `${seatingCycleProgress * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </motion.article>
           </section>
         ) : null}
       </main>
