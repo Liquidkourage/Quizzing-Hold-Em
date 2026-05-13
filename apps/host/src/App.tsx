@@ -6,6 +6,7 @@ import {
   onState,
   onToast,
   onHostLibrary,
+  onHostVenueGameplayHints,
   useSocket,
   startAnswering,
   adminAdvanceTurn,
@@ -104,6 +105,7 @@ function HostApp() {
   const importFileRef = useRef<HTMLInputElement>(null)
   const importReplaceRef = useRef(false)
   const [tvPairCode, setTvPairCode] = useState('')
+  const [livelyGameplayTableNums, setLivelyGameplayTableNums] = useState<number[]>([])
 
   const viteHostSecret =
     typeof import.meta.env.VITE_HOST_SECRET === 'string' ? import.meta.env.VITE_HOST_SECRET.trim() : ''
@@ -148,6 +150,13 @@ function HostApp() {
       setSetlists(snap.setlists)
       setActiveSetlistId(snap.activeSetlistId)
       setActiveSetlistNextIndex(snap.activeSetlistNextIndex)
+    })
+    return off
+  }, [])
+
+  useEffect(() => {
+    const off = onHostVenueGameplayHints((p) => {
+      setLivelyGameplayTableNums(p.livelyTableNums)
     })
     return off
   }, [])
@@ -1508,6 +1517,9 @@ function HostApp() {
           </p>
           <div className="mx-auto mb-8 max-w-5xl rounded-xl bg-black/30 p-5">
             <div className="mb-8 text-[11px] font-bold uppercase tracking-[0.12em] text-white/38">Venue wall</div>
+            <p className="mb-3 text-center text-[11px] leading-relaxed text-amber-200/70">
+              Amber ring on a number = that felt has play in motion (open wagering or live trivia hand)—quick cue to spotlight.
+            </p>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <NeonButton
                 variant="emerald"
@@ -1520,7 +1532,11 @@ function HostApp() {
                 <NeonButton
                   key={n}
                   variant="gold"
-                  className="!px-3 !py-2 min-w-[2.75rem]"
+                  className={`!px-3 !py-2 min-w-[2.75rem]${
+                    livelyGameplayTableNums.includes(n)
+                      ? ' ring-2 ring-amber-400/85 ring-offset-2 ring-offset-[#0f0f18]'
+                      : ''
+                  }`}
                   onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: n })}
                 >
                   {n}

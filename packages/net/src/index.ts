@@ -49,6 +49,11 @@ export type DisplayVenueTileSnapshot = {
   actingCallAmount?: number | null
   /** Same player: % of current stack required for that call. Omitted when unknown or not applicable. */
   actingCallPctOfStack?: number | null
+  /**
+   * Heuristic cue for spotlighting active play (≥2 seated, open wagering or mid-hand trivia).
+   * Omitted when false / older servers.
+   */
+  interestingAction?: boolean
 }
 
 /** Venue wall payload: table mosaic + shared trivia headline (from first live table 1–8). */
@@ -66,6 +71,11 @@ export type DisplayVenueWallSnapshot = {
    * mosaic tile phases, or local mosaic force.
    */
   showAudienceWelcome: boolean
+}
+
+/** Host-only (HOST:{venue}): numbered felts with “something happening now” spotlight cue. */
+export type HostVenueGameplayHintsPayload = {
+  livelyTableNums: number[]
 }
 
 export const ClientHello = z.object({
@@ -174,6 +184,8 @@ export interface ServerToClientEvents {
   seated: (info: { tableId: string }) => void
   /** Sent only to sockets in HOST:{venue} — bank, setlists, active rundown */
   hostLibrary: (snapshot: HostLibrarySnapshot) => void
+  /** Host cue: felts worth checking for public spotlight (cheap heuristic; updates with venue wall). */
+  hostVenueGameplayHints: (payload: HostVenueGameplayHintsPayload) => void
   /** Venue displays (DISPLAY:{venue}); host drives via displaySetLayout */
   displayLayout: (layout: DisplayLayoutPayload) => void
   /** Venue wall mosaic + current question / answer timer */

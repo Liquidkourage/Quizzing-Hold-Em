@@ -8,6 +8,7 @@ import type {
   HostLibrarySnapshot,
   DisplayLayoutPayload,
   DisplayVenueWallSnapshot,
+  HostVenueGameplayHintsPayload,
 } from './index'
 
 let socket: Socket | null = null
@@ -182,6 +183,15 @@ export function onHostLibrary(callback: (snapshot: HostLibrarySnapshot) => void)
   socket.on('hostLibrary', callback)
   return () => {
     if (socket) socket.off('hostLibrary', callback)
+  }
+}
+
+export function onHostVenueGameplayHints(callback: (payload: HostVenueGameplayHintsPayload) => void) {
+  if (!socket) return () => {}
+
+  socket.on('hostVenueGameplayHints', callback)
+  return () => {
+    if (socket) socket.off('hostVenueGameplayHints', callback)
   }
 }
 

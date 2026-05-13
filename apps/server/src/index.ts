@@ -1181,6 +1181,12 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
         }
       }
     }
+    const interestingAction =
+      seated >= 2 &&
+      ((gs.phase === 'betting' && gs.round.isBettingOpen === true) ||
+        gs.phase === 'answering' ||
+        gs.phase === 'reveal' ||
+        gs.phase === 'showdown')
     tiles.push({
       tableNum: n,
       seated,
@@ -1199,6 +1205,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
           : null,
       isBettingOpen: typeof gs.round.isBettingOpen === 'boolean' ? gs.round.isBettingOpen : null,
       actingSeatIndex: displayActingSeatIndex(gs.phase, seated, gs.round),
+      ...(interestingAction ? { interestingAction: true } : {}),
     })
   }
 
@@ -1223,6 +1230,11 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     showAudienceWelcome: !venueAudienceWelcomeExpired.has(vn),
   }
   io.to(displayVenueRoom(vn)).emit('displayVenueSnapshot', payload)
+  const livelyTableNums = tiles
+    .filter((t) => t.interestingAction === true)
+    .map((t) => t.tableNum)
+    .sort((a, b) => a - b)
+  io.to(hostVenueRoom(vn)).emit('hostVenueGameplayHints', { livelyTableNums })
 }
 
 function afterTableStateBroadcast(gs: GameState, _sessionKey: string) {
