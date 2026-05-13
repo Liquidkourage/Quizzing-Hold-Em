@@ -595,8 +595,8 @@ function DisplayTableLive({
 
   /** Full-bleed game plane under a bottom docked HUD (venue wall hides question banner). */
   const embeddedHudOverlay = isEmbedded && !showQuestionStrip
-  /** Small downward nudge of scaled tableau vs overlay HUD; reduced when HUD is lifted above a viewport dock strip. */
-  const embeddedScaledLayerNudgeYPx = embeddedHudOverlay ? 24 : 0
+  /** Negative moves tableau up in embedded hero; align with lifted HUD + viewport tour dock. */
+  const embeddedScaledLayerNudgeYPx = embeddedHudOverlay ? -20 : 0
 
   return (
     <div

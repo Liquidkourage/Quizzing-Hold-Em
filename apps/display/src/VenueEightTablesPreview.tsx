@@ -37,8 +37,8 @@ const VENUE_CRAWL_STRIP_CLASS = 'w-80 sm:w-[22rem] lg:w-96'
 const VENUE_CRAWL_PL_CLASS = 'pl-80 sm:pl-[22rem] lg:pl-96'
 const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 
-/** Fixed bottom seating-tour dock — matches label + track stack; lifts embedded felt HUD in {@link DisplayTableLive}. */
-const VENUE_SPOTLIGHT_VIEWPORT_PROGRESS_RESERVED_PX = 88
+/** Fixed viewport dock height (caption + next-table row + progress); HUD inset clears this stripe. */
+const VENUE_SPOTLIGHT_VIEWPORT_PROGRESS_RESERVED_PX = 108
 
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
 
@@ -1172,7 +1172,7 @@ export default function VenueEightTablesPreview({
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
         padLeftForTablesCrawl ? VENUE_CRAWL_PL_CLASS : ''
       } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}${
-        dockSeatingTourProgress ? ' pb-[calc(6rem+env(safe-area-inset-bottom,0px))]' : ''
+        dockSeatingTourProgress ? ' pb-[calc(7.75rem+env(safe-area-inset-bottom,0px))]' : ''
       }`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
@@ -1278,25 +1278,27 @@ export default function VenueEightTablesPreview({
                 </div>
               </div>
 
-              <div className="relative z-20 overflow-hidden border-t border-yellow-700/40 px-4 py-3 pb-4 sm:px-5 sm:py-4">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
-                <div className="pointer-events-none absolute inset-0 opacity-55">
-                  <div className="h-full w-full" style={VENUE_HERO_CARPET_STYLE} />
-                </div>
-                <div className="relative z-10 space-y-2 sm:space-y-3">
-                  <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
-                    {showRotatingTour ? (
-                      prefersReducedMotion ? (
-                        `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
+              {!dockSeatingTourProgress ? (
+                <div className="relative z-20 overflow-hidden border-t border-yellow-700/40 px-4 py-3 pb-4 sm:px-5 sm:py-4">
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+                  <div className="pointer-events-none absolute inset-0 opacity-55">
+                    <div className="h-full w-full" style={VENUE_HERO_CARPET_STYLE} />
+                  </div>
+                  <div className="relative z-10 space-y-2 sm:space-y-3">
+                    <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
+                      {showRotatingTour ? (
+                        prefersReducedMotion ? (
+                          `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
+                        ) : (
+                          `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingTourIndex + 1} of ${tileRows.length}`
+                        )
                       ) : (
-                        `Rotating seating · Table ${seatingHeroRow.tableNum} · ${seatingTourIndex + 1} of ${tileRows.length}`
-                      )
-                    ) : (
-                      `Featured table · Table ${seatingHeroRow.tableNum}`
-                    )}
-                  </p>
+                        `Featured table · Table ${seatingHeroRow.tableNum}`
+                      )}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </motion.article>
           </section>
         ) : null}
@@ -1304,13 +1306,22 @@ export default function VenueEightTablesPreview({
 
       {seatingHeroRow && dockSeatingTourProgress ? (
         <div
-          className={`fixed bottom-0 left-0 right-0 z-[60] border-t border-yellow-700/50 bg-black/90 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2 backdrop-blur-md ${
+          className={`fixed bottom-0 left-0 right-0 z-[60] border-t border-yellow-700/50 bg-black/90 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-md ${
             padLeftForTablesCrawl ? VENUE_CRAWL_PL_CLASS : ''
           } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}`}
-          role="presentation"
+          role="region"
+          aria-label="Seating spotlight tour"
         >
           <div className="mx-auto max-w-[min(1120px,min(96dvw,100%))] px-4 sm:px-5 md:px-6">
             <div className="mx-auto max-w-3xl">
+              <p
+                className="mb-3 text-center text-xs text-white/55 sm:text-sm md:text-base"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                Rotating seating · Table {seatingHeroRow.tableNum} · {seatingTourIndex + 1} of{' '}
+                {tileRows.length}
+              </p>
               <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
                 <span className="font-semibold uppercase tracking-wider text-white/45">
                   Next table
