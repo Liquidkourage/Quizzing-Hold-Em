@@ -20,19 +20,14 @@ const DISPLAY_LAYOUT_LOCAL_BROADCAST_CHANNEL = 'qhe-display-layout-demo'
 function isDisplayLayoutPayloadLocal(v: unknown): v is DisplayLayoutPayload {
   if (!v || typeof v !== 'object') return false
   const o = v as Record<string, unknown>
-  if (o.layout === 'singleTable') {
-    return typeof o.tableId === 'string' && o.tableId.length > 0
-  }
-  if (o.layout === 'venueWall') {
-    if (o.focusTable === null) return true
-    return (
-      typeof o.focusTable === 'number' &&
-      Number.isInteger(o.focusTable) &&
-      o.focusTable >= 1 &&
-      o.focusTable <= 8
-    )
-  }
-  return false
+  if (o.layout !== 'venueWall') return false
+  if (o.focusTable === null) return true
+  return (
+    typeof o.focusTable === 'number' &&
+    Number.isInteger(o.focusTable) &&
+    o.focusTable >= 1 &&
+    o.focusTable <= 8
+  )
 }
 
 function postDisplayLayoutLocal(layout: DisplayLayoutPayload) {

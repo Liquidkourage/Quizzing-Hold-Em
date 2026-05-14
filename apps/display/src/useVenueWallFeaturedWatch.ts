@@ -9,7 +9,7 @@ import {
 } from './venueWallModel'
 
 function venueSpotlightFromLayout(layout: DisplayLayoutPayload): number | null {
-  if (layout.layout === 'venueWall' && layout.focusTable != null && Number.isFinite(layout.focusTable)) {
+  if (layout.focusTable != null && Number.isFinite(layout.focusTable)) {
     return layout.focusTable
   }
   return null
@@ -43,8 +43,7 @@ export function useVenueWallFeaturedWatch(
   const tileRows = useMemo(() => buildVenueWallTileRows(wall), [wall])
   const hasLive = venueWallHasLiveTiles(wall)
   const fingerprint = tileRows.map((t) => `${t.tableNum}:${t.phase}`).join('|')
-  const showRotatingTour =
-    layout.layout === 'venueWall' && shouldRotateLobbyTour(tileRows, hasLive)
+  const showRotatingTour = shouldRotateLobbyTour(tileRows, hasLive)
 
   const prefersReducedMotion = usePrefersReducedMotion()
   const [seatingTourIndex, setSeatingTourIndex] = useState(0)
@@ -81,10 +80,9 @@ export function useVenueWallFeaturedWatch(
     return Math.min(1, elapsed / (SEATING_SPOTLIGHT_CYCLE_SEC * 1000))
   }, [seatingCycleTick, seatingTourIndex, prefersReducedMotion, tileRows.length])
 
-  const hostSpot = layout.layout === 'venueWall' ? venueSpotlightFromLayout(layout) : null
+  const hostSpot = venueSpotlightFromLayout(layout)
 
   const featuredTableNum = (() => {
-    if (layout.layout !== 'venueWall') return null
     if (tileRows.length === 0) return null
     if (hostSpot != null) return hostSpot
     if (showRotatingTour) return tileRows[seatingTourIndex]?.tableNum ?? tileRows[0]!.tableNum

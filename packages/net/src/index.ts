@@ -16,9 +16,8 @@ export type HostLibrarySnapshot = {
 export const ClientRole = z.enum(['host', 'player', 'display'])
 export type ClientRole = z.infer<typeof ClientRole>
 
-export type DisplayLayoutPayload =
-  | { layout: 'singleTable'; tableId: string }
-  | { layout: 'venueWall'; focusTable: number | null }
+/** Host-driven `/display` mode: mosaic shell always; `focusTable` spotlights one felt or null for overview. */
+export type DisplayLayoutPayload = { layout: 'venueWall'; focusTable: number | null }
 
 /** Mosaic row for `/display` venue wall — derived live from tables 1–8 sessions. */
 export type DisplayVenueTileSnapshot = {

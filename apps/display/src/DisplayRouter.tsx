@@ -7,7 +7,6 @@ import {
   onDisplayVenueSnapshot,
   subscribeDisplayLayoutLocal,
 } from '@qhe/net'
-import DisplayTableLive from './App.tsx'
 import { readUrlLayoutBootstrap } from './displayUrlParams'
 import AudienceWelcomeWall from './AudienceWelcomeWall.tsx'
 import VenueEightTablesPreview from './VenueEightTablesPreview.tsx'
@@ -35,7 +34,7 @@ function normalizeVenueWallTiles(
 }
 
 function venueOverviewFocusOff(l: DisplayLayoutPayload) {
-  return l.layout === 'venueWall' && l.focusTable == null
+  return l.focusTable == null
 }
 
 type DisplayRouterProps = {
@@ -45,8 +44,8 @@ type DisplayRouterProps = {
 }
 
 /**
- * Host-driven `displayLayout` plus venue snapshot. Venue wall stays on **`VenueEightTablesPreview`**;
- * live **`GameState`** for the featured table renders **inside** the hero (embedded **`DisplayTableLive`**).
+ * Host-driven `displayLayout` plus venue snapshot. **`VenueEightTablesPreview`** (mosaic + optional spotlight hero);
+ * live **`GameState`** for the featured table renders **inside** the hero when focused (`embedded` **`DisplayTableLive`**).
  */
 export default function DisplayRouter({ venueCode, pairingBootstrap = false }: DisplayRouterProps) {
   const [layout, setLayout] = useState<DisplayLayoutPayload>(() => {
@@ -66,7 +65,8 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   const venueMosaicWasShownRef = useRef(false)
   const prevAudienceWelcomeRef = useRef<boolean | undefined>(undefined)
 
-  const onVenueWallLayout = layout.layout === 'venueWall'
+  /** All layouts are venue wall; legacy `singleTable` payloads are normalized server-side. */
+  const onVenueWallLayout = true
   /** Hide join hero once any numbered table has left lobby (tiles stay in sync via venue snapshot). */
   const mosaicShowsLiveFelts =
     venueWall?.tiles?.some((t) => t.phase !== 'lobby') ?? false
@@ -79,19 +79,14 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
 
   const featuredWatch = useVenueWallFeaturedWatch(venueWall, layout)
 
-  const watchedLiveTableId = (): string => {
-    if (layout.layout === 'singleTable') return layout.tableId
-    const ft = featuredWatch.featuredTableNum
-    return ft != null ? String(ft) : '1'
-  }
-
-  const connectFingerprint =
-    layout.layout === 'venueWall'
-      ? `${venueCode}:wall:w${featuredWatch.featuredTableNum ?? 'none'}`
-      : `${venueCode}:tbl:${watchedLiveTableId()}`
+  const connectFingerprint = `${venueCode}:wall:w${layout.focusTable ?? 'h'}:${featuredWatch.featuredTableNum ?? 'none'}`
 
   useEffect(() => {
-    const sl = layout
+    const hostFocus = layout.focusTable
+    const derived = featuredWatch.featuredTableNum
+    const effectiveFocus =
+      hostFocus != null && hostFocus >= 1 && hostFocus <= 8 ? hostFocus : derived ?? null
+    const tableForHello = effectiveFocus != null ? String(effectiveFocus) : '1'
 
     function handleDisplayLayout(next: DisplayLayoutPayload) {
       layoutRef.current = next
@@ -104,22 +99,10 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
     }
 
     let disconnectSock: () => void
-    if (sl.layout === 'venueWall') {
-      const w = featuredWatch.featuredTableNum
-      if (w != null) {
-        disconnectSock = connect('display', 'DISPLAY01', venueCode, String(w), {
-          displayVenueWall: true,
-          displayFocusTable: w,
-        })
-      } else {
-        disconnectSock = connect('display', 'DISPLAY01', venueCode, '1', {
-          displayVenueWall: true,
-          displayFocusTable: null,
-        })
-      }
-    } else {
-      disconnectSock = connect('display', 'DISPLAY01', venueCode, watchedLiveTableId())
-    }
+    disconnectSock = connect('display', 'DISPLAY01', venueCode, tableForHello, {
+      displayVenueWall: true,
+      displayFocusTable: effectiveFocus,
+    })
 
     const offDisplay = onDisplayLayout(handleDisplayLayout)
     const offLocal = subscribeDisplayLayoutLocal(handleLocalLayoutRelay)
@@ -129,7 +112,7 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
       offLocal()
       disconnectSock()
     }
-  }, [connectFingerprint, venueCode, layout.layout, featuredWatch.featuredTableNum])
+  }, [connectFingerprint, venueCode, layout.focusTable, featuredWatch.featuredTableNum])
 
   useEffect(() => {
     if (!venueWall) {
@@ -204,21 +187,6 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
             skipMountIntro={venueMosaicWasShownRef.current}
             featuredWatch={featuredWatch}
           />
-        </motion.div>
-      )}
-      {layout.layout === 'singleTable' && (
-        <motion.div
-          key={`single-${layout.tableId}`}
-          className="relative z-10 min-h-screen w-full bg-slate-950"
-          role="presentation"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <div className="mx-auto flex min-h-[100dvh] max-w-[min(112rem,100%)] flex-col justify-center px-4 py-6">
-            <div className="flex h-[min(88dvh,900px)] min-h-0 w-full max-w-6xl flex-col">
-              <DisplayTableLive feltTableHint={layout.tableId} variant="embedded" hideQuestionBanner={false} />
-            </div>
-          </div>
         </motion.div>
       )}
     </AnimatePresence>

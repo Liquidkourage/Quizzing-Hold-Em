@@ -864,29 +864,42 @@ function normalizeDisplayFocusTable(raw: unknown): number | null {
 function parseDisplaySetLayoutPayload(payload: unknown): DisplayLayoutPayload | null {
   if (!payload || typeof payload !== 'object') return null
   const p = payload as Record<string, unknown>
-  const layout = p.layout
-  if (layout === 'venueWall') {
-    return { layout: 'venueWall', focusTable: normalizeDisplayFocusTable(p.focusTable) }
+  if (p.layout !== 'venueWall') return null
+  return { layout: 'venueWall', focusTable: normalizeDisplayFocusTable(p.focusTable) }
+}
+
+/** Normalize persisted or legacy payloads (older builds stored `singleTable`). */
+function coerceDisplayLayoutPayload(raw: unknown): DisplayLayoutPayload {
+  if (!raw || typeof raw !== 'object') return { layout: 'venueWall', focusTable: null }
+  const o = raw as Record<string, unknown>
+  if (o.layout === 'singleTable' && typeof o.tableId === 'string') {
+    const tid = normalizeTableId(o.tableId.trim())
+    const n = Number.parseInt(String(tid), 10)
+    return {
+      layout: 'venueWall',
+      focusTable: Number.isInteger(n) && n >= 1 && n <= 8 ? n : null,
+    }
   }
-  if (layout === 'singleTable') {
-    const tid = typeof p.tableId === 'string' ? p.tableId.trim() : ''
-    if (!tid) return null
-    return { layout: 'singleTable', tableId: normalizeTableId(tid) }
+  if (o.layout === 'venueWall') {
+    return { layout: 'venueWall', focusTable: normalizeDisplayFocusTable(o.focusTable) }
   }
-  return null
+  return { layout: 'venueWall', focusTable: null }
 }
 
 function resolveDisplayLayoutForHello(venueCode: string, data: ClientHello): DisplayLayoutPayload {
   const k = normalizeVenueCode(venueCode)
   const stored = venueDisplayLayouts.get(k)
-  if (stored) return stored
+  if (stored != null) return coerceDisplayLayoutPayload(stored)
   if (data.displayVenueWall) {
     return {
       layout: 'venueWall',
       focusTable: normalizeDisplayFocusTable(data.displayFocusTable),
     }
   }
-  return { layout: 'singleTable', tableId: normalizeTableId(data.tableId) }
+  const tid = normalizeTableId(data.tableId ?? '1')
+  const n = Number.parseInt(String(tid), 10)
+  const focus = Number.isInteger(n) && n >= 1 && n <= 8 ? n : null
+  return { layout: 'venueWall', focusTable: focus }
 }
 
 const DISPLAY_PAIRING_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -941,7 +954,6 @@ function wireDisplaySocketToVenue(socket: Socket, venueCodeRaw: string, data: Cl
   socket.emit('displayLayout', layout)
 
   const spotlightWatchTableId =
-    layout.layout === 'venueWall' &&
     layout.focusTable != null &&
     Number.isInteger(layout.focusTable) &&
     layout.focusTable >= 1 &&
@@ -949,12 +961,10 @@ function wireDisplaySocketToVenue(socket: Socket, venueCodeRaw: string, data: Cl
       ? String(layout.focusTable)
       : null
 
-  let sessionTableIdRaw =
-    layout.layout === 'singleTable' ? layout.tableId : spotlightWatchTableId
+  let sessionTableIdRaw = spotlightWatchTableId
 
   if (
     !sessionTableIdRaw &&
-    layout.layout === 'venueWall' &&
     layout.focusTable == null &&
     typeof data.displayFocusTable === 'number'
   ) {
@@ -1673,7 +1683,7 @@ io.on('connection', (socket) => {
       }
       const nextLayout = parseDisplaySetLayoutPayload(payload)
       if (!nextLayout) {
-        socket.emit('toast', 'Invalid TV layout (use venue wall or single table + table id).')
+        socket.emit('toast', 'Invalid TV layout (send venue wall + optional focus table 1–8).')
         return
       }
       venueDisplayLayouts.set(normalizeVenueCode(gsCtl.code), nextLayout)
