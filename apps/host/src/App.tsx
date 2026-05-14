@@ -38,7 +38,7 @@ import { LOBBY_TABLE_ID } from '@qhe/core'
 import { parseQuestionsCsv, parseQuestionsJson } from './questionImport'
 
 const HOST_TABS = [
-  { id: 'live' as const, label: 'Run show', hint: 'Lobby, CPUs, cues, TVs' },
+  { id: 'live' as const, label: 'Run show', hint: 'Venue pulse → snapshot → cues → showdown → TVs' },
   { id: 'content' as const, label: 'Content', hint: 'Bank & setlists' },
 ]
 
@@ -1163,83 +1163,17 @@ function HostApp() {
         {hostTab === 'live' && (
         <>
         <HostVenueFeltBeatStrip rows={venueFeltBeat} hostTableId={hostTableId} />
-        <Card variant="glass" hover={false} className="mb-8 border border-white/15 p-5 sm:p-6">
-          <h2 id="public-tvs-wall" className="mb-3 text-2xl font-semibold tracking-tight text-white">
-            Public TVs ({gameState.code})
-          </h2>
-          <p className="mb-6 max-w-3xl text-base leading-relaxed text-white/58">
-            Read-only TVs on <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display</code>{' '}
-            show a short pairing code unless you bookmark{' '}
-            <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display?room={gameState.code}</code>.
-            Use <strong className="text-white/75">Pair TV</strong> in the header to attach displays. Buttons below send every paired
-            display on this venue to the <strong className="text-white/80">venue wall preview</strong> (eight mock felts) or{' '}
-            <strong className="text-white/80">full live felt</strong> for one table — nothing is tapped at the TV.
-          </p>
-          <div className="mx-auto mb-2 max-w-5xl rounded-xl bg-black/30 p-5">
-            <div className="mb-8 text-[11px] font-bold uppercase tracking-[0.12em] text-white/38">Venue wall</div>
-            <p className="mb-4 text-center text-sm font-semibold leading-relaxed text-amber-100/95">
-              Glow + <span className="font-black uppercase tracking-wide text-amber-200">Live</span> tag = action on that mosaic
-              (open wagering clock or trivia in hand). Prefer the amber banner above for one-tap TV routing.
-            </p>
-            <div className="flex flex-wrap items-start justify-center gap-x-2 gap-y-6 py-3">
-              <NeonButton
-                variant="emerald"
-                onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: null })}
-              >
-                All 8 felts
-              </NeonButton>
-              <span className="mx-2 text-xs text-white/40">Spotlight (live felt)</span>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
-                const lively = livelyGameplayTableNums.includes(n)
-                const btn = (
-                  <NeonButton
-                    variant="gold"
-                    className={`relative !px-3 !py-2 min-w-[2.75rem] ${
-                      lively
-                        ? 'ring-[3px] ring-amber-300 ring-offset-4 ring-offset-[#0f0f18] shadow-[0_0_28px_rgba(251,191,36,0.55)]'
-                        : ''
-                    }`}
-                    onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: n })}
-                  >
-                    {n}
-                  </NeonButton>
-                )
-                return lively ? (
-                  <motion.span
-                    key={n}
-                    className="relative inline-block rounded-xl"
-                    animate={{
-                      filter: ['brightness(1)', 'brightness(1.35)', 'brightness(1)'],
-                      boxShadow: [
-                        '0 0 0px rgba(251,191,36,0)',
-                        '0 0 26px rgba(251,191,36,0.55)',
-                        '0 0 0px rgba(251,191,36,0)',
-                      ],
-                    }}
-                    transition={{ duration: 1.25, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <span className="absolute -top-2 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-black uppercase leading-none tracking-wider text-black shadow-[0_0_12px_rgba(251,191,36,0.9)]">
-                      Live
-                    </span>
-                    {btn}
-                  </motion.span>
-                ) : (
-                  <span key={n}>{btn}</span>
-                )
-              })}
-            </div>
-            <p className="mt-4 text-center text-[12px] leading-relaxed text-white/48">
-              Spotlight numbers zoom that table’s <strong className="text-white/65">live</strong> game to the whole display — and{' '}
-              <strong className="text-white/65">All 8 felts</strong> animates back to the overview grid. Bare{' '}
-              <code className="rounded bg-white/10 px-1 font-mono text-[11px] text-white/80">/display?table=N</code> (N =
-              1–8) is the same spotlight mode.
-            </p>
-          </div>
-        </Card>
-        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(272px,340px)_1fr] lg:items-start">
-          <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-            <Card variant="glass" hover={false} className="p-6">
-              <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-white/42">Room monitor</h2>
+        <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
+              <div className="mb-5 border-b border-white/10 pb-4">
+                <h2 id="host-live-snapshot-heading" className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                  Live snapshot
+                </h2>
+                <p className="mt-1 max-w-2xl text-base text-white/50">
+                  Read this first — it tracks the{' '}
+                  <span className="font-semibold text-white/70">Synced table</span> you chose in the header ({' '}
+                  <span className="font-semibold text-casino-gold">{gameState.tableId ?? '1'}</span> ).
+                </p>
+              </div>
               <div className="space-y-4 text-base">
                 <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
                   <span className="text-white/60">Phase</span>
@@ -1266,7 +1200,7 @@ function HostApp() {
                     Rehearsal — CPU seats
                   </a>
                   {' '}
-                  lives under Lobby (scroll on “Run show”).
+                  Use it under Run show → Lobby (below).
                 </p>
                 {gameState.phase === 'betting' && (
                   <div>
@@ -1307,15 +1241,20 @@ function HostApp() {
                 </div>
               </div>
             </Card>
-          </aside>
-          <div className="min-w-0">
-        <Card variant="glass" hover={false} className="p-6 sm:p-8">
-            <div className="mb-6 flex flex-col gap-2 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Run show</h2>
-                <p className="mt-2 max-w-2xl text-base text-white/52">Lobby, cues, deals, reveal — monitor stays beside you on wide screens.</p>
-              </div>
+
+        <Card variant="glass" hover={false} className="mb-8 p-6 sm:p-8">
+          <section aria-labelledby="run-show-heading" className="mb-6 flex flex-col gap-2 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 id="run-show-heading" className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                Run show
+              </h2>
+              <p className="mt-2 max-w-3xl text-base leading-relaxed text-white/52">
+                Follow these blocks top to bottom for a round. Pair and route paired{' '}
+                <code className="rounded bg-white/10 px-1 font-mono text-xs text-white/85">/display</code> TVs afterward in{' '}
+                <strong className="font-semibold text-white/72">Public TVs</strong>.
+              </p>
             </div>
+          </section>
 
             <details className="group mb-6 rounded-xl border border-white/10 bg-black/25 open:border-white/[0.14] [&_summary::-webkit-details-marker]:hidden">
               <summary className="cursor-pointer list-none px-4 py-3 text-base font-medium text-white/75 hover:bg-white/[0.04] hover:text-white/88 rounded-xl">
@@ -1736,8 +1675,6 @@ function HostApp() {
               </section>
             </div>
           </Card>
-          </div>
-        </div>
 
         {gameState.phase === 'showdown' && (
           <Card variant="glass" hover={false} className="mb-8 p-5 sm:p-6">
@@ -1804,6 +1741,77 @@ function HostApp() {
             </div>
           </Card>
         )}
+
+        <Card variant="glass" hover={false} className="mb-8 border border-white/15 p-5 sm:p-6">
+          <h2 id="public-tvs-wall" className="mb-2 text-2xl font-semibold tracking-tight text-white">
+            Public TVs
+          </h2>
+          <p className="mb-5 max-w-3xl text-base leading-relaxed text-white/54">
+            <span className="font-semibold text-white/72">Outputs</span> — read-only TVs on{' '}
+            <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">/display</code> show a short pairing code
+            unless you bookmark{' '}
+            <code className="rounded bg-white/10 px-1.5 font-mono text-xs text-white/90">
+              /display?room={gameState.code}
+            </code>
+            . Use <strong className="text-white/77">Pair TV</strong> in the header first. Buttons here send{' '}
+            <strong className="text-white/82">every</strong> paired display on this venue to the mosaic or a single live felt —
+            nobody taps the TV.
+          </p>
+          <div className="mx-auto mb-2 max-w-5xl rounded-xl bg-black/30 p-5">
+            <div className="mb-8 text-[11px] font-bold uppercase tracking-[0.12em] text-white/38">Venue wall</div>
+            <p className="mb-4 text-center text-sm font-semibold leading-relaxed text-amber-100/95">
+              Glow + <span className="font-black uppercase tracking-wide text-amber-200">Live</span> tag = action on that mosaic (open wagering clock or trivia in hand). Prefer the amber “Action on the floor” banner for one-tap routing.
+            </p>
+            <div className="flex flex-wrap items-start justify-center gap-x-2 gap-y-6 py-3">
+              <NeonButton variant="emerald" onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: null })}>
+                All 8 felts
+              </NeonButton>
+              <span className="mx-2 text-xs text-white/40">Spotlight (live felt)</span>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+                const lively = livelyGameplayTableNums.includes(n)
+                const btn = (
+                  <NeonButton
+                    variant="gold"
+                    className={`relative !px-3 !py-2 min-w-[2.75rem] ${
+                      lively
+                        ? 'ring-[3px] ring-amber-300 ring-offset-4 ring-offset-[#0f0f18] shadow-[0_0_28px_rgba(251,191,36,0.55)]'
+                        : ''
+                    }`}
+                    onClick={() => displaySetLayout({ layout: 'venueWall', focusTable: n })}
+                  >
+                    {n}
+                  </NeonButton>
+                )
+                return lively ? (
+                  <motion.span
+                    key={n}
+                    className="relative inline-block rounded-xl"
+                    animate={{
+                      filter: ['brightness(1)', 'brightness(1.35)', 'brightness(1)'],
+                      boxShadow: [
+                        '0 0 0px rgba(251,191,36,0)',
+                        '0 0 26px rgba(251,191,36,0.55)',
+                        '0 0 0px rgba(251,191,36,0)',
+                      ],
+                    }}
+                    transition={{ duration: 1.25, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <span className="absolute -top-2 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-black uppercase leading-none tracking-wider text-black shadow-[0_0_12px_rgba(251,191,36,0.9)]">
+                      Live
+                    </span>
+                    {btn}
+                  </motion.span>
+                ) : (
+                  <span key={n}>{btn}</span>
+                )
+              })}
+            </div>
+            <p className="mt-4 text-center text-[12px] leading-relaxed text-white/48">
+              Spotlight zooms one table&apos;s live game full-screen · <strong className="text-white/65">All 8 felts</strong> restores the mosaic.{' '}
+              <code className="rounded bg-white/10 px-1 font-mono text-[11px] text-white/80">/display?table=N</code> (N = 1–8) matches spotlight.
+            </p>
+          </div>
+        </Card>
 
         </>
         )}
