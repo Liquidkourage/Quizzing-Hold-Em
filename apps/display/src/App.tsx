@@ -1346,7 +1346,7 @@ function DisplayTableLive({
                     </div>
                     {blindPills.length > 0 ? (
                       <div
-                        className="pointer-events-none absolute z-[118] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-px"
+                        className="pointer-events-none absolute z-[118] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)]"
                         style={{ left: `${blindPx.leftPx}px`, top: `${blindPx.topPx}px` }}
                       >
                         {blindPills}
