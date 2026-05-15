@@ -1213,7 +1213,7 @@ export default function VenueEightTablesPreview({
             aria-label={
               showRotatingTour ? 'Seating spotlight tour; live felt in focus' : 'Venue floor featured table'
             }
-            className="mx-auto flex w-full max-w-none flex-col gap-3 overflow-visible sm:gap-4"
+            className="mx-auto flex w-full max-w-none flex-col gap-2 overflow-visible sm:gap-3"
           >
             <p className="sr-only" aria-live="polite" aria-atomic="true">
               Featured table {seatingHeroRow.tableNum}
@@ -1225,22 +1225,22 @@ export default function VenueEightTablesPreview({
               initial={skipMountIntro ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="pointer-events-none absolute left-3 top-2 z-30 w-[clamp(9rem,min(34vw,12rem),15rem)] sm:left-5 sm:top-3 sm:w-[clamp(10rem,min(30vw,14rem),16rem)]">
+              <div className="pointer-events-none absolute left-3 top-2 z-30 w-[clamp(7.5rem,min(26vw,10rem),12rem)] sm:left-5 sm:top-3 sm:w-[clamp(8.5rem,min(24vw,11rem),13rem)]">
                 <div className="w-full shadow-black/70 drop-shadow-xl" style={{ aspectRatio: '958 / 592' }}>
                   <QuizzEmWordmark layout="fill" />
                 </div>
               </div>
 
               {showHeadline ? (
-                <div className="relative z-20 border-b border-white/15 bg-black/40 px-3 pb-3 pl-[clamp(11rem,min(41vw,15.25rem),17rem)] pr-4 pt-[4.85rem] sm:px-4 sm:pb-4 sm:pl-[clamp(12.75rem,min(41vw,16.25rem),18rem)] sm:pt-[4.85rem]">
+                <div className="relative z-20 border-b border-white/15 bg-black/40 px-3 pb-2 pl-[clamp(9.75rem,min(36vw,13.5rem),15.5rem)] pr-4 pt-[4.15rem] sm:px-4 sm:pb-2.5 sm:pl-[clamp(10.5rem,min(35vw,14.5rem),16.5rem] sm:pt-[4.25rem]">
                   <motion.div
-                    className="flex min-h-0 min-w-0 flex-col gap-2 rounded-xl border border-casino-emerald/35 bg-black/35 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(0,255,180,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:gap-5 sm:px-4 sm:py-3"
+                    className="flex min-h-0 min-w-0 flex-col gap-2 rounded-xl border border-casino-emerald/35 bg-black/35 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(0,255,180,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2.5"
                     initial={skipMountIntro ? false : { opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="min-w-0 flex-1">
                       {headlineQuestionText ? (
-                        <p className="text-balance text-left text-2xl font-bold leading-snug text-yellow-400 sm:text-3xl md:text-4xl lg:text-5xl xl:text-[3.25rem] xl:leading-[1.2] 2xl:text-[3.75rem]">
+                        <p className="text-balance text-left text-xl font-bold leading-snug tracking-tight text-yellow-400 sm:text-2xl md:text-[1.65rem] md:leading-snug lg:text-[1.85rem] xl:text-[2.05rem] xl:leading-tight 2xl:text-[2.25rem]">
                           {headlineQuestionText}
                         </p>
                       ) : (
@@ -1249,7 +1249,7 @@ export default function VenueEightTablesPreview({
                     </div>
                     {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
                       <div
-                        className={`flex shrink-0 flex-row items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 sm:flex-col sm:px-4 sm:py-2 sm:tabular-nums ${
+                        className={`flex shrink-0 flex-row items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 sm:flex-col sm:px-3 sm:py-2 sm:tabular-nums ${
                           timerSeconds <= 10
                             ? 'border-amber-400/55 bg-amber-950/45 shadow-[0_0_20px_rgba(251,191,36,0.1)]'
                             : 'border-amber-600/35 bg-amber-950/25'
@@ -1260,7 +1260,7 @@ export default function VenueEightTablesPreview({
                         <span className="text-[10px] font-semibold uppercase tracking-wide text-white/50 sm:hidden">
                           Time
                         </span>
-                        <div className="font-mono text-4xl font-black tracking-tight text-amber-200 sm:text-5xl md:text-6xl lg:text-7xl">
+                        <div className="font-mono text-3xl font-black tracking-tight text-amber-200 sm:text-4xl md:text-5xl xl:text-6xl">
                           {timerSeconds}s
                         </div>
                       </div>
