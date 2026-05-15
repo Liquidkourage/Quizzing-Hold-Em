@@ -60,7 +60,7 @@ export type DisplayVenueTileSnapshot = {
 /** Venue wall payload: table mosaic plus **shared trivia strip** keyed off the hottest trivia phase (prefer answering, then setup, etc.), not blindly table 1. */
 export type DisplayVenueWallSnapshot = {
   tiles: DisplayVenueTileSnapshot[]
-  /** Shared trivia headline: only emitted while **any** felt is in a trivia-visible phase (question → answering → reveal chain), not stale copy from lobby/betting. */
+  /** Shared trivia headline: emitted from the current hand’s question through wagering, answering, and post-trivia phases while `round.question` is set. */
   headlineQuestionText: string | null
   /** Server epoch ms when a trivia-visible felt is in `answering` with `answerDeadline`; cleared outside that window. */
   answerDeadlineMs: number | null

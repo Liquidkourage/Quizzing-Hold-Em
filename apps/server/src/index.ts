@@ -1237,9 +1237,10 @@ function requireVenueLockstepTables(
   return rows
 }
 
-/** Wall headline trivia should mirror an active trivia phase, not a stale persisted question from lobby or betting. */
+/** Phases where the current hand’s `round.question` should drive the shared venue-wall headline strip. */
 const VENUE_WALL_HEADLINE_PHASES = new Set<string>([
   'question',
+  'betting',
   'answering',
   'reveal',
   'showdown',
@@ -1248,7 +1249,7 @@ const VENUE_WALL_HEADLINE_PHASES = new Set<string>([
 
 /**
  * Prefer the most “interesting” numbered felt for the shared TV headline bar:
- * answering (with deadline) → question setup → showdown family → fallback first seated table (may be lobby).
+ * answering (with deadline) → question setup → wagering (same question persists) → showdown family → fallback first seated table (may be lobby).
  */
 function pickVenueHeadlineGameState(venueCode: string): GameState | null {
   const vn = normalizeVenueCode(venueCode)
@@ -1272,6 +1273,13 @@ function pickVenueHeadlineGameState(venueCode: string): GameState | null {
 
   const question = firstSeated((gs) => gs.phase === 'question')
   if (question) return question
+
+  const wagering = firstSeated((gs) => {
+    if (gs.phase !== 'betting') return false
+    const t = gs.round?.question?.text
+    return typeof t === 'string' && t.trim() !== ''
+  })
+  if (wagering) return wagering
 
   const post = firstSeated(
     (gs) => gs.phase === 'reveal' || gs.phase === 'showdown' || gs.phase === 'payout'
