@@ -1,6 +1,30 @@
 import type { DisplayVenueTileSnapshot } from '@qhe/net'
-import type { GamePhase, GameState, PlayerState } from '@qhe/core'
-import { createEmptyGame } from '@qhe/core'
+import type { GamePhase, GameState, PlayerState, SeatBettingAction } from '@qhe/core'
+import { createEmptyGame, displayActingSeatIndex } from '@qhe/core'
+
+function isSeatBettingAction(x: unknown): x is SeatBettingAction {
+  return x === 'check' || x === 'call' || x === 'raise' || x === 'fold' || x === 'allIn'
+}
+
+/** Physical seat index on venue wall (0..7), same contract as mosaic {@link VenueEightTablesPreview}. */
+function venueTileActingPhysicalSeat(row: DisplayVenueTileSnapshot): number | null {
+  const fromRound = displayActingSeatIndex(row.phase, row.seated, {
+    currentPlayerIndex: row.currentPlayerIndex ?? undefined,
+    isBettingOpen: row.isBettingOpen ?? undefined,
+  })
+  if (fromRound != null) return fromRound
+  if (row.isBettingOpen === false || row.currentPlayerIndex === -1) return null
+  const legacy = row.actingSeatIndex
+  if (
+    typeof legacy === 'number' &&
+    Number.isFinite(legacy) &&
+    legacy >= 0 &&
+    legacy < row.seated
+  ) {
+    return Math.floor(legacy)
+  }
+  return null
+}
 
 const PHASES: readonly GamePhase[] = [
   'lobby',
@@ -84,15 +108,50 @@ export function embeddedHeroDisplayState(
 
     const phase = coercePhase(tile.phase)
 
+    let round = {
+      ...base.round,
+      pot: typeof tile.pot === 'number' && Number.isFinite(tile.pot) ? tile.pot : 0,
+      dealerIndex: dealerPlayerIndex,
+    }
+
+    if (phase === 'betting') {
+      const open = tile.isBettingOpen !== false
+      let currentPlayerIndex = -1
+      if (open) {
+        const phys = venueTileActingPhysicalSeat(tile)
+        if (phys != null) {
+          const pi = physicalSeatByPlayerIdx.indexOf(phys)
+          if (pi >= 0) currentPlayerIndex = pi
+          else if (phys >= 0 && phys < nPlayers) currentPlayerIndex = phys
+        }
+      }
+
+      const lastSeatBettingAction: (SeatBettingAction | null)[] = Array.from(
+        { length: nPlayers },
+        () => null
+      )
+      const src = tile.seatLastBettingAction
+      if (Array.isArray(src)) {
+        for (let pi = 0; pi < nPlayers; pi++) {
+          const phys = physicalSeatByPlayerIdx[pi]!
+          const v = src[phys]
+          lastSeatBettingAction[pi] = isSeatBettingAction(v) ? v : null
+        }
+      }
+
+      round = {
+        ...round,
+        isBettingOpen: open,
+        currentPlayerIndex,
+        lastSeatBettingAction,
+      }
+    }
+
     return {
       ...base,
       phase,
       players,
-      round: {
-        ...base.round,
-        pot: typeof tile.pot === 'number' && Number.isFinite(tile.pot) ? tile.pot : 0,
-        dealerIndex: dealerPlayerIndex,
-      },
+      round,
     }
   }
 

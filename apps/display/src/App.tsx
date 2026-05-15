@@ -3,8 +3,14 @@ import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { onState, onToast, onDealingCards, onDealingCommunityCards, type DisplayVenueTileSnapshot } from '@qhe/net'
-import type { GameState, GamePhase, PlayerState } from '@qhe/core'
-import { LOBBY_TABLE_ID, buildDisplayPreviewGameState, displayBlindSeatIndices } from '@qhe/core'
+import type { GameState, GamePhase, PlayerState, SeatBettingAction } from '@qhe/core'
+import {
+  LOBBY_TABLE_ID,
+  buildDisplayPreviewGameState,
+  displayBlindSeatIndices,
+  displayActingSeatIndex,
+  chipsRequiredToCall,
+} from '@qhe/core'
 import confetti from 'canvas-confetti'
 import { readDisplayVenueCode } from './displayUrlParams'
 import { embeddedHeroDisplayState } from './embeddedVenueHeroState'
@@ -97,6 +103,36 @@ function heroFeltSeatAssetPositions(
 function formatHeroStackMoney(amount: number): string {
   const n = Number.isFinite(amount) ? Math.round(amount) : 0
   return `$${Math.max(0, n).toLocaleString()}`
+}
+
+/** Large felt: same palette as venue mosaic, scaled for legibility at hero size. */
+const HERO_SEAT_BETTING_ACTION_LABELS: Record<SeatBettingAction, string> = {
+  check: 'CHECK',
+  call: 'CALL',
+  raise: 'RAISE',
+  fold: 'FOLD',
+  allIn: 'ALL-IN',
+}
+
+const HERO_SEAT_BETTING_ACTION_PILL_CLASS: Record<SeatBettingAction, string> = {
+  check: 'border-slate-400/45 bg-slate-900/92 text-slate-100',
+  call: 'border-sky-500/40 bg-sky-950/90 text-sky-100',
+  raise: 'border-amber-500/45 bg-amber-950/90 text-amber-100',
+  fold: 'border-rose-400/45 bg-rose-950/92 text-rose-100',
+  allIn: 'border-violet-500/45 bg-violet-950/90 text-violet-100',
+}
+
+/** On-felt “to call” cue — between acting seat rim and pot anchor, stable in table-local px. */
+function heroWagerCallBubblePositionPx(
+  actingIndex: number,
+  total: number,
+  towardPotFrac = 0.42
+): { leftPx: number; topPx: number } {
+  const { ox, oy } = heroSeatCupOffsets(actingIndex, total)
+  const rimLeft = HERO_CUPHOLDER_ORIGIN.left + ox
+  const rimTop = HERO_CUPHOLDER_ORIGIN.top + oy
+  const p = heroFeltPointTowardPot(rimLeft, rimTop, towardPotFrac)
+  return { leftPx: p.leftPx, topPx: p.topPx }
 }
 
 function displayPhaseLabel(phase: GamePhase): string {
@@ -407,6 +443,67 @@ function DisplayTableLive({
       ),
     [displayGameState.players.length, displayGameState.round.dealerIndex]
   )
+
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => setPrefersReducedMotion(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  const heroFeltTableId = feltTableHint.trim()
+  const socketStateMatchesHero =
+    gameState != null && heroFeltTableId !== '' && String(gameState.tableId) === heroFeltTableId
+
+  const heroBettingHud = useMemo(() => {
+    const gs = displayGameState
+    const n = gs.players.length
+    const phase = gs.phase
+    const isBetting = phase === 'betting'
+    const open = gs.round.isBettingOpen !== false
+    const acting = displayActingSeatIndex(gs.phase, n, {
+      currentPlayerIndex: gs.round.currentPlayerIndex,
+      isBettingOpen: gs.round.isBettingOpen,
+    })
+
+    const showSeatPills = isBetting && n > 0
+    const lastActs = gs.round.lastSeatBettingAction
+
+    const tileMatches =
+      isEmbedded &&
+      venueHeroTile != null &&
+      heroFeltTableId !== '' &&
+      venueHeroTile.tableNum === Number.parseInt(heroFeltTableId, 10)
+
+    let callLabel: string | null = null
+    let showCallBubble = false
+
+    if (isBetting && open && acting != null && acting >= 0 && acting < n) {
+      const p = gs.players[acting]!
+      const first = String(p.name ?? '').split(/\s+/)[0] || 'Player'
+      let amt = 0
+      if (socketStateMatchesHero) {
+        amt = chipsRequiredToCall(gs, p.id)
+      } else if (tileMatches && venueHeroTile?.actingCallAmount != null) {
+        const a = venueHeroTile.actingCallAmount
+        amt = typeof a === 'number' && Number.isFinite(a) ? Math.max(0, Math.round(a)) : 0
+      }
+
+      showCallBubble = true
+      callLabel = amt <= 0 ? `${first} · No bet to match` : `${first} · Call ${formatHeroStackMoney(amt)}`
+    }
+
+    return {
+      acting,
+      open,
+      showSeatPills,
+      lastActs,
+      showCallBubble,
+      callLabel,
+    }
+  }, [displayGameState, socketStateMatchesHero, isEmbedded, venueHeroTile, heroFeltTableId])
 
   // Compute showdown winner id (used for seat glow)
   const showdownWinnerId = (() => {
@@ -1232,10 +1329,13 @@ function DisplayTableLive({
           {/* Players positioned around the table */}
           {displayGameState.players.map((player, index) => {
             const position = getPlayerPosition(index, displayGameState.players.length)
+            const actingHere = heroBettingHud.acting === index
+            const lastBetAct = heroBettingHud.lastActs?.[index] ?? null
+            const hideFoldBanner = heroBettingHud.showSeatPills && lastBetAct === 'fold'
             return (
               <motion.div 
                 key={player.id} 
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20"
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${actingHere ? 'z-30' : 'z-20'}`}
                 style={{ 
                   left: position.x, 
                   top: position.y 
@@ -1256,11 +1356,37 @@ function DisplayTableLive({
                     }}
                   />
                 )}
-                <div className="relative min-h-[118px] w-[120px] origin-center scale-[1.40625] transform rounded-lg border-2 border-yellow-600 bg-black/90 p-3 text-center shadow-lg backdrop-blur-md">
+                {actingHere && (
+                  <motion.div
+                    className="pointer-events-none absolute -inset-2 rounded-xl"
+                    aria-hidden
+                    animate={prefersReducedMotion ? undefined : { opacity: [0.28, 0.62, 0.28] }}
+                    transition={prefersReducedMotion ? undefined : { repeat: Infinity, duration: 1.35 }}
+                    style={{
+                      boxShadow: '0 0 26px 8px rgba(34,211,238,0.42), inset 0 0 20px rgba(34,211,238,0.12)',
+                    }}
+                  />
+                )}
+                <div
+                  className={
+                    actingHere
+                      ? 'relative min-h-[118px] w-[120px] origin-center scale-[1.40625] transform rounded-lg border-2 border-cyan-400 bg-black/90 p-3 text-center shadow-lg ring-2 ring-cyan-300/85 backdrop-blur-md'
+                      : 'relative min-h-[118px] w-[120px] origin-center scale-[1.40625] transform rounded-lg border-2 border-yellow-600 bg-black/90 p-3 text-center shadow-lg backdrop-blur-md'
+                  }
+                >
                   <div className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-yellow-600/85">
                     Seat {heroDisplayedSeatNumber(player, index + 1)}
                   </div>
                   <div className="mb-1 text-base font-bold text-yellow-400">{player.name}</div>
+                  {heroBettingHud.showSeatPills && lastBetAct != null && (
+                    <div className="mt-0.5 flex justify-center">
+                      <span
+                        className={`inline-flex items-center justify-center rounded-md border px-2.5 py-0.5 text-[11px] font-extrabold tracking-wide shadow-md md:text-xs ${HERO_SEAT_BETTING_ACTION_PILL_CLASS[lastBetAct]}`}
+                      >
+                        {HERO_SEAT_BETTING_ACTION_LABELS[lastBetAct]}
+                      </span>
+                    </div>
+                  )}
                   <div className="sr-only">${formatHeroStackMoney(player.bankroll)}</div>
                   
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
@@ -1281,7 +1407,7 @@ function DisplayTableLive({
                   )}
                   
                   {/* Player status */}
-                  {player.hasFolded && (
+                  {player.hasFolded && !hideFoldBanner && (
                     <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-red-400 font-bold text-sm">FOLDED</div>
                   )}
                 </div>
@@ -1333,18 +1459,23 @@ function DisplayTableLive({
               {/* Cup holders centered on the middle rail stripe - one per player */}
               {displayGameState.players.map((_, index) => {
                 const { ox: x, oy: y } = heroSeatCupOffsets(index, displayGameState.players.length)
+                const actingHere = heroBettingHud.acting === index && heroBettingHud.open
                 return (
                   <div 
                     key={`cupholder-${index}`}
-                    className="absolute bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
+                    className={
+                      actingHere
+                        ? 'absolute z-[125] bg-amber-800 rounded-full border-2 border-cyan-300 ring-2 ring-cyan-400/70 shadow-[0_0_16px_rgba(34,211,238,0.45)] transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center'
+                        : 'absolute z-[120] bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center'
+                    }
                     style={{ 
                       left: `${HERO_CUPHOLDER_ORIGIN.left + x}px`, 
                       top: `${HERO_CUPHOLDER_ORIGIN.top + y}px`,
                       width: '32px',
                       height: '32px'
                     }}
-                                      >
-          </div>
+                  >
+                  </div>
                 )
               })}
 
@@ -1389,6 +1520,29 @@ function DisplayTableLive({
                   </Fragment>
                 )
               })}
+
+              {heroBettingHud.showCallBubble && heroBettingHud.callLabel != null && heroBettingHud.acting != null ? (
+                (() => {
+                  const n = displayGameState.players.length
+                  const { leftPx, topPx } = heroWagerCallBubblePositionPx(heroBettingHud.acting, n)
+                  return (
+                    <div
+                      className="pointer-events-none absolute z-[128] max-w-[min(92vw,520px)] -translate-x-1/2 -translate-y-1/2 px-2"
+                      style={{ left: `${leftPx}px`, top: `${topPx}px` }}
+                      aria-live="polite"
+                    >
+                      <div className="rounded-2xl border border-cyan-400/50 bg-black/78 px-5 py-3 text-center shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md md:px-6 md:py-3.5">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/90 md:text-xs">
+                          Action
+                        </div>
+                        <div className="mt-1 text-balance text-base font-bold leading-snug text-cyan-50 sm:text-lg md:text-xl">
+                          {heroBettingHud.callLabel}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()
+              ) : null}
               
               {/* Pot display - positioned higher */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-36 text-center">
