@@ -41,6 +41,12 @@ const VENUE_CRAWL_PR_CLASS = 'pr-80 sm:pr-[22rem] lg:pr-96'
 const VENUE_CENTER_BAND_LEFT_EDGE = 'left-80 sm:left-[22rem] lg:left-96'
 const VENUE_CENTER_BAND_RIGHT_EDGE = 'right-80 sm:right-[22rem] lg:right-96'
 
+/** Venue hero center column: ~10% smaller than legacy layout so side crawls + table read cleaner together. */
+const VENUE_HERO_MAIN_MAX_W = 'max-w-[1440px]' // ×0.9 of 1600px
+/** Embedded {@link DisplayTableLive} viewport height; keep in sync with {@link VENUE_HERO_FELT_MIN_H}. */
+const VENUE_HERO_FELT_VPORT_H = 'h-[min(76.5dvh,846px)]' // ×0.9 of min(85dvh,940px)
+const VENUE_HERO_FELT_MIN_H = 'min-h-[min(360px,43.2dvh)]' // ×0.9 of min(400px,48dvh)
+
 /** Pre-start seating tour: one table hero + thumbnails; seconds per table. */
 
 function usePrefersReducedMotion(): boolean {
@@ -1191,7 +1197,7 @@ export default function VenueEightTablesPreview({
       </div>
 
       <main
-        className={`relative z-10 mx-auto w-full max-w-[1600px] pb-12 ${
+        className={`relative z-10 mx-auto w-full ${VENUE_HERO_MAIN_MAX_W} pb-12 ${
           showHeadline && seatingHeroRow ? 'pt-0' : 'pt-2 sm:pt-3'
         } ${
           seatingHeroRow && (padLeftForTablesCrawl || showRoster) ? 'px-0 sm:px-0' : 'px-4 sm:px-6'
@@ -1289,7 +1295,9 @@ export default function VenueEightTablesPreview({
               ) : null}
 
               {/* Live felt fills this slot; viewport bottom dock is sibling to `<main>` (padding on shell), not padded inside embed. */}
-              <div className="relative z-10 box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 overflow-hidden rounded-2xl border border-yellow-700/45">
+              <div
+                className={`relative z-10 box-border flex ${VENUE_HERO_FELT_VPORT_H} ${VENUE_HERO_FELT_MIN_H} w-full min-w-0 shrink-0 overflow-hidden rounded-2xl border border-yellow-700/45`}
+              >
                 <DisplayTableLive
                   key={seatingHeroRow.tableNum}
                   feltTableHint={String(seatingHeroRow.tableNum)}
