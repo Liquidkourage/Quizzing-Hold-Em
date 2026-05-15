@@ -1271,8 +1271,9 @@ export default function VenueEightTablesPreview({
               {/* Live felt fills this slot; viewport bottom dock is sibling to `<main>` (padding on shell), not padded inside embed. */}
               <div className="relative z-10 box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 overflow-hidden rounded-b-xl rounded-t-none border border-yellow-700/45">
                 <DisplayTableLive
-                  key={featuredWatch.featuredTableNum ?? seatingHeroRow.tableNum}
+                  key={seatingHeroRow.tableNum}
                   feltTableHint={String(seatingHeroRow.tableNum)}
+                  venueHeroTile={seatingHeroRow}
                   variant="embedded"
                   hideQuestionBanner
                 />

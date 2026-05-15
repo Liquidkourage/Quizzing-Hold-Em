@@ -2,11 +2,12 @@
 import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
-import { onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
+import { onState, onToast, onDealingCards, onDealingCommunityCards, type DisplayVenueTileSnapshot } from '@qhe/net'
 import type { GameState, GamePhase } from '@qhe/core'
-import { LOBBY_TABLE_ID, buildDisplayPreviewGameState, createEmptyGame } from '@qhe/core'
+import { LOBBY_TABLE_ID, buildDisplayPreviewGameState } from '@qhe/core'
 import confetti from 'canvas-confetti'
 import { readDisplayVenueCode } from './displayUrlParams'
+import { embeddedHeroDisplayState } from './embeddedVenueHeroState'
 
 /** Authoring viewport (logical px). Embedded venue heroes scale uniformly to fit the measured game plane; fullscreen uses live `gw/gh`. */
 const EMBEDDED_FELT_LAYOUT_W = 1280
@@ -123,12 +124,18 @@ type DisplayTableLiveProps = {
   variant?: 'fullscreen' | 'embedded'
   /** When the parent already renders the headline question/timer (venue wall header). */
   hideQuestionBanner?: boolean
+  /**
+   * Venue mosaic row for this hero — reconstructs seated lobby when socket `state` is for another
+   * numbered table or has not arrived (display sockets follow a single spotlight session).
+   */
+  venueHeroTile?: DisplayVenueTileSnapshot | null
 }
 
 function DisplayTableLive({
   feltTableHint,
   variant = 'fullscreen',
   hideQuestionBanner = false,
+  venueHeroTile = null,
 }: DisplayTableLiveProps) {
   const isEmbedded = variant === 'embedded'
 
@@ -210,11 +217,15 @@ function DisplayTableLive({
     setDemoGameState(buildDisplayPreviewGameState(readDisplayVenueCode(), feltTableHint))
   }, [feltTableHint])
 
-  const embeddedLobbyShell = useMemo(
-    () => createEmptyGame(readDisplayVenueCode(), '', feltTableHint),
-    [feltTableHint]
-  )
-  const displayGameState = gameState ?? (isEmbedded ? embeddedLobbyShell : demoGameState)
+  const displayGameState = useMemo(() => {
+    if (!isEmbedded) return gameState ?? demoGameState
+    return embeddedHeroDisplayState(
+      gameState,
+      feltTableHint,
+      venueHeroTile ?? undefined,
+      readDisplayVenueCode()
+    )
+  }, [isEmbedded, gameState, feltTableHint, venueHeroTile, demoGameState])
 
   // Compute showdown winner id (used for seat glow)
   const showdownWinnerId = (() => {

@@ -84,8 +84,10 @@ export function useVenueWallFeaturedWatch(
 
   const featuredTableNum = (() => {
     if (tileRows.length === 0) return null
-    if (hostSpot != null) return hostSpot
+    // Pre-show lobby tour: advance the hero on a timer. Host `focusTable` must not pin the felt
+    // while every table is still in lobby — that froze the hero on Table 1 with a misleading tour index.
     if (showRotatingTour) return tileRows[seatingTourIndex]?.tableNum ?? tileRows[0]!.tableNum
+    if (hostSpot != null) return hostSpot
     return tileRows[floorIdx]?.tableNum ?? tileRows[0]!.tableNum
   })()
 
