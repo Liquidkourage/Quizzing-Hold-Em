@@ -795,40 +795,33 @@ function DisplayTableLive({
   /** Negative = move felt + seats up in fullscreen; embedded venue uses overlay HUD + full-height plane, so keep 0 to center vertically. */
   const displayTableLiftPx = variant === 'embedded' ? 0 : -88
 
-  // Calculate player positions around the table (perfectly aligned with cupholders / felt overlays)
-  const getPlayerPosition = (index: number, total: number) => {
+  /**
+   * Pixel offset of the player HUD box center from the game plane center (same coords as `fdW`×`fdH`).
+   * Used by `getPlayerPosition`, dealing flight paths, and chip flights — do not parse `calc(50% + … - 55px)` with parseFloat
+   * (that only reads the first `px` group and misplaces animations until static cards replace them).
+   */
+  const getPlayerSeatOffsetFromPlaneCenterPx = (index: number, total: number) => {
     const { ox: cupholderX, oy: cupholderY } = heroSeatCupOffsets(index, total)
-
-    const cupholderDistance = Math.sqrt(cupholderX * cupholderX + cupholderY * cupholderY)
+    const cupholderDistance = Math.sqrt(cupholderX * cupholderX + cupholderY * cupholderY) || 1
     const directionX = cupholderX / cupholderDistance
     const directionY = cupholderY / cupholderDistance
-    
-    // Position player just outside the table by extending the cupholder position outward
-    // Adjust extension distance based on position - corners out, edges in
-    let extensionDistance = 142 // Base extension (88px * 1.62 scale)
-    
-    // Determine if this is a corner or edge position for 8-player layout
-    // Corner positions: 2,4,6,8 (0-indexed: 1,3,5,7) - need to be pushed out 10%
-    // Edge positions: 1,3,5,7 (0-indexed: 0,2,4,6) - need to be pulled in 10%
-    const isCornerPosition = index % 2 === 1 // Odd indices are corners (1,3,5,7)
-    
-    if (isCornerPosition) {
-      // Corner positions - push out 10%
-      extensionDistance = extensionDistance * 1.1
-    } else {
-      // Edge positions - pull in 10%
-      extensionDistance = extensionDistance * 0.9
-    }
-    
-    const playerX = cupholderX + (directionX * extensionDistance)
-    const playerY = cupholderY + (directionY * extensionDistance)
-    
-    // Position relative to the table center
-    // Table is centered at 50% with transform translate
-    // Adjust for offset to align with visual center
+    let extensionDistance = 142
+    const isCornerPosition = index % 2 === 1
+    extensionDistance = isCornerPosition ? extensionDistance * 1.1 : extensionDistance * 0.9
+    const playerX = cupholderX + directionX * extensionDistance
+    const playerY = cupholderY + directionY * extensionDistance
     return {
-      x: `calc(50% + ${playerX}px - 55px)`,
-      y: `calc(50% + ${playerY + displayTableLiftPx}px - 60px)`,
+      dx: playerX - 55,
+      dy: playerY + displayTableLiftPx - 60,
+    }
+  }
+
+  // Calculate player positions around the table (perfectly aligned with cupholders / felt overlays)
+  const getPlayerPosition = (index: number, total: number) => {
+    const { dx, dy } = getPlayerSeatOffsetFromPlaneCenterPx(index, total)
+    return {
+      x: `calc(50% + ${dx}px)`,
+      y: `calc(50% + ${dy}px)`,
     }
   }
 
@@ -1091,105 +1084,92 @@ function DisplayTableLive({
                 {dealingCards.map((dealingCard) => {
                   // Calculate exact endpoint to match static card positioning
                   const calculateCardEndpoint = (playerIndex: number, cardIndex: number) => {
-                    const playerPosition = getPlayerPosition(playerIndex, displayGameState.players.length)
-                    
-                    // Parse the position values
-                    const targetX = parseFloat(playerPosition.x.replace('calc(50% + ', '').replace('px)', ''))
-                    const targetY = parseFloat(playerPosition.y.replace('calc(50% + ', '').replace('px)', ''))
-                    
-                    // Calculate center relative to container
-                    const containerWidth = fdW
-                    const viewportHeight = fdH
-                    const centerX = containerWidth / 2
-                    const centerY = viewportHeight / 2
-                    
-                    // Player container positioning: absolute with transform -translate-x-1/2 -translate-y-1/2
-                    const playerCenterX = centerX + targetX
-                    const playerCenterY = centerY + targetY
-                    
+                    const { dx, dy } = getPlayerSeatOffsetFromPlaneCenterPx(
+                      playerIndex,
+                      displayGameState.players.length
+                    )
+
+                    const centerX = fdW / 2
+                    const centerY = fdH / 2
+                    const playerCenterX = centerX + dx
+                    const playerCenterY = centerY + dy
+
                     // Static card positioning inside player container:
                     // - Container: w-[120px] h-[130px] with scale-[1.40625]
                     // - Cards: absolute bottom-0 left-1/2 transform -translate-x-1/2 flex
                     // - Each card: scale-50 origin-bottom with marginLeft: i === 0 ? '0' : '-50px'
-                    
+
                     const containerScale = 1.40625
                     const cardScale = 0.5
-                    
+
                     // Container dimensions after scaling
                     const scaledHeight = 130 * containerScale
-                    
+
                     // Cards are positioned at bottom-0 (bottom of container)
-                    const cardsBottomY = playerCenterY + (scaledHeight / 2)
-                    
+                    const cardsBottomY = playerCenterY + scaledHeight / 2
+
                     // Cards use flex with overlapping via negative margin
-                    // First card (index 0): no offset
-                    // Second card (index 1): -50px margin (before scale)
                     const baseCardWidth = 96 // Normal NumericPlayingCard width
                     const baseCardHeight = 144 // Normal NumericPlayingCard height
                     const scaledCardWidth = baseCardWidth * cardScale * containerScale
                     const cardOverlap = -50 // px overlap before scaling
-                    
-                    // Calculate card X position
-                    // Cards are centered horizontally (left-1/2 transform -translate-x-1/2)
-                    // Add small offset to move cards slightly right and up
-                                          const horizontalOffset = 16 // px adjustment to move right (decreased by 2px)
-                    const verticalOffset = 9 - (fdH * 0.08) // px adjustment — scale with felt coordinate height
-                    let cardX
-                    
+
+                    const horizontalOffset = 16
+                    const verticalOffset = 9 - fdH * 0.08
+                    let cardX: number
+
                     if (cardIndex === 0) {
-                      // First card is centered
-                      cardX = playerCenterX - (scaledCardWidth / 2) + horizontalOffset
+                      cardX = playerCenterX - scaledCardWidth / 2 + horizontalOffset
                     } else {
-                      // Second card overlaps by -50px (before container scaling)
                       const overlapScaled = cardOverlap * containerScale
-                      cardX = playerCenterX - (scaledCardWidth / 2) + overlapScaled + horizontalOffset
+                      cardX = playerCenterX - scaledCardWidth / 2 + overlapScaled + horizontalOffset
                     }
-                    
-                    // Card Y position accounts for card height and origin-bottom
+
                     const scaledCardHeight = baseCardHeight * cardScale * containerScale
                     const cardY = cardsBottomY - scaledCardHeight + verticalOffset
-                    
+
                     return { x: cardX, y: cardY, scale: cardScale * containerScale }
                   }
-                  
+
                   const endpoint = calculateCardEndpoint(dealingCard.playerIndex, dealingCard.cardIndex)
-                  
-                  // Calculate exact center for animation start (same as deck position)
-                  const centerX = (fdW / 2) - 50 // Match deck position
-                  const centerY = (fdH / 2 + 100 + displayTableLiftPx) - fdH * 0.1 // Match deck position, move up 10%
-                  
+
+                  const deckCenterX = fdW / 2 - 50
+                  const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
+                  const startW = 96 * 0.1
+                  const startH = 144 * 0.1
+                  const initialX = deckCenterX - startW / 2
+                  const initialY = deckCenterY - startH / 2
+
                   const finalX = endpoint.x
                   const finalY = endpoint.y
                   const finalScale = endpoint.scale
-                  
+
                   return (
                     <motion.div
                       key={dealingCard.id}
                       className="absolute"
-                      style={{ 
-                        left: 0, 
-                        top: 0 
+                      style={{
+                        left: 0,
+                        top: 0,
+                        transformOrigin: 'top left',
                       }}
-                      initial={{ 
-                        x: centerX,
-                        y: centerY,
+                      initial={{
+                        x: initialX,
+                        y: initialY,
                         scale: 0.1,
                         rotate: Math.random() * 360 - 180,
-                        opacity: 0
+                        opacity: 0,
                       }}
-                      animate={{ 
+                      animate={{
                         x: finalX,
                         y: finalY,
-                        scale: finalScale, // Match the exact card scale
+                        scale: finalScale,
                         rotate: 0,
-                        opacity: 1
+                        opacity: 1,
                       }}
-                      transition={{ 
-                        duration: 1.2,
-                        ease: "easeOut",
-                        type: "spring",
-                        stiffness: 100,
-                        damping: 10
+                      transition={{
+                        duration: 0.9,
+                        ease: [0.22, 1, 0.36, 1],
                       }}
                     >
                       <NumericPlayingCard 
@@ -1281,35 +1261,34 @@ function DisplayTableLive({
                   }
                   
                   const { x: finalX, y: finalY, scale: finalScale } = calculateCommunityCardEndpoint(dealingCard.cardIndex)
-                  
-                  // Calculate center for animation start (same as deck position)
-                  const centerX = (fdW / 2) - 50 // Match deck position
-                  const centerY = fdH / 2 + 100 + displayTableLiftPx
-                  
+
+                  const deckCenterX = fdW / 2 - 50
+                  const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
+                  const initialX = deckCenterX - (64 * 0.05) / 2
+                  const initialY = deckCenterY - (96 * 0.05) / 2
+
                   return (
                     <motion.div
                       key={dealingCard.id}
                       className="absolute"
-                      initial={{ 
-                        x: centerX, 
-                        y: centerY, 
-                        scale: 0.05, // Start even smaller for more dramatic growth
-                        rotate: Math.random() * 360 - 180, 
-                        opacity: 0 
+                      style={{ transformOrigin: 'top left' }}
+                      initial={{
+                        x: initialX,
+                        y: initialY,
+                        scale: 0.05,
+                        rotate: Math.random() * 360 - 180,
+                        opacity: 0,
                       }}
-                      animate={{ 
-                        x: finalX, 
-                        y: finalY, 
-                        scale: finalScale, // Scale up to community card size
-                        rotate: 0, 
-                        opacity: 1 
+                      animate={{
+                        x: finalX,
+                        y: finalY,
+                        scale: finalScale,
+                        rotate: 0,
+                        opacity: 1,
                       }}
-                      transition={{ 
-                        duration: 1.2, 
-                        ease: "easeOut", 
-                        type: "spring", 
-                        stiffness: 100, 
-                        damping: 10 
+                      transition={{
+                        duration: 0.9,
+                        ease: [0.22, 1, 0.36, 1],
                       }}
                     >
                                                   <NumericPlayingCard 
@@ -1765,14 +1744,12 @@ function DisplayTableLive({
             const potX = sw / 2
             const potY = sh / 2 + (-144 + displayTableLiftPx) * chipScale
             const idx = displayGameState.players.findIndex((p) => p.id === showdownWinnerId)
-            const seat = getPlayerPosition(Math.max(0, idx), displayGameState.players.length)
-            const seatX =
-              sw / 2 +
-              (parseFloat(seat.x.replace('calc(50% + ', '').replace('px - 55px)', '')) + 55) *
-                chipScale
-            const seatY =
-              sh / 2 +
-              (parseFloat(seat.y.replace('calc(50% + ', '').replace('px - 60px)', '')) + 10) * chipScale
+            const { dx, dy } = getPlayerSeatOffsetFromPlaneCenterPx(
+              Math.max(0, idx),
+              displayGameState.players.length
+            )
+            const seatX = sw / 2 + dx * chipScale
+            const seatY = sh / 2 + dy * chipScale
             return chipFlights.map(chip => (
               <motion.div
                 key={chip.id}
