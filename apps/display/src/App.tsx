@@ -1318,8 +1318,9 @@ function DisplayTableLive({
                 const { ox, oy } = heroSeatCupOffsets(index, total)
                 const rimLeft = HERO_CUPHOLDER_ORIGIN.left + ox
                 const rimTop = HERO_CUPHOLDER_ORIGIN.top + oy
-                const chipPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.48)
-                const blindPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.31)
+                /** Smaller fraction = closer to rim / rail; blinds sit slightly rim-ward of stacks. */
+                const chipPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.2)
+                const blindPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.08)
                 const blindPills = heroSeatBlindMarkerPills(index, blindSeatMarkers, 'onFelt')
                 const dimStack = player.hasFolded === true
 
@@ -1337,9 +1338,9 @@ function DisplayTableLive({
                         width={96}
                         height={72}
                         draggable={false}
-                        className="pointer-events-none h-[3rem] w-auto max-w-[5rem] shrink-0 select-none object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:h-[3.35rem] sm:max-w-[5.75rem]"
+                        className="pointer-events-none h-[3.5rem] w-auto max-w-[5.75rem] shrink-0 select-none object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] sm:h-[4.1rem] sm:max-w-[6.5rem] md:h-[4.35rem] md:max-w-[7rem]"
                       />
-                      <span className="max-w-[10rem] text-center font-mono text-[1.22rem] font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:text-[1.38rem] [text-shadow:0_1px_3px_rgba(0,0,0,0.96),0_2px_10px_rgba(0,0,0,0.88)]">
+                      <span className="max-w-[11rem] text-center font-mono text-[1.35rem] font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:max-w-[12rem] sm:text-[1.55rem] md:text-[1.7rem] [text-shadow:0_1px_3px_rgba(0,0,0,0.96),0_2px_10px_rgba(0,0,0,0.88)]">
                         {formatHeroStackMoney(player.bankroll)}
                       </span>
                     </div>

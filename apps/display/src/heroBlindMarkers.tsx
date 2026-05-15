@@ -11,7 +11,7 @@ export function heroSeatBlindMarkerPills(
 ): ReactNode[] {
   const badgeBase =
     presentation === 'onFelt'
-      ? 'rounded border px-[4px] py-0.5 text-[10px] font-black uppercase leading-none tracking-tight shadow-sm sm:text-[11px]'
+      ? 'rounded-md border-2 px-2 py-1 text-xs font-black uppercase leading-none tracking-tight shadow-md sm:px-2.5 sm:py-1 sm:text-sm md:text-base min-w-[2.25rem] sm:min-w-[2.75rem]'
       : 'inline-flex min-w-[1.6rem] items-center justify-center rounded px-1 py-0.5 text-[9px] font-black uppercase leading-none tracking-tight shadow-sm sm:text-[10px]'
   const out: ReactNode[] = []
   if (blindSeats.dealerSeatIndex === seatIndex) {
