@@ -1191,7 +1191,9 @@ export default function VenueEightTablesPreview({
       </div>
 
       <main
-        className={`relative z-10 mx-auto w-full max-w-[1600px] pb-12 pt-2 sm:pt-3 ${
+        className={`relative z-10 mx-auto w-full max-w-[1600px] pb-12 ${
+          showHeadline && seatingHeroRow ? 'pt-0' : 'pt-2 sm:pt-3'
+        } ${
           seatingHeroRow && (padLeftForTablesCrawl || showRoster) ? 'px-0 sm:px-0' : 'px-4 sm:px-6'
         }`}
       >
@@ -1219,58 +1221,75 @@ export default function VenueEightTablesPreview({
               Featured table {seatingHeroRow.tableNum}
             </p>
 
-            {/* Single center card: wordmark overlays top; headline row when live; taller hero felt below. */}
+            {/* Headline: sticky top of center column; wordmark + question use full band between side crawls. */}
+            {showHeadline ? (
+              <motion.div
+                className="sticky top-0 z-[45] mb-2 flex w-full min-w-0 items-stretch gap-2.5 rounded-b-2xl border-2 border-yellow-400/85 bg-black/82 px-2.5 py-2 shadow-[0_12px_36px_rgba(0,0,0,0.5)] backdrop-blur-md sm:gap-4 sm:px-4 sm:py-2.5 md:gap-5 md:px-5 md:py-3"
+                style={{
+                  paddingTop: 'max(0.35rem, env(safe-area-inset-top, 0px))',
+                }}
+                initial={skipMountIntro ? false : { opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="pointer-events-none flex w-[clamp(6.75rem,min(22vw,9rem),11rem)] shrink-0 items-center self-center sm:w-[clamp(7.5rem,min(26vw,10rem),12rem)] md:w-[clamp(8.5rem,min(24vw,11rem),13rem)]">
+                  <div
+                    className="w-full shadow-black/70 drop-shadow-xl"
+                    style={{ aspectRatio: '958 / 592' }}
+                  >
+                    <QuizzEmWordmark layout="fill" />
+                  </div>
+                </div>
+                <motion.div
+                  className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-xl border border-casino-emerald/35 bg-black/35 px-2.5 py-2 shadow-[inset_0_0_0_1px_rgba(0,255,180,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-2.5 md:gap-4 md:px-5"
+                  initial={skipMountIntro ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="min-w-0 flex-1">
+                    {headlineQuestionText ? (
+                      <p className="text-balance text-left text-lg font-bold leading-snug tracking-tight text-yellow-400 sm:text-xl sm:leading-snug md:text-2xl md:leading-snug lg:text-[1.75rem] xl:text-[2rem] 2xl:text-[2.15rem]">
+                        {headlineQuestionText}
+                      </p>
+                    ) : (
+                      <p className="sr-only">Answering in progress.</p>
+                    )}
+                  </div>
+                  {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
+                    <div
+                      className={`flex shrink-0 flex-row items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 sm:flex-col sm:px-3 sm:py-2 sm:tabular-nums ${
+                        timerSeconds <= 10
+                          ? 'border-amber-400/55 bg-amber-950/45 shadow-[0_0_20px_rgba(251,191,36,0.1)]'
+                          : 'border-amber-600/35 bg-amber-950/25'
+                      }`}
+                      aria-live="polite"
+                      aria-label={`Time remaining ${timerSeconds} seconds`}
+                    >
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-white/50 sm:hidden">
+                        Time
+                      </span>
+                      <div className="font-mono text-2xl font-black tracking-tight text-amber-200 sm:text-4xl md:text-5xl xl:text-6xl">
+                        {timerSeconds}s
+                      </div>
+                    </div>
+                  ) : null}
+                </motion.div>
+              </motion.div>
+            ) : null}
+
             <motion.article
               className="relative w-full overflow-hidden rounded-2xl border-2 border-yellow-400/85 bg-black/55 shadow-xl backdrop-blur-md"
               initial={skipMountIntro ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="pointer-events-none absolute left-3 top-2 z-30 w-[clamp(7.5rem,min(26vw,10rem),12rem)] sm:left-5 sm:top-3 sm:w-[clamp(8.5rem,min(24vw,11rem),13rem)]">
-                <div className="w-full shadow-black/70 drop-shadow-xl" style={{ aspectRatio: '958 / 592' }}>
-                  <QuizzEmWordmark layout="fill" />
-                </div>
-              </div>
-
-              {showHeadline ? (
-                <div className="relative z-20 border-b border-white/15 bg-black/40 px-3 pb-2 pl-[clamp(9.75rem,min(36vw,13.5rem),15.5rem)] pr-4 pt-[4.15rem] sm:px-4 sm:pb-2.5 sm:pl-[clamp(10.5rem,min(35vw,14.5rem),16.5rem] sm:pt-[4.25rem]">
-                  <motion.div
-                    className="flex min-h-0 min-w-0 flex-col gap-2 rounded-xl border border-casino-emerald/35 bg-black/35 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(0,255,180,0.06)] backdrop-blur-md sm:flex-row sm:items-center sm:gap-4 sm:px-4 sm:py-2.5"
-                    initial={skipMountIntro ? false : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    <div className="min-w-0 flex-1">
-                      {headlineQuestionText ? (
-                        <p className="text-balance text-left text-xl font-bold leading-snug tracking-tight text-yellow-400 sm:text-2xl md:text-[1.65rem] md:leading-snug lg:text-[1.85rem] xl:text-[2.05rem] xl:leading-tight 2xl:text-[2.25rem]">
-                          {headlineQuestionText}
-                        </p>
-                      ) : (
-                        <p className="sr-only">Answering in progress.</p>
-                      )}
-                    </div>
-                    {answerDeadlineMs != null && typeof timerSeconds === 'number' ? (
-                      <div
-                        className={`flex shrink-0 flex-row items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 sm:flex-col sm:px-3 sm:py-2 sm:tabular-nums ${
-                          timerSeconds <= 10
-                            ? 'border-amber-400/55 bg-amber-950/45 shadow-[0_0_20px_rgba(251,191,36,0.1)]'
-                            : 'border-amber-600/35 bg-amber-950/25'
-                        }`}
-                        aria-live="polite"
-                        aria-label={`Time remaining ${timerSeconds} seconds`}
-                      >
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-white/50 sm:hidden">
-                          Time
-                        </span>
-                        <div className="font-mono text-3xl font-black tracking-tight text-amber-200 sm:text-4xl md:text-5xl xl:text-6xl">
-                          {timerSeconds}s
-                        </div>
-                      </div>
-                    ) : null}
-                  </motion.div>
+              {!showHeadline ? (
+                <div className="pointer-events-none absolute left-3 top-2 z-30 w-[clamp(7.5rem,min(26vw,10rem),12rem)] sm:left-5 sm:top-3 sm:w-[clamp(8.5rem,min(24vw,11rem),13rem)]">
+                  <div className="w-full shadow-black/70 drop-shadow-xl" style={{ aspectRatio: '958 / 592' }}>
+                    <QuizzEmWordmark layout="fill" />
+                  </div>
                 </div>
               ) : null}
 
               {/* Live felt fills this slot; viewport bottom dock is sibling to `<main>` (padding on shell), not padded inside embed. */}
-              <div className="relative z-10 box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 overflow-hidden rounded-b-xl rounded-t-none border border-yellow-700/45">
+              <div className="relative z-10 box-border flex h-[min(85dvh,940px)] min-h-[min(400px,48dvh)] w-full min-w-0 shrink-0 overflow-hidden rounded-2xl border border-yellow-700/45">
                 <DisplayTableLive
                   key={seatingHeroRow.tableNum}
                   feltTableHint={String(seatingHeroRow.tableNum)}
