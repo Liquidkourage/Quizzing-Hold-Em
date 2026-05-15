@@ -58,6 +58,42 @@ function heroFeltPointTowardPot(
   }
 }
 
+/**
+ * Pucks / lammers stay rail-tight; chip piles sit farther toward the pot, offset **tangentially**
+ * left vs right per seat index so badges and stacks never share the same on-screen corridor.
+ */
+function heroFeltSeatAssetPositions(
+  rimLeftPx: number,
+  rimTopPx: number,
+  seatIndex: number
+): { blindPx: { leftPx: number; topPx: number }; chipPx: { leftPx: number; topPx: number } } {
+  const dx = HERO_TABLE_POT_ANCHOR.cx - rimLeftPx
+  const dy = HERO_TABLE_POT_ANCHOR.cy - rimTopPx
+  const len = Math.hypot(dx, dy) || 1
+  const ux = dx / len
+  const uy = dy / len
+  /** Clockwise perpendicular in screen space — slide assets along the felt “belt”. */
+  const tx = -uy
+  const ty = ux
+  const sign = seatIndex % 2 === 0 ? 1 : -1
+  /** Half-width-ish gap between puck column and chip column (authoring px). */
+  const tangentSepPx = 32
+
+  const blindBase = heroFeltPointTowardPot(rimLeftPx, rimTopPx, 0.07)
+  const chipBase = heroFeltPointTowardPot(rimLeftPx, rimTopPx, 0.32)
+
+  return {
+    blindPx: {
+      leftPx: blindBase.leftPx + tx * tangentSepPx * sign,
+      topPx: blindBase.topPx + ty * tangentSepPx * sign,
+    },
+    chipPx: {
+      leftPx: chipBase.leftPx - tx * tangentSepPx * sign,
+      topPx: chipBase.topPx - ty * tangentSepPx * sign,
+    },
+  }
+}
+
 function formatHeroStackMoney(amount: number): string {
   const n = Number.isFinite(amount) ? Math.round(amount) : 0
   return `$${Math.max(0, n).toLocaleString()}`
@@ -1312,15 +1348,13 @@ function DisplayTableLive({
                 )
               })}
 
-              {/* Chip stacks + blind markers on felt (toward center from cup ellipse) */}
+              {/* Seat assets on felt — blinds rail-tight, stacks deeper inward, tangentially split */}
               {displayGameState.players.map((player, index) => {
                 const total = displayGameState.players.length
                 const { ox, oy } = heroSeatCupOffsets(index, total)
                 const rimLeft = HERO_CUPHOLDER_ORIGIN.left + ox
                 const rimTop = HERO_CUPHOLDER_ORIGIN.top + oy
-                /** Smaller fraction = closer to rim / rail; blinds sit slightly rim-ward of stacks. */
-                const chipPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.2)
-                const blindPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.08)
+                const { blindPx, chipPx } = heroFeltSeatAssetPositions(rimLeft, rimTop, index)
                 const blindPills = heroSeatBlindMarkerPills(index, blindSeatMarkers, 'onFelt')
                 const dimStack = player.hasFolded === true
 
@@ -1328,14 +1362,14 @@ function DisplayTableLive({
                   <Fragment key={`felt-seat-${player.id}`}>
                     {blindPills.length > 0 ? (
                       <div
-                        className="pointer-events-none absolute z-[110] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)]"
+                        className="pointer-events-none absolute z-[118] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)]"
                         style={{ left: `${blindPx.leftPx}px`, top: `${blindPx.topPx}px` }}
                       >
                         {blindPills}
                       </div>
                     ) : null}
                     <div
-                      className={`pointer-events-none absolute z-[125] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 ${
+                      className={`pointer-events-none absolute z-[118] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 ${
                         dimStack ? 'opacity-45 saturate-[0.65]' : 'opacity-96'
                       }`}
                       style={{ left: `${chipPx.leftPx}px`, top: `${chipPx.topPx}px` }}
