@@ -1,10 +1,10 @@
-﻿import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react'
+﻿import { useEffect, useState, useCallback, useRef, useLayoutEffect, useMemo } from 'react'
 import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { onState, onToast, onDealingCards, onDealingCommunityCards } from '@qhe/net'
 import type { GameState, GamePhase } from '@qhe/core'
-import { LOBBY_TABLE_ID, buildDisplayPreviewGameState } from '@qhe/core'
+import { LOBBY_TABLE_ID, buildDisplayPreviewGameState, createEmptyGame } from '@qhe/core'
 import confetti from 'canvas-confetti'
 import { readDisplayVenueCode } from './displayUrlParams'
 
@@ -130,6 +130,8 @@ function DisplayTableLive({
   variant = 'fullscreen',
   hideQuestionBanner = false,
 }: DisplayTableLiveProps) {
+  const isEmbedded = variant === 'embedded'
+
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [isDealing, setIsDealing] = useState(false)
@@ -198,7 +200,8 @@ function DisplayTableLive({
     return unsubscribe
   }, [])
 
-  // Offline / pre-socket scaffold — matches seeded display sessions (@qhe/core display preview fixture).
+  // Offline / standalone: rehearsal preview. Embedded venue wall: lobby shell until socket `state` —
+  // do not use {@link buildDisplayPreviewGameState} (shows fake answering + three-board “Flop”).
   const [demoGameState, setDemoGameState] = useState<GameState>(() =>
     buildDisplayPreviewGameState(readDisplayVenueCode(), feltTableHint)
   )
@@ -206,7 +209,12 @@ function DisplayTableLive({
   useEffect(() => {
     setDemoGameState(buildDisplayPreviewGameState(readDisplayVenueCode(), feltTableHint))
   }, [feltTableHint])
-  const displayGameState = gameState || demoGameState
+
+  const embeddedLobbyShell = useMemo(
+    () => createEmptyGame(readDisplayVenueCode(), '', feltTableHint),
+    [feltTableHint]
+  )
+  const displayGameState = gameState ?? (isEmbedded ? embeddedLobbyShell : demoGameState)
 
   // Compute showdown winner id (used for seat glow)
   const showdownWinnerId = (() => {
@@ -349,8 +357,7 @@ function DisplayTableLive({
 
   // Function to trigger community card dealing animation
   const triggerCommunityDealingAnimation = useCallback(() => {
-    // Get the current fresh state - use displayGameState to avoid stale closure issues
-    const currentGameState = displayGameState || demoGameState
+    const currentGameState = displayGameState
     
     // ONLY use server community cards - NO RANDOM FALLBACK
     if (currentGameState.round.communityCards.length === 0) {
@@ -448,7 +455,7 @@ function DisplayTableLive({
   const [answerSecondsLeft, setAnswerSecondsLeft] = useState<number | null>(null)
 
   useEffect(() => {
-    const gs = gameState ?? demoGameState
+    const gs = displayGameState
     const deadline = gs.round?.answerDeadline
     const inAnswering = gs.phase === 'answering'
 
@@ -464,12 +471,7 @@ function DisplayTableLive({
     tick()
     const id = window.setInterval(tick, 200)
     return () => window.clearInterval(id)
-  }, [
-    gameState?.phase,
-    gameState?.round?.answerDeadline,
-    demoGameState.phase,
-    demoGameState.round?.answerDeadline,
-  ])
+  }, [displayGameState.phase, displayGameState.round?.answerDeadline])
 
   const shellRef = useRef<HTMLDivElement>(null)
   const gamePlaneRef = useRef<HTMLDivElement>(null)
@@ -582,7 +584,6 @@ function DisplayTableLive({
   const sw = shellSize.w > 0 ? shellSize.w : gwFallback
   const sh = shellSize.h > 0 ? shellSize.h : ghFallback
 
-  const isEmbedded = variant === 'embedded'
   /** Coordinate space for dealing/community math (matches the positioned subtree). */
   const fdW = isEmbedded ? EMBEDDED_FELT_LAYOUT_W : gw
   const fdH = isEmbedded ? EMBEDDED_FELT_LAYOUT_H : gh
