@@ -70,12 +70,14 @@ export default function DisplayRouter({ venueCode, pairingBootstrap = false }: D
   /** Hide join hero once any numbered table has left lobby (tiles stay in sync via venue snapshot). */
   const mosaicShowsLiveFelts =
     venueWall?.tiles?.some((t) => t.phase !== 'lobby') ?? false
+  /**
+   * Until the first venue snapshot arrives, `venueWall` is null — treat that as briefing so we never
+   * flash `VenueEightTablesPreview` rehearsal tiles before `AudienceWelcomeWall` (TV pair / cold load).
+   */
   const audienceBriefing =
     onVenueWallLayout &&
-    venueWall != null &&
-    venueWall.showAudienceWelcome !== false &&
-    !mosaicForcedByHost &&
-    !mosaicShowsLiveFelts
+    (venueWall === null ||
+      (venueWall.showAudienceWelcome !== false && !mosaicForcedByHost && !mosaicShowsLiveFelts))
 
   const featuredWatch = useVenueWallFeaturedWatch(venueWall, layout)
 
