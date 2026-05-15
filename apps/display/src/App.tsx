@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback, useRef, useLayoutEffect, useMemo } from 'react'
+﻿import { Fragment, useEffect, useState, useCallback, useRef, useLayoutEffect, useMemo } from 'react'
 import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
@@ -9,10 +9,59 @@ import confetti from 'canvas-confetti'
 import { readDisplayVenueCode } from './displayUrlParams'
 import { embeddedHeroDisplayState } from './embeddedVenueHeroState'
 import { heroSeatBlindMarkerPills } from './heroBlindMarkers'
+import seatChipStackImg from './assets/seat-chip-stack.png'
 
 /** Authoring viewport (logical px). Embedded venue heroes scale uniformly to fit the measured game plane; fullscreen uses live `gw/gh`. */
 const EMBEDDED_FELT_LAYOUT_W = 1280
 const EMBEDDED_FELT_LAYOUT_H = 940
+
+/**
+ * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of 810×605 rail box origin.
+ */
+function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: number } {
+  const angle = (index / total) * 2 * Math.PI - Math.PI / 2
+  const baseRadiusX = 392
+  const baseRadiusY = 316
+  let ox = Math.cos(angle) * baseRadiusX
+  let oy = Math.sin(angle) * baseRadiusY
+  const normalizedAngle = ((angle + Math.PI / 2) % (2 * Math.PI)) / (2 * Math.PI)
+  const isTopRegion = normalizedAngle > 0.9 || normalizedAngle < 0.1
+  const isBottomRegion = normalizedAngle > 0.4 && normalizedAngle < 0.6
+  const isCorner =
+    (normalizedAngle > 0.125 && normalizedAngle < 0.375) ||
+    (normalizedAngle > 0.625 && normalizedAngle < 0.875)
+  if (isTopRegion) {
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
+    oy = -291.6 + bowAmount
+  } else if (isBottomRegion) {
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
+    oy = 291.6 - bowAmount
+  } else if (isCorner) {
+    ox = Math.cos(angle) * (baseRadiusX + 0.81)
+    oy = Math.sin(angle) * (baseRadiusY + 0.81)
+  }
+  return { ox, oy }
+}
+
+/** Visual center-ish under pot / community arc on authoring table (px, same coords as cupholders). */
+const HERO_TABLE_POT_ANCHOR = { cx: 406, cy: 298 } as const
+const HERO_CUPHOLDER_ORIGIN = { left: 394, top: 293 } as const
+
+function heroFeltPointTowardPot(
+  rimLeftPx: number,
+  rimTopPx: number,
+  frac: number
+): { leftPx: number; topPx: number } {
+  return {
+    leftPx: rimLeftPx + (HERO_TABLE_POT_ANCHOR.cx - rimLeftPx) * frac,
+    topPx: rimTopPx + (HERO_TABLE_POT_ANCHOR.cy - rimTopPx) * frac,
+  }
+}
+
+function formatHeroStackMoney(amount: number): string {
+  const n = Number.isFinite(amount) ? Math.round(amount) : 0
+  return `$${Math.max(0, n).toLocaleString()}`
+}
 
 function displayPhaseLabel(phase: GamePhase): string {
   switch (phase) {
@@ -613,42 +662,10 @@ function DisplayTableLive({
   /** Negative = move felt + seats up in fullscreen; embedded venue uses overlay HUD + full-height plane, so keep 0 to center vertically. */
   const displayTableLiftPx = variant === 'embedded' ? 0 : -88
 
-  // Calculate player positions around the table (perfectly aligned with cupholders)
+  // Calculate player positions around the table (perfectly aligned with cupholders / felt overlays)
   const getPlayerPosition = (index: number, total: number) => {
-    const angle = (index / total) * 2 * Math.PI - Math.PI / 2 // Start from top
-    
-    // Use the same angle logic as cupholders for perfect alignment
-    const normalizedAngle = ((angle + Math.PI/2) % (2 * Math.PI)) / (2 * Math.PI)
-    
-    // Identify top and bottom regions for straight line alignment (same as cupholders)
-    const isTopRegion = normalizedAngle > 0.9 || normalizedAngle < 0.1
-    const isBottomRegion = normalizedAngle > 0.4 && normalizedAngle < 0.6
-    
-    // Identify corner regions
-    const isCorner = (normalizedAngle > 0.125 && normalizedAngle < 0.375) || 
-                     (normalizedAngle > 0.625 && normalizedAngle < 0.875)
-    
-    let cupholderX, cupholderY
-    
-    // Calculate cupholder position (scaled up by 1.62x for larger table)
-    const scaleTable = 1.62
-    if (isTopRegion) {
-      const bowAmount = Math.abs(Math.cos(angle)) * (15 * scaleTable)
-      cupholderX = Math.cos(angle) * (242 * scaleTable)
-      cupholderY = (-180 + bowAmount) * scaleTable
-    } else if (isBottomRegion) {
-      const bowAmount = Math.abs(Math.cos(angle)) * (15 * scaleTable)
-      cupholderX = Math.cos(angle) * (242 * scaleTable)
-      cupholderY = (180 - bowAmount) * scaleTable
-    } else if (isCorner) {
-      cupholderX = Math.cos(angle) * ((242 + 0.5) * scaleTable)
-      cupholderY = Math.sin(angle) * ((195 + 0.5) * scaleTable)
-    } else {
-      cupholderX = Math.cos(angle) * (242 * scaleTable)
-      cupholderY = Math.sin(angle) * (195 * scaleTable)
-    }
-    
-    // Calculate direction from table center (0,0) to cupholder
+    const { ox: cupholderX, oy: cupholderY } = heroSeatCupOffsets(index, total)
+
     const cupholderDistance = Math.sqrt(cupholderX * cupholderX + cupholderY * cupholderY)
     const directionX = cupholderX / cupholderDistance
     const directionY = cupholderY / cupholderDistance
@@ -1203,17 +1220,12 @@ function DisplayTableLive({
                     }}
                   />
                 )}
-                <div className="relative min-h-[142px] w-[120px] origin-center scale-[1.40625] transform rounded-lg border-2 border-yellow-600 bg-black/90 p-3 text-center shadow-lg backdrop-blur-md">
+                <div className="relative min-h-[118px] w-[120px] origin-center scale-[1.40625] transform rounded-lg border-2 border-yellow-600 bg-black/90 p-3 text-center shadow-lg backdrop-blur-md">
                   <div className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-yellow-600/85">
                     Seat {heroDisplayedSeatNumber(player, index + 1)}
                   </div>
-                  <div className="mb-1 flex min-h-[16px] flex-wrap justify-center gap-0.5">
-                    {heroSeatBlindMarkerPills(index, blindSeatMarkers)}
-                  </div>
                   <div className="mb-1 text-base font-bold text-yellow-400">{player.name}</div>
-                  <div className="text-white text-base mb-1">
-                    ${player.bankroll}
-                  </div>
+                  <div className="sr-only">${formatHeroStackMoney(player.bankroll)}</div>
                   
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
                   {player.hand.length > 0 && !isDealing && hasDealtCards && (
@@ -1284,55 +1296,62 @@ function DisplayTableLive({
 
               {/* Cup holders centered on the middle rail stripe - one per player */}
               {displayGameState.players.map((_, index) => {
-                const angle = (index / displayGameState.players.length) * 2 * Math.PI - Math.PI / 2
-                
-                // Base ellipse dimensions - scaled up for larger table
-                const baseRadiusX = 392  // Horizontal radius (242 * 1.62)
-                const baseRadiusY = 316  // Vertical radius (195 * 1.62)
-                
-                // Calculate base position
-                let x = Math.cos(angle) * baseRadiusX
-                let y = Math.sin(angle) * baseRadiusY
-                
-                // Adjust positioning based on angle regions
-                const normalizedAngle = ((angle + Math.PI/2) % (2 * Math.PI)) / (2 * Math.PI)
-                
-                // Identify top and bottom regions for straight line alignment
-                const isTopRegion = normalizedAngle > 0.9 || normalizedAngle < 0.1
-                const isBottomRegion = normalizedAngle > 0.4 && normalizedAngle < 0.6
-                
-                // Identify corner regions
-                const isCorner = (normalizedAngle > 0.125 && normalizedAngle < 0.375) || 
-                               (normalizedAngle > 0.625 && normalizedAngle < 0.875)
-                
-                if (isTopRegion) {
-                  // Create more pronounced inward bow for top line
-                  const bowAmount = Math.abs(Math.cos(angle)) * 24.3 // Bow inward (15 * 1.62)
-                  y = -291.6 + bowAmount // Positioning (-180 * 1.62)
-                } else if (isBottomRegion) {
-                  // Create more pronounced inward bow for bottom line
-                  const bowAmount = Math.abs(Math.cos(angle)) * 24.3 // Bow inward (15 * 1.62)
-                  y = 291.6 - bowAmount // Positioning (180 * 1.62)
-                } else if (isCorner) {
-                  // Push corners out by increasing radius - minimal boost for nearly flat
-                  x = Math.cos(angle) * (baseRadiusX + 0.81)
-                  y = Math.sin(angle) * (baseRadiusY + 0.81)
-                }
-                
-                // Note: Individual adjustments removed since we now have 8 cupholders instead of 50
-                
+                const { ox: x, oy: y } = heroSeatCupOffsets(index, displayGameState.players.length)
                 return (
                   <div 
                     key={`cupholder-${index}`}
                     className="absolute bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
                     style={{ 
-                      left: `${394 + x}px`, 
-                      top: `${293 + y}px`,
+                      left: `${HERO_CUPHOLDER_ORIGIN.left + x}px`, 
+                      top: `${HERO_CUPHOLDER_ORIGIN.top + y}px`,
                       width: '32px',
                       height: '32px'
                     }}
                                       >
           </div>
+                )
+              })}
+
+              {/* Chip stacks + blind markers on felt (toward center from cup ellipse) */}
+              {displayGameState.players.map((player, index) => {
+                const total = displayGameState.players.length
+                const { ox, oy } = heroSeatCupOffsets(index, total)
+                const rimLeft = HERO_CUPHOLDER_ORIGIN.left + ox
+                const rimTop = HERO_CUPHOLDER_ORIGIN.top + oy
+                const chipPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.48)
+                const blindPx = heroFeltPointTowardPot(rimLeft, rimTop, 0.31)
+                const blindPills = heroSeatBlindMarkerPills(index, blindSeatMarkers, 'onFelt')
+                const dimStack = player.hasFolded === true
+
+                return (
+                  <Fragment key={`felt-seat-${player.id}`}>
+                    <div
+                      className={`pointer-events-none absolute z-[115] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 ${
+                        dimStack ? 'opacity-45 saturate-[0.65]' : 'opacity-96'
+                      }`}
+                      style={{ left: `${chipPx.leftPx}px`, top: `${chipPx.topPx}px` }}
+                    >
+                      <img
+                        src={seatChipStackImg}
+                        alt=""
+                        width={96}
+                        height={72}
+                        draggable={false}
+                        className="pointer-events-none h-[3rem] w-auto max-w-[5rem] shrink-0 select-none object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] sm:h-[3.35rem] sm:max-w-[5.75rem]"
+                      />
+                      <span className="max-w-[10rem] text-center font-mono text-[1.22rem] font-extrabold leading-tight tabular-nums tracking-tight text-amber-50 sm:text-[1.38rem] [text-shadow:0_1px_3px_rgba(0,0,0,0.96),0_2px_10px_rgba(0,0,0,0.88)]">
+                        {formatHeroStackMoney(player.bankroll)}
+                      </span>
+                    </div>
+                    {blindPills.length > 0 ? (
+                      <div
+                        className="pointer-events-none absolute z-[118] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-px"
+                        style={{ left: `${blindPx.leftPx}px`, top: `${blindPx.topPx}px` }}
+                      >
+                        {blindPills}
+                      </div>
+                    ) : null}
+                  </Fragment>
                 )
               })}
               

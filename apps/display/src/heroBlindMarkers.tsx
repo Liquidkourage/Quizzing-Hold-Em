@@ -2,43 +2,35 @@ import { displayBlindSeatIndices } from '@qhe/core'
 import type { ReactNode } from 'react'
 
 /**
- * Chips at the rim (mosaic + hero) — dealer “button”, small blind, big blind.
- * Match {@link VenueEightTablesPreview} `blindTagsForSeat` styling.
+ * Dealer button + blind pills — rims on mini felts ({@link inline}) vs main hero felt ({@link onFelt}).
  */
 export function heroSeatBlindMarkerPills(
   seatIndex: number,
-  blindSeats: ReturnType<typeof displayBlindSeatIndices>
+  blindSeats: ReturnType<typeof displayBlindSeatIndices>,
+  presentation: 'onFelt' | 'inline' = 'inline'
 ): ReactNode[] {
+  const badgeBase =
+    presentation === 'onFelt'
+      ? 'rounded border px-[4px] py-0.5 text-[10px] font-black uppercase leading-none tracking-tight shadow-sm sm:text-[11px]'
+      : 'inline-flex min-w-[1.6rem] items-center justify-center rounded px-1 py-0.5 text-[9px] font-black uppercase leading-none tracking-tight shadow-sm sm:text-[10px]'
   const out: ReactNode[] = []
   if (blindSeats.dealerSeatIndex === seatIndex) {
     out.push(
-      <span
-        key="btn"
-        title="Dealer button"
-        className="inline-flex min-w-[1.6rem] items-center justify-center rounded px-1 py-0.5 text-[9px] font-black leading-none tracking-tight border border-amber-700/40 bg-amber-400 text-black shadow-sm sm:text-[10px]"
-      >
+      <span key="btn" title="Dealer button" className={`${badgeBase} border-amber-700/40 bg-amber-400 text-black`}>
         BTN
       </span>
     )
   }
   if (blindSeats.smallBlindSeatIndex === seatIndex) {
     out.push(
-      <span
-        key="sb"
-        title="Small blind"
-        className="inline-flex min-w-[1.6rem] items-center justify-center rounded px-1 py-0.5 text-[9px] font-black leading-none tracking-tight border border-sky-900/35 bg-sky-500 text-white shadow-sm sm:text-[10px]"
-      >
+      <span key="sb" title="Small blind" className={`${badgeBase} border-sky-900/35 bg-sky-500 text-white`}>
         SB
       </span>
     )
   }
   if (blindSeats.bigBlindSeatIndex === seatIndex) {
     out.push(
-      <span
-        key="bb"
-        title="Big blind"
-        className="inline-flex min-w-[1.6rem] items-center justify-center rounded px-1 py-0.5 text-[9px] font-black leading-none tracking-tight border border-rose-900/40 bg-rose-600 text-white shadow-sm sm:text-[10px]"
-      >
+      <span key="bb" title="Big blind" className={`${badgeBase} border-rose-900/40 bg-rose-600 text-white`}>
         BB
       </span>
     )
