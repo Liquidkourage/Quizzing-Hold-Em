@@ -115,6 +115,16 @@ Venue-wide mutations (`startGame`, `setQuestion`, deals, `adminCloseBetting` whe
 
 ---
 
+## Large all-CPU rehearsals (e.g. 20 seats)
+
+**“Finish” (one wave)** means driving the canonical path through **`showdown`**, then host **`endRound`** so **every playable felt** lands back in **`lobby`** with payouts and cleared cards (`stateDiagram` above). A longer **event** is **multiple waves** (repeat from **`startGame`** / question / deals … **`endRound`**).
+
+- Rosters **`maxPlayers`** default to **32** in core **`createEmptyGame`** — twenty **`vp:*`** seats in **`LOBBY`** then **Assign from lobby** splits into several numbered felts (e.g. 20 → three tables within **≤8** per felt). Only **sessions that exist** participate in venue lockstep; empty table ids are not instantiated.
+- Paced CPU wagering uses **one virtual action every ~3–7s random** per **CPU-only** felt so the mosaic stays legible (`drainCpuVpSessionChain`). With many bots that becomes **hours** unless you shorten the pause: set server env **`QHE_CPU_VP_ACTION_DELAY_MS`** to a nonnegative ms value (**`50`**–**`150`** typical for rehearsals; **`0`** hammers CPU steps back-to-back in the chunked loop).
+- If felts drift during wagering (different random paths), venue-wide steps block until fingerprints match — use **`adminCloseBetting`** (same street everywhere) plus waiting or **temporary** **`QHE_CPU_VP_ACTION_DELAY_MS=0`** to resync sooner.
+
+---
+
 ## Host recovery levers
 
 | Action | Effect |
@@ -161,7 +171,7 @@ After deploy, **`index.html`** is sent with **`Cache-Control: no-store`** so bro
 | Layer | Files |
 |--------|--------|
 | Types + transitions | `packages/core/src/index.ts` (`GameState`, **`startGame`, `setQuestion`, `dealInitialCards`, `dealCommunityCards`, `player*`**, **`submitAnswer`, `revealAnswer`, `endRound`**, **`createEmptyGame`**) |
-| IO + timers + venue fan-out | `apps/server/src/index.ts` (**`action`** switch**, **`VENUE_SYNC_ACTION_TYPES`**, **`startAnswering`**, **`emitDisplayVenueSnapshotNow`** → **`hostVenueGameplayHints`** + **`hostVenueFeltBeat`**) |
+| IO + timers + venue fan-out | `apps/server/src/index.ts` (**`action`** switch**, **`VENUE_SYNC_ACTION_TYPES`**, **`startAnswering`**, **`emitDisplayVenueSnapshotNow`** → **`hostVenueGameplayHints`** + **`hostVenueFeltBeat`**), **`QHE_CPU_VP_ACTION_DELAY_MS`** (paced CPU-only drain) |
 | Host UX | `apps/host/src/App.tsx` (library, gameplay hints, **venue 1–8 felt beat strip**, deals, admins) |
 | Net | `packages/net` (**`hostVenueFeltBeat`**, **`HostVenueFeltBeatPayload`**) |
 | Player UX | `apps/player` emits **`action`** payloads constrained by **`GameState`** subscriptions |

@@ -1491,7 +1491,18 @@ const cpuVpDrainPending = new Set<string>()
 /** One wagering/answering VP step per timer tick (not 72 micro-steps at once). */
 const CPU_VP_STEPS_PER_CHUNK = 1
 
+/**
+ * Pace between paced CPU-only wagering steps (`drainCpuVpSessionChain`).
+ * Default ~3–7s random so the venue wall stays readable during demos.
+ * Set **`QHE_CPU_VP_ACTION_DELAY_MS`** on the server to a nonnegative integer (e.g. `0` or `50`)
+ * when rehearsing large all-CPU fields (many seats × multiple felts → venue lockstep).
+ */
 function cpuVpDelayMsBetweenActions(): number {
+  const raw = process.env.QHE_CPU_VP_ACTION_DELAY_MS?.trim()
+  if (raw !== undefined && raw !== '') {
+    const n = Number.parseInt(raw, 10)
+    if (Number.isFinite(n) && n >= 0) return Math.min(n, 120_000)
+  }
   const min = 3000
   const max = 7000
   return min + Math.floor(Math.random() * (max - min + 1))
