@@ -3,11 +3,12 @@ import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { onState, onToast, onDealingCards, onDealingCommunityCards, type DisplayVenueTileSnapshot } from '@qhe/net'
-import type { GameState, GamePhase } from '@qhe/core'
-import { LOBBY_TABLE_ID, buildDisplayPreviewGameState } from '@qhe/core'
+import type { GameState, GamePhase, PlayerState } from '@qhe/core'
+import { LOBBY_TABLE_ID, buildDisplayPreviewGameState, displayBlindSeatIndices } from '@qhe/core'
 import confetti from 'canvas-confetti'
 import { readDisplayVenueCode } from './displayUrlParams'
 import { embeddedHeroDisplayState } from './embeddedVenueHeroState'
+import { heroSeatBlindMarkerPills } from './heroBlindMarkers'
 
 /** Authoring viewport (logical px). Embedded venue heroes scale uniformly to fit the measured game plane; fullscreen uses live `gw/gh`. */
 const EMBEDDED_FELT_LAYOUT_W = 1280
@@ -51,6 +52,26 @@ function displayTableLabel(tableId: string): string {
   return tableId === LOBBY_TABLE_ID ? 'Lobby' : `Table ${tableId}`
 }
 
+/** Mosaic / hero numbering (slots 1–8). Tile-sourced rosters encode physical index in synthetic ids. */
+function heroDisplayedSeatNumber(player: PlayerState, contiguousOrderOneBased: number): number {
+  const m = /^venue-wall-seat-.+-(\d+)$/.exec(player.id)
+  if (m && m[1] != null) {
+    const zero = Number(m[1])
+    if (Number.isFinite(zero)) return zero + 1
+  }
+  return contiguousOrderOneBased
+}
+
+/** Venue-wall hero: combine phase + board label without stray em dash columns. */
+function venueWallHeroMergedLine(gs: GameState): string {
+  const ph = gs.phase
+  const phaseLab = displayPhaseLabel(ph)
+  const streetLab = displayStreetLabel(gs)
+  if (ph === 'question') return phaseLab
+  if (streetLab === '—') return phaseLab
+  return `${phaseLab} · ${streetLab}`
+}
+
 function DisplayTableInfoBar({
   gameState,
   layout = 'default',
@@ -60,33 +81,99 @@ function DisplayTableInfoBar({
   layout?: 'default' | 'venueHero'
 }) {
   const venueHero = layout === 'venueHero'
+  const seatedCount = gameState.players.reduce(
+    (n, p) => n + (String(p.name ?? '').trim() !== '' ? 1 : 0),
+    0
+  )
+  const potRaw = gameState.round?.pot
+  const potShown =
+    typeof potRaw === 'number' && Number.isFinite(potRaw) ? Math.max(0, Math.round(potRaw)) : 0
+
+  if (venueHero) {
+    const lobby = gameState.phase === 'lobby'
+    return (
+      <div className="w-full min-w-0">
+        <div className="w-full border border-yellow-600 bg-black/90 px-3 py-3 backdrop-blur-md sm:px-5 sm:py-3.5">
+          <div className="grid grid-cols-1 gap-3 text-center sm:grid-cols-3 sm:items-center sm:gap-6">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55 md:text-xs">Table</div>
+              <div className="text-xl font-bold tabular-nums text-yellow-400 sm:text-2xl md:text-3xl">
+                {displayTableLabel(gameState.tableId ?? '1')}
+              </div>
+              <div className="mt-1 text-[13px] tabular-nums text-white/50 sm:text-sm">
+                Blinds ${gameState.smallBlind} / ${gameState.bigBlind}
+              </div>
+            </div>
+
+            <div className="sm:border-x sm:border-yellow-700/35 sm:py-1">
+              {lobby ? (
+                <>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55 md:text-xs">Status</div>
+                  <div className="text-xl font-bold text-yellow-400 sm:text-2xl md:text-3xl">
+                    {displayPhaseLabel(gameState.phase)}
+                  </div>
+                  <div className="mt-1 text-[13px] text-white/50 sm:text-sm">{seatedCount} seated</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55 md:text-xs">Pot</div>
+                  <div className="font-black tabular-nums text-[1.85rem] text-yellow-400 sm:text-[2.125rem] md:text-4xl">
+                    ${potShown.toLocaleString()}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div>
+              {!lobby ? (
+                <>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55 md:text-xs">
+                    Situation
+                  </div>
+                  <div className="mt-1 text-balance text-base font-semibold leading-snug text-yellow-400 sm:text-lg md:text-xl">
+                    {venueWallHeroMergedLine(gameState)}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55 md:text-xs">
+                    &nbsp;
+                  </div>
+                  <div className="mt-2 text-sm leading-snug text-white/40 sm:text-base">
+                    Game flow runs from the host console.
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className={venueHero ? 'w-full min-w-0' : 'max-w-4xl mx-auto px-4'}>
-      <div
-        className={`bg-black/90 backdrop-blur-md border border-yellow-600 md:rounded-t-lg md:py-5 ${
-          venueHero ? 'w-full px-3 py-3 sm:px-5 sm:py-4' : 'px-4 py-4'
-        }`}
-      >
+    <div className="mx-auto max-w-4xl px-4">
+      <div className="border border-yellow-600 bg-black/90 px-4 py-4 backdrop-blur-md md:rounded-t-lg md:py-5">
         <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4 md:gap-5">
           <div>
-            <div className="text-white text-base md:text-xl">Felt</div>
-            <div className="text-yellow-400 font-bold text-xl md:text-3xl">
+            <div className="text-base text-white md:text-xl">Felt</div>
+            <div className="text-xl font-bold text-yellow-400 md:text-3xl">
               {displayTableLabel(gameState.tableId ?? '1')}
             </div>
           </div>
           <div>
-            <div className="text-white text-base md:text-xl">Blinds</div>
-            <div className="text-yellow-400 font-bold text-xl tabular-nums md:text-3xl">
+            <div className="text-base text-white md:text-xl">Blinds</div>
+            <div className="text-xl font-bold tabular-nums text-yellow-400 md:text-3xl">
               ${gameState.smallBlind} / ${gameState.bigBlind}
             </div>
           </div>
           <div>
-            <div className="text-white text-base md:text-xl">Phase</div>
-            <div className="text-yellow-400 font-bold text-xl md:text-3xl">{displayPhaseLabel(gameState.phase)}</div>
+            <div className="text-base text-white md:text-xl">Phase</div>
+            <div className="text-xl font-bold text-yellow-400 md:text-3xl">{displayPhaseLabel(gameState.phase)}</div>
           </div>
           <div>
-            <div className="text-white text-base md:text-xl">Street</div>
-            <div className="text-yellow-400 font-bold text-xl md:text-3xl">{displayStreetLabel(gameState)}</div>
+            <div className="text-base text-white md:text-xl">Street</div>
+            <div className="text-xl font-bold text-yellow-400 md:text-3xl">{displayStreetLabel(gameState)}</div>
           </div>
         </div>
       </div>
@@ -226,6 +313,15 @@ function DisplayTableLive({
       readDisplayVenueCode()
     )
   }, [isEmbedded, gameState, feltTableHint, venueHeroTile, demoGameState])
+
+  const blindSeatMarkers = useMemo(
+    () =>
+      displayBlindSeatIndices(
+        displayGameState.players.length,
+        displayGameState.round.dealerIndex
+      ),
+    [displayGameState.players.length, displayGameState.round.dealerIndex]
+  )
 
   // Compute showdown winner id (used for seat glow)
   const showdownWinnerId = (() => {
@@ -1107,11 +1203,14 @@ function DisplayTableLive({
                     }}
                   />
                 )}
-                <div className="bg-black/90 backdrop-blur-md border-2 border-yellow-600 rounded-lg p-3 text-center w-[120px] h-[130px] shadow-lg transform scale-[1.40625] origin-center relative">
-                  <div className="text-yellow-600/85 text-xs font-semibold uppercase tracking-wide mb-0.5">
-                    Seat {index + 1}
+                <div className="relative min-h-[142px] w-[120px] origin-center scale-[1.40625] transform rounded-lg border-2 border-yellow-600 bg-black/90 p-3 text-center shadow-lg backdrop-blur-md">
+                  <div className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-yellow-600/85">
+                    Seat {heroDisplayedSeatNumber(player, index + 1)}
                   </div>
-                  <div className="text-yellow-400 font-bold text-base mb-1">{player.name}</div>
+                  <div className="mb-1 flex min-h-[16px] flex-wrap justify-center gap-0.5">
+                    {heroSeatBlindMarkerPills(index, blindSeatMarkers)}
+                  </div>
+                  <div className="mb-1 text-base font-bold text-yellow-400">{player.name}</div>
                   <div className="text-white text-base mb-1">
                     ${player.bankroll}
                   </div>
@@ -1320,7 +1419,7 @@ function DisplayTableLive({
           >
             <DisplayTableInfoBar
               gameState={displayGameState}
-              layout={embeddedHudOverlay ? 'venueHero' : 'default'}
+              layout={isEmbedded ? 'venueHero' : 'default'}
             />
           </div>
         ) : null}

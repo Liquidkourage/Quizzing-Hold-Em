@@ -43,6 +43,8 @@ export function embeddedHeroDisplayState(
   if (tile != null && tile.tableNum === Number.parseInt(tid, 10)) {
     const base = createEmptyGame(venueCode, '', tid)
     const players: PlayerState[] = []
+    /** Physical seat slot (venue wall index); parallel to players[] built from contiguous occupied seats only. */
+    const physicalSeatByPlayerIdx: number[] = []
 
     const names = tile.seatNames
     const max = typeof names?.length === 'number' ? names.length : 0
@@ -67,11 +69,17 @@ export function embeddedHeroDisplayState(
         hasFolded: folded,
         isAllIn: false,
       })
+      physicalSeatByPlayerIdx.push(i)
     }
 
-    let dealerIndex = base.round.dealerIndex
+    const nPlayers = players.length
+    /** Map server's physical seat (`tile.dealerSeatIndex`) to compact `players[]` index when seat grids have gaps. */
+    let dealerPlayerIndex = base.round.dealerIndex
     if (typeof tile.dealerSeatIndex === 'number' && Number.isFinite(tile.dealerSeatIndex)) {
-      dealerIndex = Math.max(0, Math.floor(tile.dealerSeatIndex))
+      const dSeat = Math.floor(tile.dealerSeatIndex)
+      const at = physicalSeatByPlayerIdx.indexOf(dSeat)
+      if (at >= 0) dealerPlayerIndex = at
+      else if (nPlayers > 0) dealerPlayerIndex = 0
     }
 
     const phase = coercePhase(tile.phase)
@@ -83,7 +91,7 @@ export function embeddedHeroDisplayState(
       round: {
         ...base.round,
         pot: typeof tile.pot === 'number' && Number.isFinite(tile.pot) ? tile.pot : 0,
-        dealerIndex,
+        dealerIndex: dealerPlayerIndex,
       },
     }
   }

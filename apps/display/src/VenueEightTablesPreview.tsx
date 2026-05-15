@@ -913,8 +913,8 @@ function comparePlayersByFirstNameThenFullName(a: { name: string }, b: { name: s
 
 function rosterRowsFromTiles(
   tiles: DisplayVenueTileSnapshot[]
-): { name: string; tableNum: number; bankroll: number }[] {
-  const out: { name: string; tableNum: number; bankroll: number }[] = []
+): { name: string; tableNum: number; seatNum: number; bankroll: number }[] {
+  const out: { name: string; tableNum: number; seatNum: number; bankroll: number }[] = []
   const leaderboardOrder = venueWallGameplayActive(tiles)
   for (const t of tiles) {
     const sn = t.seatNames
@@ -922,7 +922,8 @@ function rosterRowsFromTiles(
     if (sn == null || sn.length === 0) continue
     for (let i = 0; i < sn.length; i++) {
       const raw = sn[i]?.trim()
-      if (raw) out.push({ name: raw, tableNum: t.tableNum, bankroll: br[i] ?? 0 })
+      /** Physical numbered seat positions (same indexing as mosaic + hero). */
+      if (raw) out.push({ name: raw, tableNum: t.tableNum, seatNum: i + 1, bankroll: br[i] ?? 0 })
     }
   }
   out.sort((a, b) => {
@@ -978,16 +979,16 @@ function VenueScrollingRoster({ tiles }: { tiles: DisplayVenueTileSnapshot[] }) 
         >
           {doubled.map((r, idx) => (
             <div
-              key={`${r.tableNum}-${r.name}-${idx}`}
+              key={`${r.tableNum}-${r.seatNum}-${r.name}-${idx}`}
               className="w-full min-w-0 border-b border-white/[0.08] py-3 sm:py-3.5"
-              aria-label={`${r.name}, ${formatVenueBankroll(r.bankroll)}, Table ${r.tableNum}`}
+              aria-label={`${r.name}, ${formatVenueBankroll(r.bankroll)}, Table ${r.tableNum} seat ${r.seatNum}`}
             >
               <div className="w-full min-w-0 truncate text-xl font-bold leading-[1.15] text-white/95 sm:text-2xl md:text-3xl">
                 {r.name}
               </div>
               <div className="mt-1 flex w-full min-w-0 items-baseline justify-between gap-2">
                 <span className="min-w-0 flex-1 truncate font-mono text-sm font-bold tabular-nums tracking-tight text-yellow-400/92 sm:text-base">
-                  Table {r.tableNum}
+                  Table {r.tableNum} · Seat {r.seatNum}
                 </span>
                 <span className="shrink-0 text-right font-mono text-lg font-bold tabular-nums leading-none text-casino-emerald sm:text-xl">
                   {formatVenueBankroll(r.bankroll)}
