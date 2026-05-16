@@ -39,8 +39,8 @@ const SEAT_HUD_PANEL_SCALE = 1.40625
 /** Tailwind `scale-50` on each hole-card wrapper (`origin-bottom`). */
 const HOLE_CARD_WRAPPER_SCALE = 0.5
 /** Flight-only: measured anchors sit slightly low on the HUD; lift and scale up to fill name boxes. */
-const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -17
-const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.16
+const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -21
+const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.18
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
   const rowHalfW = HOLE_HAND_ROW_W_PX / 2
