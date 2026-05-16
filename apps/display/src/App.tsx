@@ -1,4 +1,4 @@
-﻿import { Fragment, useEffect, useState, useCallback, useRef, useLayoutEffect, useMemo } from 'react'
+﻿import { Fragment, useEffect, useState, useCallback, useRef, useLayoutEffect, useMemo, type ReactNode } from 'react'
 import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
@@ -28,6 +28,19 @@ const SEAT_HUD_BORDER_B_PX = 2 // border-2: bottom border width inside border bo
 /** {@link NumericPlayingCard} `normal` — packages/ui `sizeStyles.normal` */
 const PLAYING_CARD_NORMAL_W_PX = 80
 const PLAYING_CARD_NORMAL_H_PX = 112
+
+/**
+ * Persistent “gold border” on display felts: outer frame is independent of {@link NumericPlayingCard}
+ * face/front styling, so it stays when a card flips face-up or neon inner borders change.
+ * Uses box-shadow (not ring-offset) so it survives parent `overflow-hidden`.
+ */
+function DisplayGoldCardFrame({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-block rounded-[13px] shadow-[0_0_0_2px_rgba(234,179,8,0.9),0_0_16px_rgba(251,191,36,0.42)]">
+      {children}
+    </span>
+  )
+}
 
 /**
  * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of 810×605 rail box origin.
@@ -1077,15 +1090,17 @@ function DisplayTableLive({
                         delay: i * 0.1
                       }}
                     >
-                      <NumericPlayingCard 
-                        digit={0} 
-                        variant="cyan" 
-                        size="small" 
-                        faceDown={true}
-                        backDesign="star"
-                        style="neon"
-                        neonVariant="matrix"
-                      />
+                      <DisplayGoldCardFrame>
+                        <NumericPlayingCard
+                          digit={0}
+                          variant="cyan"
+                          size="small"
+                          faceDown={true}
+                          backDesign="star"
+                          style="neon"
+                          neonVariant="matrix"
+                        />
+                      </DisplayGoldCardFrame>
                     </motion.div>
                   ))}
                 </motion.div>
@@ -1165,15 +1180,17 @@ function DisplayTableLive({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <NumericPlayingCard 
-                        digit={dealingCard.digit} 
-                        variant="cyan" 
-                        size="normal" 
-                        faceDown={true}
-                        backDesign="star"
-                        style="neon"
-                        neonVariant="pulse"
-                      />
+                      <DisplayGoldCardFrame>
+                        <NumericPlayingCard
+                          digit={dealingCard.digit}
+                          variant="cyan"
+                          size="normal"
+                          faceDown={true}
+                          backDesign="star"
+                          style="neon"
+                          neonVariant="pulse"
+                        />
+                      </DisplayGoldCardFrame>
                     </motion.div>
                   )
                 })}
@@ -1220,15 +1237,17 @@ function DisplayTableLive({
                         delay: i * 0.1
                       }}
                     >
-                      <NumericPlayingCard 
-                        digit={0} 
-                        variant="cyan" 
-                        size="small" 
-                        faceDown={true}
-                        backDesign="star"
-                        style="neon"
-                        neonVariant="matrix"
-                      />
+                      <DisplayGoldCardFrame>
+                        <NumericPlayingCard
+                          digit={0}
+                          variant="cyan"
+                          size="small"
+                          faceDown={true}
+                          backDesign="star"
+                          style="neon"
+                          neonVariant="matrix"
+                        />
+                      </DisplayGoldCardFrame>
                     </motion.div>
                   ))}
                 </motion.div>
@@ -1284,14 +1303,16 @@ function DisplayTableLive({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                                                  <NumericPlayingCard 
-                              digit={dealingCard.digit} 
-                              variant="cyan" 
-                              size="small" 
-                              faceDown={!dealingCard.isRevealed}
-                              style="neon"
-                              neonVariant="pulse"
-                            />
+                      <DisplayGoldCardFrame>
+                        <NumericPlayingCard
+                          digit={dealingCard.digit}
+                          variant="cyan"
+                          size="small"
+                          faceDown={!dealingCard.isRevealed}
+                          style="neon"
+                          neonVariant="pulse"
+                        />
+                      </DisplayGoldCardFrame>
                     </motion.div>
                   )
                 })}
@@ -1366,13 +1387,15 @@ function DisplayTableLive({
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex">
                       {player.hand.map((card, i) => (
                         <div key={i} className="transform scale-50 origin-bottom" style={{ marginLeft: i === 0 ? '0' : '-50px' }}>
-                          <NumericPlayingCard 
-                            digit={card.digit} 
-                            variant="cyan" 
-                            size="normal" 
-                            faceDown={displayGameState.phase !== 'showdown' || player.hasFolded} 
-                            backDesign="star" 
-                          />
+                          <DisplayGoldCardFrame>
+                            <NumericPlayingCard
+                              digit={card.digit}
+                              variant="cyan"
+                              size="normal"
+                              faceDown={displayGameState.phase !== 'showdown' || player.hasFolded}
+                              backDesign="star"
+                            />
+                          </DisplayGoldCardFrame>
                         </div>
                       ))}
                     </div>
@@ -1569,13 +1592,15 @@ function DisplayTableLive({
                             transformOrigin: '0 0' // Scale from top-left corner
                           }}
                         >
-                          <NumericPlayingCard 
-                            digit={card.digit} 
-                            variant="cyan" 
-                            style="neon" 
-                            neonVariant="matrix" 
-                            size="small" 
-                          />
+                          <DisplayGoldCardFrame>
+                            <NumericPlayingCard
+                              digit={card.digit}
+                              variant="cyan"
+                              style="neon"
+                              neonVariant="matrix"
+                              size="small"
+                            />
+                          </DisplayGoldCardFrame>
                         </div>
                       )
                     })
