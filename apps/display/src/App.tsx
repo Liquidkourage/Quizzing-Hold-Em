@@ -87,12 +87,15 @@ function holeCardRectToPlaneEndpoint(
 ): HoleCardPlaneEndpoint | null {
   const planeRect = planeRoot.getBoundingClientRect()
   if (planeRect.width < 1 || planeRect.height < 1) return null
-  const scaleX = planeRoot.clientWidth / planeRect.width
-  const scaleY = planeRoot.clientHeight / planeRect.height
+  const planeScaleX = planeRoot.clientWidth / planeRect.width
+  const planeScaleY = planeRoot.clientHeight / planeRect.height
+  const scaleFromW = (cardRect.width * planeScaleX) / PLAYING_CARD_LAYOUT_W_PX
+  const scaleFromH = (cardRect.height * planeScaleY) / PLAYING_CARD_LAYOUT_H_PX
   return {
-    x: (cardRect.left - planeRect.left) * scaleX,
-    y: (cardRect.top - planeRect.top) * scaleY,
-    scale: cardRect.width / PLAYING_CARD_LAYOUT_W_PX,
+    x: (cardRect.left - planeRect.left) * planeScaleX,
+    y: (cardRect.top - planeRect.top) * planeScaleY,
+    // `x`/`y` are in plane px; `scale` must be too (not raw screen width ÷ layout).
+    scale: (scaleFromW + scaleFromH) / 2,
   }
 }
 
@@ -1227,7 +1230,6 @@ function DisplayTableLive({
 
                   const finalX = endpoint.x
                   const finalY = endpoint.y
-                  const finalScale = endpoint.scale
 
                   return (
                     <motion.div
@@ -1248,7 +1250,7 @@ function DisplayTableLive({
                       animate={{
                         x: finalX,
                         y: finalY,
-                        scale: finalScale,
+                        scale: 1,
                         rotate: 0,
                         opacity: 1,
                       }}
@@ -1257,15 +1259,20 @@ function DisplayTableLive({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <NumericPlayingCard
-                        digit={dealingCard.digit}
-                        variant="cyan"
-                        size="normal"
-                        faceDown={true}
-                        backDesign="star"
-                        style="neon"
-                        neonVariant="pulse"
-                      />
+                      <div
+                        className="origin-bottom scale-50 transform"
+                        style={{ marginLeft: dealingCard.cardIndex === 0 ? '0' : '-50px' }}
+                      >
+                        <NumericPlayingCard
+                          digit={dealingCard.digit}
+                          variant="cyan"
+                          size="normal"
+                          faceDown={true}
+                          backDesign="star"
+                          style="neon"
+                          neonVariant="pulse"
+                        />
+                      </div>
                     </motion.div>
                   )
                 })}
@@ -1459,8 +1466,8 @@ function DisplayTableLive({
                       player.hand.length > 0 && !isDealing && hasDealtCards
                     return (
                       <div
-                        className={`absolute bottom-0 left-1/2 flex -translate-x-1/2 ${
-                          showRealHand ? '' : 'pointer-events-none opacity-0'
+                        className={`absolute bottom-1 left-1/2 flex -translate-x-1/2 ${
+                          showRealHand ? '' : 'pointer-events-none invisible'
                         }`}
                         aria-hidden={!showRealHand}
                       >
