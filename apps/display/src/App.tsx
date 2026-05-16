@@ -28,6 +28,14 @@ const SEAT_HUD_BORDER_B_PX = 2 // border-2: bottom border width inside border bo
 /** {@link NumericPlayingCard} `normal` — packages/ui `sizeStyles.normal` */
 const PLAYING_CARD_NORMAL_W_PX = 80
 const PLAYING_CARD_NORMAL_H_PX = 112
+/** Card root uses `margin: 10px` in {@link NumericPlayingCard} — include in seat / dealing geometry. */
+const PLAYING_CARD_MARGIN_PX = 10
+const PLAYING_CARD_LAYOUT_W_PX = PLAYING_CARD_NORMAL_W_PX + 2 * PLAYING_CARD_MARGIN_PX
+const PLAYING_CARD_LAYOUT_H_PX = PLAYING_CARD_NORMAL_H_PX + 2 * PLAYING_CARD_MARGIN_PX
+/** Second hole-card wrapper `marginLeft` — must match seat hand markup. */
+const HOLE_HAND_STACK_OVERLAP_PX = -50
+/** Two-card row width in panel-local px: 100 + (100 - 50) overlap extent. */
+const HOLE_HAND_ROW_W_PX = PLAYING_CARD_LAYOUT_W_PX + PLAYING_CARD_LAYOUT_W_PX + HOLE_HAND_STACK_OVERLAP_PX
 
 /**
  * Persistent “gold border” on display felts: outer frame is independent of {@link NumericPlayingCard}
@@ -1126,15 +1134,18 @@ function DisplayTableLive({
                       SEAT_HUD_PANEL_MIN_H_PX / 2 - SEAT_HUD_PADDING_PX - SEAT_HUD_BORDER_B_PX
                     const cardsBottomY = playerCenterY + handBottomOffsetFromCenter
 
-                    const scaledCardWidth = PLAYING_CARD_NORMAL_W_PX * cardScale * cs
-                    const scaledCardHeight = PLAYING_CARD_NORMAL_H_PX * cardScale * cs
+                    // Hand row: two layout-width cells with second `marginLeft: -50`, centered in panel (see seat JSX).
+                    // Row half-width in panel-local px = HOLE_HAND_ROW_W_PX / 2; first left edge at -that from panel X center.
+                    const rowHalfW = HOLE_HAND_ROW_W_PX / 2
+                    const firstLeftFromPanelCenter = -rowHalfW
+                    const secondLeftFromPanelCenter =
+                      firstLeftFromPanelCenter + PLAYING_CARD_LAYOUT_W_PX + HOLE_HAND_STACK_OVERLAP_PX
+                    const cardLeftFromPanelCenter =
+                      cardIndex === 0 ? firstLeftFromPanelCenter : secondLeftFromPanelCenter
+                    const cardX = playerCenterX + cardLeftFromPanelCenter * cs
 
-                    // Two 80px-wide wrappers, second marginLeft -50 → row width 110, centered under panel:
-                    // card0 center at -15px, card1 center at +15px from panel X center (unscaled panel space).
-                    const centerOffsetUnscaled = cardIndex === 0 ? -15 : 15
-                    const cardX = playerCenterX + centerOffsetUnscaled * cs - scaledCardWidth / 2
-
-                    const cardY = cardsBottomY - scaledCardHeight
+                    const scaledLayoutHeight = PLAYING_CARD_LAYOUT_H_PX * cardScale * cs
+                    const cardY = cardsBottomY - scaledLayoutHeight
 
                     return { x: cardX, y: cardY, scale: cardScale * containerScale }
                   }
@@ -1143,8 +1154,8 @@ function DisplayTableLive({
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
-                  const startW = PLAYING_CARD_NORMAL_W_PX * 0.1
-                  const startH = PLAYING_CARD_NORMAL_H_PX * 0.1
+                  const startW = PLAYING_CARD_LAYOUT_W_PX * 0.1
+                  const startH = PLAYING_CARD_LAYOUT_H_PX * 0.1
                   const initialX = deckCenterX - startW / 2
                   const initialY = deckCenterY - startH / 2
 
