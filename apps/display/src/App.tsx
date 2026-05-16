@@ -23,8 +23,6 @@ const EMBEDDED_FELT_LAYOUT_H = 940
 
 /** Seat HUD panel — match Tailwind `w-[120px] min-h-[118px] p-3 border-2` on the player stack in {@link DisplayTableLive}. */
 const SEAT_HUD_PANEL_MIN_H_PX = 118
-const SEAT_HUD_PADDING_PX = 12 // p-3
-const SEAT_HUD_BORDER_B_PX = 2 // border-2: bottom border width inside border box
 /** {@link NumericPlayingCard} `normal` — packages/ui `sizeStyles.normal` */
 const PLAYING_CARD_NORMAL_W_PX = 80
 const PLAYING_CARD_NORMAL_H_PX = 112
@@ -36,6 +34,49 @@ const PLAYING_CARD_LAYOUT_H_PX = PLAYING_CARD_NORMAL_H_PX + 2 * PLAYING_CARD_MAR
 const HOLE_HAND_STACK_OVERLAP_PX = -50
 /** Two-card row width in panel-local px: 100 + (100 - 50) overlap extent. */
 const HOLE_HAND_ROW_W_PX = PLAYING_CARD_LAYOUT_W_PX + PLAYING_CARD_LAYOUT_W_PX + HOLE_HAND_STACK_OVERLAP_PX
+/** Tailwind `scale-[1.40625]` on the seat HUD panel. */
+const SEAT_HUD_PANEL_SCALE = 1.40625
+/** Tailwind `scale-50` on each hole-card wrapper (`origin-bottom`). */
+const HOLE_CARD_WRAPPER_SCALE = 0.5
+
+function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
+  const rowHalfW = HOLE_HAND_ROW_W_PX / 2
+  const firstLeft = -rowHalfW
+  return cardIndex === 0
+    ? firstLeft
+    : firstLeft + PLAYING_CARD_LAYOUT_W_PX + HOLE_HAND_STACK_OVERLAP_PX
+}
+
+/**
+ * Visual top-left of a hole card in the game-plane coordinate system.
+ * Mirrors: seat center → panel `scale-[1.40625]` → hand `bottom-0` → wrapper `scale-50 origin-bottom`.
+ */
+function holeCardVisualTopLeftInPlanePx(
+  planeW: number,
+  planeH: number,
+  seatDx: number,
+  seatDy: number,
+  cardIndex: number
+): { x: number; y: number; scale: number } {
+  const cs = SEAT_HUD_PANEL_SCALE
+  const inner = HOLE_CARD_WRAPPER_SCALE
+  const playerCenterX = planeW / 2 + seatDx
+  const playerCenterY = planeH / 2 + seatDy
+
+  const layoutLeftFromPanelCenter = holeCardLayoutLeftFromPanelCenterPx(cardIndex)
+  const layoutTopFromPanelCenter = SEAT_HUD_PANEL_MIN_H_PX / 2 - PLAYING_CARD_LAYOUT_H_PX
+
+  const visualLeftFromPanelCenter =
+    layoutLeftFromPanelCenter + (PLAYING_CARD_LAYOUT_W_PX * (1 - inner)) / 2
+  const visualTopFromPanelCenter =
+    layoutTopFromPanelCenter + PLAYING_CARD_LAYOUT_H_PX * (1 - inner)
+
+  return {
+    x: playerCenterX + visualLeftFromPanelCenter * cs,
+    y: playerCenterY + visualTopFromPanelCenter * cs,
+    scale: inner * cs,
+  }
+}
 
 /**
  * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of 810×605 rail box origin.
@@ -1098,45 +1139,17 @@ function DisplayTableLive({
                   ))}
                 </motion.div>
                 {dealingCards.map((dealingCard) => {
-                  // Calculate exact endpoint to match static card positioning
-                  const calculateCardEndpoint = (playerIndex: number, cardIndex: number) => {
-                    const { dx, dy } = getPlayerSeatOffsetFromPlaneCenterPx(
-                      playerIndex,
-                      displayGameState.players.length
-                    )
-
-                    const centerX = fdW / 2
-                    const centerY = fdH / 2
-                    const playerCenterX = centerX + dx
-                    const playerCenterY = centerY + dy
-
-                    const containerScale = 1.40625
-                    const cardScale = 0.5
-                    const cs = containerScale
-
-                    // Bottom of the hand row = bottom inner edge of padded seat panel (absolute bottom-0 in DOM).
-                    // Offset is in **unscaled** panel px; multiply by `cs` so it lands in the same felt space as the scaled HUD.
-                    const handBottomOffsetFromSeatCenterUnscaled =
-                      SEAT_HUD_PANEL_MIN_H_PX / 2 - SEAT_HUD_PADDING_PX - SEAT_HUD_BORDER_B_PX
-                    const cardsBottomY = playerCenterY + handBottomOffsetFromSeatCenterUnscaled * cs
-
-                    // Hand row: two layout-width cells with second `marginLeft: -50`, centered in panel (see seat JSX).
-                    // Row half-width in panel-local px = HOLE_HAND_ROW_W_PX / 2; first left edge at -that from panel X center.
-                    const rowHalfW = HOLE_HAND_ROW_W_PX / 2
-                    const firstLeftFromPanelCenter = -rowHalfW
-                    const secondLeftFromPanelCenter =
-                      firstLeftFromPanelCenter + PLAYING_CARD_LAYOUT_W_PX + HOLE_HAND_STACK_OVERLAP_PX
-                    const cardLeftFromPanelCenter =
-                      cardIndex === 0 ? firstLeftFromPanelCenter : secondLeftFromPanelCenter
-                    const cardX = playerCenterX + cardLeftFromPanelCenter * cs
-
-                    const scaledLayoutHeight = PLAYING_CARD_LAYOUT_H_PX * cardScale * cs
-                    const cardY = cardsBottomY - scaledLayoutHeight
-
-                    return { x: cardX, y: cardY, scale: cardScale * containerScale }
-                  }
-
-                  const endpoint = calculateCardEndpoint(dealingCard.playerIndex, dealingCard.cardIndex)
+                  const { dx, dy } = getPlayerSeatOffsetFromPlaneCenterPx(
+                    dealingCard.playerIndex,
+                    displayGameState.players.length
+                  )
+                  const endpoint = holeCardVisualTopLeftInPlanePx(
+                    fdW,
+                    fdH,
+                    dx,
+                    dy,
+                    dealingCard.cardIndex
+                  )
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
