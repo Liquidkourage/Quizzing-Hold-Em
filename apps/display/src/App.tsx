@@ -38,6 +38,9 @@ const HOLE_HAND_ROW_W_PX = PLAYING_CARD_LAYOUT_W_PX + PLAYING_CARD_LAYOUT_W_PX +
 const SEAT_HUD_PANEL_SCALE = 1.40625
 /** Tailwind `scale-50` on each hole-card wrapper (`origin-bottom`). */
 const HOLE_CARD_WRAPPER_SCALE = 0.5
+/** Flight-only: measured anchors sit slightly low on the HUD; lift and scale up to fill name boxes. */
+const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -12
+const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.12
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
   const rowHalfW = HOLE_HAND_ROW_W_PX / 2
@@ -96,6 +99,14 @@ function holeCardRectToPlaneEndpoint(
     y: (cardRect.top - planeRect.top) * planeScaleY,
     // `x`/`y` are in plane px; `scale` must be too (not raw screen width ÷ layout).
     scale: (scaleFromW + scaleFromH) / 2,
+  }
+}
+
+function tuneHoleCardDealFlightEndpoint(endpoint: HoleCardPlaneEndpoint): HoleCardPlaneEndpoint {
+  return {
+    x: endpoint.x,
+    y: endpoint.y + HOLE_DEAL_FLIGHT_Y_NUDGE_PX,
+    scale: endpoint.scale * HOLE_DEAL_FLIGHT_SCALE_MULT,
   }
 }
 
@@ -1211,7 +1222,7 @@ function DisplayTableLive({
                     dealingCard.playerIndex,
                     displayGameState.players.length
                   )
-                  const endpoint =
+                  const rawEndpoint =
                     measured ??
                     holeCardVisualTopLeftInPlanePx(
                       fdW,
@@ -1220,16 +1231,15 @@ function DisplayTableLive({
                       dy,
                       dealingCard.cardIndex
                     )
+                  const { x: finalX, y: finalY, scale: finalScale } =
+                    tuneHoleCardDealFlightEndpoint(rawEndpoint)
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
-                  const startW = PLAYING_CARD_LAYOUT_W_PX * 0.1
-                  const startH = PLAYING_CARD_LAYOUT_H_PX * 0.1
+                  const startW = PLAYING_CARD_LAYOUT_W_PX * finalScale * 0.1
+                  const startH = PLAYING_CARD_LAYOUT_H_PX * finalScale * 0.1
                   const initialX = deckCenterX - startW / 2
                   const initialY = deckCenterY - startH / 2
-
-                  const finalX = endpoint.x
-                  const finalY = endpoint.y
 
                   return (
                     <motion.div
@@ -1243,14 +1253,14 @@ function DisplayTableLive({
                       initial={{
                         x: initialX,
                         y: initialY,
-                        scale: 0.1,
+                        scale: finalScale * 0.12,
                         rotate: Math.random() * 360 - 180,
                         opacity: 0,
                       }}
                       animate={{
                         x: finalX,
                         y: finalY,
-                        scale: 1,
+                        scale: finalScale,
                         rotate: 0,
                         opacity: 1,
                       }}
@@ -1259,20 +1269,15 @@ function DisplayTableLive({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <div
-                        className="origin-bottom scale-50 transform"
-                        style={{ marginLeft: dealingCard.cardIndex === 0 ? '0' : '-50px' }}
-                      >
-                        <NumericPlayingCard
-                          digit={dealingCard.digit}
-                          variant="cyan"
-                          size="normal"
-                          faceDown={true}
-                          backDesign="star"
-                          style="neon"
-                          neonVariant="pulse"
-                        />
-                      </div>
+                      <NumericPlayingCard
+                        digit={dealingCard.digit}
+                        variant="cyan"
+                        size="normal"
+                        faceDown={true}
+                        backDesign="star"
+                        style="neon"
+                        neonVariant="pulse"
+                      />
                     </motion.div>
                   )
                 })}
@@ -1466,7 +1471,7 @@ function DisplayTableLive({
                       player.hand.length > 0 && !isDealing && hasDealtCards
                     return (
                       <div
-                        className={`absolute bottom-1 left-1/2 flex -translate-x-1/2 ${
+                        className={`absolute bottom-0 left-1/2 flex -translate-x-1/2 ${
                           showRealHand ? '' : 'pointer-events-none invisible'
                         }`}
                         aria-hidden={!showRealHand}
