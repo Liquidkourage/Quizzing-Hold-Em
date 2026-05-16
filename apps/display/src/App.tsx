@@ -591,7 +591,9 @@ function DisplayTableLive({
   const triggerDealingAnimation = useCallback(() => {
     setIsDealing(true)
     setDealingCards([])
-    setHasDealtCards(false) // Hide static cards during animation
+    // Keep static hole cards mounted under the z-50 flight layer whenever we already have hand data,
+    // so nothing vanishes when the overlay unmounts at the end of the deal.
+    setHasDealtCards(displayGameState.players.some((p) => p.hand.length > 0))
     setShowDeck(true) // Show deck for initial deal animation
     
     // Create dealing cards in standard poker order: one card at a time around the table
@@ -731,10 +733,10 @@ function DisplayTableLive({
 
   useEffect(() => {
     const unsubscribe = onDealingCommunityCards(() => {
-      // IMMEDIATELY set dealing state to prevent static cards from showing
       setIsDealingCommunity(true)
-      setHasDealtCommunityCards(false) // Hide static cards during animation
-      
+      // Keep static board cards under the flight layer so the felt never blanks when the overlay ends.
+      setHasDealtCommunityCards(true)
+
       // Wait for the state update to arrive, then trigger animation
       setTimeout(() => {
         // Use the ref to get the latest function
@@ -1373,8 +1375,8 @@ function DisplayTableLive({
                   )}
                   <div className="sr-only">${formatHeroStackMoney(player.bankroll)}</div>
                   
-                  {/* Player's hand - docked at bottom edge with overlapping cards */}
-                  {player.hand.length > 0 && !isDealing && hasDealtCards && (
+                  {/* Player's hand - docked at bottom edge with overlapping cards (stays mounted under dealing overlay when data exists) */}
+                  {player.hand.length > 0 && hasDealtCards && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex">
                       {player.hand.map((card, i) => (
                         <div key={i} className="transform scale-50 origin-bottom" style={{ marginLeft: i === 0 ? '0' : '-50px' }}>
@@ -1554,8 +1556,12 @@ function DisplayTableLive({
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12">
                 {/* Show community cards if they exist in server state OR if animation has completed */}
                 {(() => {
-                  const shouldShowServerCards = displayGameState.round.communityCards.length > 0 && !isDealingCommunity
-                  const shouldShowAnimationCards = sharedCommunityCards && sharedCommunityCards.length > 0 && hasDealtCommunityCards
+                  const shouldShowServerCards = displayGameState.round.communityCards.length > 0
+                  const shouldShowAnimationCards =
+                    sharedCommunityCards &&
+                    sharedCommunityCards.length > 0 &&
+                    hasDealtCommunityCards &&
+                    displayGameState.round.communityCards.length === 0
                   const cardsToShow = displayGameState.round.communityCards.length > 0 ? displayGameState.round.communityCards : sharedCommunityCards
                   
                   return (shouldShowServerCards || shouldShowAnimationCards) ? (
