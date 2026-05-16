@@ -533,6 +533,27 @@ function DisplayTableLive({
     )
   }, [isEmbedded, gameState, feltTableHint, venueHeroTile, demoGameState])
 
+  /** Live socket state already includes hole cards (hero spotlight / mid-hand join) — do not wait for deal animation. */
+  const feltHasPersistedHoleCards = useMemo(
+    () => displayGameState.players.some((p) => p.hand.length > 0),
+    [displayGameState.players]
+  )
+
+  const feltHasPersistedCommunityCards =
+    displayGameState.round.communityCards.length > 0
+
+  useEffect(() => {
+    if (feltHasPersistedHoleCards && !isDealing) {
+      setHasDealtCards(true)
+    }
+  }, [feltHasPersistedHoleCards, isDealing])
+
+  useEffect(() => {
+    if (feltHasPersistedCommunityCards && !isDealingCommunity) {
+      setHasDealtCommunityCards(true)
+    }
+  }, [feltHasPersistedCommunityCards, isDealingCommunity])
+
   const blindSeatMarkers = useMemo(
     () =>
       displayBlindSeatIndices(
@@ -1467,7 +1488,9 @@ function DisplayTableLive({
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
                   {(() => {
                     const showRealHand =
-                      player.hand.length > 0 && !isDealing && hasDealtCards
+                      player.hand.length > 0 &&
+                      !isDealing &&
+                      (hasDealtCards || feltHasPersistedHoleCards)
                     return (
                       <div
                         className={`absolute bottom-0 left-1/2 flex -translate-x-1/2 ${
@@ -1664,13 +1687,20 @@ function DisplayTableLive({
 
               {/* Community Cards - positioned inside table at center */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12">
-                {/* Show community cards if they exist in server state OR if animation has completed */}
+                {/* Show community when state has cards — not only after a deal animation on this client. */}
                 {(() => {
-                  const shouldShowServerCards = displayGameState.round.communityCards.length > 0 && !isDealingCommunity
-                  const shouldShowAnimationCards = sharedCommunityCards && sharedCommunityCards.length > 0 && hasDealtCommunityCards
-                  const cardsToShow = displayGameState.round.communityCards.length > 0 ? displayGameState.round.communityCards : sharedCommunityCards
-                  
-                  return (shouldShowServerCards || shouldShowAnimationCards) ? (
+                  const cardsToShow =
+                    displayGameState.round.communityCards.length > 0
+                      ? displayGameState.round.communityCards
+                      : sharedCommunityCards
+                  const showCommunity =
+                    !isDealingCommunity &&
+                    cardsToShow.length > 0 &&
+                    (feltHasPersistedCommunityCards ||
+                      hasDealtCommunityCards ||
+                      sharedCommunityCards.length > 0)
+
+                  return showCommunity ? (
                     cardsToShow.map((card, i) => {
                       // Use relative positioning within the table
                       const cardWidth = 64 // small card width (64px)
