@@ -21,6 +21,14 @@ import seatChipStackImg from './assets/seat-chip-stack.png'
 const EMBEDDED_FELT_LAYOUT_W = 1280
 const EMBEDDED_FELT_LAYOUT_H = 940
 
+/** Seat HUD panel — match Tailwind `w-[120px] min-h-[118px] p-3 border-2` on the player stack in {@link DisplayTableLive}. */
+const SEAT_HUD_PANEL_MIN_H_PX = 118
+const SEAT_HUD_PADDING_PX = 12 // p-3
+const SEAT_HUD_BORDER_B_PX = 2 // border-2: bottom border width inside border box
+/** {@link NumericPlayingCard} `normal` — packages/ui `sizeStyles.normal` */
+const PLAYING_CARD_NORMAL_W_PX = 80
+const PLAYING_CARD_NORMAL_H_PX = 112
+
 /**
  * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of 810×605 rail box origin.
  */
@@ -1094,39 +1102,24 @@ function DisplayTableLive({
                     const playerCenterX = centerX + dx
                     const playerCenterY = centerY + dy
 
-                    // Static card positioning inside player container:
-                    // - Container: w-[120px] h-[130px] with scale-[1.40625]
-                    // - Cards: absolute bottom-0 left-1/2 transform -translate-x-1/2 flex
-                    // - Each card: scale-50 origin-bottom with marginLeft: i === 0 ? '0' : '-50px'
-
                     const containerScale = 1.40625
                     const cardScale = 0.5
+                    const cs = containerScale
 
-                    // Container dimensions after scaling
-                    const scaledHeight = 130 * containerScale
+                    // Bottom of the hand row = bottom inner edge of padded seat panel (absolute bottom-0 in DOM).
+                    const handBottomOffsetFromCenter =
+                      SEAT_HUD_PANEL_MIN_H_PX / 2 - SEAT_HUD_PADDING_PX - SEAT_HUD_BORDER_B_PX
+                    const cardsBottomY = playerCenterY + handBottomOffsetFromCenter
 
-                    // Cards are positioned at bottom-0 (bottom of container)
-                    const cardsBottomY = playerCenterY + scaledHeight / 2
+                    const scaledCardWidth = PLAYING_CARD_NORMAL_W_PX * cardScale * cs
+                    const scaledCardHeight = PLAYING_CARD_NORMAL_H_PX * cardScale * cs
 
-                    // Cards use flex with overlapping via negative margin
-                    const baseCardWidth = 96 // Normal NumericPlayingCard width
-                    const baseCardHeight = 144 // Normal NumericPlayingCard height
-                    const scaledCardWidth = baseCardWidth * cardScale * containerScale
-                    const cardOverlap = -50 // px overlap before scaling
+                    // Two 80px-wide wrappers, second marginLeft -50 → row width 110, centered under panel:
+                    // card0 center at -15px, card1 center at +15px from panel X center (unscaled panel space).
+                    const centerOffsetUnscaled = cardIndex === 0 ? -15 : 15
+                    const cardX = playerCenterX + centerOffsetUnscaled * cs - scaledCardWidth / 2
 
-                    const horizontalOffset = 16
-                    const verticalOffset = 9 - fdH * 0.08
-                    let cardX: number
-
-                    if (cardIndex === 0) {
-                      cardX = playerCenterX - scaledCardWidth / 2 + horizontalOffset
-                    } else {
-                      const overlapScaled = cardOverlap * containerScale
-                      cardX = playerCenterX - scaledCardWidth / 2 + overlapScaled + horizontalOffset
-                    }
-
-                    const scaledCardHeight = baseCardHeight * cardScale * containerScale
-                    const cardY = cardsBottomY - scaledCardHeight + verticalOffset
+                    const cardY = cardsBottomY - scaledCardHeight
 
                     return { x: cardX, y: cardY, scale: cardScale * containerScale }
                   }
@@ -1135,8 +1128,8 @@ function DisplayTableLive({
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
-                  const startW = 96 * 0.1
-                  const startH = 144 * 0.1
+                  const startW = PLAYING_CARD_NORMAL_W_PX * 0.1
+                  const startH = PLAYING_CARD_NORMAL_H_PX * 0.1
                   const initialX = deckCenterX - startW / 2
                   const initialY = deckCenterY - startH / 2
 
