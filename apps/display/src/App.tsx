@@ -78,6 +78,24 @@ function holeCardVisualTopLeftInPlanePx(
   }
 }
 
+type HoleCardPlaneEndpoint = { x: number; y: number; scale: number }
+
+/** Map screen-space rect into the felt layer’s authoring coordinates (pre–outer-scale `clientWidth`). */
+function holeCardRectToPlaneEndpoint(
+  planeRoot: HTMLElement,
+  cardRect: DOMRect
+): HoleCardPlaneEndpoint | null {
+  const planeRect = planeRoot.getBoundingClientRect()
+  if (planeRect.width < 1 || planeRect.height < 1) return null
+  const scaleX = planeRoot.clientWidth / planeRect.width
+  const scaleY = planeRoot.clientHeight / planeRect.height
+  return {
+    x: (cardRect.left - planeRect.left) * scaleX,
+    y: (cardRect.top - planeRect.top) * scaleY,
+    scale: cardRect.width / PLAYING_CARD_LAYOUT_W_PX,
+  }
+}
+
 /**
  * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of 810×605 rail box origin.
  */
@@ -410,6 +428,14 @@ function DisplayTableLive({
   
   // Use ref to store the latest animation function to avoid dependency cycles
   const triggerCommunityDealingAnimationRef = useRef<(() => void) | null>(null)
+  /** Same subtree as dealing flights — convert anchor `getBoundingClientRect` to plane px. */
+  const feltLayerRef = useRef<HTMLDivElement>(null)
+  const holeCardAnchorRefs = useRef<(HTMLDivElement | null)[][]>([])
+  const holeCardDealEndpointsRef = useRef<Map<string, HoleCardPlaneEndpoint>>(new Map())
+  const pendingHoleDealQueueRef = useRef<
+    Array<{ id: string; playerIndex: number; cardIndex: number; digit: number }> | null
+  >(null)
+  const [holeDealLayoutEpoch, setHoleDealLayoutEpoch] = useState(0)
   const [dealingCards, setDealingCards] = useState<Array<{id: string, playerIndex: number, cardIndex: number, digit: number}>>([])
   const [hasDealtCards, setHasDealtCards] = useState(false) // Track if cards have been dealt - start false to hide initial cards
   
@@ -628,56 +654,87 @@ function DisplayTableLive({
     return () => clearTimeout(cleanup)
   }, [displayGameState.phase, showdownWinnerId, displayGameState.players.length])
 
+  const registerHoleCardAnchor = useCallback(
+    (playerIndex: number, cardIndex: number, el: HTMLDivElement | null) => {
+      const rows = holeCardAnchorRefs.current
+      while (rows.length <= playerIndex) rows.push([])
+      const row = rows[playerIndex]!
+      while (row.length <= cardIndex) row.push(null)
+      row[cardIndex] = el
+    },
+    []
+  )
+
+  const refreshHoleCardDealEndpoints = useCallback((playerCount: number) => {
+    const root = feltLayerRef.current
+    const next = new Map<string, HoleCardPlaneEndpoint>()
+    if (root) {
+      for (let p = 0; p < playerCount; p++) {
+        for (let c = 0; c < 2; c++) {
+          const anchor = holeCardAnchorRefs.current[p]?.[c]
+          if (!anchor) continue
+          const pt = holeCardRectToPlaneEndpoint(root, anchor.getBoundingClientRect())
+          if (pt) next.set(`${p}-${c}`, pt)
+        }
+      }
+    }
+    holeCardDealEndpointsRef.current = next
+  }, [])
+
   // Function to trigger dealing animation
   const triggerDealingAnimation = useCallback(() => {
-    setIsDealing(true)
-    setDealingCards([])
-    setHasDealtCards(false) // Hide static cards during animation
-    setShowDeck(true) // Show deck for initial deal animation
-    
-    // Create dealing cards in standard poker order: one card at a time around the table
-    const cards: Array<{id: string, playerIndex: number, cardIndex: number, digit: number}> = []
-    
-    // Deal cards one at a time: first card to all players, then second card to all players
+    const cards: Array<{ id: string; playerIndex: number; cardIndex: number; digit: number }> = []
+
     for (let cardIndex = 0; cardIndex < 2; cardIndex++) {
       displayGameState.players.forEach((player, playerIndex) => {
         if (player.hand.length > cardIndex) {
-          // Use actual cards from player's hand
           cards.push({
             id: `dealing-${playerIndex}-${cardIndex}`,
             playerIndex,
             cardIndex,
-            digit: player.hand[cardIndex].digit
+            digit: player.hand[cardIndex].digit,
           })
         } else {
-          // Create demo cards for animation if no cards exist yet
           cards.push({
             id: `dealing-${playerIndex}-${cardIndex}`,
             playerIndex,
             cardIndex,
-            digit: Math.floor(Math.random() * 9) + 1 // Random digit 1-9
+            digit: Math.floor(Math.random() * 9) + 1,
           })
         }
       })
     }
-    
-    // Animate cards one by one with delays
+
+    pendingHoleDealQueueRef.current = cards
+    setDealingCards([])
+    setHasDealtCards(false)
+    setShowDeck(true)
+    setIsDealing(true)
+    setHoleDealLayoutEpoch((n) => n + 1)
+  }, [displayGameState.players])
+
+  useLayoutEffect(() => {
+    if (!isDealing) return
+    const cards = pendingHoleDealQueueRef.current
+    if (!cards || cards.length === 0) return
+    pendingHoleDealQueueRef.current = null
+
+    refreshHoleCardDealEndpoints(displayGameState.players.length)
+
     cards.forEach((card, index) => {
-      setTimeout(() => {
-        setDealingCards(prev => [...prev, card])
-      }, index * 200) // 200ms delay between each card
+      window.setTimeout(() => {
+        setDealingCards((prev) => [...prev, card])
+      }, index * 200)
     })
-    
-    // End dealing animation after all cards are dealt
-    setTimeout(() => {
+
+    const endMs = cards.length * 200 + 1000
+    const endTimer = window.setTimeout(() => {
       setIsDealing(false)
       setDealingCards([])
-      setShowDeck(false) // Hide deck after initial deal
-      setHasDealtCards(true) // Mark that cards have been dealt
-      
-      // For demo mode, populate the player hands with the dealt cards
+      setShowDeck(false)
+      setHasDealtCards(true)
+
       if (!gameState) {
-        // This is demo mode, so we need to update the demo state with the dealt cards
         const updatedPlayers = displayGameState.players.map((player) => {
           const hasHole = player.hand.length >= 2
           return {
@@ -690,16 +747,21 @@ function DisplayTableLive({
                 ],
           }
         })
-        
-        setDemoGameState(prev => ({
+        setDemoGameState((prev) => ({
           ...prev,
-          players: updatedPlayers
+          players: updatedPlayers,
         }))
-        
-
       }
-    }, cards.length * 200 + 1000)
-  }, [displayGameState.players])
+    }, endMs)
+
+    return () => window.clearTimeout(endTimer)
+  }, [
+    isDealing,
+    holeDealLayoutEpoch,
+    refreshHoleCardDealEndpoints,
+    displayGameState.players.length,
+    gameState,
+  ])
 
   // Function to trigger community card dealing animation
   const triggerCommunityDealingAnimation = useCallback(() => {
@@ -1073,7 +1135,8 @@ function DisplayTableLive({
                 }`
           }
         >
-          <div
+          <motion.div
+            ref={feltLayerRef}
             className={isEmbedded ? 'absolute' : 'absolute inset-0'}
             style={
               isEmbedded
@@ -1139,17 +1202,21 @@ function DisplayTableLive({
                   ))}
                 </motion.div>
                 {dealingCards.map((dealingCard) => {
+                  const endpointKey = `${dealingCard.playerIndex}-${dealingCard.cardIndex}`
+                  const measured = holeCardDealEndpointsRef.current.get(endpointKey)
                   const { dx, dy } = getPlayerSeatOffsetFromPlaneCenterPx(
                     dealingCard.playerIndex,
                     displayGameState.players.length
                   )
-                  const endpoint = holeCardVisualTopLeftInPlanePx(
-                    fdW,
-                    fdH,
-                    dx,
-                    dy,
-                    dealingCard.cardIndex
-                  )
+                  const endpoint =
+                    measured ??
+                    holeCardVisualTopLeftInPlanePx(
+                      fdW,
+                      fdH,
+                      dx,
+                      dy,
+                      dealingCard.cardIndex
+                    )
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
@@ -1387,21 +1454,42 @@ function DisplayTableLive({
                   <div className="sr-only">${formatHeroStackMoney(player.bankroll)}</div>
                   
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
-                  {player.hand.length > 0 && !isDealing && hasDealtCards && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex">
-                      {player.hand.map((card, i) => (
-                        <div key={i} className="transform scale-50 origin-bottom" style={{ marginLeft: i === 0 ? '0' : '-50px' }}>
-                          <NumericPlayingCard
-                            digit={card.digit}
-                            variant="cyan"
-                            size="normal"
-                            faceDown={displayGameState.phase !== 'showdown' || player.hasFolded}
-                            backDesign="star"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {(() => {
+                    const showRealHand =
+                      player.hand.length > 0 && !isDealing && hasDealtCards
+                    return (
+                      <div
+                        className={`absolute bottom-0 left-1/2 flex -translate-x-1/2 ${
+                          showRealHand ? '' : 'pointer-events-none opacity-0'
+                        }`}
+                        aria-hidden={!showRealHand}
+                      >
+                        {[0, 1].map((cardIndex) => {
+                          const card = player.hand[cardIndex]
+                          return (
+                            <motion.div
+                              key={cardIndex}
+                              ref={(el) => registerHoleCardAnchor(index, cardIndex, el)}
+                              className="transform origin-bottom scale-50"
+                              style={{ marginLeft: cardIndex === 0 ? '0' : '-50px' }}
+                            >
+                              <NumericPlayingCard
+                                digit={showRealHand && card ? card.digit : 0}
+                                variant="cyan"
+                                size="normal"
+                                faceDown={
+                                  !showRealHand ||
+                                  displayGameState.phase !== 'showdown' ||
+                                  player.hasFolded
+                                }
+                                backDesign="star"
+                              />
+                            </motion.div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                   
                   {/* Player status */}
                   {player.hasFolded && !hideFoldBanner && (
@@ -1611,7 +1699,7 @@ function DisplayTableLive({
 
             </div>
           </div>
-          </div>
+          </motion.div>
         </div>
 
         {isEmbedded ? (
