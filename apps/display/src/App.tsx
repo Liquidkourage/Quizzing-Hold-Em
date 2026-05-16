@@ -38,8 +38,10 @@ const HOLE_HAND_ROW_W_PX = PLAYING_CARD_LAYOUT_W_PX + PLAYING_CARD_LAYOUT_W_PX +
 const SEAT_HUD_PANEL_SCALE = 1.40625
 /** Tailwind `scale-50` on each hole-card wrapper (`origin-bottom`). */
 const HOLE_CARD_WRAPPER_SCALE = 0.5
-/** Fine-tune after DOM measure — positive Y moves the flight down in plane px. */
-const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = 5
+/** Fine-tune after DOM measure (plane px): negative X = left, negative Y = up. */
+const HOLE_DEAL_FLIGHT_X_NUDGE_PX = -6
+const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -8
+const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.06
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
   const rowHalfW = HOLE_HAND_ROW_W_PX / 2
@@ -103,9 +105,9 @@ function holeCardRectToPlaneEndpoint(
 
 function tuneHoleCardDealFlightEndpoint(endpoint: HoleCardPlaneEndpoint): HoleCardPlaneEndpoint {
   return {
-    x: endpoint.x,
+    x: endpoint.x + HOLE_DEAL_FLIGHT_X_NUDGE_PX,
     y: endpoint.y + HOLE_DEAL_FLIGHT_Y_NUDGE_PX,
-    scale: endpoint.scale,
+    scale: endpoint.scale * HOLE_DEAL_FLIGHT_SCALE_MULT,
   }
 }
 
@@ -1230,7 +1232,8 @@ function DisplayTableLive({
                       dy,
                       dealingCard.cardIndex
                     )
-                  const { x: finalX, y: finalY } = tuneHoleCardDealFlightEndpoint(rawEndpoint)
+                  const { x: finalX, y: finalY, scale: finalScale } =
+                    tuneHoleCardDealFlightEndpoint(rawEndpoint)
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
@@ -1249,12 +1252,14 @@ function DisplayTableLive({
                       initial={{
                         x: initialX,
                         y: initialY,
+                        scale: finalScale * 0.12,
                         opacity: 0,
                         rotate: Math.random() * 360 - 180,
                       }}
                       animate={{
                         x: finalX,
                         y: finalY,
+                        scale: finalScale,
                         opacity: 1,
                         rotate: 0,
                       }}
@@ -1263,17 +1268,15 @@ function DisplayTableLive({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <div className="origin-bottom scale-50 transform">
-                        <NumericPlayingCard
-                          digit={dealingCard.digit}
-                          variant="cyan"
-                          size="normal"
-                          faceDown={true}
-                          backDesign="star"
-                          style="neon"
-                          neonVariant="pulse"
-                        />
-                      </div>
+                      <NumericPlayingCard
+                        digit={dealingCard.digit}
+                        variant="cyan"
+                        size="normal"
+                        faceDown={true}
+                        backDesign="star"
+                        style="neon"
+                        neonVariant="pulse"
+                      />
                     </motion.div>
                   )
                 })}
@@ -1395,7 +1398,7 @@ function DisplayTableLive({
                     </motion.div>
                   )
                 })}
-            </div>
+              </div>
             )}
           </AnimatePresence>
           {/* Players positioned around the table */}
