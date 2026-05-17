@@ -3,7 +3,7 @@ import type { RefObject } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import { onState, onToast, onDealingCards, onDealingCommunityCards, type DisplayVenueTileSnapshot } from '@qhe/net'
-import type { GameState, GamePhase, PlayerState, SeatBettingAction } from '@qhe/core'
+import type { GameState, GamePhase, PlayerState, SeatBettingAction, NumericCard } from '@qhe/core'
 import {
   LOBBY_TABLE_ID,
   buildDisplayPreviewGameState,
@@ -453,6 +453,8 @@ function DisplayTableLive({
   const [holeDealLayoutEpoch, setHoleDealLayoutEpoch] = useState(0)
   const [dealingCards, setDealingCards] = useState<Array<{id: string, playerIndex: number, cardIndex: number, digit: number}>>([])
   const [hasDealtCards, setHasDealtCards] = useState(false) // Track if cards have been dealt - start false to hide initial cards
+  /** Hole cards revealed by the last deal flight when socket/tile state has not caught up yet. */
+  const [postDealHoleHands, setPostDealHoleHands] = useState<Record<number, NumericCard[]>>({})
   
   // Community card dealing animation state
   const [isDealingCommunity, setIsDealingCommunity] = useState(false)
@@ -484,6 +486,7 @@ function DisplayTableLive({
     setHasDealtCards(false)
     setHasDealtCommunityCards(false)
     setSharedCommunityCards([])
+    setPostDealHoleHands({})
   }, [feltTableHint])
 
   useEffect(() => {
@@ -574,13 +577,13 @@ function DisplayTableLive({
     if (feltHasPersistedHoleCards && !isDealing) {
       setHasDealtCards(true)
     }
-  }, [feltHasPersistedHoleCards, isDealing])
+  }, [feltHasPersistedHoleCards, isDealing, gameState?.round?.roundId])
 
   useEffect(() => {
     if (feltHasPersistedCommunityCards && !isDealingCommunity) {
       setHasDealtCommunityCards(true)
     }
-  }, [feltHasPersistedCommunityCards, isDealingCommunity])
+  }, [feltHasPersistedCommunityCards, isDealingCommunity, gameState?.round?.roundId])
 
   const blindSeatMarkers = useMemo(
     () =>
@@ -772,6 +775,7 @@ function DisplayTableLive({
     pendingHoleDealQueueRef.current = cards
     setDealingCards([])
     setHasDealtCards(false)
+    setPostDealHoleHands({})
     setShowDeck(true)
     setIsDealing(true)
     setHoleDealLayoutEpoch((n) => n + 1)
@@ -792,23 +796,27 @@ function DisplayTableLive({
     })
 
     const endMs = cards.length * 200 + 1000
+    const dealtSnapshot = cards.reduce<Record<number, NumericCard[]>>((acc, c) => {
+      const row = acc[c.playerIndex] ?? []
+      row[c.cardIndex] = { digit: c.digit as NumericCard['digit'] }
+      acc[c.playerIndex] = row
+      return acc
+    }, {})
+
     const endTimer = window.setTimeout(() => {
       setIsDealing(false)
       setDealingCards([])
       setShowDeck(false)
       setHasDealtCards(true)
+      setPostDealHoleHands(dealtSnapshot)
 
-      if (!gameState) {
-        const updatedPlayers = displayGameState.players.map((player) => {
+      if (!gameStateRef.current) {
+        const updatedPlayers = displayGameState.players.map((player, playerIndex) => {
+          const fromDeal = dealtSnapshot[playerIndex]
           const hasHole = player.hand.length >= 2
           return {
             ...player,
-            hand: hasHole
-              ? player.hand
-              : [
-                  { digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 },
-                  { digit: (Math.floor(Math.random() * 9) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 },
-                ],
+            hand: hasHole ? player.hand : (fromDeal?.length ? fromDeal : player.hand),
           }
         })
         setDemoGameState((prev) => ({
@@ -819,13 +827,7 @@ function DisplayTableLive({
     }, endMs)
 
     return () => window.clearTimeout(endTimer)
-  }, [
-    isDealing,
-    holeDealLayoutEpoch,
-    refreshHoleCardDealEndpoints,
-    displayGameState.players.length,
-    gameState,
-  ])
+  }, [isDealing, holeDealLayoutEpoch, refreshHoleCardDealEndpoints])
 
   // Function to trigger community card dealing animation
   const triggerCommunityDealingAnimation = useCallback(() => {
@@ -935,12 +937,20 @@ function DisplayTableLive({
     if (spotlightRoundKeyRef.current === key) return
     spotlightRoundKeyRef.current = key
 
-    setHasDealtCards(false)
-    setHasDealtCommunityCards(false)
-    setSharedCommunityCards([])
+    const anyHole = gameState.players.some((p) => p.hand.length > 0)
+    const anyCommunity = gameState.round.communityCards.length > 0
+
+    if (!anyHole) {
+      setHasDealtCards(false)
+      setPostDealHoleHands({})
+    }
+    if (!anyCommunity) {
+      setHasDealtCommunityCards(false)
+      setSharedCommunityCards([])
+    }
     setDealingCommunityCards([])
     setIsDealingCommunity(false)
-  }, [gameState?.tableId, gameState?.round?.roundId])
+  }, [gameState?.tableId, gameState?.round?.roundId, gameState?.players, gameState?.round?.communityCards])
 
   const [answerSecondsLeft, setAnswerSecondsLeft] = useState<number | null>(null)
 
@@ -1533,10 +1543,14 @@ function DisplayTableLive({
                   
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
                   {(() => {
+                    const handToShow =
+                      player.hand.length > 0 ? player.hand : (postDealHoleHands[index] ?? [])
                     const showRealHand =
-                      player.hand.length > 0 &&
                       !isDealing &&
-                      (hasDealtCards || feltHasPersistedHoleCards)
+                      handToShow.length > 0 &&
+                      (hasDealtCards ||
+                        feltHasPersistedHoleCards ||
+                        (postDealHoleHands[index]?.length ?? 0) > 0)
                     return (
                       <div
                         className={`absolute bottom-0 left-1/2 flex -translate-x-1/2 ${
@@ -1545,7 +1559,7 @@ function DisplayTableLive({
                         aria-hidden={!showRealHand}
                       >
                         {[0, 1].map((cardIndex) => {
-                          const card = player.hand[cardIndex]
+                          const card = handToShow[cardIndex]
                           return (
                             <motion.div
                               key={cardIndex}
@@ -1744,7 +1758,8 @@ function DisplayTableLive({
                     cardsToShow.length > 0 &&
                     (feltHasPersistedCommunityCards ||
                       hasDealtCommunityCards ||
-                      sharedCommunityCards.length > 0)
+                      sharedCommunityCards.length > 0 ||
+                      displayGameState.round.communityCards.length > 0)
 
                   return showCommunity ? (
                     cardsToShow.map((card, i) => {
