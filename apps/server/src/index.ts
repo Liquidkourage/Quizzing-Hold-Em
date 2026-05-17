@@ -1424,6 +1424,29 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
         gs.phase === 'answering' ||
         gs.phase === 'reveal' ||
         gs.phase === 'showdown')
+    const seatHoleDigits = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
+      const p = gs.players[i]
+      if (p == null || p.hand.length < 2) return null
+      const d0 = p.hand[0]?.digit
+      const d1 = p.hand[1]?.digit
+      if (
+        typeof d0 !== 'number' ||
+        typeof d1 !== 'number' ||
+        !Number.isInteger(d0) ||
+        !Number.isInteger(d1) ||
+        d0 < 0 ||
+        d0 > 9 ||
+        d1 < 0 ||
+        d1 > 9
+      ) {
+        return null
+      }
+      return [d0, d1] as [number, number]
+    })
+    const communityDigits =
+      gs.round.communityCards.length > 0
+        ? gs.round.communityCards.map((c) => c.digit)
+        : undefined
     tiles.push({
       tableNum: n,
       seated,
@@ -1435,6 +1458,8 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       seatLastBettingAction,
       actingCallAmount,
       actingCallPctOfStack,
+      ...(seatHoleDigits.some((h) => h != null) ? { seatHoleDigits } : {}),
+      ...(communityDigits != null && communityDigits.length > 0 ? { communityDigits } : {}),
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
       currentPlayerIndex:
         typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)

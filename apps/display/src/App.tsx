@@ -14,6 +14,10 @@ import {
 import confetti from 'canvas-confetti'
 import { readDisplayVenueCode } from './displayUrlParams'
 import { embeddedHeroDisplayState } from './embeddedVenueHeroState'
+import {
+  cacheDisplaySpotlightState,
+  readDisplaySpotlightState,
+} from './displaySpotlightStateCache'
 import { heroSeatBlindMarkerPills } from './heroBlindMarkers'
 import seatChipStackImg from './assets/seat-chip-stack.png'
 
@@ -474,11 +478,23 @@ function DisplayTableLive({
   const spotlightRoundKeyRef = useRef<string | null>(null)
   const isDealingRef = useRef(false)
   const midJoinHoleRevealTimerRef = useRef<number | null>(null)
+  const pendingSpotlightRevealRef = useRef(false)
   isDealingRef.current = isDealing
+
+  const revealPersistedCardsFromDisplayState = useCallback((gs: GameState) => {
+    const anyHole = gs.players.some((p) => p.hand.length > 0)
+    const anyCommunity = gs.round.communityCards.length > 0
+    if (anyHole) setHasDealtCards(true)
+    if (anyCommunity) {
+      setHasDealtCommunityCards(true)
+      setSharedCommunityCards(gs.round.communityCards.map((c) => ({ digit: c.digit })))
+    }
+  }, [])
 
   /** Host spotlight / venue hero table changed — drop stale socket snapshot and deal UI until `state` for this felt arrives. */
   useEffect(() => {
     const tid = feltTableHint.trim()
+    pendingSpotlightRevealRef.current = true
     setGameState((prev) =>
       prev != null && tid !== '' && String(prev.tableId) === tid ? prev : null
     )
@@ -493,7 +509,16 @@ function DisplayTableLive({
     setHasDealtCommunityCards(false)
     setSharedCommunityCards([])
     setPostDealHoleHands({})
-  }, [feltTableHint])
+
+    if (tid) {
+      const cached = readDisplaySpotlightState(tid)
+      if (cached) {
+        setGameState(cached)
+        revealPersistedCardsFromDisplayState(cached)
+        pendingSpotlightRevealRef.current = false
+      }
+    }
+  }, [feltTableHint, revealPersistedCardsFromDisplayState])
 
   useEffect(() => {
     const tid = feltTableHint.trim()
@@ -511,9 +536,16 @@ function DisplayTableLive({
       }
 
       setGameState(newGameState)
+      if (isEmbedded && tid !== '' && String(newGameState.tableId) === tid) {
+        cacheDisplaySpotlightState(newGameState)
+        if (pendingSpotlightRevealRef.current && !isDealingRef.current) {
+          revealPersistedCardsFromDisplayState(newGameState)
+          pendingSpotlightRevealRef.current = false
+        }
+      }
     })
     return unsubscribe
-  }, [feltTableHint, isEmbedded])
+  }, [feltTableHint, isEmbedded, revealPersistedCardsFromDisplayState])
 
   // Celebration confetti on showdown
   useEffect(() => {
@@ -579,13 +611,22 @@ function DisplayTableLive({
   const feltHasPersistedCommunityCards =
     displayGameState.round.communityCards.length > 0
 
-  /** Mid-hand spotlight join: show hole cards only if no deal animation starts soon. */
+  /** Mid-hand join on the same spotlight table (no table hop): reveal if no deal animation follows. */
   useEffect(() => {
     if (midJoinHoleRevealTimerRef.current) {
       window.clearTimeout(midJoinHoleRevealTimerRef.current)
       midJoinHoleRevealTimerRef.current = null
     }
     if (!feltHasPersistedHoleCards || isDealing) return
+
+    if (pendingSpotlightRevealRef.current) {
+      setHasDealtCards(true)
+      if (feltHasPersistedCommunityCards) {
+        setHasDealtCommunityCards(true)
+      }
+      pendingSpotlightRevealRef.current = false
+      return
+    }
 
     midJoinHoleRevealTimerRef.current = window.setTimeout(() => {
       midJoinHoleRevealTimerRef.current = null
@@ -600,7 +641,7 @@ function DisplayTableLive({
         midJoinHoleRevealTimerRef.current = null
       }
     }
-  }, [feltHasPersistedHoleCards, isDealing, gameState?.round?.roundId])
+  }, [feltHasPersistedHoleCards, feltHasPersistedCommunityCards, isDealing, gameState?.round?.roundId])
 
   useEffect(() => {
     if (!feltHasPersistedCommunityCards || isDealingCommunity) return
@@ -926,6 +967,7 @@ function DisplayTableLive({
         window.clearTimeout(midJoinHoleRevealTimerRef.current)
         midJoinHoleRevealTimerRef.current = null
       }
+      pendingSpotlightRevealRef.current = false
       setIsDealing(true)
       setHasDealtCards(false)
       setPostDealHoleHands({})

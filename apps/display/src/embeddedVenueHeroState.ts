@@ -1,6 +1,33 @@
 import type { DisplayVenueTileSnapshot } from '@qhe/net'
-import type { GamePhase, GameState, PlayerState, SeatBettingAction } from '@qhe/core'
+import type { GamePhase, GameState, PlayerState, SeatBettingAction, NumericCard } from '@qhe/core'
 import { createEmptyGame, displayActingSeatIndex } from '@qhe/core'
+
+function isCardDigit(n: unknown): n is NumericCard['digit'] {
+  return typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 9
+}
+
+function holeHandFromTileSeat(
+  tile: DisplayVenueTileSnapshot,
+  physicalSeat: number
+): NumericCard[] {
+  const pair = tile.seatHoleDigits?.[physicalSeat]
+  if (pair == null || pair.length < 2) return []
+  const d0 = pair[0]
+  const d1 = pair[1]
+  if (!isCardDigit(d0) || !isCardDigit(d1)) return []
+  return [{ digit: d0 }, { digit: d1 }]
+}
+
+function communityFromTile(tile: DisplayVenueTileSnapshot): NumericCard[] {
+  const digits = tile.communityDigits
+  if (!Array.isArray(digits) || digits.length === 0) return []
+  const out: NumericCard[] = []
+  for (const d of digits) {
+    if (!isCardDigit(d)) continue
+    out.push({ digit: d })
+  }
+  return out
+}
 
 function isSeatBettingAction(x: unknown): x is SeatBettingAction {
   return x === 'check' || x === 'call' || x === 'raise' || x === 'fold' || x === 'allIn'
@@ -89,7 +116,7 @@ export function embeddedHeroDisplayState(
         id: `venue-wall-seat-${tid}-${i}`,
         name,
         bankroll,
-        hand: [],
+        hand: holeHandFromTileSeat(tile, i),
         hasFolded: folded,
         isAllIn: false,
       })
@@ -147,11 +174,16 @@ export function embeddedHeroDisplayState(
       }
     }
 
+    const communityCards = communityFromTile(tile)
+
     return {
       ...base,
       phase,
       players,
-      round,
+      round: {
+        ...round,
+        ...(communityCards.length > 0 ? { communityCards } : {}),
+      },
     }
   }
 

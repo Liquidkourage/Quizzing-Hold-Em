@@ -55,6 +55,13 @@ export type DisplayVenueTileSnapshot = {
    * Omitted when false / older servers.
    */
   interestingAction?: boolean
+  /**
+   * Per physical seat (parallel `seatNames`): hole card digits when dealt, else null.
+   * Lets the venue hero show cards before the spotlight socket `state` reconnects.
+   */
+  seatHoleDigits?: (readonly [number, number] | null)[]
+  /** Community board digits for this table's current hand. Omitted when empty. */
+  communityDigits?: number[]
 }
 
 /** Venue wall payload: table mosaic plus **shared trivia strip** keyed off the hottest trivia phase (prefer answering, then setup, etc.), not blindly table 1. */
