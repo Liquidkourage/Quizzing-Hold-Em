@@ -463,8 +463,36 @@ function DisplayTableLive({
   // Shared community cards state - used by both animation and static display
   const [sharedCommunityCards, setSharedCommunityCards] = useState<Array<{digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}>>([])
 
+  const gameStateRef = useRef<GameState | null>(null)
+  gameStateRef.current = gameState
+
+  const spotlightRoundKeyRef = useRef<string | null>(null)
+
+  /** Host spotlight / venue hero table changed — drop stale socket snapshot and deal UI until `state` for this felt arrives. */
   useEffect(() => {
+    const tid = feltTableHint.trim()
+    setGameState((prev) =>
+      prev != null && tid !== '' && String(prev.tableId) === tid ? prev : null
+    )
+    spotlightRoundKeyRef.current = null
+    setIsDealing(false)
+    setDealingCards([])
+    setIsDealingCommunity(false)
+    setDealingCommunityCards([])
+    setShowDeck(false)
+    pendingHoleDealQueueRef.current = null
+    setHasDealtCards(false)
+    setHasDealtCommunityCards(false)
+    setSharedCommunityCards([])
+  }, [feltTableHint])
+
+  useEffect(() => {
+    const tid = feltTableHint.trim()
     const unsubscribe = onState((newGameState) => {
+      if (isEmbedded && tid !== '' && String(newGameState.tableId) !== tid) {
+        return
+      }
+
       // Clear client-side community card state when server has no cards (new round, etc.)
       if (!newGameState?.round?.communityCards || newGameState.round.communityCards.length === 0) {
         setSharedCommunityCards([])
@@ -472,11 +500,11 @@ function DisplayTableLive({
         setDealingCommunityCards([])
         setIsDealingCommunity(false)
       }
-      
+
       setGameState(newGameState)
     })
     return unsubscribe
-  }, [])
+  }, [feltTableHint, isEmbedded])
 
   // Celebration confetti on showdown
   useEffect(() => {
@@ -859,42 +887,60 @@ function DisplayTableLive({
   }, [triggerCommunityDealingAnimation])
 
   useEffect(() => {
+    const tid = feltTableHint.trim()
     const unsubscribe = onDealingCards(() => {
       // Add a delay to wait for the server to update the game state with the new cards
       setTimeout(() => {
+        const gs = gameStateRef.current
+        if (isEmbedded && tid !== '' && gs != null && String(gs.tableId) !== tid) {
+          return
+        }
         triggerDealingAnimation()
       }, 500) // Wait 500ms for server state update
     })
     return unsubscribe
-  }, [displayGameState, triggerDealingAnimation])
+  }, [feltTableHint, isEmbedded, triggerDealingAnimation])
 
   useEffect(() => {
+    const tid = feltTableHint.trim()
     const unsubscribe = onDealingCommunityCards(() => {
+      const gs = gameStateRef.current
+      if (isEmbedded && tid !== '' && gs != null && String(gs.tableId) !== tid) {
+        return
+      }
+
       // IMMEDIATELY set dealing state to prevent static cards from showing
       setIsDealingCommunity(true)
       setHasDealtCommunityCards(false) // Hide static cards during animation
-      
+
       // Wait for the state update to arrive, then trigger animation
       setTimeout(() => {
-        // Use the ref to get the latest function
+        const latest = gameStateRef.current
+        if (isEmbedded && tid !== '' && latest != null && String(latest.tableId) !== tid) {
+          setIsDealingCommunity(false)
+          return
+        }
         if (triggerCommunityDealingAnimationRef.current) {
           triggerCommunityDealingAnimationRef.current()
         }
       }, 200) // Wait 200ms for state update to arrive
     })
     return unsubscribe
-  }, []) // No dependencies - use ref to avoid cycles
+  }, [feltTableHint, isEmbedded])
 
-  // Reset hasDealtCards when the round changes to prevent flickering
+  // Reset deal UI when the same spotlight table starts a new round (not when hopping tables).
   useEffect(() => {
-    if (gameState && gameState.round) {
-      setHasDealtCards(false)
-      setHasDealtCommunityCards(false) // Also reset community cards for new rounds
-      setSharedCommunityCards([]) // Clear shared community cards for new rounds
-      setDealingCommunityCards([]) // Clear any ongoing community card animations
-      setIsDealingCommunity(false) // Stop any ongoing community card dealing
-    }
-  }, [gameState?.round?.roundId])
+    if (!gameState?.round?.roundId) return
+    const key = `${gameState.tableId}:${gameState.round.roundId}`
+    if (spotlightRoundKeyRef.current === key) return
+    spotlightRoundKeyRef.current = key
+
+    setHasDealtCards(false)
+    setHasDealtCommunityCards(false)
+    setSharedCommunityCards([])
+    setDealingCommunityCards([])
+    setIsDealingCommunity(false)
+  }, [gameState?.tableId, gameState?.round?.roundId])
 
   const [answerSecondsLeft, setAnswerSecondsLeft] = useState<number | null>(null)
 
