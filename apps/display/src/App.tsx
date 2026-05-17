@@ -40,6 +40,10 @@ const SEAT_HUD_PANEL_SCALE = 1.40625
 const HOLE_CARD_WRAPPER_SCALE = 0.5
 /** Mid-hand join: reveal persisted hole cards only if no `dealingCards` event follows. */
 const HOLE_MIDJOIN_REVEAL_MS = 800
+/** Flight-only nudge (plane px): negative Y = up. Does not move static seat cards. */
+const HOLE_DEAL_FLIGHT_X_NUDGE_PX = -6
+const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -16
+const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.08
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
   const rowHalfW = HOLE_HAND_ROW_W_PX / 2
@@ -98,6 +102,15 @@ function holeCardRectToPlaneEndpoint(
     y: (cardRect.top - planeRect.top) * planeScaleY,
     // `x`/`y` are in plane px; `scale` must be too (not raw screen width ÷ layout).
     scale: (scaleFromW + scaleFromH) / 2,
+  }
+}
+
+/** Nudge deal flights only — static anchors stay on measured seat slots. */
+function tuneHoleCardDealFlightEndpoint(endpoint: HoleCardPlaneEndpoint): HoleCardPlaneEndpoint {
+  return {
+    x: endpoint.x + HOLE_DEAL_FLIGHT_X_NUDGE_PX,
+    y: endpoint.y + HOLE_DEAL_FLIGHT_Y_NUDGE_PX,
+    scale: endpoint.scale * HOLE_DEAL_FLIGHT_SCALE_MULT,
   }
 }
 
@@ -801,7 +814,11 @@ function DisplayTableLive({
     if (!cards || cards.length === 0) return
     pendingHoleDealQueueRef.current = null
 
-    refreshHoleCardDealEndpoints(displayGameState.players.length)
+    const playerCount = displayGameState.players.length
+    refreshHoleCardDealEndpoints(playerCount)
+    requestAnimationFrame(() => {
+      refreshHoleCardDealEndpoints(playerCount)
+    })
 
     cards.forEach((card, index) => {
       window.setTimeout(() => {
@@ -1331,7 +1348,8 @@ function DisplayTableLive({
                       dy,
                       dealingCard.cardIndex
                     )
-                  const { x: finalX, y: finalY } = rawEndpoint
+                  const { x: finalX, y: finalY, scale: finalScale } =
+                    tuneHoleCardDealFlightEndpoint(rawEndpoint)
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
@@ -1350,14 +1368,14 @@ function DisplayTableLive({
                       initial={{
                         x: initialX,
                         y: initialY,
-                        scale: 0.12,
+                        scale: finalScale * 0.12,
                         opacity: 0,
                         rotate: Math.random() * 360 - 180,
                       }}
                       animate={{
                         x: finalX,
                         y: finalY,
-                        scale: 1,
+                        scale: finalScale,
                         opacity: 1,
                         rotate: 0,
                       }}
@@ -1366,22 +1384,15 @@ function DisplayTableLive({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <motion.div
-                        className="transform origin-bottom scale-50"
-                        style={{
-                          marginLeft: dealingCard.cardIndex === 0 ? '0' : '-50px',
-                        }}
-                      >
-                        <NumericPlayingCard
-                          digit={dealingCard.digit}
-                          variant="cyan"
-                          size="normal"
-                          faceDown={true}
-                          backDesign="star"
-                          style="neon"
-                          neonVariant="pulse"
-                        />
-                      </motion.div>
+                      <NumericPlayingCard
+                        digit={dealingCard.digit}
+                        variant="cyan"
+                        size="normal"
+                        faceDown={true}
+                        backDesign="star"
+                        style="neon"
+                        neonVariant="pulse"
+                      />
                     </motion.div>
                   )
                 })}
