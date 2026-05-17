@@ -41,8 +41,8 @@ const HOLE_CARD_WRAPPER_SCALE = 0.5
 /** Mid-hand join: reveal persisted hole cards only if no `dealingCards` event follows. */
 const HOLE_MIDJOIN_REVEAL_MS = 800
 /** Flight-only nudge (plane px): negative Y = up, negative X = left. Does not move static seat cards. */
-const HOLE_DEAL_FLIGHT_X_NUDGE_PX = 2
-const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -8
+const HOLE_DEAL_FLIGHT_X_NUDGE_PX = -1
+const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -5
 const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.08
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
