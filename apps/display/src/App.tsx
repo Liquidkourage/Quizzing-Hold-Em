@@ -38,10 +38,8 @@ const HOLE_HAND_ROW_W_PX = PLAYING_CARD_LAYOUT_W_PX + PLAYING_CARD_LAYOUT_W_PX +
 const SEAT_HUD_PANEL_SCALE = 1.40625
 /** Tailwind `scale-50` on each hole-card wrapper (`origin-bottom`). */
 const HOLE_CARD_WRAPPER_SCALE = 0.5
-/** Fine-tune after DOM measure (plane px): negative X = left, negative Y = up. */
-const HOLE_DEAL_FLIGHT_X_NUDGE_PX = -6
-const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -8
-const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.06
+/** Mid-hand join: reveal persisted hole cards only if no `dealingCards` event follows. */
+const HOLE_MIDJOIN_REVEAL_MS = 800
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
   const rowHalfW = HOLE_HAND_ROW_W_PX / 2
@@ -100,14 +98,6 @@ function holeCardRectToPlaneEndpoint(
     y: (cardRect.top - planeRect.top) * planeScaleY,
     // `x`/`y` are in plane px; `scale` must be too (not raw screen width ÷ layout).
     scale: (scaleFromW + scaleFromH) / 2,
-  }
-}
-
-function tuneHoleCardDealFlightEndpoint(endpoint: HoleCardPlaneEndpoint): HoleCardPlaneEndpoint {
-  return {
-    x: endpoint.x + HOLE_DEAL_FLIGHT_X_NUDGE_PX,
-    y: endpoint.y + HOLE_DEAL_FLIGHT_Y_NUDGE_PX,
-    scale: endpoint.scale * HOLE_DEAL_FLIGHT_SCALE_MULT,
   }
 }
 
@@ -469,6 +459,9 @@ function DisplayTableLive({
   gameStateRef.current = gameState
 
   const spotlightRoundKeyRef = useRef<string | null>(null)
+  const isDealingRef = useRef(false)
+  const midJoinHoleRevealTimerRef = useRef<number | null>(null)
+  isDealingRef.current = isDealing
 
   /** Host spotlight / venue hero table changed — drop stale socket snapshot and deal UI until `state` for this felt arrives. */
   useEffect(() => {
@@ -573,16 +566,37 @@ function DisplayTableLive({
   const feltHasPersistedCommunityCards =
     displayGameState.round.communityCards.length > 0
 
+  /** Mid-hand spotlight join: show hole cards only if no deal animation starts soon. */
   useEffect(() => {
-    if (feltHasPersistedHoleCards && !isDealing) {
-      setHasDealtCards(true)
+    if (midJoinHoleRevealTimerRef.current) {
+      window.clearTimeout(midJoinHoleRevealTimerRef.current)
+      midJoinHoleRevealTimerRef.current = null
+    }
+    if (!feltHasPersistedHoleCards || isDealing) return
+
+    midJoinHoleRevealTimerRef.current = window.setTimeout(() => {
+      midJoinHoleRevealTimerRef.current = null
+      if (!isDealingRef.current) {
+        setHasDealtCards(true)
+      }
+    }, HOLE_MIDJOIN_REVEAL_MS)
+
+    return () => {
+      if (midJoinHoleRevealTimerRef.current) {
+        window.clearTimeout(midJoinHoleRevealTimerRef.current)
+        midJoinHoleRevealTimerRef.current = null
+      }
     }
   }, [feltHasPersistedHoleCards, isDealing, gameState?.round?.roundId])
 
   useEffect(() => {
-    if (feltHasPersistedCommunityCards && !isDealingCommunity) {
-      setHasDealtCommunityCards(true)
-    }
+    if (!feltHasPersistedCommunityCards || isDealingCommunity) return
+    const id = window.setTimeout(() => {
+      if (!isDealingCommunity) {
+        setHasDealtCommunityCards(true)
+      }
+    }, HOLE_MIDJOIN_REVEAL_MS)
+    return () => window.clearTimeout(id)
   }, [feltHasPersistedCommunityCards, isDealingCommunity, gameState?.round?.roundId])
 
   const blindSeatMarkers = useMemo(
@@ -891,14 +905,22 @@ function DisplayTableLive({
   useEffect(() => {
     const tid = feltTableHint.trim()
     const unsubscribe = onDealingCards(() => {
-      // Add a delay to wait for the server to update the game state with the new cards
-      setTimeout(() => {
+      if (midJoinHoleRevealTimerRef.current) {
+        window.clearTimeout(midJoinHoleRevealTimerRef.current)
+        midJoinHoleRevealTimerRef.current = null
+      }
+      setIsDealing(true)
+      setHasDealtCards(false)
+      setPostDealHoleHands({})
+
+      window.setTimeout(() => {
         const gs = gameStateRef.current
         if (isEmbedded && tid !== '' && gs != null && String(gs.tableId) !== tid) {
+          setIsDealing(false)
           return
         }
         triggerDealingAnimation()
-      }, 500) // Wait 500ms for server state update
+      }, 100)
     })
     return unsubscribe
   }, [feltTableHint, isEmbedded, triggerDealingAnimation])
@@ -1309,8 +1331,7 @@ function DisplayTableLive({
                       dy,
                       dealingCard.cardIndex
                     )
-                  const { x: finalX, y: finalY, scale: finalScale } =
-                    tuneHoleCardDealFlightEndpoint(rawEndpoint)
+                  const { x: finalX, y: finalY } = rawEndpoint
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
@@ -1329,14 +1350,14 @@ function DisplayTableLive({
                       initial={{
                         x: initialX,
                         y: initialY,
-                        scale: finalScale * 0.12,
+                        scale: 0.12,
                         opacity: 0,
                         rotate: Math.random() * 360 - 180,
                       }}
                       animate={{
                         x: finalX,
                         y: finalY,
-                        scale: finalScale,
+                        scale: 1,
                         opacity: 1,
                         rotate: 0,
                       }}
@@ -1345,15 +1366,22 @@ function DisplayTableLive({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <NumericPlayingCard
-                        digit={dealingCard.digit}
-                        variant="cyan"
-                        size="normal"
-                        faceDown={true}
-                        backDesign="star"
-                        style="neon"
-                        neonVariant="pulse"
-                      />
+                      <motion.div
+                        className="transform origin-bottom scale-50"
+                        style={{
+                          marginLeft: dealingCard.cardIndex === 0 ? '0' : '-50px',
+                        }}
+                      >
+                        <NumericPlayingCard
+                          digit={dealingCard.digit}
+                          variant="cyan"
+                          size="normal"
+                          faceDown={true}
+                          backDesign="star"
+                          style="neon"
+                          neonVariant="pulse"
+                        />
+                      </motion.div>
                     </motion.div>
                   )
                 })}
@@ -1548,15 +1576,14 @@ function DisplayTableLive({
                     const showRealHand =
                       !isDealing &&
                       handToShow.length > 0 &&
-                      (hasDealtCards ||
-                        feltHasPersistedHoleCards ||
-                        (postDealHoleHands[index]?.length ?? 0) > 0)
+                      (hasDealtCards || (postDealHoleHands[index]?.length ?? 0) > 0)
+                    const hideForDealFlight = isDealing || !showRealHand
                     return (
-                      <div
+                      <motion.div
                         className={`absolute bottom-0 left-1/2 flex -translate-x-1/2 ${
-                          showRealHand ? '' : 'pointer-events-none invisible'
+                          hideForDealFlight ? 'pointer-events-none opacity-0' : ''
                         }`}
-                        aria-hidden={!showRealHand}
+                        aria-hidden={hideForDealFlight}
                       >
                         {[0, 1].map((cardIndex) => {
                           const card = handToShow[cardIndex]
@@ -1581,10 +1608,10 @@ function DisplayTableLive({
                             </motion.div>
                           )
                         })}
-                      </div>
+                      </motion.div>
                     )
                   })()}
-                  
+
                   {/* Player status */}
                   {player.hasFolded && !hideFoldBanner && (
                     <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-red-400 font-bold text-sm">FOLDED</div>
@@ -1756,10 +1783,7 @@ function DisplayTableLive({
                   const showCommunity =
                     !isDealingCommunity &&
                     cardsToShow.length > 0 &&
-                    (feltHasPersistedCommunityCards ||
-                      hasDealtCommunityCards ||
-                      sharedCommunityCards.length > 0 ||
-                      displayGameState.round.communityCards.length > 0)
+                    (hasDealtCommunityCards || sharedCommunityCards.length > 0)
 
                   return showCommunity ? (
                     cardsToShow.map((card, i) => {
