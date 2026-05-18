@@ -374,6 +374,7 @@ export function dealInitialCards(state: GameState): GameState {
   };
 
   const currentPlayerIndex = findNextToAct(startIndex);
+  const isBettingOpen = currentPlayerIndex >= 0;
 
   return {
     ...state,
@@ -384,8 +385,8 @@ export function dealInitialCards(state: GameState): GameState {
       communityCards: [],
       bettingRound: 1,
       currentBet: Math.max(state.bigBlind, 0),
-      currentPlayerIndex,
-      isBettingOpen: true,
+      currentPlayerIndex: isBettingOpen ? currentPlayerIndex : -1,
+      isBettingOpen,
       playerBets,
       pot,
       lastSeatBettingAction: Array.from({ length: playersAfterBlinds.length }, () => null),

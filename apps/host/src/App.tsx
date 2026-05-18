@@ -455,8 +455,20 @@ function HostApp() {
         const p = gameState.phase
         if (p === 'lobby')
           return 'Start Game first—you can deal once phase is “question”.'
-        if (p === 'betting')
-          return 'Hole cards dealt (round 1) or board is live (round 2)—see Deal Community / Close Betting hints below.'
+        if (p === 'betting') {
+          const r = gameState.round
+          const br = r.bettingRound ?? 0
+          const open = r.isBettingOpen !== false
+          if (open) {
+            const idx = r.currentPlayerIndex
+            const actor =
+              typeof idx === 'number' && idx >= 0 ? gameState.players[idx]?.name : null
+            return `Wagering round ${br} is open${actor ? ` — action on ${hostPlayerLabel(actor)}` : ''}. Use Close Betting when the street is done, then Deal Community Cards.`
+          }
+          return br === 1
+            ? 'Wagering round 1 is closed — deal the community board next, or open overrides below if needed.'
+            : 'Wagering round 2 is closed — start answering when the board is complete.'
+        }
         if (p === 'answering')
           return 'Answering is open—initial deal is finished. Use Reveal Answer or wait for the timer.'
         if (p === 'showdown' || p === 'payout') {
@@ -1203,16 +1215,29 @@ function HostApp() {
                   Use it under Run show → Lobby (below).
                 </p>
                 {gameState.phase === 'betting' && (
-                  <div>
-                    <div className="text-xs font-semibold tracking-wide text-white/50">Action on</div>
-                    <div className="mt-1 text-lg font-extrabold text-casino-gold">
-                      {(() => {
-                        const idx = (gameState.round as { currentPlayerIndex?: number }).currentPlayerIndex
-                        const p = typeof idx === 'number' ? gameState.players[idx] : undefined
-                        return p ? hostPlayerLabel(p.name) : '—'
-                      })()}
+                  <>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-white/60">Wagering</span>
+                      <span className="font-semibold text-white/90">
+                        Round {bettingRound} ·{' '}
+                        {gameState.round.isBettingOpen !== false ? 'clock open' : 'clock closed'}
+                      </span>
                     </div>
-                  </div>
+                    <div>
+                      <div className="text-xs font-semibold tracking-wide text-white/50">Action on</div>
+                      <div className="mt-1 text-lg font-extrabold text-casino-gold">
+                        {(() => {
+                          if (gameState.round.isBettingOpen === false) {
+                            return '— (street closed)'
+                          }
+                          const idx = gameState.round.currentPlayerIndex
+                          const p =
+                            typeof idx === 'number' && idx >= 0 ? gameState.players[idx] : undefined
+                          return p ? hostPlayerLabel(p.name) : '— (waiting for seat)'
+                        })()}
+                      </div>
+                    </div>
+                  </>
                 )}
                 {gameState.phase === 'answering' && (
                   <div>

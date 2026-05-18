@@ -1581,13 +1581,8 @@ function drainCpuVpSessionChain(sessionKey: string) {
       setTimeout(() => drainCpuVpSessionChain(sessionKey), 0)
       return
     }
-    const flushed = runVirtualPlayerSimulation(gs)
-    if (flushed !== gs) {
-      rooms.set(sessionKey, flushed)
-      emitVenueTableState(sessionKey, flushed)
-      setTimeout(() => drainCpuVpSessionChain(sessionKey), cpuVpDelayMsBetweenActions())
-      return
-    }
+    // Never run full runVirtualPlayerSimulation here — it collapses the whole street in one tick
+    // so host/TV never show wagering even though the felt advanced.
   }
 
   const hitChunkCap = steps === CPU_VP_STEPS_PER_CHUNK
