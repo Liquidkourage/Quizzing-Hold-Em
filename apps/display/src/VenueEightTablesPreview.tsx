@@ -170,47 +170,168 @@ function seatBettingActionPillClass(action: SeatBettingAction): string {
   return SEAT_BETTING_ACTION_PILL_CLASS[action]
 }
 
-/**
- * Felt div uses `inset-[12%_8%_15%_8%]` (top,right,bottom,left) — an axis-aligned ellipse
- * in %-space of the SeatRing wrapper: x% of width, y% of height.
- */
-const TABLE_FELT_INSET_TOP = 0.12
-const TABLE_FELT_INSET_RIGHT = 0.08
-const TABLE_FELT_INSET_BOTTOM = 0.15
-const TABLE_FELT_INSET_LEFT = 0.08
+/** Mini-table wrapper aspect (width / height). */
+const VENUE_RING_ASPECT_MD = 13 / 8
+const VENUE_RING_ASPECT_LG = 14 / 8
 
-/** Horizontal elongation of venue felts — same height, wider seat orbit (matches hero felt width scale). */
-const VENUE_FELT_RX_SCALE = 1.4
+/** Amber rail — flat top/bottom capsule just inside the ring wrapper. */
+const VENUE_RAIL_INSET_TOP = 0.02
+const VENUE_RAIL_INSET_RIGHT = 0.02
+const VENUE_RAIL_INSET_BOTTOM = 0.02
+const VENUE_RAIL_INSET_LEFT = 0.02
 
-const TABLE_FELT_ELLIPSE = (() => {
-  const innerW = 1 - TABLE_FELT_INSET_LEFT - TABLE_FELT_INSET_RIGHT
-  const innerH = 1 - TABLE_FELT_INSET_TOP - TABLE_FELT_INSET_BOTTOM
+/** Green felt inset inside the rail. */
+const VENUE_FELT_INSET_TOP = 0.1
+const VENUE_FELT_INSET_RIGHT = 0.06
+const VENUE_FELT_INSET_BOTTOM = 0.13
+const VENUE_FELT_INSET_LEFT = 0.06
+
+function venueRailBoundsFrac() {
+  const innerW = 1 - VENUE_RAIL_INSET_LEFT - VENUE_RAIL_INSET_RIGHT
+  const innerH = 1 - VENUE_RAIL_INSET_TOP - VENUE_RAIL_INSET_BOTTOM
   return {
-    cx: TABLE_FELT_INSET_LEFT + innerW / 2,
-    cy: TABLE_FELT_INSET_TOP + innerH / 2,
-    /** Semi-axis in horizontal %-of-width units */
-    rx: innerW / 2,
-    /** Semi-axis in vertical %-of-height units */
-    ry: innerH / 2,
-  }
-})()
-
-/**
- * Rim of the visible felt ellipse. Seat index 0 centers at clock top; advances CCW when viewed from above.
- * @param radialScale 1 = on rim, < 1 inward toward table center along the same radial, > 1 outward (name chips).
- */
-function feltEllipsePct(seatIndex: number, radialScale: number): { leftPct: number; topPct: number } {
-  const θ = (seatIndex / VENUE_SEAT_SLOTS) * 2 * Math.PI - Math.PI / 2
-  const { cx, cy, rx, ry } = TABLE_FELT_ELLIPSE
-  const c = Math.cos(θ)
-  const s = Math.sin(θ)
-  return {
-    leftPct: (cx + rx * VENUE_FELT_RX_SCALE * radialScale * c) * 100,
-    topPct: (cy + ry * radialScale * s) * 100,
+    cx: VENUE_RAIL_INSET_LEFT + innerW / 2,
+    cy: VENUE_RAIL_INSET_TOP + innerH / 2,
+    halfW: innerW / 2,
+    halfH: innerH / 2,
+    innerW,
+    innerH,
   }
 }
 
-/** Polar angle θ for seat i (matches {@link feltEllipsePct}). */
+function venueFeltBoundsFrac() {
+  const innerW = 1 - VENUE_FELT_INSET_LEFT - VENUE_FELT_INSET_RIGHT
+  const innerH = 1 - VENUE_FELT_INSET_TOP - VENUE_FELT_INSET_BOTTOM
+  return {
+    cx: VENUE_FELT_INSET_LEFT + innerW / 2,
+    cy: VENUE_FELT_INSET_TOP + innerH / 2,
+    halfW: innerW / 2,
+    halfH: innerH / 2,
+    innerW,
+    innerH,
+  }
+}
+
+/** Capsule border-radius so wide boxes get flat top/bottom rails (not a tall ellipse). */
+function venueCapsuleBorderRadiusCss(
+  innerWidthFrac: number,
+  innerHeightFrac: number,
+  parentAspect: number
+): string {
+  const boxAspect = (innerWidthFrac * parentAspect) / innerHeightFrac
+  if (boxAspect <= 1.02) return '50%'
+  const rxPct = Math.min(50, 50 / boxAspect)
+  return `${rxPct.toFixed(2)}% / 50%`
+}
+
+type CapsuleHit = { x: number; y: number; nx: number; ny: number; t: number }
+
+/** Ray ∩ horizontal stadium (flat top/bottom, semicircular ends) in pixel space. */
+function capsuleBoundaryHitPx(
+  cx: number,
+  cy: number,
+  halfW: number,
+  halfH: number,
+  dx: number,
+  dy: number
+): CapsuleHit | null {
+  const len = Math.hypot(dx, dy)
+  if (len < 1e-9) return null
+  dx /= len
+  dy /= len
+
+  let best: CapsuleHit | null = null
+  const consider = (t: number, nx: number, ny: number) => {
+    if (!(t > 1e-6)) return
+    const nLen = Math.hypot(nx, ny) || 1
+    const hit: CapsuleHit = {
+      x: cx + t * dx,
+      y: cy + t * dy,
+      nx: nx / nLen,
+      ny: ny / nLen,
+      t,
+    }
+    if (!best || t < best.t) best = hit
+  }
+
+  const r = halfH
+  const flat = halfW - r
+  if (flat <= 0) {
+    consider(r, dx, dy)
+    return best
+  }
+
+  if (dy < -1e-9) {
+    const t = (-halfH) / dy
+    const x = cx + t * dx
+    if (x >= cx - flat - 0.5 && x <= cx + flat + 0.5) consider(t, 0, -1)
+  }
+  if (dy > 1e-9) {
+    const t = halfH / dy
+    const x = cx + t * dx
+    if (x >= cx - flat - 0.5 && x <= cx + flat + 0.5) consider(t, 0, 1)
+  }
+
+  for (const sign of [-1, 1] as const) {
+    const acx = cx + sign * flat
+    const aox = cx - acx
+    const B = 2 * aox * dx
+    const C = aox * aox - r * r
+    const disc = B * B - 4 * C
+    if (disc < 0) continue
+    const sqrtD = Math.sqrt(disc)
+    for (const t of [(-B - sqrtD) / 2, (-B + sqrtD) / 2]) {
+      const x = cx + t * dx
+      const y = cy + t * dy
+      consider(t, (x - acx) / r, (y - cy) / r)
+    }
+  }
+
+  return best
+}
+
+function venueSeatRimPxAndOutwardNormal(
+  seatIndex: number,
+  w: number,
+  h: number,
+  radialScale: number,
+  target: 'rail' | 'felt' = 'rail'
+): { rimX: number; rimY: number; ux: number; uy: number } {
+  const bounds = target === 'rail' ? venueRailBoundsFrac() : venueFeltBoundsFrac()
+  const cx = bounds.cx * w
+  const cy = bounds.cy * h
+  const halfW = bounds.halfW * w
+  const halfH = bounds.halfH * h
+  const θ = seatThetaRad(seatIndex)
+  const hit = capsuleBoundaryHitPx(cx, cy, halfW, halfH, Math.cos(θ), Math.sin(θ))
+  if (!hit) return { rimX: cx, rimY: cy, ux: 0, uy: -1 }
+  return {
+    rimX: cx + (hit.x - cx) * radialScale,
+    rimY: cy + (hit.y - cy) * radialScale,
+    ux: hit.nx,
+    uy: hit.ny,
+  }
+}
+
+/**
+ * Seat rim in wrapper %. Seat index 0 at clock top; advances CCW when viewed from above.
+ * @param radialScale 1 = on rail outer boundary, < 1 inward toward center.
+ */
+function venueSeatRimPct(
+  seatIndex: number,
+  radialScale: number,
+  w = 0,
+  h = 0,
+  target: 'rail' | 'felt' = 'rail'
+): { leftPct: number; topPct: number } {
+  const aspect = w > 0 && h > 0 ? w / h : VENUE_RING_ASPECT_MD
+  const ww = w > 0 ? w : 260 * aspect
+  const hh = h > 0 ? h : 260
+  const { rimX, rimY } = venueSeatRimPxAndOutwardNormal(seatIndex, ww, hh, radialScale, target)
+  return { leftPct: (rimX / ww) * 100, topPct: (rimY / hh) * 100 }
+}
+
+/** Polar angle θ for seat i (matches {@link venueSeatRimPct}). */
 function seatThetaRad(seatIndex: number): number {
   return (seatIndex / VENUE_SEAT_SLOTS) * 2 * Math.PI - Math.PI / 2
 }
@@ -302,32 +423,6 @@ function mosaicPhaseCornerTypography(row: DisplayVenueTileSnapshot): string {
   return 'font-bold uppercase leading-tight truncate'
 }
 
-/**
- * Rim point and outward unit normal on the inset felt ellipse (pixel space of wrapper `w×h`).
- * Normal is Euclidean for the ellipse with semi-axes Rx, Ry derived from frac-space rx, ry.
- */
-function ellipseRimPxAndOutwardNormal(
-  seatIndex: number,
-  w: number,
-  h: number
-): { rimX: number; rimY: number; ux: number; uy: number; Rx: number; Ry: number } {
-  const θ = seatThetaRad(seatIndex)
-  const { cx, cy, rx, ry } = TABLE_FELT_ELLIPSE
-  const Rx = rx * w * VENUE_FELT_RX_SCALE
-  const Ry = ry * h
-  const cxx = cx * w
-  const cyy = cy * h
-  const c = Math.cos(θ)
-  const s = Math.sin(θ)
-  const rimX = cxx + Rx * c
-  const rimY = cyy + Ry * s
-  const gx = c / Rx
-  const gy = s / Ry
-  const len = Math.hypot(gx, gy)
-  const ux = gx / len
-  const uy = gy / len
-  return { rimX, rimY, ux, uy, Rx, Ry }
-}
 
 /** Fallback label anchor when wrapper size unknown (SSR / first paint). */
 function fallbackLabelEllipseScale(size: 'md' | 'lg', feltStacks: boolean): number {
@@ -337,7 +432,7 @@ function fallbackLabelEllipseScale(size: 'md' | 'lg', feltStacks: boolean): numb
 
 /** Dot diameters match Tailwind classes on seat markers ({@link SeatRingWithLabels}). */
 function seatDotDiameterPx(rootRemPx: number, size: 'md' | 'lg'): number {
-  if (size !== 'lg') return 2 * rootRemPx
+  if (size !== 'lg') return 1.75 * rootRemPx
   const sm =
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
@@ -378,7 +473,7 @@ function computeSeatLabelAnchorsPct(args: {
   const labelPairMinDistPx = 2 * estLabelHalfWidthPx * 0.64 + 2
 
   const rimCache = Array.from({ length: VENUE_SEAT_SLOTS }, (_, j) =>
-    ellipseRimPxAndOutwardNormal(j, w, h)
+    venueSeatRimPxAndOutwardNormal(j, w, h, 1)
   )
 
   const out = empty()
@@ -485,14 +580,27 @@ function SeatRingWithLabels({
   const seatFolded = padSeatFolded(seatFoldedIn)
   const seatLastBettingAction = padSeatLastBettingAction(seatLastBettingActionIn)
   const prefersReducedMotion = usePrefersReducedMotion()
-  /** 14/8 = (10/8)×1.4 width — wider oval, same vertical size as the original 10/8 ring. */
+  const ringAspect = size === 'lg' ? VENUE_RING_ASPECT_LG : VENUE_RING_ASPECT_MD
+  const railBounds = venueRailBoundsFrac()
+  const feltBounds = venueFeltBoundsFrac()
+  const railBorderRadius = venueCapsuleBorderRadiusCss(
+    railBounds.innerW,
+    railBounds.innerH,
+    ringAspect
+  )
+  const feltBorderRadius = venueCapsuleBorderRadiusCss(
+    feltBounds.innerW,
+    feltBounds.innerH,
+    ringAspect
+  )
+  /** Spotlight hero — wide capsule; mosaic tiles use smaller md ring below. */
   const lgRing =
-    'mx-auto aspect-[14/8] h-auto max-h-[min(min(68svh,57dvh),39rem)] w-[min(100%,calc(100dvw-2.5rem),76.5rem)] max-w-full shrink-0'
-  /** Must keep height so %-positioned seats/names resolve; only abs children collapsed to zero without aspect. */
+    'mx-auto aspect-[14/8] h-auto max-h-[min(min(68svh,57dvh),36rem)] w-[min(100%,calc(100dvw-2.5rem),68rem)] max-w-full shrink-0'
+  /** Mosaic crawl tiles — compact stadium table. */
   const mdRing =
-    'mx-auto aspect-[14/8] h-auto w-full max-w-[min(100%,29.4rem)] shrink-0 sm:max-w-[min(100%,30.8rem)]'
+    'mx-auto aspect-[13/8] h-auto w-full max-w-[min(100%,22rem)] shrink-0 sm:max-w-[min(100%,23rem)]'
   const wrap = size === 'lg' ? lgRing : mdRing
-  const dot = size === 'lg' ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]' : 'h-8 w-8'
+  const dot = size === 'lg' ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]' : 'h-7 w-7'
   /** Larger rim marker for the player on the clock — reads from the back of the room. */
   const dotActing =
     size === 'lg' ? 'h-[3.5rem] w-[3.5rem] sm:h-16 sm:w-16 md:h-[4.25rem] md:w-[4.25rem]' : 'h-10 w-10 sm:h-11 sm:w-11'
@@ -537,17 +645,53 @@ function SeatRingWithLabels({
     [feltSeatStacks, ringPx.h, ringPx.w, seatNames, size]
   )
 
+  const seatDotAnchorsPct = useMemo(() => {
+    if (!(ringPx.w > 0 && ringPx.h > 0)) return null
+    const rootRem =
+      typeof document !== 'undefined'
+        ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+        : 16
+    const dotR = seatDotDiameterPx(rootRem, size) / 2
+    const railBorderPx = size === 'lg' ? 2.5 : 2
+    const insetPx = dotR + railBorderPx * 0.5
+    return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
+      const { rimX, rimY, ux, uy } = venueSeatRimPxAndOutwardNormal(i, ringPx.w, ringPx.h, 1)
+      return {
+        leftPct: ((rimX - ux * insetPx) / ringPx.w) * 100,
+        topPct: ((rimY - uy * insetPx) / ringPx.h) * 100,
+      }
+    })
+  }, [ringPx.h, ringPx.w, size])
+
+  const rimW = ringPx.w
+  const rimH = ringPx.h
+
   return (
     <div ref={ringElRef} className={`relative overflow-visible ${wrap}`}>
       <div
-        className={`absolute rounded-[50%] border-amber-700/70 shadow-inner ${
+        className={`absolute border-amber-700/90 shadow-md ${
+          size === 'lg'
+            ? 'border-2 bg-gradient-to-br from-amber-900 via-amber-800 to-amber-950 sm:border-[3px]'
+            : 'border-2 bg-gradient-to-br from-amber-900 via-amber-800 to-amber-950'
+        }`}
+        style={{
+          top: `${VENUE_RAIL_INSET_TOP * 100}%`,
+          right: `${VENUE_RAIL_INSET_RIGHT * 100}%`,
+          bottom: `${VENUE_RAIL_INSET_BOTTOM * 100}%`,
+          left: `${VENUE_RAIL_INSET_LEFT * 100}%`,
+          borderRadius: railBorderRadius,
+        }}
+      />
+      <div
+        className={`absolute border-amber-700/70 shadow-inner ${
           size === 'lg' ? 'border-2 sm:border-[3px]' : 'border-2'
         }`}
         style={{
-          top: `${TABLE_FELT_INSET_TOP * 100}%`,
-          right: `${TABLE_FELT_INSET_RIGHT * 100}%`,
-          bottom: `${TABLE_FELT_INSET_BOTTOM * 100}%`,
-          left: `${TABLE_FELT_INSET_LEFT * 100}%`,
+          top: `${VENUE_FELT_INSET_TOP * 100}%`,
+          right: `${VENUE_FELT_INSET_RIGHT * 100}%`,
+          bottom: `${VENUE_FELT_INSET_BOTTOM * 100}%`,
+          left: `${VENUE_FELT_INSET_LEFT * 100}%`,
+          borderRadius: feltBorderRadius,
           background: `
             repeating-linear-gradient(
               45deg,
@@ -561,11 +705,11 @@ function SeatRingWithLabels({
         }}
       />
       {Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
-        const seatRim = feltEllipsePct(i, 1)
-        const chipPos = feltEllipsePct(i, chipInnerScale)
+        const seatRim = seatDotAnchorsPct?.[i] ?? venueSeatRimPct(i, 1, rimW, rimH)
+        const chipPos = venueSeatRimPct(i, chipInnerScale, rimW, rimH, 'felt')
         const anchored = labelAnchorsPct[i]
         const fb = fallbackLabelEllipseScale(size, Boolean(feltSeatStacks && size === 'lg'))
-        const fallbackPos = feltEllipsePct(i, fb)
+        const fallbackPos = venueSeatRimPct(i, fb, rimW, rimH)
         const labelPos = anchored ?? fallbackPos
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
@@ -640,7 +784,7 @@ function SeatRingWithLabels({
               if (tags.length === 0) return null
               const blindInset =
                 feltSeatStacks && size === 'lg' ? 0.71 : size === 'lg' ? 0.8 : 0.76
-              const rp = feltEllipsePct(i, blindInset)
+              const rp = venueSeatRimPct(i, blindInset, rimW, rimH, 'felt')
               const badgeText =
                 size === 'lg'
                   ? 'text-[8px] font-black leading-none tracking-tight sm:text-[9px]'
@@ -671,8 +815,8 @@ function SeatRingWithLabels({
               <div
                 className={`pointer-events-none absolute ${SEAT_LAYER_BLIND_OUT} flex flex-col items-center`}
                 style={{
-                  left: `${feltEllipsePct(i, 0.58).leftPct}%`,
-                  top: `${feltEllipsePct(i, 0.58).topPct}%`,
+                  left: `${venueSeatRimPct(i, 0.58, rimW, rimH, 'felt').leftPct}%`,
+                  top: `${venueSeatRimPct(i, 0.58, rimW, rimH, 'felt').topPct}%`,
                   transform: 'translate(-50%, -50%)',
                 }}
               >
