@@ -275,11 +275,6 @@ function mosaicPhaseLabel(row: DisplayVenueTileSnapshot): string {
     return displayBettingPhaseLabel({
       isBettingOpen: row.isBettingOpen ?? undefined,
       currentPlayerIndex: row.currentPlayerIndex ?? undefined,
-      bettingRound: row.bettingRound ?? undefined,
-      communityCards:
-        row.communityDigits != null && row.communityDigits.length > 0
-          ? row.communityDigits.map((d) => ({ digit: d }))
-          : undefined,
     })
   }
   return phaseLabel(row.phase)
