@@ -169,52 +169,53 @@ const HERO_RAIL_H_PX = HERO_RAIL_BASE_H_PX
 const HERO_RAIL_SHADOW_W_PX = Math.round(842 * HERO_TABLE_WIDTH_SCALE)
 const HERO_RAIL_SHADOW_H_PX = 637
 
-/** Cupholder orbit center / semi-axes tuned at 810×605; X tracks rail width so rims stay on the rail edge. */
-const HERO_CUPHOLDER_CENTER_X = () => Math.round(HERO_RAIL_W_PX / 2 - 11)
-const HERO_CUPHOLDER_CENTER_Y = 293
-const HERO_CUPHOLDER_RADIUS_X = () => Math.round(HERO_RAIL_W_PX / 2 - 13)
-const HERO_CUPHOLDER_RADIUS_Y = 316
+const HERO_RAIL_BORDER_PX = 8
+const HERO_CUPHOLDER_SIZE_PX = 32
+const HERO_CUPHOLDER_HALF_PX = HERO_CUPHOLDER_SIZE_PX / 2
+
+function heroRailCenterPx() {
+  return { cx: HERO_RAIL_W_PX / 2, cy: HERO_RAIL_H_PX / 2 }
+}
+
+function heroCupholderOrbitRadiiPx() {
+  return {
+    rx: HERO_RAIL_W_PX / 2 - HERO_RAIL_BORDER_PX - HERO_CUPHOLDER_HALF_PX,
+    ry: HERO_RAIL_H_PX / 2 - HERO_RAIL_BORDER_PX - HERO_CUPHOLDER_HALF_PX,
+  }
+}
+
+/** Capsule rail — flat top/bottom on the elongated hero felt (matches venue mosaic). */
+function heroRailBorderRadiusCss(): string {
+  const aspect = HERO_RAIL_W_PX / HERO_RAIL_H_PX
+  const rxPct = Math.min(50, 50 / aspect)
+  return `${rxPct.toFixed(2)}% / 50%`
+}
 
 /**
- * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of rail box origin.
+ * Cupholder offsets from rail center — ellipse matching the rail capsule outline.
  */
 function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: number } {
   const angle = (index / total) * 2 * Math.PI - Math.PI / 2
-  const baseRadiusX = HERO_CUPHOLDER_RADIUS_X()
-  const baseRadiusY = HERO_CUPHOLDER_RADIUS_Y
-  let ox = Math.cos(angle) * baseRadiusX
-  let oy = Math.sin(angle) * baseRadiusY
-  const normalizedAngle = ((angle + Math.PI / 2) % (2 * Math.PI)) / (2 * Math.PI)
-  const isTopRegion = normalizedAngle > 0.9 || normalizedAngle < 0.1
-  const isBottomRegion = normalizedAngle > 0.4 && normalizedAngle < 0.6
-  const isCorner =
-    (normalizedAngle > 0.125 && normalizedAngle < 0.375) ||
-    (normalizedAngle > 0.625 && normalizedAngle < 0.875)
-  if (isTopRegion) {
-    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
-    oy = -291.6 + bowAmount
-  } else if (isBottomRegion) {
-    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
-    oy = 291.6 - bowAmount
-  } else if (isCorner) {
-    ox = Math.cos(angle) * (baseRadiusX + 0.81)
-    oy = Math.sin(angle) * (baseRadiusY + 0.81)
-  }
-  return { ox, oy }
+  const { rx, ry } = heroCupholderOrbitRadiiPx()
+  return { ox: rx * Math.cos(angle), oy: ry * Math.sin(angle) }
 }
 
-/** Visual center-ish under pot / community arc on authoring table (px, same coords as cupholders). */
+/** Visual center-ish under pot / community arc (px, rail-local coords). */
 const HERO_TABLE_POT_ANCHOR = {
   get cx() {
-    return Math.round(HERO_CUPHOLDER_CENTER_X() + 12)
+    return Math.round(heroRailCenterPx().cx)
   },
-  cy: 298,
+  get cy() {
+    return Math.round(heroRailCenterPx().cy + 5)
+  },
 } as const
 const HERO_CUPHOLDER_ORIGIN = {
   get left() {
-    return HERO_CUPHOLDER_CENTER_X()
+    return heroRailCenterPx().cx
   },
-  top: HERO_CUPHOLDER_CENTER_Y,
+  get top() {
+    return heroRailCenterPx().cy
+  },
 } as const
 
 function heroFeltPointTowardPot(
@@ -1868,19 +1869,28 @@ function DisplayTableLive({
           >
             {/* Table shadow */}
             <div
-              className="absolute inset-0 bg-black/40 rounded-full blur-lg transform translate-y-2"
-              style={{ width: HERO_RAIL_SHADOW_W_PX, height: HERO_RAIL_SHADOW_H_PX }}
+              className="absolute inset-0 bg-black/40 blur-lg transform translate-y-2"
+              style={{
+                width: HERO_RAIL_SHADOW_W_PX,
+                height: HERO_RAIL_SHADOW_H_PX,
+                borderRadius: heroRailBorderRadiusCss(),
+              }}
             />
             
             {/* Table base/rail */}
             <div
-              className="bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative"
-              style={{ width: HERO_RAIL_W_PX, height: HERO_RAIL_H_PX }}
+              className="bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 border-8 border-amber-600 shadow-2xl relative"
+              style={{
+                width: HERO_RAIL_W_PX,
+                height: HERO_RAIL_H_PX,
+                borderRadius: heroRailBorderRadiusCss(),
+              }}
             >
                             {/* FELT SURFACE - Direct application to rail padding */}
-              <div 
-                className="absolute inset-2 rounded-full border-4 border-amber-500"
+              <div
+                className="absolute inset-2 border-4 border-amber-500"
                 style={{
+                  borderRadius: heroRailBorderRadiusCss(),
                   background: `
                     repeating-linear-gradient(
                       45deg,

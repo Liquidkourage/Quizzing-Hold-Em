@@ -431,7 +431,12 @@ function fallbackLabelEllipseScale(size: 'md' | 'lg', feltStacks: boolean): numb
 }
 
 /** Dot diameters match Tailwind classes on seat markers ({@link SeatRingWithLabels}). */
-function seatDotDiameterPx(rootRemPx: number, size: 'md' | 'lg'): number {
+function seatDotDiameterPx(
+  rootRemPx: number,
+  size: 'md' | 'lg',
+  mosaic = false
+): number {
+  if (mosaic) return 1.25 * rootRemPx
   if (size !== 'lg') return 1.75 * rootRemPx
   const sm =
     typeof window !== 'undefined' &&
@@ -550,6 +555,7 @@ function SeatRingWithLabels({
   seatNames,
   seatBankrolls,
   size = 'md',
+  ringMode = 'mosaic',
   feltSeatStacks = false,
   blindSeats = null,
   seatFolded: seatFoldedIn,
@@ -562,6 +568,8 @@ function SeatRingWithLabels({
   seatNames: string[]
   seatBankrolls: number[]
   size?: 'md' | 'lg'
+  /** `mosaic` = rail + seat dots only (crawl tiles); `full` = names, actions, and felt stacks. */
+  ringMode?: 'mosaic' | 'full'
   /** Spotlight hero: draw mini chip stack + bankroll on the felt by each seated player. */
   feltSeatStacks?: boolean
   /** Dealer / blind roles (indexes match `seatNames`). Null when unsupported or omitted by server snapshot. */
@@ -580,6 +588,7 @@ function SeatRingWithLabels({
   const seatFolded = padSeatFolded(seatFoldedIn)
   const seatLastBettingAction = padSeatLastBettingAction(seatLastBettingActionIn)
   const prefersReducedMotion = usePrefersReducedMotion()
+  const isMosaic = ringMode === 'mosaic'
   const ringAspect = size === 'lg' ? VENUE_RING_ASPECT_LG : VENUE_RING_ASPECT_MD
   const railBounds = venueRailBoundsFrac()
   const feltBounds = venueFeltBoundsFrac()
@@ -597,13 +606,21 @@ function SeatRingWithLabels({
   const lgRing =
     'mx-auto aspect-[14/8] h-auto max-h-[min(min(68svh,57dvh),36rem)] w-[min(100%,calc(100dvw-2.5rem),68rem)] max-w-full shrink-0'
   /** Mosaic crawl tiles — compact stadium table. */
-  const mdRing =
-    'mx-auto aspect-[13/8] h-auto w-full max-w-[min(100%,22rem)] shrink-0 sm:max-w-[min(100%,23rem)]'
+  const mdRing = isMosaic
+    ? 'mx-auto aspect-[13/8] h-auto w-full max-w-full max-h-[7rem] min-h-[4.75rem] shrink-0'
+    : 'mx-auto aspect-[13/8] h-auto w-full max-w-[min(100%,22rem)] shrink-0 sm:max-w-[min(100%,23rem)]'
   const wrap = size === 'lg' ? lgRing : mdRing
-  const dot = size === 'lg' ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]' : 'h-7 w-7'
+  const dot = isMosaic
+    ? 'h-5 w-5'
+    : size === 'lg'
+      ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]'
+      : 'h-7 w-7'
   /** Larger rim marker for the player on the clock — reads from the back of the room. */
-  const dotActing =
-    size === 'lg' ? 'h-[3.5rem] w-[3.5rem] sm:h-16 sm:w-16 md:h-[4.25rem] md:w-[4.25rem]' : 'h-10 w-10 sm:h-11 sm:w-11'
+  const dotActing = isMosaic
+    ? 'h-6 w-6 ring-2 ring-cyan-400/60'
+    : size === 'lg'
+      ? 'h-[3.5rem] w-[3.5rem] sm:h-16 sm:w-16 md:h-[4.25rem] md:w-[4.25rem]'
+      : 'h-10 w-10 sm:h-11 sm:w-11'
   const labelClass =
     size === 'lg'
       ? 'max-w-[min(12rem,34vw)] text-[1.125rem] leading-tight sm:text-[1.3rem] sm:leading-snug md:text-[1.5625rem]'
@@ -633,25 +650,26 @@ function SeatRingWithLabels({
     return () => ro.disconnect()
   }, [])
 
-  const labelAnchorsPct = useMemo(
-    () =>
-      computeSeatLabelAnchorsPct({
-        w: ringPx.w,
-        h: ringPx.h,
-        size,
-        feltSeatStacks,
-        seatNames,
-      }),
-    [feltSeatStacks, ringPx.h, ringPx.w, seatNames, size]
-  )
+  const labelAnchorsPct = useMemo(() => {
+    if (isMosaic) {
+      return Array.from({ length: VENUE_SEAT_SLOTS }, () => null as { leftPct: number; topPct: number } | null)
+    }
+    return computeSeatLabelAnchorsPct({
+      w: ringPx.w,
+      h: ringPx.h,
+      size,
+      feltSeatStacks,
+      seatNames,
+    })
+  }, [feltSeatStacks, isMosaic, ringPx.h, ringPx.w, seatNames, size])
 
   const seatDotAnchorsPct = useMemo(() => {
-    if (!(ringPx.w > 0 && ringPx.h > 0)) return null
+    if (isMosaic || !(ringPx.w > 0 && ringPx.h > 0)) return null
     const rootRem =
       typeof document !== 'undefined'
         ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
         : 16
-    const dotR = seatDotDiameterPx(rootRem, size) / 2
+    const dotR = seatDotDiameterPx(rootRem, size, false) / 2
     const railBorderPx = size === 'lg' ? 2.5 : 2
     const insetPx = dotR + railBorderPx * 0.5
     return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
@@ -661,13 +679,13 @@ function SeatRingWithLabels({
         topPct: ((rimY - uy * insetPx) / ringPx.h) * 100,
       }
     })
-  }, [ringPx.h, ringPx.w, size])
+  }, [isMosaic, ringPx.h, ringPx.w, size])
 
   const rimW = ringPx.w
   const rimH = ringPx.h
 
   return (
-    <div ref={ringElRef} className={`relative overflow-visible ${wrap}`}>
+    <div ref={ringElRef} className={`relative overflow-hidden ${wrap}`}>
       <div
         className={`absolute border-amber-700/90 shadow-md ${
           size === 'lg'
@@ -705,7 +723,9 @@ function SeatRingWithLabels({
         }}
       />
       {Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
-        const seatRim = seatDotAnchorsPct?.[i] ?? venueSeatRimPct(i, 1, rimW, rimH)
+        const seatRim =
+          seatDotAnchorsPct?.[i] ??
+          venueSeatRimPct(i, isMosaic ? 1.02 : 1, rimW, rimH)
         const chipPos = venueSeatRimPct(i, chipInnerScale, rimW, rimH, 'felt')
         const anchored = labelAnchorsPct[i]
         const fb = fallbackLabelEllipseScale(size, Boolean(feltSeatStacks && size === 'lg'))
@@ -713,6 +733,15 @@ function SeatRingWithLabels({
         const labelPos = anchored ?? fallbackPos
         const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
+        const mosaicInitials =
+          isMosaic && raw.length > 0
+            ? raw
+                .split(/\s+/)
+                .map((p) => p[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase()
+            : ''
         const chips = seatBankrolls[i] ?? 0
         const showFeltStack = Boolean(raw && feltSeatStacks && size === 'lg')
         const labelVy = seatNameLabelVerticalNudgePx(i, size)
@@ -742,8 +771,9 @@ function SeatRingWithLabels({
           }
           return filled ? 'border-emerald-300/70 bg-black/85' : 'border-white/20 bg-black/35'
         })()
-        const actingSoftPulse =
-          size === 'lg'
+        const actingSoftPulse = isMosaic
+          ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden'
+          : size === 'lg'
             ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-[4.5rem] w-[4.5rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden sm:h-[5rem] sm:w-[5rem]'
             : 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/10 motion-reduce:hidden sm:h-[3.75rem] sm:w-[3.75rem]'
         return (
@@ -760,25 +790,31 @@ function SeatRingWithLabels({
                 <span aria-hidden className={`${actingSoftPulse} motion-safe:animate-pulse motion-safe:[animation-duration:2.8s]`} />
               ) : null}
               <div
-                className={`relative z-[2] shrink-0 ${isActing ? dotActing : dot} rounded-full border-2 shadow ${seatDotClass}`}
+                className={`relative z-[2] flex shrink-0 items-center justify-center ${isActing ? dotActing : dot} rounded-full border-2 shadow ${seatDotClass}`}
                 aria-current={isActing ? true : undefined}
                 aria-label={
-                  isActing
+                  raw
                     ? [
-                        'Seat has the wagering turn',
+                        raw,
+                        isActing ? 'has the wagering turn' : null,
+                        isFolded ? 'folded' : null,
                         showActingCallLine
                           ? formatActingCallHint(actingCallAmount ?? 0)
                           : null,
                       ]
                         .filter(Boolean)
-                        .join('. ')
-                    : isFolded
-                      ? 'Folded — out of this hand'
-                      : undefined
+                        .join(', ')
+                    : `Seat ${i + 1}, empty`
                 }
-              />
+              >
+                {isMosaic && filled && mosaicInitials ? (
+                  <span className="text-[0.5rem] font-black leading-none tracking-tight text-amber-100/95">
+                    {mosaicInitials}
+                  </span>
+                ) : null}
+              </div>
             </div>
-            {(() => {
+            {isMosaic ? null : (() => {
               if (blindSeats == null) return null
               const tags = blindTagsForSeat(i, blindSeats)
               if (tags.length === 0) return null
@@ -811,7 +847,7 @@ function SeatRingWithLabels({
                 </div>
               )
             })()}
-            {showFoldOut && raw ? (
+            {!isMosaic && showFoldOut && raw ? (
               <div
                 className={`pointer-events-none absolute ${SEAT_LAYER_BLIND_OUT} flex flex-col items-center`}
                 style={{
@@ -829,7 +865,7 @@ function SeatRingWithLabels({
                 </span>
               </div>
             ) : null}
-            {showFeltStack ? (
+            {!isMosaic && showFeltStack ? (
               <div
                 className={`pointer-events-none absolute ${SEAT_LAYER_FELT_CHIP_PILE} flex flex-col items-center gap-0.5 px-0.5 ${
                   isFolded ? 'opacity-45' : 'opacity-95'
@@ -853,7 +889,7 @@ function SeatRingWithLabels({
                 </span>
               </div>
             ) : null}
-            {raw ? (
+            {!isMosaic && raw ? (
               <div
                 className={`pointer-events-none absolute ${SEAT_LAYER_NAME_CLUSTER} text-center font-semibold leading-tight shadow-black/80 drop-shadow ${labelClass} ${
                   isFolded ? 'text-white/60' : 'text-white/92'
@@ -887,7 +923,7 @@ function SeatRingWithLabels({
                 })()}
               </div>
             ) : null}
-            {raw && showActionPanel ? (
+            {!isMosaic && raw && showActionPanel ? (
               <div
                 className={`pointer-events-none absolute ${SEAT_LAYER_ACTION_PANEL} flex flex-col items-center gap-1 text-center`}
                 style={{
@@ -990,7 +1026,7 @@ function VenueMosaicTableCard({
         role="group"
         aria-current={spotlight ? 'true' : undefined}
         aria-label={`Table ${tn}, mosaic tile`}
-        className={`flex w-full min-w-0 flex-col gap-2 overflow-visible p-3 backdrop-blur-md sm:gap-2.5 sm:p-3.5 ${cardShell}`}
+        className={`flex w-full min-w-0 flex-col gap-1.5 overflow-visible p-2 backdrop-blur-md sm:gap-2 sm:p-2.5 ${cardShell}`}
       >
         <div className="flex shrink-0 items-start justify-between gap-2">
           <div className="min-w-0">
@@ -1008,21 +1044,54 @@ function VenueMosaicTableCard({
           </span>
         </div>
 
-        <div className="relative z-[1] flex shrink-0 justify-center overflow-visible">
+        <div className="relative z-[1] flex shrink-0 justify-center overflow-hidden">
           <SeatRingWithLabels
+            ringMode="mosaic"
             seatedCount={seats}
             seatNames={seatNames}
             seatBankrolls={seatBankrolls}
             blindSeats={blindSeatSnapshot}
             seatFolded={seatFolded}
             actingSeatIndex={actingSeat}
-            showSeatBettingActions={showSeatBettingActions}
+            showSeatBettingActions={false}
             seatLastBettingAction={seatLastBettingAction}
             actingCallAmount={row.actingCallAmount}
           />
         </div>
 
-        <dl className="min-w-0 space-y-1 border-t border-white/10 pt-2 text-[0.6875rem] leading-snug text-white/88 sm:text-sm">
+        {seats > 0 ? (
+          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 border-t border-white/10 pt-1.5 text-[0.625rem] leading-tight text-white/82 sm:text-[0.6875rem]">
+            {Array.from({ length: seats }, (_, i) => {
+              const name = seatNames[i]?.trim() ?? ''
+              if (!name) return null
+              const act = showSeatBettingActions ? seatLastBettingAction[i] : null
+              const folded = seatFolded[i] === true
+              const onClock = actingSeat === i && !folded
+              return (
+                <li key={i} className="flex min-w-0 items-center justify-between gap-1">
+                  <span
+                    className={`min-w-0 truncate ${folded ? 'text-white/45 line-through' : onClock ? 'font-bold text-amber-200' : ''}`}
+                  >
+                    {name}
+                  </span>
+                  {act != null ? (
+                    <span
+                      className={`shrink-0 rounded border px-1 py-px text-[0.55rem] font-black uppercase leading-none ${seatBettingActionPillClass(act)}`}
+                    >
+                      {seatBettingActionLabel(act)}
+                    </span>
+                  ) : onClock ? (
+                    <span className="shrink-0 text-[0.55rem] font-bold uppercase text-cyan-300">
+                      Turn
+                    </span>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        ) : null}
+
+        <dl className="min-w-0 space-y-1 border-t border-white/10 pt-1.5 text-[0.6875rem] leading-snug text-white/88 sm:text-sm">
           <div className="flex justify-between gap-2">
             <dt className="font-semibold text-white/65">Occupied</dt>
             <dd className="font-mono font-bold tabular-nums text-casino-emerald">
