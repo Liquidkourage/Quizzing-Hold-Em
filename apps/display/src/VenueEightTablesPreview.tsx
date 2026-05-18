@@ -25,7 +25,11 @@ import {
   shouldUseVenueShowdownWall,
   VENUE_WALL_SEAT_SLOTS,
 } from './venueWallModel'
-import { capsuleBorderRadiusCss, capsuleBoundaryHitPx } from './tableRimGeometry'
+import {
+  capsuleBorderRadiusCss,
+  capsuleBoundaryHitPx,
+  capsuleOuterBoundaryHitPx,
+} from './tableRimGeometry'
 
 const VENUE_SEAT_SLOTS = VENUE_WALL_SEAT_SLOTS
 
@@ -265,9 +269,9 @@ function seatThetaRad(seatIndex: number): number {
 }
 
 /**
- * Mosaic crawl: seat dots on the amber rail, evenly spaced by seat index around the table.
- * Uses distance from the **table center** along each seat ray (outer rim vs felt inset).
- * Do not average outer/inner hit XY — felt uses a shifted center and pulls side seats inward.
+ * Mosaic crawl: seat dots on the amber rail at fixed seat indices (0 = top, CCW).
+ * Rays start at table center (inside the stadium) — must use **outer** boundary hits;
+ * nearest hits sit only ~8px from center on side seats and pile icons on the felt.
  */
 function mosaicSeatDotPct(
   seatIndex: number,
@@ -284,11 +288,11 @@ function mosaicSeatDotPct(
   const dx = Math.cos(θ)
   const dy = Math.sin(θ)
 
-  const outerHit = capsuleBoundaryHitPx(cx, cy, halfW, halfH, dx, dy)
+  const outerHit = capsuleOuterBoundaryHitPx(cx, cy, halfW, halfH, dx, dy)
   if (!outerHit) return { leftPct: 50, topPct: 50 }
 
   const felt = venueFeltBoundsFrac()
-  const innerHit = capsuleBoundaryHitPx(
+  const feltOuterHit = capsuleOuterBoundaryHitPx(
     felt.cx * ww,
     felt.cy * hh,
     felt.halfW * ww,
@@ -297,12 +301,12 @@ function mosaicSeatDotPct(
     dy
   )
 
-  const outerDist = Math.hypot(outerHit.x - cx, outerHit.y - cy)
-  const innerDist = innerHit
-    ? Math.hypot(innerHit.x - cx, innerHit.y - cy)
+  const outerDist = outerHit.t
+  const feltOuterDist = feltOuterHit
+    ? Math.hypot(feltOuterHit.x - cx, feltOuterHit.y - cy)
     : outerDist * (felt.halfW / 0.5)
-  /** ~mid-rail between felt lip and outer rim (0 = felt, 1 = outer). */
-  const railDist = innerDist + (outerDist - innerDist) * 0.58
+  /** Mid-amber rail between felt outer edge and table outer edge. */
+  const railDist = feltOuterDist + (outerDist - feltOuterDist) * 0.52
   const x = cx + dx * railDist
   const y = cy + dy * railDist
   return { leftPct: (x / ww) * 100, topPct: (y / hh) * 100 }

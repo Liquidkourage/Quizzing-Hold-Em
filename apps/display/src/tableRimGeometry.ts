@@ -5,39 +5,37 @@
 
 export type CapsuleHit = { x: number; y: number; nx: number; ny: number; t: number }
 
-/** Ray ∩ horizontal stadium (flat top/bottom, semicircular ends) in pixel space. */
-export function capsuleBoundaryHitPx(
+function capsuleBoundaryHitsAlongRayPx(
   cx: number,
   cy: number,
   halfW: number,
   halfH: number,
   dx: number,
   dy: number
-): CapsuleHit | null {
+): CapsuleHit[] {
   const len = Math.hypot(dx, dy)
-  if (len < 1e-9) return null
+  if (len < 1e-9) return []
   dx /= len
   dy /= len
 
-  let best: CapsuleHit | null = null
+  const hits: CapsuleHit[] = []
   const consider = (t: number, nx: number, ny: number) => {
     if (!(t > 1e-6)) return
     const nLen = Math.hypot(nx, ny) || 1
-    const hit: CapsuleHit = {
+    hits.push({
       x: cx + t * dx,
       y: cy + t * dy,
       nx: nx / nLen,
       ny: ny / nLen,
       t,
-    }
-    if (!best || t < best.t) best = hit
+    })
   }
 
   const r = halfH
   const flat = halfW - r
   if (flat <= 0) {
     consider(r, dx, dy)
-    return best
+    return hits
   }
 
   if (dy < -1e-9) {
@@ -66,7 +64,38 @@ export function capsuleBoundaryHitPx(
     }
   }
 
-  return best
+  return hits
+}
+
+/** Nearest boundary hit along the ray from `(cx, cy)` — for rays starting outside the shape. */
+export function capsuleBoundaryHitPx(
+  cx: number,
+  cy: number,
+  halfW: number,
+  halfH: number,
+  dx: number,
+  dy: number
+): CapsuleHit | null {
+  const hits = capsuleBoundaryHitsAlongRayPx(cx, cy, halfW, halfH, dx, dy)
+  if (hits.length === 0) return null
+  return hits.reduce((a, b) => (a.t < b.t ? a : b))
+}
+
+/**
+ * Farthest boundary hit along the ray from `(cx, cy)` — for origins **inside** the stadium
+ * (venue mosaic: table center). Using the nearest hit pulls side seats into the felt center.
+ */
+export function capsuleOuterBoundaryHitPx(
+  cx: number,
+  cy: number,
+  halfW: number,
+  halfH: number,
+  dx: number,
+  dy: number
+): CapsuleHit | null {
+  const hits = capsuleBoundaryHitsAlongRayPx(cx, cy, halfW, halfH, dx, dy)
+  if (hits.length === 0) return null
+  return hits.reduce((a, b) => (a.t > b.t ? a : b))
 }
 
 /** Capsule border-radius so wide boxes get flat top/bottom (not a tall ellipse). */
