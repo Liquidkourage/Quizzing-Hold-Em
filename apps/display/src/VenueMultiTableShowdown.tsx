@@ -85,7 +85,7 @@ export default function VenueMultiTableShowdown({ tiles, className = '' }: Venue
             tableNum={tile.tableNum}
             correctAnswer={showdownCorrectAnswerFromTile(tile)}
             rows={showdownRowsFromTile(tile)}
-            className="max-h-[min(420px,48dvh)]"
+            className="max-h-[min(480px,52dvh)]"
           />
         ))}
       </div>

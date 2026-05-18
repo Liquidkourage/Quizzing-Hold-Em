@@ -1,6 +1,6 @@
 import type { ShowdownResultRow } from './showdownDisplay'
 
-export type ShowdownChipSize = 'sm' | 'md'
+export type ShowdownChipSize = 'sm' | 'md' | 'lg'
 
 type DigitChipVariant = 'hole' | 'board' | 'inactive'
 
@@ -14,9 +14,11 @@ function DigitChip({
   size?: ShowdownChipSize
 }) {
   const dim =
-    size === 'sm'
-      ? 'h-6 min-w-[1.125rem] px-0.5 text-[0.65rem]'
-      : 'h-7 min-w-[1.35rem] px-1 text-xs'
+    size === 'lg'
+      ? 'h-9 min-w-[1.65rem] px-1 text-base sm:h-10 sm:min-w-[1.85rem] sm:text-lg'
+      : size === 'sm'
+        ? 'h-6 min-w-[1.125rem] px-0.5 text-[0.65rem]'
+        : 'h-7 min-w-[1.35rem] px-1 text-xs'
   const styles: Record<DigitChipVariant, string> = {
     hole: 'border-amber-400/85 bg-amber-950/90 text-amber-50 shadow-[0_0_8px_rgba(251,191,36,0.35)]',
     board:
@@ -52,9 +54,14 @@ export function ShowdownFiveCardsUsed({
     return <span className="text-[0.6rem] text-white/35">—</span>
   }
 
+  const wrapClass =
+    size === 'lg'
+      ? 'flex flex-nowrap items-center justify-center gap-1'
+      : 'flex flex-wrap items-center justify-center gap-0.5'
+
   return (
     <div
-      className="flex flex-wrap items-center gap-0.5"
+      className={wrapClass}
       aria-label={`Five cards used: ${cards.map((c) => c.digit).join(', ')}`}
     >
       {cards.map((c, i) => (
