@@ -11,8 +11,13 @@ import { SHOWDOWN_FELT_STYLE } from './showdownTheme'
 type ShowdownTableCardProps = {
   tableNum: number
   correctAnswer: number | undefined
+  pot: number
   rows: ShowdownResultRow[]
   className?: string
+}
+
+function formatChipPayout(amount: number): string {
+  return `+$${amount.toLocaleString()}`
 }
 
 function MiniRow({
@@ -36,9 +41,7 @@ function MiniRow({
       className={`flex min-w-0 flex-col items-stretch gap-1.5 rounded-md border px-1.5 py-2 sm:px-2 ${
         isWinner
           ? 'border-amber-400/55 bg-amber-950/45'
-          : row.hasFolded
-            ? 'border-white/6 bg-black/20 opacity-55'
-            : 'border-white/10 bg-black/30'
+          : 'border-white/10 bg-black/30'
       }`}
       aria-label={`${row.name}, seat ${row.seat}`}
     >
@@ -72,6 +75,12 @@ function MiniRow({
           </p>
         ) : null}
       </div>
+
+      {row.chipPayout != null && row.chipPayout > 0 ? (
+        <p className="text-center font-mono text-sm font-black tabular-nums text-emerald-300 sm:text-base">
+          {formatChipPayout(row.chipPayout)}
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -79,12 +88,14 @@ function MiniRow({
 export default function ShowdownTableCard({
   tableNum,
   correctAnswer,
+  pot,
   rows,
   className = '',
 }: ShowdownTableCardProps) {
   const { rows: sorted, winnerKey } = sortShowdownRowsByDistance(rows, correctAnswer)
-  const activeRows = sorted.filter((r) => r.name.trim() !== '')
+  const activeRows = sorted.filter((r) => r.name.trim() !== '' && !r.hasFolded)
   const winnerRow = activeRows.find((r) => winnerKey === `${r.seat}:${r.name}`)
+  const potShown = typeof pot === 'number' && Number.isFinite(pot) && pot > 0 ? Math.round(pot) : 0
 
   return (
     <motion.article
@@ -99,9 +110,16 @@ export default function ShowdownTableCard({
         <p className="font-mono text-2xl font-black tabular-nums leading-none text-yellow-400 sm:text-3xl">
           {tableNum}
         </p>
-        <p className="font-mono text-lg font-black tabular-nums text-amber-100 sm:text-xl">
-          {formatTriviaNumber(correctAnswer)}
-        </p>
+        <div className="text-right leading-tight">
+          <p className="font-mono text-lg font-black tabular-nums text-amber-100 sm:text-xl">
+            {formatTriviaNumber(correctAnswer)}
+          </p>
+          {potShown > 0 ? (
+            <p className="font-mono text-xs font-bold tabular-nums text-yellow-300 sm:text-sm">
+              ${potShown.toLocaleString()}
+            </p>
+          ) : null}
+        </div>
       </header>
 
       {winnerRow ? (

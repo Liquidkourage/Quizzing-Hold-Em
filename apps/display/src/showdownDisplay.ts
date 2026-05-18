@@ -3,6 +3,7 @@ import {
   communityIndicesFromAnswerComposition,
   inferAnswerComposition,
   PLAYER_ANSWER_DIGIT_CARD_COUNT,
+  previewChipPayoutByPlayerId,
   type AnswerCardPick,
   type GameState,
   type NumericCard,
@@ -23,6 +24,8 @@ export type ShowdownResultRow = {
   answerCommunityIndices: number[]
   /** Exactly five picks (0–2 holes + 3–5 board) used to build `submitted`. */
   answerCards: readonly ShowdownCardUsed[]
+  /** Projected chips won from the pot (side pots + uncalled returns). */
+  chipPayout: number | null
 }
 
 function inferCompositionForShowdown(
@@ -103,6 +106,7 @@ export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownRe
   const holes = tile.seatHoleDigits
   const guesses = tile.seatSubmittedAnswers
   const communityPicks = tile.seatAnswerCommunityIndices
+  const chipPayouts = tile.seatChipPayout
   const communityBoard = communityBoardFromTile(tile)
   const rows: ShowdownResultRow[] = []
 
@@ -135,6 +139,11 @@ export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownRe
         ? communityIndicesForPlayer(composition, communityPicks?.[i] ?? null)
         : []
     const answerCards = cardsUsedFromComposition(composition, holePair, communityBoard)
+    const rawPayout = chipPayouts?.[i]
+    const chipPayout =
+      !hasFolded && typeof rawPayout === 'number' && Number.isFinite(rawPayout) && rawPayout > 0
+        ? Math.round(rawPayout)
+        : null
     rows.push({
       seat: i + 1,
       name,
@@ -144,6 +153,7 @@ export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownRe
       communityBoard,
       answerCommunityIndices,
       answerCards,
+      chipPayout,
     })
   }
   return rows
@@ -154,6 +164,7 @@ export function showdownRowsFromGameState(gs: GameState): ShowdownResultRow[] {
     gs.round.communityCards.length > 0
       ? gs.round.communityCards.map((c) => c.digit)
       : null
+  const payoutById = previewChipPayoutByPlayerId(gs)
   return gs.players.map((p, i) => {
     const holes: readonly [number, number] | null =
       !p.hasFolded && p.hand.length >= 2
@@ -169,6 +180,11 @@ export function showdownRowsFromGameState(gs: GameState): ShowdownResultRow[] {
     const answerCommunityIndices =
       submitted != null ? communityIndicesForPlayer(composition, undefined) : []
     const answerCards = cardsUsedFromComposition(composition, holes, communityBoard)
+    const rawPayout = payoutById[p.id]
+    const chipPayout =
+      !p.hasFolded && typeof rawPayout === 'number' && Number.isFinite(rawPayout) && rawPayout > 0
+        ? Math.round(rawPayout)
+        : null
     return {
       seat: i + 1,
       name: p.name,
@@ -178,6 +194,7 @@ export function showdownRowsFromGameState(gs: GameState): ShowdownResultRow[] {
       communityBoard,
       answerCommunityIndices,
       answerCards,
+      chipPayout,
     }
   })
 }
@@ -208,6 +225,7 @@ export function sortShowdownRowsByDistance(
         communityBoard,
         answerCommunityIndices,
         answerCards,
+        chipPayout,
       }) => ({
         seat,
         name,
@@ -217,6 +235,7 @@ export function sortShowdownRowsByDistance(
         communityBoard,
         answerCommunityIndices,
         answerCards,
+        chipPayout,
       })
     ),
     winnerKey: winner,

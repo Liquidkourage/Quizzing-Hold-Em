@@ -84,6 +84,7 @@ export default function VenueMultiTableShowdown({ tiles, className = '' }: Venue
             key={tile.tableNum}
             tableNum={tile.tableNum}
             correctAnswer={showdownCorrectAnswerFromTile(tile)}
+            pot={tile.pot}
             rows={showdownRowsFromTile(tile)}
             className="max-h-[min(480px,52dvh)]"
           />

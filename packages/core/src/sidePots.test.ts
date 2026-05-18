@@ -5,6 +5,7 @@ import {
   createEmptyGame,
   endRound,
   payoutHandWithSidePots,
+  previewChipPayoutByPlayerId,
 } from './index'
 import type { GameState } from './index'
 
@@ -67,6 +68,10 @@ describe('payoutHandWithSidePots', () => {
     expect(paid.players.find((p) => p.id === 'short')!.bankroll).toBe(1100) // 800 + main 300
     expect(paid.players.find((p) => p.id === 'big')!.bankroll).toBe(650) // 400 + 250 uncalled return
     expect(paid.players.find((p) => p.id === 'mid')!.bankroll).toBe(950) // 650 + side 300
+    const preview = previewChipPayoutByPlayerId(gs)
+    expect(preview.short).toBe(300)
+    expect(preview.big).toBe(250)
+    expect(preview.mid).toBe(300)
   })
 
   it('awards each side pot to the closest eligible trivia answer', () => {

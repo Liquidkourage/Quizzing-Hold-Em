@@ -39,6 +39,7 @@ import {
   chipsRequiredToCall,
   pctOfStackToCall,
   normalizeBettingTurn,
+  previewChipPayoutByPlayerId,
 } from '@qhe/core'
 import type { Question, GameState } from '@qhe/core'
 import type { 
@@ -1482,6 +1483,13 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
         const idx = communityIndicesFromAnswerComposition(comp)
         return idx.length > 0 ? idx : null
       })
+      const payoutById = previewChipPayoutByPlayerId(gs)
+      seatChipPayout = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
+        const p = gs.players[i]
+        if (p == null) return null
+        const amt = payoutById[p.id]
+        return typeof amt === 'number' && Number.isFinite(amt) && amt > 0 ? Math.round(amt) : null
+      })
     }
     tiles.push({
       tableNum: n,
@@ -1501,6 +1509,9 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       ...(seatAnswerCommunityIndices != null &&
       seatAnswerCommunityIndices.some((x) => x != null && x.length > 0)
         ? { seatAnswerCommunityIndices }
+        : {}),
+      ...(seatChipPayout != null && seatChipPayout.some((x) => x != null && x > 0)
+        ? { seatChipPayout }
         : {}),
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
       currentPlayerIndex:

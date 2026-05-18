@@ -78,6 +78,11 @@ export type DisplayVenueTileSnapshot = {
    * Omitted when unknown / older servers.
    */
   seatAnswerCommunityIndices?: (readonly number[] | null)[]
+  /**
+   * Parallel to `seatNames`: projected chips won when the host ends the round (side pots + returns).
+   * Omitted when not in showdown / reveal or older servers.
+   */
+  seatChipPayout?: (number | null)[]
 }
 
 /** Venue wall payload: table mosaic plus **shared trivia strip** keyed off the hottest trivia phase (prefer answering, then setup, etc.), not blindly table 1. */

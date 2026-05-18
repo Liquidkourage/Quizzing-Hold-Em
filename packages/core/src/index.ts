@@ -1175,6 +1175,18 @@ export function payoutHandWithSidePots(state: GameState): GameState {
   return { ...s, round: { ...s.round, pot: 0 } };
 }
 
+/** Projected bankroll gain per player when {@link payoutHandWithSidePots} runs (showdown / reveal only). */
+export function previewChipPayoutByPlayerId(state: GameState): Record<string, number> {
+  if (state.phase !== 'showdown' && state.phase !== 'reveal') return {};
+  const paid = payoutHandWithSidePots(state);
+  const out: Record<string, number> = {};
+  for (const p of state.players) {
+    const next = paid.players.find((x) => x.id === p.id);
+    if (next) out[p.id] = next.bankroll - p.bankroll;
+  }
+  return out;
+}
+
 function payoutLegacySinglePot(state: GameState): GameState {
   const pendingPot = state.round.pot;
   if (pendingPot <= 0) return { ...state, round: { ...state.round, pot: 0 } };
