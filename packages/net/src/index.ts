@@ -42,6 +42,8 @@ export type DisplayVenueTileSnapshot = {
   currentPlayerIndex?: number | null
   /** Betting: false when wagering is explicitly closed between streets. Null when unknown / older payloads. */
   isBettingOpen?: boolean | null
+  /** 1 = pre-board, 2 = post-board. Omitted by older servers. */
+  bettingRound?: number | null
   /** Parallel to `seatNames`: true when that roster seat has folded this hand. Omitted by older servers. */
   seatFolded?: boolean[]
   /** This wagering street only: last check / call / raise / fold / all-in per seat. Omitted by older servers. */

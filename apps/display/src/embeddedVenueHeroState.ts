@@ -1,6 +1,6 @@
 import type { DisplayVenueTileSnapshot } from '@qhe/net'
 import type { GamePhase, GameState, PlayerState, SeatBettingAction, NumericCard } from '@qhe/core'
-import { createEmptyGame, displayActingSeatIndex } from '@qhe/core'
+import { createEmptyGame, venueTileActingSeatIndex } from '@qhe/core'
 
 function isCardDigit(n: unknown): n is NumericCard['digit'] {
   return typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 9
@@ -31,26 +31,6 @@ function communityFromTile(tile: DisplayVenueTileSnapshot): NumericCard[] {
 
 function isSeatBettingAction(x: unknown): x is SeatBettingAction {
   return x === 'check' || x === 'call' || x === 'raise' || x === 'fold' || x === 'allIn'
-}
-
-/** Physical seat index on venue wall (0..7), same contract as mosaic {@link VenueEightTablesPreview}. */
-function venueTileActingPhysicalSeat(row: DisplayVenueTileSnapshot): number | null {
-  const fromRound = displayActingSeatIndex(row.phase, row.seated, {
-    currentPlayerIndex: row.currentPlayerIndex ?? undefined,
-    isBettingOpen: row.isBettingOpen ?? undefined,
-  })
-  if (fromRound != null) return fromRound
-  if (row.isBettingOpen === false || row.currentPlayerIndex === -1) return null
-  const legacy = row.actingSeatIndex
-  if (
-    typeof legacy === 'number' &&
-    Number.isFinite(legacy) &&
-    legacy >= 0 &&
-    legacy < row.seated
-  ) {
-    return Math.floor(legacy)
-  }
-  return null
 }
 
 const PHASES: readonly GamePhase[] = [
@@ -148,10 +128,10 @@ export function embeddedHeroDisplayState(
     }
 
     if (phase === 'betting') {
-      const open = tile.isBettingOpen !== false
+      const open = tile.isBettingOpen === true
       let currentPlayerIndex = -1
       if (open) {
-        const phys = venueTileActingPhysicalSeat(tile)
+        const phys = venueTileActingSeatIndex(tile)
         if (phys != null) {
           const pi = physicalSeatByPlayerIdx.indexOf(phys)
           if (pi >= 0) currentPlayerIndex = pi

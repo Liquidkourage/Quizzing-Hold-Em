@@ -1378,8 +1378,15 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
   for (const key of tableKeys) {
     const n = tableNumFromSessionKey(vn, key)
     if (n == null) continue
-    const gs = rooms.get(key)
+    let gs = rooms.get(key)
     if (!gs) continue
+    if (gs.phase === 'betting') {
+      const normalized = normalizeBettingTurn(gs)
+      if (normalized !== gs) {
+        rooms.set(key, normalized)
+        gs = normalized
+      }
+    }
     const seated = welcomeWallSeatCount(gs)
     totalSeatedAtTables += seated
     const seatNames = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
@@ -1500,8 +1507,15 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
         typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)
           ? Math.floor(gs.round.currentPlayerIndex)
           : null,
-      isBettingOpen: typeof gs.round.isBettingOpen === 'boolean' ? gs.round.isBettingOpen : null,
-      actingSeatIndex: displayActingSeatIndex(gs.phase, seated, gs.round),
+      isBettingOpen: gs.phase === 'betting' ? gs.round.isBettingOpen === true : null,
+      bettingRound:
+        gs.phase === 'betting' && typeof gs.round.bettingRound === 'number' && Number.isFinite(gs.round.bettingRound)
+          ? Math.floor(gs.round.bettingRound)
+          : null,
+      actingSeatIndex:
+        gs.phase === 'betting' && gs.round.isBettingOpen === true
+          ? displayActingSeatIndex(gs.phase, seated, gs.round)
+          : null,
       ...(interestingAction ? { interestingAction: true } : {}),
     })
   }

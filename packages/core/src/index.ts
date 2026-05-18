@@ -526,6 +526,90 @@ export function displayActingSeatIndex(
   return i;
 }
 
+/** True only when the engine clock allows checks, calls, raises, and folds. */
+export function isWageringClockOpen(
+  round: Partial<Pick<RoundState, 'isBettingOpen'>>
+): boolean {
+  return round.isBettingOpen === true;
+}
+
+/** `betting` phase with the clock closed until the host advances (deal board or start answering). */
+export function isWageringPaused(
+  phase: GamePhase | string,
+  round: Partial<Pick<RoundState, 'isBettingOpen' | 'currentPlayerIndex'>>
+): boolean {
+  const ph = String(phase ?? '').trim().toLowerCase();
+  if (ph !== 'betting') return false;
+  if (isWageringClockOpen(round)) return false;
+  if (round.isBettingOpen === false) return true;
+  const raw = round.currentPlayerIndex as unknown;
+  if (typeof raw === 'number' && Number.isFinite(raw) && Math.floor(raw) === -1) return true;
+  return false;
+}
+
+/** Corner / info-bar copy during `betting` (open clock vs between host steps). */
+export function displayBettingPhaseLabel(
+  round: Partial<
+    Pick<RoundState, 'isBettingOpen' | 'currentPlayerIndex' | 'bettingRound' | 'communityCards'>
+  >
+): string {
+  if (isWageringClockOpen(round)) return 'Wagering';
+  return 'All bets are in!';
+}
+
+/** Venue mosaic tile: paused when the clock is not explicitly open. */
+export function isVenueTileWageringPaused(row: {
+  phase: string;
+  isBettingOpen?: boolean | null;
+  currentPlayerIndex?: number | null;
+  bettingRound?: number | null;
+  communityDigits?: number[] | null;
+}): boolean {
+  const ph = String(row.phase ?? '').trim().toLowerCase();
+  if (ph !== 'betting') return false;
+  if (row.isBettingOpen === true) return false;
+  if (row.isBettingOpen === false) return true;
+  const idx =
+    typeof row.currentPlayerIndex === 'number' && Number.isFinite(row.currentPlayerIndex)
+      ? Math.floor(row.currentPlayerIndex)
+      : null;
+  if (idx === -1) return true;
+  const br = row.bettingRound ?? 0;
+  const board = row.communityDigits?.length ?? 0;
+  if (br >= 2 && board >= 5) return true;
+  return false;
+}
+
+/** Acting seat for venue wall tiles — requires an explicitly open clock. */
+export function venueTileActingSeatIndex(
+  row: {
+    phase: string;
+    seated: number;
+    isBettingOpen?: boolean | null;
+    currentPlayerIndex?: number | null;
+    actingSeatIndex?: number | null;
+  }
+): number | null {
+  const ph = String(row.phase ?? '').trim().toLowerCase();
+  if (ph !== 'betting' || row.seated < 1) return null;
+  if (row.isBettingOpen !== true) return null;
+  const fromRound = displayActingSeatIndex(row.phase, row.seated, {
+    currentPlayerIndex: row.currentPlayerIndex ?? undefined,
+    isBettingOpen: true,
+  });
+  if (fromRound != null) return fromRound;
+  const legacy = row.actingSeatIndex;
+  if (
+    typeof legacy === 'number' &&
+    Number.isFinite(legacy) &&
+    legacy >= 0 &&
+    legacy < row.seated
+  ) {
+    return Math.floor(legacy);
+  }
+  return null;
+}
+
 /** After round-1 wagering is closed: deal five community cards and open round-2 wagering. */
 export function dealCommunityCards(state: GameState): GameState {
   if (state.phase !== 'betting') return state;

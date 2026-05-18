@@ -9,6 +9,8 @@ import {
   buildDisplayPreviewGameState,
   displayBlindSeatIndices,
   displayActingSeatIndex,
+  displayBettingPhaseLabel,
+  isWageringClockOpen,
   chipsRequiredToCall,
 } from '@qhe/core'
 import confetti from 'canvas-confetti'
@@ -272,14 +274,16 @@ function heroWagerCallBubblePositionPx(
   return { leftPx: p.leftPx, topPx: p.topPx }
 }
 
-function displayPhaseLabel(phase: GamePhase): string {
+function displayPhaseLabel(phase: GamePhase, round?: GameState['round']): string {
   switch (phase) {
     case 'lobby':
       return 'Lobby'
     case 'question':
       return 'Question'
     case 'betting':
-      return 'Wagering'
+      return round != null
+        ? displayBettingPhaseLabel(round)
+        : 'Wagering'
     case 'answering':
       return 'Answering'
     case 'reveal':
@@ -323,7 +327,7 @@ function heroDisplayedSeatNumber(player: PlayerState, contiguousOrderOneBased: n
 /** Venue-wall hero: combine phase + board label without stray em dash columns. */
 function venueWallHeroMergedLine(gs: GameState): string {
   const ph = gs.phase
-  const phaseLab = displayPhaseLabel(ph)
+  const phaseLab = displayPhaseLabel(ph, gs.round)
   const streetLab = displayStreetLabel(gs)
   if (ph === 'question') return phaseLab
   if (streetLab === '—') return phaseLab
@@ -368,7 +372,7 @@ function DisplayTableInfoBar({
                 <>
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55 md:text-xs">Status</div>
                   <div className="text-xl font-bold text-yellow-400 sm:text-2xl md:text-3xl">
-                    {displayPhaseLabel(gameState.phase)}
+                    {displayPhaseLabel(gameState.phase, gameState.round)}
                   </div>
                   <div className="mt-1 text-[13px] text-white/50 sm:text-sm">{seatedCount} seated</div>
                 </>
@@ -427,7 +431,7 @@ function DisplayTableInfoBar({
           </div>
           <div>
             <div className="text-base text-white md:text-xl">Phase</div>
-            <div className="text-xl font-bold text-yellow-400 md:text-3xl">{displayPhaseLabel(gameState.phase)}</div>
+            <div className="text-xl font-bold text-yellow-400 md:text-3xl">{displayPhaseLabel(gameState.phase, gameState.round)}</div>
           </div>
           <div>
             <div className="text-base text-white md:text-xl">Street</div>
@@ -728,11 +732,13 @@ function DisplayTableLive({
     const n = gs.players.length
     const phase = gs.phase
     const isBetting = phase === 'betting'
-    const open = gs.round.isBettingOpen !== false
-    const acting = displayActingSeatIndex(gs.phase, n, {
-      currentPlayerIndex: gs.round.currentPlayerIndex,
-      isBettingOpen: gs.round.isBettingOpen,
-    })
+    const open = isWageringClockOpen(gs.round)
+    const acting = open
+      ? displayActingSeatIndex(gs.phase, n, {
+          currentPlayerIndex: gs.round.currentPlayerIndex,
+          isBettingOpen: true,
+        })
+      : null
 
     const showSeatPills = isBetting && n > 0
     const lastActs = gs.round.lastSeatBettingAction

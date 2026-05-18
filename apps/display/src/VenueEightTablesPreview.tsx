@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { motion } from 'framer-motion'
 import { QuizzEmWordmark } from '@qhe/ui'
-import { displayActingSeatIndex } from '@qhe/core'
+import {
+  displayBettingPhaseLabel,
+  isVenueTileWageringPaused,
+  venueTileActingSeatIndex,
+} from '@qhe/core'
 import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot, SeatBettingAction } from '@qhe/net'
 
 import seatChipStackImg from './assets/seat-chip-stack.png'
@@ -261,48 +265,35 @@ function venueTileBlindSeats(row: DisplayVenueTileSnapshot): VenueWallBlindSeats
   }
 }
 
-/** Engine-derived seat with the wagering action (may differ from stale `actingSeatIndex` alone). */
 function venueTileActingSeat(row: DisplayVenueTileSnapshot): number | null {
-  const fromRound = displayActingSeatIndex(row.phase, row.seated, {
-    currentPlayerIndex: row.currentPlayerIndex ?? undefined,
-    isBettingOpen: row.isBettingOpen ?? undefined,
-  })
-  if (fromRound != null) return fromRound
-  /** Closed betting / sentinel index — never resurrect a stale wall `actingSeatIndex`. */
-  if (row.isBettingOpen === false || row.currentPlayerIndex === -1) return null
-  const legacy = row.actingSeatIndex
-  if (
-    typeof legacy === 'number' &&
-    Number.isFinite(legacy) &&
-    legacy >= 0 &&
-    legacy < row.seated
-  ) {
-    return Math.floor(legacy)
-  }
-  return null
-}
-
-/** Betting phase between streets — no actor; corner shows All bets are in!. */
-function venueTileBettingPausedCenter(row: DisplayVenueTileSnapshot): boolean {
-  const ph = String(row.phase ?? '').trim().toLowerCase()
-  if (ph !== 'betting' || row.seated < 2) return false
-  if (venueTileActingSeat(row) != null) return false
-  return row.isBettingOpen === false || row.currentPlayerIndex === -1
+  return venueTileActingSeatIndex(row)
 }
 
 function mosaicPhaseLabel(row: DisplayVenueTileSnapshot): string {
-  if (venueTileBettingPausedCenter(row)) return 'All bets are in!'
+  const ph = String(row.phase ?? '').trim().toLowerCase()
+  if (ph === 'betting' && row.seated >= 2 && isVenueTileWageringPaused(row)) {
+    return displayBettingPhaseLabel({
+      isBettingOpen: row.isBettingOpen ?? undefined,
+      currentPlayerIndex: row.currentPlayerIndex ?? undefined,
+      bettingRound: row.bettingRound ?? undefined,
+      communityCards:
+        row.communityDigits != null && row.communityDigits.length > 0
+          ? row.communityDigits.map((d) => ({ digit: d }))
+          : undefined,
+    })
+  }
   return phaseLabel(row.phase)
 }
 
 function mosaicPhaseAccent(row: DisplayVenueTileSnapshot): string {
-  if (venueTileBettingPausedCenter(row)) return 'text-emerald-100 ring-1 ring-emerald-400/45'
+  if (isVenueTileWageringPaused(row) && row.seated >= 2)
+    return 'text-emerald-100 ring-1 ring-emerald-400/45'
   return phaseAccent(row.phase)
 }
 
 /** Corner phase pill: paused betting uses sentence case and may wrap — other phases stay compact uppercase. */
 function mosaicPhaseCornerTypography(row: DisplayVenueTileSnapshot): string {
-  if (venueTileBettingPausedCenter(row))
+  if (isVenueTileWageringPaused(row) && row.seated >= 2)
     return 'font-bold leading-snug normal-case whitespace-normal hyphens-none'
   return 'font-bold uppercase leading-tight truncate'
 }
