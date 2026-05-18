@@ -1963,39 +1963,29 @@ function DisplayTableLive({
 
       {/* Showdown Overlay */}
       {displayGameState.phase === 'showdown' && (
-        <div className={`${dockCls} inset-0 z-[60] flex items-center justify-center`}>
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <motion.div className={`${dockCls} inset-0 z-[60] flex items-center justify-center p-3 sm:p-6`}>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(20,80,45,0.35),rgba(0,0,0,0.88)_70%)] backdrop-blur-md" />
           <motion.div
-            className="relative bg-black/90 border-2 border-yellow-500/60 rounded-2xl shadow-2xl max-w-4xl w-[90%] p-10 text-lg text-white"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="relative w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl"
+            initial={{ opacity: 0, scale: 0.92, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 22 }}
           >
-            {/* Winner marquee banner */}
-            {showdownWinnerName && (
-              <div className="relative overflow-hidden rounded-xl bg-yellow-500/10 border border-yellow-400/30 mb-5">
-                <motion.div
-                  initial={{ x: '100%' }}
-                  animate={{ x: '-100%' }}
-                  transition={{ duration: 6, ease: 'easeInOut' }}
-                  className="py-3 whitespace-nowrap text-xl md:text-2xl"
-                >
-                  <span className="mx-6 text-xl text-yellow-300 font-extrabold tracking-wide md:text-2xl">
-                    🏆 WINNER: {showdownWinnerName}
-                  </span>
-                  <span className="mx-6 text-xl text-yellow-300 font-extrabold tracking-wide md:text-2xl">
-                    🏆 WINNER: {showdownWinnerName}
-                  </span>
-                </motion.div>
-              </div>
-            )}
-
-            <ShowdownResultsPanel
+            <div
+              className="rounded-[1.75rem] p-2 sm:rounded-[2rem] sm:p-2.5"
+              style={{
+                background: 'linear-gradient(180deg, #6b4423 0%, #4a2f18 40%, #2d1a0c 100%)',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,220,160,0.15)',
+              }}
+            >
+              <ShowdownResultsPanel
               correctAnswer={displayGameState.round.question?.answer}
               rows={showdownRowsFromGameState(displayGameState)}
               winnerName={showdownWinnerName || undefined}
             />
+            </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
 
       {/* Chips flying layer (pot -> winner) */}

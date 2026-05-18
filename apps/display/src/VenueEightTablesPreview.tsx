@@ -904,10 +904,13 @@ function VenueMosaicTableCard({ row, isSpotlightThumb }: VenueMosaicTableCardPro
         </dl>
 
         {inShowdown && showdownRows.length > 0 ? (
-          <div className="rounded-lg border border-yellow-500/45 bg-yellow-950/25 px-2 py-2 sm:px-2.5">
-            <p className="mb-1.5 text-center text-[0.625rem] font-bold uppercase tracking-wider text-yellow-200/90 sm:text-[0.6875rem]">
-              Showdown
-            </p>
+          <div
+            className="rounded-lg p-1"
+            style={{
+              background: 'linear-gradient(180deg, #5c3d1e 0%, #3d2810 100%)',
+              boxShadow: 'inset 0 1px 0 rgba(255,220,160,0.1)',
+            }}
+          >
             <ShowdownResultsPanel
               compact
               correctAnswer={showdownAnswer}
