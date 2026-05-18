@@ -25,11 +25,7 @@ import {
   shouldUseVenueShowdownWall,
   VENUE_WALL_SEAT_SLOTS,
 } from './venueWallModel'
-import {
-  capsuleBorderRadiusCss,
-  capsuleBoundaryHitPx,
-  seatDotCenterOnRailPct,
-} from './tableRimGeometry'
+import { capsuleBorderRadiusCss, capsuleBoundaryHitPx } from './tableRimGeometry'
 
 const VENUE_SEAT_SLOTS = VENUE_WALL_SEAT_SLOTS
 
@@ -179,8 +175,9 @@ function seatBettingActionPillClass(action: SeatBettingAction): string {
 const VENUE_RING_ASPECT_MD = 8 / 5
 const VENUE_RING_ASPECT_LG = 14 / 8
 
-/** Inward from outer rail edge toward felt (1 = on outer boundary). */
-const MOSAIC_SEAT_DOT_RADIAL_SCALE = 0.96
+/** Authoring size for mosaic seat layout before ResizeObserver (16.5rem × 8.75rem @ 16px). */
+const MOSAIC_RING_FALLBACK_W_PX = 264
+const MOSAIC_RING_FALLBACK_H_PX = 140
 
 /** Amber rail — mosaic uses full wrapper; full mode insets slightly. */
 const VENUE_RAIL_INSET_TOP = 0.02
@@ -265,6 +262,49 @@ function venueSeatRimPct(
 /** Polar angle θ for seat i (matches {@link venueSeatRimPct}). */
 function seatThetaRad(seatIndex: number): number {
   return (seatIndex / VENUE_SEAT_SLOTS) * 2 * Math.PI - Math.PI / 2
+}
+
+/**
+ * Mosaic crawl: center each seat dot on the amber rail band (midpoint between wrapper
+ * outline and felt inset). Matches the painted rail better than outer-edge capsule math.
+ */
+function mosaicSeatDotPct(
+  seatIndex: number,
+  w: number,
+  h: number
+): { leftPct: number; topPct: number } {
+  const ww = w > 0 ? w : MOSAIC_RING_FALLBACK_W_PX
+  const hh = h > 0 ? h : MOSAIC_RING_FALLBACK_H_PX
+  const θ = seatThetaRad(seatIndex)
+  const dx = Math.cos(θ)
+  const dy = Math.sin(θ)
+  const outerHit = capsuleBoundaryHitPx(ww / 2, hh / 2, ww / 2, hh / 2, dx, dy)
+  if (!outerHit) return { leftPct: 50, topPct: 50 }
+
+  const felt = venueFeltBoundsFrac()
+  const innerHit = capsuleBoundaryHitPx(
+    felt.cx * ww,
+    felt.cy * hh,
+    felt.halfW * ww,
+    felt.halfH * hh,
+    dx,
+    dy
+  )
+  if (!innerHit) {
+    return {
+      leftPct: (outerHit.x / ww) * 100,
+      topPct: (outerHit.y / hh) * 100,
+    }
+  }
+
+  const mx = (outerHit.x + innerHit.x) / 2
+  const my = (outerHit.y + innerHit.y) / 2
+  const nLen = Math.hypot(outerHit.nx, outerHit.ny) || 1
+  const ux = outerHit.nx / nLen
+  const uy = outerHit.ny / nLen
+  const x = mx + ux * 1.25
+  const y = my + uy * 1.25
+  return { leftPct: (x / ww) * 100, topPct: (y / hh) * 100 }
 }
 
 /** Nudge pole labels toward beltline (top downward, bottom upward); east/west stay put. */
@@ -603,8 +643,6 @@ function SeatRingWithLabels({
         )
       : railBorderRadius
 
-  const mosaicDotRadiusPx = isMosaic ? 9.6 : 0
-
   return (
     <div ref={ringElRef} className={`relative overflow-visible ${wrap}`}>
       <div
@@ -647,20 +685,9 @@ function SeatRingWithLabels({
         const filled = i < seatedCount
         if (isMosaic && !filled) return null
 
-        const seatRim =
-          isMosaic && railW > 0 && railH > 0
-            ? (() => {
-                const local = seatDotCenterOnRailPct(
-                  i,
-                  VENUE_SEAT_SLOTS,
-                  railW,
-                  railH,
-                  mosaicDotRadiusPx,
-                  MOSAIC_SEAT_DOT_RADIAL_SCALE
-                )
-                return { leftPct: local.leftPct, topPct: local.topPct }
-              })()
-            : venueSeatRimPct(i, 1, rimW, rimH)
+        const seatRim = isMosaic
+          ? mosaicSeatDotPct(i, rimW, rimH)
+          : venueSeatRimPct(i, 1, rimW, rimH)
         const chipPos = venueSeatRimPct(i, chipInnerScale, rimW, rimH, 'felt')
         const anchored = labelAnchorsPct[i]
         const fb = fallbackLabelEllipseScale(size, Boolean(feltSeatStacks && size === 'lg'))
@@ -706,7 +733,7 @@ function SeatRingWithLabels({
           return filled ? 'border-emerald-300/70 bg-black/85' : 'border-white/20 bg-black/35'
         })()
         const actingSoftPulse = isMosaic
-          ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden'
+          ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-[1.35rem] w-[1.35rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden'
           : size === 'lg'
             ? 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-[4.5rem] w-[4.5rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/12 motion-reduce:hidden sm:h-[5rem] sm:w-[5rem]'
             : 'pointer-events-none absolute left-1/2 top-1/2 z-0 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400/10 motion-reduce:hidden sm:h-[3.75rem] sm:w-[3.75rem]'
@@ -742,7 +769,7 @@ function SeatRingWithLabels({
                 }
               >
                 {isMosaic && filled && mosaicInitials ? (
-                  <span className="text-[0.5rem] font-black leading-none tracking-tight text-amber-100/95">
+                  <span className="block w-full min-w-0 px-0.5 text-center text-[0.5625rem] font-black leading-none tracking-tighter text-amber-50">
                     {mosaicInitials}
                   </span>
                 ) : null}
