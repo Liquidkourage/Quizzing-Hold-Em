@@ -48,6 +48,12 @@ const HOLE_MIDJOIN_REVEAL_MS = 800
 const HOLE_DEAL_FLIGHT_X_NUDGE_PX = -1
 const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -5
 const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.08
+/** Community flight-only nudge (plane px) after DOM measure. */
+const COMMUNITY_DEAL_FLIGHT_X_NUDGE_PX = -2
+const COMMUNITY_DEAL_FLIGHT_Y_NUDGE_PX = 3
+const COMMUNITY_CARD_SLOT_W_PX = 64
+const COMMUNITY_CARD_SLOT_H_PX = 96
+const COMMUNITY_CARD_SLOT_SCALE = 1.5
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
   const rowHalfW = HOLE_HAND_ROW_W_PX / 2
@@ -88,13 +94,21 @@ function holeCardVisualTopLeftInPlanePx(
   }
 }
 
-type HoleCardPlaneEndpoint = { x: number; y: number; scale: number }
+type CardPlaneEndpoint = { x: number; y: number; scale: number }
+
+function tuneCommunityDealFlightEndpoint(endpoint: CardPlaneEndpoint): CardPlaneEndpoint {
+  return {
+    x: endpoint.x + COMMUNITY_DEAL_FLIGHT_X_NUDGE_PX,
+    y: endpoint.y + COMMUNITY_DEAL_FLIGHT_Y_NUDGE_PX,
+    scale: endpoint.scale,
+  }
+}
 
 /** Map screen-space rect into the felt layer’s authoring coordinates (pre–outer-scale `clientWidth`). */
 function holeCardRectToPlaneEndpoint(
   planeRoot: HTMLElement,
   cardRect: DOMRect
-): HoleCardPlaneEndpoint | null {
+): CardPlaneEndpoint | null {
   const planeRect = planeRoot.getBoundingClientRect()
   if (planeRect.width < 1 || planeRect.height < 1) return null
   const planeScaleX = planeRoot.clientWidth / planeRect.width
@@ -110,7 +124,7 @@ function holeCardRectToPlaneEndpoint(
 }
 
 /** Nudge deal flights only — static anchors stay on measured seat slots. */
-function tuneHoleCardDealFlightEndpoint(endpoint: HoleCardPlaneEndpoint): HoleCardPlaneEndpoint {
+function tuneHoleCardDealFlightEndpoint(endpoint: CardPlaneEndpoint): CardPlaneEndpoint {
   return {
     x: endpoint.x + HOLE_DEAL_FLIGHT_X_NUDGE_PX,
     y: endpoint.y + HOLE_DEAL_FLIGHT_Y_NUDGE_PX,
@@ -453,7 +467,9 @@ function DisplayTableLive({
   /** Same subtree as dealing flights — convert anchor `getBoundingClientRect` to plane px. */
   const feltLayerRef = useRef<HTMLDivElement>(null)
   const holeCardAnchorRefs = useRef<(HTMLDivElement | null)[][]>([])
-  const holeCardDealEndpointsRef = useRef<Map<string, HoleCardPlaneEndpoint>>(new Map())
+  const holeCardDealEndpointsRef = useRef<Map<string, CardPlaneEndpoint>>(new Map())
+  const communityCardAnchorRefs = useRef<(HTMLDivElement | null)[]>([])
+  const communityCardDealEndpointsRef = useRef<Map<number, CardPlaneEndpoint>>(new Map())
   const pendingHoleDealQueueRef = useRef<
     Array<{ id: string; playerIndex: number; cardIndex: number; digit: number }> | null
   >(null)
@@ -800,9 +816,29 @@ function DisplayTableLive({
     []
   )
 
+  const registerCommunityCardAnchor = useCallback((cardIndex: number, el: HTMLDivElement | null) => {
+    const row = communityCardAnchorRefs.current
+    while (row.length <= cardIndex) row.push(null)
+    row[cardIndex] = el
+  }, [])
+
+  const refreshCommunityDealEndpoints = useCallback((cardCount: number) => {
+    const root = feltLayerRef.current
+    const next = new Map<number, CardPlaneEndpoint>()
+    if (root) {
+      for (let i = 0; i < cardCount; i++) {
+        const anchor = communityCardAnchorRefs.current[i]
+        if (!anchor) continue
+        const pt = holeCardRectToPlaneEndpoint(root, anchor.getBoundingClientRect())
+        if (pt) next.set(i, pt)
+      }
+    }
+    communityCardDealEndpointsRef.current = next
+  }, [])
+
   const refreshHoleCardDealEndpoints = useCallback((playerCount: number) => {
     const root = feltLayerRef.current
-    const next = new Map<string, HoleCardPlaneEndpoint>()
+    const next = new Map<string, CardPlaneEndpoint>()
     if (root) {
       for (let p = 0; p < playerCount; p++) {
         for (let c = 0; c < 2; c++) {
@@ -900,6 +936,23 @@ function DisplayTableLive({
 
     return () => window.clearTimeout(endTimer)
   }, [isDealing, holeDealLayoutEpoch, refreshHoleCardDealEndpoints])
+
+  useLayoutEffect(() => {
+    if (!isDealingCommunity) return
+    const cardCount = Math.max(
+      sharedCommunityCards.length,
+      displayGameState.round.communityCards.length,
+      5
+    )
+    refreshCommunityDealEndpoints(cardCount)
+    const id = requestAnimationFrame(() => refreshCommunityDealEndpoints(cardCount))
+    return () => window.cancelAnimationFrame(id)
+  }, [
+    isDealingCommunity,
+    sharedCommunityCards.length,
+    displayGameState.round.communityCards.length,
+    refreshCommunityDealEndpoints,
+  ])
 
   // Function to trigger community card dealing animation
   const triggerCommunityDealingAnimation = useCallback(() => {
@@ -1495,26 +1548,25 @@ function DisplayTableLive({
                 </motion.div>
                 )}
                 {dealingCommunityCards.map((dealingCard) => {
-                  // Calculate exact endpoint for community card positioning (relative to table center)
-                  const calculateCommunityCardEndpoint = (cardIndex: number) => {
-                    // Community cards are positioned at the center of the measured game plane (original layout used viewport).
-                    const tableCenterX = (fdW / 2) + (fdW * 0.02) - 18
-                    const tableCenterY = (fdH / 2) + (fdH * 0.05) - fdH * 0.12 + 3 + displayTableLiftPx
-                    
-                                      // Calculate position for each community card in a horizontal row
-                  const cardWidth = 64 // small card width (64px)
-                  const cardSpacing = 8 // gap between cards
-                  const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
-                  // Move left so that the 3rd card (index 2) is centered - smaller offset
-                  const startX = tableCenterX - (totalWidth / 2) - ((cardWidth + cardSpacing) * 0.75)
-                  
-                  const cardX = startX + (cardIndex * (cardWidth + cardSpacing)) + (cardWidth / 2)
-                    const cardY = tableCenterY - 48 // Move up by same amount as static cards (-translate-y-12 = -48px)
-                    
-                    return { x: cardX, y: cardY, scale: 1.5 } // larger scale for community cards (more dramatic growth from deck)
-                  }
-                  
-                  const { x: finalX, y: finalY, scale: finalScale } = calculateCommunityCardEndpoint(dealingCard.cardIndex)
+                  const measured = communityCardDealEndpointsRef.current.get(dealingCard.cardIndex)
+                  const rawEndpoint =
+                    measured ??
+                    (() => {
+                      const cardWidth = COMMUNITY_CARD_SLOT_W_PX
+                      const cardSpacing = 8
+                      const totalWidth = 5 * cardWidth + 4 * cardSpacing
+                      const startX = -(totalWidth / 2) - (cardWidth + cardSpacing) * 0.75
+                      const cardX = startX + dealingCard.cardIndex * (cardWidth + cardSpacing) + cardWidth / 2
+                      const left = cardX - (cardWidth * COMMUNITY_CARD_SLOT_SCALE) / 2 + 42
+                      const top = -(COMMUNITY_CARD_SLOT_H_PX * COMMUNITY_CARD_SLOT_SCALE) / 2 + 43
+                      return {
+                        x: fdW / 2 + left,
+                        y: fdH / 2 - 48 + displayTableLiftPx + top,
+                        scale: COMMUNITY_CARD_SLOT_SCALE,
+                      }
+                    })()
+                  const { x: finalX, y: finalY, scale: finalScale } =
+                    tuneCommunityDealFlightEndpoint(rawEndpoint)
 
                   const deckCenterX = fdW / 2 - 50
                   const deckCenterY = fdH / 2 + 100 + displayTableLiftPx - fdH * 0.1
@@ -1826,39 +1878,48 @@ function DisplayTableLive({
               </div>
 
               {/* Community Cards - positioned inside table at center */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12">
-                {/* Show community when state has cards — not only after a deal animation on this client. */}
-                {(() => {
-                  const cardsToShow =
-                    displayGameState.round.communityCards.length > 0
-                      ? displayGameState.round.communityCards
-                      : sharedCommunityCards
-                  const showCommunity =
-                    !isDealingCommunity &&
-                    cardsToShow.length > 0 &&
-                    (hasDealtCommunityCards || sharedCommunityCards.length > 0)
+              {(() => {
+                const cardsToShow =
+                  displayGameState.round.communityCards.length > 0
+                    ? displayGameState.round.communityCards
+                    : sharedCommunityCards
+                const layoutCards =
+                  cardsToShow.length > 0
+                    ? cardsToShow
+                    : isDealingCommunity
+                      ? sharedCommunityCards
+                      : []
+                const showCommunityStatic =
+                  !isDealingCommunity &&
+                  cardsToShow.length > 0 &&
+                  (hasDealtCommunityCards || sharedCommunityCards.length > 0)
 
-                  return showCommunity ? (
-                    cardsToShow.map((card, i) => {
-                      // Use relative positioning within the table
-                      const cardWidth = 64 // small card width (64px)
-                      const cardSpacing = 8 // gap between cards
-                      const totalWidth = (5 * cardWidth) + (4 * cardSpacing) // 5 cards total
-                      // Move left so that the 3rd card (index 2) is centered - smaller offset
-                      const startX = -(totalWidth / 2) - ((cardWidth + cardSpacing) * 0.75) // Start from center and go left by half total width plus smaller offset for 3rd card
-                      
-                      const cardX = startX + (i * (cardWidth + cardSpacing)) + (cardWidth / 2)
-                      const cardY = 0 // Center vertically
-                    
+                if (layoutCards.length === 0) return null
+
+                const cardWidth = COMMUNITY_CARD_SLOT_W_PX
+                const cardSpacing = 8
+                const totalWidth = 5 * cardWidth + 4 * cardSpacing
+                const startX = -(totalWidth / 2) - (cardWidth + cardSpacing) * 0.75
+
+                return (
+                  <div
+                    className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -translate-y-12 ${
+                      showCommunityStatic ? '' : 'pointer-events-none opacity-0'
+                    }`}
+                    aria-hidden={!showCommunityStatic}
+                  >
+                    {layoutCards.map((card, i) => {
+                      const cardX = startX + i * (cardWidth + cardSpacing) + cardWidth / 2
                       return (
-                        <div
+                        <motion.div
                           key={i}
+                          ref={(el) => registerCommunityCardAnchor(i, el)}
                           className="absolute"
                           style={{
-                            left: cardX - (64 * 1.5 / 2) + 42, // Offset by half the scaled card width + even larger right offset (1 pixel more)
-                            top: cardY - (96 * 1.5 / 2) + 43, // Offset by half the scaled card height + smaller down offset (1 pixel more)
-                            transform: 'scale(1.5)', // Scale to match animation
-                            transformOrigin: '0 0' // Scale from top-left corner
+                            left: cardX - (cardWidth * COMMUNITY_CARD_SLOT_SCALE) / 2 + 42,
+                            top: -(COMMUNITY_CARD_SLOT_H_PX * COMMUNITY_CARD_SLOT_SCALE) / 2 + 43,
+                            transform: `scale(${COMMUNITY_CARD_SLOT_SCALE})`,
+                            transformOrigin: '0 0',
                           }}
                         >
                           <NumericPlayingCard
@@ -1868,12 +1929,12 @@ function DisplayTableLive({
                             neonVariant="matrix"
                             size="small"
                           />
-                        </div>
+                        </motion.div>
                       )
-                    })
-                  ) : null
-                })()}
-              </div>
+                    })}
+                  </div>
+                )
+              })()}
 
 
             </div>

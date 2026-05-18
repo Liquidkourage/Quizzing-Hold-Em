@@ -36,6 +36,7 @@ import {
   displayBlindSeatIndices,
   chipsRequiredToCall,
   pctOfStackToCall,
+  normalizeBettingTurn,
 } from '@qhe/core'
 import type { Question, GameState } from '@qhe/core'
 import type { 
@@ -1570,6 +1571,23 @@ function drainCpuVpSessionChain(sessionKey: string) {
   if (!gs || !tableIsCpuOnly(gs)) {
     cpuVpDrainPending.delete(sessionKey)
     return
+  }
+
+  if (steps === 0 && gs.phase === 'betting' && gs.round.isBettingOpen === true) {
+    const normalized = normalizeBettingTurn(gs)
+    if (normalized !== gs) {
+      rooms.set(sessionKey, normalized)
+      emitVenueTableState(sessionKey, normalized)
+      setTimeout(() => drainCpuVpSessionChain(sessionKey), 0)
+      return
+    }
+    const flushed = runVirtualPlayerSimulation(gs)
+    if (flushed !== gs) {
+      rooms.set(sessionKey, flushed)
+      emitVenueTableState(sessionKey, flushed)
+      setTimeout(() => drainCpuVpSessionChain(sessionKey), cpuVpDelayMsBetweenActions())
+      return
+    }
   }
 
   const hitChunkCap = steps === CPU_VP_STEPS_PER_CHUNK

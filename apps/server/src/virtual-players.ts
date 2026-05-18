@@ -11,6 +11,7 @@ import {
   playerAllIn,
   nearestLegalAnswerToTarget,
   rehearsalSeatDisplayName,
+  normalizeBettingTurn,
 } from '@qhe/core'
 
 /** Synthetic seats — never collide with Socket.IO ids. */
@@ -117,6 +118,8 @@ function nearestGuessFromDigits(digits: number[], answer: number): number {
 /** One deterministic step so real players can join between bot actions after each broadcast. */
 function stepVirtualSimulation(state: GameState): GameState {
   if (!state.players.some(p => isVirtualPlayerId(p.id))) return state
+
+  state = normalizeBettingTurn(state)
 
   const virtualFirstNeedingAnswer = state.players.find(
     p =>

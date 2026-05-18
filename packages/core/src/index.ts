@@ -571,6 +571,41 @@ function isBettingComplete(state: GameState): boolean {
   return true;
 }
 
+/**
+ * When the action seat is folded, all-in, or off the roster, advance or close wagering so
+ * CPU drains and venue lockstep do not stall with an open clock on a dead seat.
+ */
+export function normalizeBettingTurn(state: GameState): GameState {
+  if (state.phase !== 'betting' || state.round.isBettingOpen !== true) return state;
+
+  if (isBettingComplete(state)) {
+    return {
+      ...state,
+      round: { ...state.round, isBettingOpen: false, currentPlayerIndex: -1 },
+    };
+  }
+
+  const rawIdx = state.round.currentPlayerIndex;
+  const idx = typeof rawIdx === 'number' && Number.isFinite(rawIdx) ? Math.floor(rawIdx) : -1;
+  if (idx >= 0 && idx < state.players.length) {
+    const p = state.players[idx]!;
+    if (inChipContest(p) && !p.hasFolded && !p.isAllIn) return state;
+  }
+
+  const probeIdx = idx >= 0 ? idx : 0;
+  const next = advanceToNextPlayer({
+    ...state,
+    round: { ...state.round, currentPlayerIndex: probeIdx },
+  });
+  if (next < 0) {
+    return {
+      ...state,
+      round: { ...state.round, isBettingOpen: false, currentPlayerIndex: -1 },
+    };
+  }
+  return { ...state, round: { ...state.round, currentPlayerIndex: next } };
+}
+
 export function playerCheck(state: GameState, playerId: string): GameState {
   if (state.phase !== 'betting' || !state.round.isBettingOpen) return state;
   const seat = getSeatIndexByPlayerId(state, playerId);
