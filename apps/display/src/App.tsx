@@ -24,6 +24,7 @@ import { heroSeatBlindMarkerPills } from './heroBlindMarkers'
 import seatChipStackImg from './assets/seat-chip-stack.png'
 import ShowdownResultsPanel from './ShowdownResultsPanel'
 import { showdownRowsFromGameState } from './showdownDisplay'
+import { capsuleBorderRadiusCss, seatDotCenterOnRailPx } from './tableRimGeometry'
 
 /** Authoring viewport (logical px). Embedded venue heroes scale uniformly to fit the measured game plane; fullscreen uses live `gw/gh`. */
 const EMBEDDED_FELT_LAYOUT_W = 1280
@@ -169,7 +170,6 @@ const HERO_RAIL_H_PX = HERO_RAIL_BASE_H_PX
 const HERO_RAIL_SHADOW_W_PX = Math.round(842 * HERO_TABLE_WIDTH_SCALE)
 const HERO_RAIL_SHADOW_H_PX = 637
 
-const HERO_RAIL_BORDER_PX = 8
 const HERO_CUPHOLDER_SIZE_PX = 32
 const HERO_CUPHOLDER_HALF_PX = HERO_CUPHOLDER_SIZE_PX / 2
 
@@ -177,27 +177,32 @@ function heroRailCenterPx() {
   return { cx: HERO_RAIL_W_PX / 2, cy: HERO_RAIL_H_PX / 2 }
 }
 
-function heroCupholderOrbitRadiiPx() {
-  return {
-    rx: HERO_RAIL_W_PX / 2 - HERO_RAIL_BORDER_PX - HERO_CUPHOLDER_HALF_PX,
-    ry: HERO_RAIL_H_PX / 2 - HERO_RAIL_BORDER_PX - HERO_CUPHOLDER_HALF_PX,
-  }
-}
-
-/** Capsule rail — flat top/bottom on the elongated hero felt (matches venue mosaic). */
 function heroRailBorderRadiusCss(): string {
-  const aspect = HERO_RAIL_W_PX / HERO_RAIL_H_PX
-  const rxPct = Math.min(50, 50 / aspect)
-  return `${rxPct.toFixed(2)}% / 50%`
+  return capsuleBorderRadiusCss(HERO_RAIL_W_PX, HERO_RAIL_H_PX)
 }
 
-/**
- * Cupholder offsets from rail center — ellipse matching the rail capsule outline.
- */
+/** Cupholder center in rail-local px, then as offset from rail center (for HUD orbit). */
 function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: number } {
-  const angle = (index / total) * 2 * Math.PI - Math.PI / 2
-  const { rx, ry } = heroCupholderOrbitRadiiPx()
-  return { ox: rx * Math.cos(angle), oy: ry * Math.sin(angle) }
+  const pt = seatDotCenterOnRailPx(
+    index,
+    total,
+    HERO_RAIL_W_PX,
+    HERO_RAIL_H_PX,
+    HERO_CUPHOLDER_HALF_PX
+  )
+  const c = heroRailCenterPx()
+  return { ox: pt.x - c.cx, oy: pt.y - c.cy }
+}
+
+function heroSeatCupholderPx(index: number, total: number): { leftPx: number; topPx: number } {
+  const pt = seatDotCenterOnRailPx(
+    index,
+    total,
+    HERO_RAIL_W_PX,
+    HERO_RAIL_H_PX,
+    HERO_CUPHOLDER_HALF_PX
+  )
+  return { leftPx: pt.x, topPx: pt.y }
 }
 
 /** Visual center-ish under pot / community arc (px, rail-local coords). */
@@ -209,15 +214,6 @@ const HERO_TABLE_POT_ANCHOR = {
     return Math.round(heroRailCenterPx().cy + 5)
   },
 } as const
-const HERO_CUPHOLDER_ORIGIN = {
-  get left() {
-    return heroRailCenterPx().cx
-  },
-  get top() {
-    return heroRailCenterPx().cy
-  },
-} as const
-
 function heroFeltPointTowardPot(
   rimLeftPx: number,
   rimTopPx: number,
@@ -1920,33 +1916,33 @@ function DisplayTableLive({
 
               {/* Cup holders centered on the middle rail stripe - one per player */}
               {displayGameState.players.map((_, index) => {
-                const { ox: x, oy: y } = heroSeatCupOffsets(index, displayGameState.players.length)
+                const { leftPx, topPx } = heroSeatCupholderPx(
+                  index,
+                  displayGameState.players.length
+                )
                 const actingHere = heroBettingHud.acting === index && heroBettingHud.open
                 return (
-                  <div 
+                  <div
                     key={`cupholder-${index}`}
                     className={
                       actingHere
-                        ? 'absolute z-[125] bg-amber-800 rounded-full border-2 border-cyan-300 ring-2 ring-cyan-400/70 shadow-[0_0_16px_rgba(34,211,238,0.45)] transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center'
-                        : 'absolute z-[120] bg-amber-800 rounded-full border-2 border-amber-600 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center'
+                        ? 'absolute z-[125] bg-amber-800 rounded-full border-2 border-cyan-300 ring-2 ring-cyan-400/70 shadow-[0_0_16px_rgba(34,211,238,0.45)] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center'
+                        : 'absolute z-[120] bg-amber-800 rounded-full border-2 border-amber-600 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center'
                     }
-                    style={{ 
-                      left: `${HERO_CUPHOLDER_ORIGIN.left + x}px`, 
-                      top: `${HERO_CUPHOLDER_ORIGIN.top + y}px`,
-                      width: '32px',
-                      height: '32px'
+                    style={{
+                      left: `${leftPx}px`,
+                      top: `${topPx}px`,
+                      width: `${HERO_CUPHOLDER_SIZE_PX}px`,
+                      height: `${HERO_CUPHOLDER_SIZE_PX}px`,
                     }}
-                  >
-                  </div>
+                  />
                 )
               })}
 
               {/* Seat assets on felt — blinds rail-tight, stacks deeper inward, tangentially split */}
               {displayGameState.players.map((player, index) => {
                 const total = displayGameState.players.length
-                const { ox, oy } = heroSeatCupOffsets(index, total)
-                const rimLeft = HERO_CUPHOLDER_ORIGIN.left + ox
-                const rimTop = HERO_CUPHOLDER_ORIGIN.top + oy
+                const { leftPx: rimLeft, topPx: rimTop } = heroSeatCupholderPx(index, total)
                 const { blindPx, chipPx } = heroFeltSeatAssetPositions(rimLeft, rimTop, index)
                 const blindPills = heroSeatBlindMarkerPills(index, blindSeatMarkers, 'onFelt')
                 const dimStack = player.hasFolded === true

@@ -25,6 +25,11 @@ import {
   shouldUseVenueShowdownWall,
   VENUE_WALL_SEAT_SLOTS,
 } from './venueWallModel'
+import {
+  capsuleBorderRadiusCss,
+  capsuleBoundaryHitPx,
+  seatDotCenterOnRailPct,
+} from './tableRimGeometry'
 
 const VENUE_SEAT_SLOTS = VENUE_WALL_SEAT_SLOTS
 
@@ -171,14 +176,15 @@ function seatBettingActionPillClass(action: SeatBettingAction): string {
 }
 
 /** Mini-table wrapper aspect (width / height). */
-const VENUE_RING_ASPECT_MD = 13 / 8
+const VENUE_RING_ASPECT_MD = 11 / 5
 const VENUE_RING_ASPECT_LG = 14 / 8
 
-/** Amber rail — flat top/bottom capsule just inside the ring wrapper. */
+/** Amber rail — mosaic uses full wrapper; full mode insets slightly. */
 const VENUE_RAIL_INSET_TOP = 0.02
 const VENUE_RAIL_INSET_RIGHT = 0.02
 const VENUE_RAIL_INSET_BOTTOM = 0.02
 const VENUE_RAIL_INSET_LEFT = 0.02
+const VENUE_RAIL_INSET_MOSAIC = 0
 
 /** Green felt inset inside the rail. */
 const VENUE_FELT_INSET_TOP = 0.1
@@ -210,84 +216,6 @@ function venueFeltBoundsFrac() {
     innerW,
     innerH,
   }
-}
-
-/** Capsule border-radius so wide boxes get flat top/bottom rails (not a tall ellipse). */
-function venueCapsuleBorderRadiusCss(
-  innerWidthFrac: number,
-  innerHeightFrac: number,
-  parentAspect: number
-): string {
-  const boxAspect = (innerWidthFrac * parentAspect) / innerHeightFrac
-  if (boxAspect <= 1.02) return '50%'
-  const rxPct = Math.min(50, 50 / boxAspect)
-  return `${rxPct.toFixed(2)}% / 50%`
-}
-
-type CapsuleHit = { x: number; y: number; nx: number; ny: number; t: number }
-
-/** Ray ∩ horizontal stadium (flat top/bottom, semicircular ends) in pixel space. */
-function capsuleBoundaryHitPx(
-  cx: number,
-  cy: number,
-  halfW: number,
-  halfH: number,
-  dx: number,
-  dy: number
-): CapsuleHit | null {
-  const len = Math.hypot(dx, dy)
-  if (len < 1e-9) return null
-  dx /= len
-  dy /= len
-
-  let best: CapsuleHit | null = null
-  const consider = (t: number, nx: number, ny: number) => {
-    if (!(t > 1e-6)) return
-    const nLen = Math.hypot(nx, ny) || 1
-    const hit: CapsuleHit = {
-      x: cx + t * dx,
-      y: cy + t * dy,
-      nx: nx / nLen,
-      ny: ny / nLen,
-      t,
-    }
-    if (!best || t < best.t) best = hit
-  }
-
-  const r = halfH
-  const flat = halfW - r
-  if (flat <= 0) {
-    consider(r, dx, dy)
-    return best
-  }
-
-  if (dy < -1e-9) {
-    const t = (-halfH) / dy
-    const x = cx + t * dx
-    if (x >= cx - flat - 0.5 && x <= cx + flat + 0.5) consider(t, 0, -1)
-  }
-  if (dy > 1e-9) {
-    const t = halfH / dy
-    const x = cx + t * dx
-    if (x >= cx - flat - 0.5 && x <= cx + flat + 0.5) consider(t, 0, 1)
-  }
-
-  for (const sign of [-1, 1] as const) {
-    const acx = cx + sign * flat
-    const aox = cx - acx
-    const B = 2 * aox * dx
-    const C = aox * aox - r * r
-    const disc = B * B - 4 * C
-    if (disc < 0) continue
-    const sqrtD = Math.sqrt(disc)
-    for (const t of [(-B - sqrtD) / 2, (-B + sqrtD) / 2]) {
-      const x = cx + t * dx
-      const y = cy + t * dy
-      consider(t, (x - acx) / r, (y - cy) / r)
-    }
-  }
-
-  return best
 }
 
 function venueSeatRimPxAndOutwardNormal(
@@ -590,34 +518,27 @@ function SeatRingWithLabels({
   const prefersReducedMotion = usePrefersReducedMotion()
   const isMosaic = ringMode === 'mosaic'
   const ringAspect = size === 'lg' ? VENUE_RING_ASPECT_LG : VENUE_RING_ASPECT_MD
-  const railBounds = venueRailBoundsFrac()
+  const railInsetTop = isMosaic ? VENUE_RAIL_INSET_MOSAIC : VENUE_RAIL_INSET_TOP
+  const railInsetRight = isMosaic ? VENUE_RAIL_INSET_MOSAIC : VENUE_RAIL_INSET_RIGHT
+  const railInsetBottom = isMosaic ? VENUE_RAIL_INSET_MOSAIC : VENUE_RAIL_INSET_BOTTOM
+  const railInsetLeft = isMosaic ? VENUE_RAIL_INSET_MOSAIC : VENUE_RAIL_INSET_LEFT
   const feltBounds = venueFeltBoundsFrac()
-  const railBorderRadius = venueCapsuleBorderRadiusCss(
-    railBounds.innerW,
-    railBounds.innerH,
-    ringAspect
-  )
-  const feltBorderRadius = venueCapsuleBorderRadiusCss(
-    feltBounds.innerW,
-    feltBounds.innerH,
-    ringAspect
-  )
   /** Spotlight hero — wide capsule; mosaic tiles use smaller md ring below. */
   const lgRing =
     'mx-auto aspect-[14/8] h-auto max-h-[min(min(68svh,57dvh),36rem)] w-[min(100%,calc(100dvw-2.5rem),68rem)] max-w-full shrink-0'
-  /** Mosaic crawl tiles — compact stadium table. */
+  /** Mosaic crawl — wide flat-top capsule, fixed height. */
   const mdRing = isMosaic
-    ? 'mx-auto aspect-[13/8] h-auto w-full max-w-full max-h-[7rem] min-h-[4.75rem] shrink-0'
+    ? 'relative mx-auto aspect-[11/5] h-[9.5rem] w-full max-w-full shrink-0'
     : 'mx-auto aspect-[13/8] h-auto w-full max-w-[min(100%,22rem)] shrink-0 sm:max-w-[min(100%,23rem)]'
   const wrap = size === 'lg' ? lgRing : mdRing
   const dot = isMosaic
-    ? 'h-5 w-5'
+    ? 'h-[1.35rem] w-[1.35rem] border-[1.5px]'
     : size === 'lg'
       ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]'
       : 'h-7 w-7'
   /** Larger rim marker for the player on the clock — reads from the back of the room. */
   const dotActing = isMosaic
-    ? 'h-6 w-6 ring-2 ring-cyan-400/60'
+    ? 'h-[1.65rem] w-[1.65rem] border-[2px] ring-2 ring-cyan-400/70'
     : size === 'lg'
       ? 'h-[3.5rem] w-[3.5rem] sm:h-16 sm:w-16 md:h-[4.25rem] md:w-[4.25rem]'
       : 'h-10 w-10 sm:h-11 sm:w-11'
@@ -663,29 +584,26 @@ function SeatRingWithLabels({
     })
   }, [feltSeatStacks, isMosaic, ringPx.h, ringPx.w, seatNames, size])
 
-  const seatDotAnchorsPct = useMemo(() => {
-    if (isMosaic || !(ringPx.w > 0 && ringPx.h > 0)) return null
-    const rootRem =
-      typeof document !== 'undefined'
-        ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-        : 16
-    const dotR = seatDotDiameterPx(rootRem, size, false) / 2
-    const railBorderPx = size === 'lg' ? 2.5 : 2
-    const insetPx = dotR + railBorderPx * 0.5
-    return Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
-      const { rimX, rimY, ux, uy } = venueSeatRimPxAndOutwardNormal(i, ringPx.w, ringPx.h, 1)
-      return {
-        leftPct: ((rimX - ux * insetPx) / ringPx.w) * 100,
-        topPct: ((rimY - uy * insetPx) / ringPx.h) * 100,
-      }
-    })
-  }, [isMosaic, ringPx.h, ringPx.w, size])
-
   const rimW = ringPx.w
   const rimH = ringPx.h
+  const railW = rimW * (1 - railInsetLeft - railInsetRight)
+  const railH = rimH * (1 - railInsetTop - railInsetBottom)
+  const railBorderRadius =
+    railW > 0 && railH > 0
+      ? capsuleBorderRadiusCss(railW, railH)
+      : capsuleBorderRadiusCss(220 * ringAspect, 220)
+  const feltBorderRadius =
+    rimW > 0 && rimH > 0
+      ? capsuleBorderRadiusCss(
+          rimW * feltBounds.innerW,
+          rimH * feltBounds.innerH
+        )
+      : railBorderRadius
+
+  const mosaicDotRadiusPx = isMosaic ? 10.8 : 0
 
   return (
-    <div ref={ringElRef} className={`relative overflow-hidden ${wrap}`}>
+    <div ref={ringElRef} className={`relative overflow-visible ${wrap}`}>
       <div
         className={`absolute border-amber-700/90 shadow-md ${
           size === 'lg'
@@ -693,10 +611,10 @@ function SeatRingWithLabels({
             : 'border-2 bg-gradient-to-br from-amber-900 via-amber-800 to-amber-950'
         }`}
         style={{
-          top: `${VENUE_RAIL_INSET_TOP * 100}%`,
-          right: `${VENUE_RAIL_INSET_RIGHT * 100}%`,
-          bottom: `${VENUE_RAIL_INSET_BOTTOM * 100}%`,
-          left: `${VENUE_RAIL_INSET_LEFT * 100}%`,
+          top: `${railInsetTop * 100}%`,
+          right: `${railInsetRight * 100}%`,
+          bottom: `${railInsetBottom * 100}%`,
+          left: `${railInsetLeft * 100}%`,
           borderRadius: railBorderRadius,
         }}
       />
@@ -723,15 +641,32 @@ function SeatRingWithLabels({
         }}
       />
       {Array.from({ length: VENUE_SEAT_SLOTS }, (_, i) => {
+        const filled = i < seatedCount
+        if (isMosaic && !filled) return null
+
         const seatRim =
-          seatDotAnchorsPct?.[i] ??
-          venueSeatRimPct(i, isMosaic ? 1.02 : 1, rimW, rimH)
+          isMosaic && railW > 0 && railH > 0
+            ? (() => {
+                const railLeft = rimW * railInsetLeft
+                const railTop = rimH * railInsetTop
+                const local = seatDotCenterOnRailPct(
+                  i,
+                  VENUE_SEAT_SLOTS,
+                  railW,
+                  railH,
+                  mosaicDotRadiusPx
+                )
+                return {
+                  leftPct: ((railLeft + (local.leftPct / 100) * railW) / rimW) * 100,
+                  topPct: ((railTop + (local.topPct / 100) * railH) / rimH) * 100,
+                }
+              })()
+            : venueSeatRimPct(i, 1, rimW, rimH)
         const chipPos = venueSeatRimPct(i, chipInnerScale, rimW, rimH, 'felt')
         const anchored = labelAnchorsPct[i]
         const fb = fallbackLabelEllipseScale(size, Boolean(feltSeatStacks && size === 'lg'))
         const fallbackPos = venueSeatRimPct(i, fb, rimW, rimH)
         const labelPos = anchored ?? fallbackPos
-        const filled = i < seatedCount
         const raw = seatNames[i]?.trim() ?? ''
         const mosaicInitials =
           isMosaic && raw.length > 0
@@ -1030,12 +965,7 @@ function VenueMosaicTableCard({
       >
         <div className="flex shrink-0 items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/58 sm:text-xs">
-              Table
-            </div>
-            <div className="-mt-0.5 text-3xl font-black tabular-nums leading-none text-yellow-400 sm:text-4xl">
-              {tn}
-            </div>
+            <div className="text-2xl font-black tabular-nums leading-none text-yellow-400">Table {tn}</div>
           </div>
           <span
             className={`max-w-[min(9rem,46%)] shrink-0 rounded-md px-2 py-1 text-[10px] font-semibold leading-tight sm:max-w-[10rem] sm:px-2.5 sm:py-1.5 sm:text-xs ${mosaicPhaseCornerTypography(row)} ${mosaicPhaseAccent(row)}`}
@@ -1044,7 +974,7 @@ function VenueMosaicTableCard({
           </span>
         </div>
 
-        <div className="relative z-[1] flex shrink-0 justify-center overflow-hidden">
+        <div className="relative z-[1] flex shrink-0 justify-center overflow-visible">
           <SeatRingWithLabels
             ringMode="mosaic"
             seatedCount={seats}
@@ -1060,7 +990,7 @@ function VenueMosaicTableCard({
         </div>
 
         {seats > 0 ? (
-          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 border-t border-white/10 pt-1.5 text-[0.625rem] leading-tight text-white/82 sm:text-[0.6875rem]">
+          <ul className="max-h-[5.5rem] space-y-0.5 overflow-y-auto border-t border-white/10 pt-1.5 text-[0.7rem] leading-snug text-white/88">
             {Array.from({ length: seats }, (_, i) => {
               const name = seatNames[i]?.trim() ?? ''
               if (!name) return null
@@ -1081,10 +1011,14 @@ function VenueMosaicTableCard({
                       {seatBettingActionLabel(act)}
                     </span>
                   ) : onClock ? (
-                    <span className="shrink-0 text-[0.55rem] font-bold uppercase text-cyan-300">
+                    <span className="shrink-0 text-[0.6rem] font-bold uppercase tracking-wide text-cyan-300">
                       Turn
                     </span>
-                  ) : null}
+                  ) : (
+                    <span className="shrink-0 font-mono text-[0.65rem] tabular-nums text-casino-emerald">
+                      {formatVenueBankroll(seatBankrolls[i] ?? 0)}
+                    </span>
+                  )}
                 </li>
               )
             })}
