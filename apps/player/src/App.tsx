@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { connect, onState, onToast, fold, submitAnswer, check as checkAction, callBet as callAction, raiseBet as raiseAction, allIn as allInAction, useSocket, onSeated } from '@qhe/net'
 import { Card, NeonButton, NumericPlayingCard, PokerChip } from '@qhe/ui'
 import type { GameState } from '@qhe/core'
-import { LOBBY_TABLE_ID, inChipContest } from '@qhe/core'
+import { formatTriviaNumber, LOBBY_TABLE_ID, inChipContest } from '@qhe/core'
 
 /** Hands are built from exactly five digit cards (holes + community); optional decimal in the player UI. */
 const ANSWER_CARD_COUNT = 5
@@ -456,7 +456,7 @@ function PlayerApp() {
               <div className="text-base font-bold text-casino-gold sm:text-lg">{gameState.round.question.text}</div>
               {gameState.phase === 'showdown' && (
                 <div className="text-lg font-bold text-casino-emerald mt-3">
-                  Answer: {gameState.round.question.answer}
+                  Answer: {formatTriviaNumber(gameState.round.question.answer)}
                 </div>
               )}
             </div>

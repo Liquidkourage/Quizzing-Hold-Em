@@ -132,6 +132,15 @@ export function nearlyEqualNumbers(a: number, b: number): boolean {
   return Math.abs(a - b) <= ANSWER_NUMERIC_EPS * Math.max(1, Math.abs(a), Math.abs(b));
 }
 
+/** Human-readable trivia / guess values — strips float noise from decimal composition. */
+export function formatTriviaNumber(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return '—';
+  const rounded = Math.round(value * 1_000_000) / 1_000_000;
+  const fixed = rounded.toFixed(6);
+  const trimmed = fixed.replace(/\.?0+$/, '');
+  return trimmed === '' ? '0' : trimmed;
+}
+
 function addDecimalVariantsForFiveDigits(digitsFive: number[], sink: Set<number>): void {
   sink.add(Number(digitsFive.join('')));
   for (let k = 1; k <= PLAYER_ANSWER_DIGIT_CARD_COUNT - 1; k++) {

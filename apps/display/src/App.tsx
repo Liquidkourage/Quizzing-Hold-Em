@@ -633,6 +633,9 @@ function DisplayTableLive({
     )
   }, [isEmbedded, gameState, feltTableHint, venueHeroTile, demoGameState])
 
+  const displayGameStateRef = useRef(displayGameState)
+  displayGameStateRef.current = displayGameState
+
   /** Live socket state already includes hole cards (hero spotlight / mid-hand join) — do not wait for deal animation. */
   const feltHasPersistedHoleCards = useMemo(
     () => displayGameState.players.some((p) => p.hand.length > 0),
@@ -964,30 +967,53 @@ function DisplayTableLive({
     communityDealTimersRef.current.push(id)
   }, [])
 
-  const runCommunityDealAnimationForState = useCallback(
-    (gs: GameState) => {
-      if (gs.round.communityCards.length === 0) return false
+  const getCommunityCardsForFelt = useCallback((): NumericCard[] => {
+    const tid = heroFeltTableId
+    const gs = gameStateRef.current
+    if (gs != null && tid !== '' && String(gs.tableId) === tid && gs.round.communityCards.length > 0) {
+      return gs.round.communityCards
+    }
+    return displayGameStateRef.current.round.communityCards
+  }, [heroFeltTableId])
+
+  const revealCommunityBoard = useCallback(
+    (cards: NumericCard[]) => {
+      if (cards.length === 0) return
+      setSharedCommunityCards(cards.map((c) => ({ digit: c.digit })))
+      setHasDealtCommunityCards(true)
+      setIsDealingCommunity(false)
+      setDealingCommunityCards([])
+      setShowDeck(false)
+      communityDealAnimationRequestedRef.current = false
+      clearCommunityDealTimers()
+    },
+    [clearCommunityDealTimers],
+  )
+
+  const runCommunityDealAnimationForCards = useCallback(
+    (cards: NumericCard[]) => {
+      if (cards.length === 0) return false
 
       clearCommunityDealTimers()
-      const cardsToUse = gs.round.communityCards.map((card) => ({ digit: card.digit }))
+      const cardsToUse = cards.map((card) => ({ digit: card.digit }))
       setSharedCommunityCards(cardsToUse)
       setDealingCommunityCards([])
       setShowDeck(true)
 
-      const cards = cardsToUse.map((card, index) => ({
+      const flightCards = cardsToUse.map((card, index) => ({
         id: `community-dealing-${index}`,
         cardIndex: index,
         digit: card.digit,
         isRevealed: false as const,
       }))
 
-      cards.forEach((card, index) => {
+      flightCards.forEach((card, index) => {
         scheduleCommunityDealTimer(() => {
           setDealingCommunityCards((prev) => [...prev, card])
         }, index * 200)
       })
 
-      const revealAtMs = cards.length * 200 + 500
+      const revealAtMs = flightCards.length * 200 + 500
       scheduleCommunityDealTimer(() => {
         setDealingCommunityCards((prev) => prev.map((c) => ({ ...c, isRevealed: true })))
       }, revealAtMs)
@@ -1013,13 +1039,7 @@ function DisplayTableLive({
       }
 
       if (prefersReducedMotion) {
-        const gs = gameStateRef.current
-        if (gs != null && gs.round.communityCards.length > 0) {
-          setSharedCommunityCards(gs.round.communityCards.map((c) => ({ digit: c.digit })))
-          setHasDealtCommunityCards(true)
-        }
-        communityDealAnimationRequestedRef.current = false
-        setIsDealingCommunity(false)
+        revealCommunityBoard(getCommunityCardsForFelt())
         return
       }
 
@@ -1031,14 +1051,13 @@ function DisplayTableLive({
       clearCommunityDealTimers()
 
       const attemptRun = (tryNum: number) => {
-        const gs = gameStateRef.current
-        if (gs != null && gs.round.communityCards.length > 0) {
-          runCommunityDealAnimationForState(gs)
+        const cards = getCommunityCardsForFelt()
+        if (cards.length > 0) {
+          runCommunityDealAnimationForCards(cards)
           return
         }
         if (tryNum >= 15) {
-          setIsDealingCommunity(false)
-          communityDealAnimationRequestedRef.current = false
+          revealCommunityBoard(displayGameStateRef.current.round.communityCards)
           return
         }
         scheduleCommunityDealTimer(() => attemptRun(tryNum + 1), 100)
@@ -1050,7 +1069,9 @@ function DisplayTableLive({
       heroFeltTableId,
       prefersReducedMotion,
       clearCommunityDealTimers,
-      runCommunityDealAnimationForState,
+      getCommunityCardsForFelt,
+      revealCommunityBoard,
+      runCommunityDealAnimationForCards,
       scheduleCommunityDealTimer,
     ],
   )
@@ -1940,9 +1961,7 @@ function DisplayTableLive({
                       ? sharedCommunityCards
                       : []
                 const showCommunityStatic =
-                  !isDealingCommunity &&
-                  cardsToShow.length > 0 &&
-                  (hasDealtCommunityCards || sharedCommunityCards.length > 0)
+                  !isDealingCommunity && layoutCards.length > 0
 
                 if (layoutCards.length === 0) return null
 

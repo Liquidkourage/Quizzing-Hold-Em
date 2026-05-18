@@ -8,6 +8,7 @@ import {
   endRound,
   foldPlayer,
   isSubmittedAnswerComposableFromDeal,
+  formatTriviaNumber,
   nearlyEqualNumbers,
 } from './index'
 import type { GameState } from './index'
@@ -15,6 +16,14 @@ import type { GameState } from './index'
 function totalWealth(gs: GameState): number {
   return gs.players.reduce((s, p) => s + p.bankroll, 0) + gs.round.pot
 }
+
+describe('formatTriviaNumber', () => {
+  it('strips binary float noise from decimal answers', () => {
+    expect(formatTriviaNumber(0.1 + 0.2)).toBe('0.3')
+    expect(formatTriviaNumber(12.345)).toBe('12.345')
+    expect(formatTriviaNumber(12345)).toBe('12345')
+  })
+})
 
 describe('composeNumericAnswersFromSevenDigitCards', () => {
   it('includes straight concatenation and one internal decimal (five digits used)', () => {

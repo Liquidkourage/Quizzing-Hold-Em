@@ -34,7 +34,7 @@ import {
 } from '@qhe/net'
 import type { GameState, GamePhase, Question } from '@qhe/core'
 import type { HostVenueFeltBeatRow } from '@qhe/net'
-import { LOBBY_TABLE_ID } from '@qhe/core'
+import { formatTriviaNumber, LOBBY_TABLE_ID } from '@qhe/core'
 import { parseQuestionsCsv, parseQuestionsJson } from './questionImport'
 
 const HOST_TABS = [
@@ -1707,7 +1707,7 @@ function HostApp() {
             <div className="text-center text-white mb-6">
               <div className="text-white/80">Correct Answer</div>
               <div className="text-4xl font-extrabold text-casino-gold">
-                {gameState.round.question?.answer ?? '—'}
+                {formatTriviaNumber(gameState.round.question?.answer)}
               </div>
             </div>
 
@@ -1742,8 +1742,10 @@ function HostApp() {
                         <tr key={player.id} className={`${player.id === winnerId ? 'bg-white/10' : ''}`}>
                           <td className="py-2 px-3 tabular-nums text-white/80">{seat}</td>
                           <td className="py-2 px-3 font-bold text-casino-emerald">{hostPlayerLabel(player.name)}</td>
-                          <td className="py-2 px-3">{hasAnswer ? player.submittedAnswer : '—'}</td>
-                          <td className="py-2 px-3">{hasAnswer && typeof correct === 'number' ? distance : '—'}</td>
+                          <td className="py-2 px-3">{hasAnswer ? formatTriviaNumber(player.submittedAnswer) : '—'}</td>
+                          <td className="py-2 px-3">
+                            {hasAnswer && typeof correct === 'number' ? formatTriviaNumber(distance) : '—'}
+                          </td>
                           <td className="py-2 px-3">
                             {player.hasFolded ? (
                               <span className="text-red-400 font-semibold">FOLDED</span>

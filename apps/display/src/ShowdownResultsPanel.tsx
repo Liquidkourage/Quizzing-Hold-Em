@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { formatTriviaNumber } from '@qhe/core'
 import { NumericPlayingCard, PokerChip } from '@qhe/ui'
 import {
   formatHoleDigits,
@@ -123,7 +124,7 @@ function PlayerShowdownPod({
         </span>
         <HoleCards holes={row.holes} folded={row.hasFolded} compact />
         <span className="font-mono text-[0.7rem] font-black tabular-nums text-amber-200">
-          {hasGuess ? row.submitted : '—'}
+          {hasGuess ? formatTriviaNumber(row.submitted) : '—'}
         </span>
       </motion.div>
     )
@@ -174,7 +175,7 @@ function PlayerShowdownPod({
       >
         <p className="text-[0.55rem] font-bold uppercase tracking-[0.14em] text-amber-200/70">Guess</p>
         <p className="font-mono text-xl font-black tabular-nums text-amber-100 sm:text-2xl">
-          {hasGuess ? row.submitted : '—'}
+          {hasGuess ? formatTriviaNumber(row.submitted) : '—'}
         </p>
       </motion.div>
 
@@ -185,7 +186,7 @@ function PlayerShowdownPod({
           }`}
         >
           <span className="text-[0.55rem] font-bold uppercase tracking-wider text-white/40">Off by </span>
-          {distance}
+          {formatTriviaNumber(distance)}
         </p>
       ) : (
         <p className="text-center text-xs font-semibold text-white/35">
@@ -226,7 +227,7 @@ export default function ShowdownResultsPanel({
         >
           <p className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-amber-200/80">Answer</p>
           <p className="font-mono text-xl font-black tabular-nums text-amber-100">
-            {correctAnswer ?? '—'}
+            {formatTriviaNumber(correctAnswer)}
           </p>
         </div>
         <div
@@ -293,7 +294,7 @@ export default function ShowdownResultsPanel({
                 style={SHOWDOWN_FELT_STYLE}
               >
                 <span className="font-mono text-5xl font-black tabular-nums text-amber-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-6xl">
-                  {correctAnswer ?? '—'}
+                  {formatTriviaNumber(correctAnswer)}
                 </span>
               </div>
             </div>
