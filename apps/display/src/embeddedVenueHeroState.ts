@@ -111,6 +111,11 @@ export function embeddedHeroDisplayState(
           : 1000
 
       const folded = tile.seatFolded?.[i] === true
+      let submittedAnswer: number | undefined
+      if (!folded) {
+        const g = tile.seatSubmittedAnswers?.[i]
+        if (typeof g === 'number' && Number.isFinite(g)) submittedAnswer = g
+      }
 
       players.push({
         id: `venue-wall-seat-${tid}-${i}`,
@@ -119,6 +124,7 @@ export function embeddedHeroDisplayState(
         hand: holeHandFromTileSeat(tile, i),
         hasFolded: folded,
         isAllIn: false,
+        ...(submittedAnswer !== undefined ? { submittedAnswer } : {}),
       })
       physicalSeatByPlayerIdx.push(i)
     }
@@ -176,6 +182,20 @@ export function embeddedHeroDisplayState(
 
     const communityCards = communityFromTile(tile)
 
+    let question = base.round.question
+    if (
+      (phase === 'showdown' || phase === 'reveal') &&
+      typeof tile.showdownAnswer === 'number' &&
+      Number.isFinite(tile.showdownAnswer)
+    ) {
+      const qt = tile.showdownQuestionText
+      question = {
+        id: `venue-wall-showdown-${tid}`,
+        text: typeof qt === 'string' && qt.trim() !== '' ? qt.trim() : 'Trivia',
+        answer: tile.showdownAnswer,
+      }
+    }
+
     return {
       ...base,
       phase,
@@ -183,6 +203,7 @@ export function embeddedHeroDisplayState(
       round: {
         ...round,
         ...(communityCards.length > 0 ? { communityCards } : {}),
+        ...(question != null ? { question } : {}),
       },
     }
   }

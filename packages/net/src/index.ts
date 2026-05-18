@@ -62,6 +62,15 @@ export type DisplayVenueTileSnapshot = {
   seatHoleDigits?: (readonly [number, number] | null)[]
   /** Community board digits for this table's current hand. Omitted when empty. */
   communityDigits?: number[]
+  /** Trivia answer while this felt is in showdown / reveal (parallel `seatNames`). */
+  showdownAnswer?: number | null
+  /** Question text for mosaic / embedded hero during showdown. */
+  showdownQuestionText?: string | null
+  /**
+   * Parallel to `seatNames` (physical 0..7): each seated player's trivia guess.
+   * Null when folded or no submission.
+   */
+  seatSubmittedAnswers?: (number | null)[]
 }
 
 /** Venue wall payload: table mosaic plus **shared trivia strip** keyed off the hottest trivia phase (prefer answering, then setup, etc.), not blindly table 1. */

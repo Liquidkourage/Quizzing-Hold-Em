@@ -12,6 +12,9 @@ export const VENUE_WALL_SEAT_SLOTS = 8 as const
 /** Pre-start crawl: hero table advances on this cadence while every live snapshot tile is lobby. */
 export const SEATING_SPOTLIGHT_CYCLE_SEC = 10
 
+/** During venue-wide showdown, rotate the hero felt so each table gets the full overlay. */
+export const SHOWDOWN_SPOTLIGHT_CYCLE_SEC = 14
+
 export function buildVenueWallTileRows(wall: DisplayVenueWallSnapshot | null): DisplayVenueTileSnapshot[] {
   if (wall?.tiles != null && wall.tiles.length > 0) {
     return [...wall.tiles].sort((a, b) => a.tableNum - b.tableNum)
@@ -80,4 +83,17 @@ export function shouldRotateLobbyTour(
   if (tileRows.length === 0) return false
   if (!hasLiveWall) return true
   return tileRows.every((t) => t.phase === 'lobby')
+}
+
+export function showdownTableNums(tileRows: DisplayVenueTileSnapshot[]): number[] {
+  return tileRows.filter((t) => t.phase === 'showdown').map((t) => t.tableNum)
+}
+
+/** Multiple felts in showdown with no host pin — cycle hero so TV shows each full overlay. */
+export function shouldRotateShowdownTour(
+  tileRows: DisplayVenueTileSnapshot[],
+  hostFocusTable: number | null
+): boolean {
+  if (hostFocusTable != null) return false
+  return showdownTableNums(tileRows).length > 1
 }

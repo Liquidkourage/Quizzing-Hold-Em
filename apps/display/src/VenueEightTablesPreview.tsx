@@ -7,7 +7,14 @@ import type { DisplayVenueTileSnapshot, DisplayVenueWallSnapshot, SeatBettingAct
 import seatChipStackImg from './assets/seat-chip-stack.png'
 import DisplayTableLive from './App.tsx'
 import type { VenueFeaturedWatch } from './useVenueWallFeaturedWatch.ts'
-import { buildVenueWallTileRows, SEATING_SPOTLIGHT_CYCLE_SEC, VENUE_WALL_SEAT_SLOTS } from './venueWallModel'
+import ShowdownResultsPanel from './ShowdownResultsPanel'
+import { showdownCorrectAnswerFromTile, showdownRowsFromTile } from './showdownDisplay'
+import {
+  buildVenueWallTileRows,
+  SEATING_SPOTLIGHT_CYCLE_SEC,
+  SHOWDOWN_SPOTLIGHT_CYCLE_SEC,
+  VENUE_WALL_SEAT_SLOTS,
+} from './venueWallModel'
 
 const VENUE_SEAT_SLOTS = VENUE_WALL_SEAT_SLOTS
 
@@ -819,6 +826,9 @@ function VenueMosaicTableCard({ row, isSpotlightThumb }: VenueMosaicTableCardPro
   const actingSeat = venueTileActingSeat(row)
   const seatLastBettingAction = padSeatLastBettingAction(row.seatLastBettingAction)
   const showSeatBettingActions = ph === 'betting'
+  const inShowdown = ph === 'showdown'
+  const showdownRows = inShowdown ? showdownRowsFromTile(row) : []
+  const showdownAnswer = inShowdown ? showdownCorrectAnswerFromTile(row) : undefined
   const mosaicPotSubtitle = mosaicPotSubtitleActingToCall({
     actingSeatIndex: actingSeat,
     seatNames,
@@ -892,6 +902,19 @@ function VenueMosaicTableCard({ row, isSpotlightThumb }: VenueMosaicTableCardPro
             <dd className="font-mono font-bold tabular-nums text-white/90">{formatVenueBankroll(totalChips)}</dd>
           </div>
         </dl>
+
+        {inShowdown && showdownRows.length > 0 ? (
+          <div className="rounded-lg border border-yellow-500/45 bg-yellow-950/25 px-2 py-2 sm:px-2.5">
+            <p className="mb-1.5 text-center text-[0.625rem] font-bold uppercase tracking-wider text-yellow-200/90 sm:text-[0.6875rem]">
+              Showdown
+            </p>
+            <ShowdownResultsPanel
+              compact
+              correctAnswer={showdownAnswer}
+              rows={showdownRows}
+            />
+          </div>
+        ) : null}
       </article>
   )
 }
@@ -1166,6 +1189,10 @@ export default function VenueEightTablesPreview({
   const showRotatingTour = featuredWatch.showRotatingTour
   const seatingCycleProgress = featuredWatch.seatingCycleProgress
   const seatingTourIndex = featuredWatch.seatingTourIndex
+  const showShowdownTour = featuredWatch.showShowdownTour
+  const showdownCycleProgress = featuredWatch.showdownCycleProgress
+  const showdownTourIndex = featuredWatch.showdownTourIndex
+  const showdownTableCount = tileRows.filter((t) => t.phase === 'showdown').length
 
   const showRoster = rosterRowsFromTiles(tileRows).length > 0
 
@@ -1174,13 +1201,16 @@ export default function VenueEightTablesPreview({
 
   const dockSeatingTourProgress =
     showRotatingTour && !prefersReducedMotion && tileRows.length > 1
+  const dockShowdownTourProgress =
+    showShowdownTour && !prefersReducedMotion && showdownTableCount > 1
+  const dockTourProgress = dockSeatingTourProgress || dockShowdownTourProgress
 
   return (
     <div
       className={`relative min-h-screen overflow-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white ${
         padLeftForTablesCrawl ? VENUE_CRAWL_PL_CLASS : ''
       } ${showRoster ? VENUE_CRAWL_PR_CLASS : ''}${
-        dockSeatingTourProgress ? ' pb-[calc(7.75rem+env(safe-area-inset-bottom,0px))]' : ''
+        dockTourProgress ? ' pb-[calc(7.75rem+env(safe-area-inset-bottom,0px))]' : ''
       }`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-35">
@@ -1219,7 +1249,11 @@ export default function VenueEightTablesPreview({
         ) : seatingHeroRow ? (
           <section
             aria-label={
-              showRotatingTour ? 'Seating spotlight tour; live felt in focus' : 'Venue floor featured table'
+              showShowdownTour
+                ? 'Showdown tour; full results on each felt in focus'
+                : showRotatingTour
+                  ? 'Seating spotlight tour; live felt in focus'
+                  : 'Venue floor featured table'
             }
             className="mx-auto flex w-full max-w-none flex-col gap-2 overflow-visible sm:gap-3"
           >
@@ -1307,7 +1341,7 @@ export default function VenueEightTablesPreview({
                 />
               </div>
 
-              {!dockSeatingTourProgress ? (
+              {!dockTourProgress ? (
                 <div className="relative z-20 overflow-hidden border-t border-yellow-700/40 px-4 py-3 pb-4 sm:px-5 sm:py-4">
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
                   <div className="pointer-events-none absolute inset-0 opacity-55">
@@ -1315,7 +1349,13 @@ export default function VenueEightTablesPreview({
                   </div>
                   <div className="relative z-10 space-y-2 sm:space-y-3">
                     <p className="text-center text-sm text-white/50 sm:text-base md:text-lg">
-                      {showRotatingTour ? (
+                      {showShowdownTour ? (
+                        prefersReducedMotion ? (
+                          `Showdown — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
+                        ) : (
+                          `Showdown tour · Table ${seatingHeroRow.tableNum} · ${showdownTourIndex + 1} of ${showdownTableCount}`
+                        )
+                      ) : showRotatingTour ? (
                         prefersReducedMotion ? (
                           `Seating spotlight — Table ${seatingHeroRow.tableNum} (auto-rotation off: reduced motion)`
                         ) : (
@@ -1333,6 +1373,53 @@ export default function VenueEightTablesPreview({
         ) : null}
       </main>
 
+      {seatingHeroRow && dockShowdownTourProgress ? (
+        <motion.div
+          className={`fixed bottom-0 z-[60] border-t border-yellow-500/55 bg-black/90 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-md ${
+            padLeftForTablesCrawl ? VENUE_CENTER_BAND_LEFT_EDGE : 'left-0'
+          } ${showRoster ? VENUE_CENTER_BAND_RIGHT_EDGE : 'right-0'}`}
+          role="region"
+          aria-label="Showdown tour across tables"
+        >
+          <div className="w-full px-4 sm:px-5 md:px-6">
+            <div className="mx-auto w-full max-w-3xl">
+              <p
+                className="mb-3 text-center text-xs text-yellow-100/80 sm:text-sm md:text-base"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                Showdown · Table {seatingHeroRow.tableNum} · {showdownTourIndex + 1} of{' '}
+                {showdownTableCount} — compact results on every tile in All tables
+              </p>
+              <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs text-white/50 sm:text-sm">
+                <span className="font-semibold uppercase tracking-wider text-white/45">
+                  Next felt
+                </span>
+                <span className="font-mono tabular-nums text-amber-200/90">
+                  {Math.max(
+                    0,
+                    Math.ceil((1 - showdownCycleProgress) * SHOWDOWN_SPOTLIGHT_CYCLE_SEC)
+                  )}
+                  s
+                </span>
+              </div>
+              <div
+                className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(showdownCycleProgress * 100)}
+                aria-label="Showdown tour progress until the next table"
+              >
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-yellow-700/95 to-yellow-300/95"
+                  style={{ width: `${showdownCycleProgress * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ) : null}
       {seatingHeroRow && dockSeatingTourProgress ? (
         <div
           className={`fixed bottom-0 z-[60] border-t border-yellow-700/50 bg-black/90 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-md ${

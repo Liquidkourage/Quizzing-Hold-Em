@@ -20,6 +20,8 @@ import {
 } from './displaySpotlightStateCache'
 import { heroSeatBlindMarkerPills } from './heroBlindMarkers'
 import seatChipStackImg from './assets/seat-chip-stack.png'
+import ShowdownResultsPanel from './ShowdownResultsPanel'
+import { showdownRowsFromGameState } from './showdownDisplay'
 
 /** Authoring viewport (logical px). Embedded venue heroes scale uniformly to fit the measured game plane; fullscreen uses live `gw/gh`. */
 const EMBEDDED_FELT_LAYOUT_W = 1280
@@ -1987,97 +1989,11 @@ function DisplayTableLive({
               </div>
             )}
 
-            <div className="text-center mb-6">
-              <div className="text-white/80 text-xl font-semibold md:text-2xl">Correct Answer</div>
-              <motion.div
-                key={String(displayGameState.round.question?.answer ?? '—')}
-                initial={{ rotateX: -90, opacity: 0, transformPerspective: 800 }}
-                animate={{ rotateX: 0, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                className="inline-block px-4 py-1 rounded-lg bg-yellow-500/10 border border-yellow-400/40 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-              >
-                <span className="text-7xl font-extrabold text-yellow-400 tracking-wide md:text-8xl">
-                  {displayGameState.round.question?.answer ?? '—'}
-                </span>
-              </motion.div>
-            </div>
-
-            {(() => {
-              const correct = displayGameState.round.question?.answer
-              const rows = displayGameState.players
-                .map((p, seatIdx) => {
-                  const sa = p.submittedAnswer
-                  const has = typeof sa === 'number' && !p.hasFolded
-                  const distance =
-                    has && typeof correct === 'number' ? Math.abs(sa - correct) : Infinity
-                  return { player: p, seat: seatIdx + 1, has, distance }
-                })
-                .sort((a, b) => a.distance - b.distance)
-              const winnerId = rows.length && rows[0].distance !== Infinity ? rows[0].player.id : undefined
-
-              return (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-lg md:text-xl">
-                    <thead>
-                      <tr className="text-white/80">
-                        <th className="py-3 px-4">Seat</th>
-                        <th className="py-3 px-4">Player</th>
-                        <th className="py-3 px-4">Submitted</th>
-                        <th className="py-3 px-4">Distance</th>
-                        <th className="py-3 px-4">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map(({ player, seat, has, distance }, idx) => (
-                        <motion.tr
-                          key={player.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.08 }}
-                          className={player.id === winnerId ? 'bg-white/10' : ''}
-                        >
-                          <td className="py-3 px-4 tabular-nums text-white/80">{seat}</td>
-                          <td className="py-3 px-4 font-bold text-yellow-300">{player.name}</td>
-                          <td className="py-3 px-4">
-                            {has ? (
-                              <motion.span
-                                initial={{ scale: 0.8, rotate: -5, opacity: 0 }}
-                                animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                                transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                                className="inline-block"
-                              >
-                                {player.submittedAnswer}
-                              </motion.span>
-                            ) : '—'}
-                          </td>
-                          <td className="py-3 px-4">{has && typeof correct === 'number' ? distance : '—'}</td>
-                          <td className="py-3 px-4">
-                            {player.hasFolded ? (
-                              <span className="text-red-400 font-semibold">FOLDED</span>
-                            ) : has ? (
-                              player.id === winnerId ? (
-                                <motion.span
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: [0, 1.2, 1] }}
-                                  transition={{ type: 'spring', stiffness: 260, damping: 12 }}
-                                  className="text-yellow-400 font-extrabold"
-                                >
-                                  WINNER
-                                </motion.span>
-                              ) : (
-                                <span className="text-white/70">Submitted</span>
-                              )
-                            ) : (
-                              <span className="text-white/50">No Answer</span>
-                            )}
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )
-            })()}
+            <ShowdownResultsPanel
+              correctAnswer={displayGameState.round.question?.answer}
+              rows={showdownRowsFromGameState(displayGameState)}
+              winnerName={showdownWinnerName || undefined}
+            />
           </motion.div>
         </div>
       )}

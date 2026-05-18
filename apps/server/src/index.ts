@@ -1446,8 +1446,25 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     })
     const communityDigits =
       gs.round.communityCards.length > 0
-        ? gs.round.communityCards.map((c) => c.digit)
+        ? gs.round.communityCards.map((c: { digit: number }) => c.digit)
         : undefined
+    let showdownAnswer: number | null | undefined
+    let showdownQuestionText: string | null | undefined
+    let seatSubmittedAnswers: (number | null)[] | undefined
+    if (gs.phase === 'showdown' || gs.phase === 'reveal') {
+      const q = gs.round.question
+      if (q != null && typeof q.answer === 'number' && Number.isFinite(q.answer)) {
+        showdownAnswer = q.answer
+        const qt = q.text
+        showdownQuestionText = typeof qt === 'string' && qt.trim() !== '' ? qt.trim() : null
+      }
+      seatSubmittedAnswers = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
+        const p = gs.players[i]
+        if (p == null || p.hasFolded) return null
+        const sa = p.submittedAnswer
+        return typeof sa === 'number' && Number.isFinite(sa) ? sa : null
+      })
+    }
     tiles.push({
       tableNum: n,
       seated,
@@ -1461,6 +1478,8 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       actingCallPctOfStack,
       ...(seatHoleDigits.some((h) => h != null) ? { seatHoleDigits } : {}),
       ...(communityDigits != null && communityDigits.length > 0 ? { communityDigits } : {}),
+      ...(showdownAnswer != null ? { showdownAnswer, showdownQuestionText: showdownQuestionText ?? null } : {}),
+      ...(seatSubmittedAnswers != null ? { seatSubmittedAnswers } : {}),
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
       currentPlayerIndex:
         typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)
