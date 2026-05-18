@@ -194,7 +194,7 @@ function PlayerApp() {
       return
     }
     const composition = selectedCards.map((sc) => ({
-      source: sc.type,
+      source: sc.type === 'hand' ? ('hole' as const) : ('community' as const),
       index: sc.index,
     }))
     submitAnswer(composedAnswer.value, composition, (ack: { ok: boolean; message: string }) => {
