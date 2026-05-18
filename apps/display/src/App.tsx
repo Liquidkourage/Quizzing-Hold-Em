@@ -24,7 +24,6 @@ import { heroSeatBlindMarkerPills } from './heroBlindMarkers'
 import seatChipStackImg from './assets/seat-chip-stack.png'
 import ShowdownResultsPanel from './ShowdownResultsPanel'
 import { showdownRowsFromGameState } from './showdownDisplay'
-import { capsuleBorderRadiusCss, seatDotCenterOnRailPx } from './tableRimGeometry'
 
 /** Authoring viewport (logical px). Embedded venue heroes scale uniformly to fit the measured game plane; fullscreen uses live `gw/gh`. */
 const EMBEDDED_FELT_LAYOUT_W = 1280
@@ -170,49 +169,60 @@ const HERO_RAIL_H_PX = HERO_RAIL_BASE_H_PX
 const HERO_RAIL_SHADOW_W_PX = Math.round(842 * HERO_TABLE_WIDTH_SCALE)
 const HERO_RAIL_SHADOW_H_PX = 637
 
-const HERO_CUPHOLDER_SIZE_PX = 32
-const HERO_CUPHOLDER_HALF_PX = HERO_CUPHOLDER_SIZE_PX / 2
+/** Cupholder orbit — tuned at 810×605; horizontal radius tracks elongated rail width. */
+const HERO_CUPHOLDER_CENTER_X = () => Math.round(HERO_RAIL_W_PX / 2 - 11)
+const HERO_CUPHOLDER_CENTER_Y = 293
+const HERO_CUPHOLDER_RADIUS_X = () => Math.round(HERO_RAIL_W_PX / 2 - 13)
+const HERO_CUPHOLDER_RADIUS_Y = 316
 
-function heroRailCenterPx() {
-  return { cx: HERO_RAIL_W_PX / 2, cy: HERO_RAIL_H_PX / 2 }
-}
-
-function heroRailBorderRadiusCss(): string {
-  return capsuleBorderRadiusCss(HERO_RAIL_W_PX, HERO_RAIL_H_PX)
-}
-
-/** Cupholder center in rail-local px, then as offset from rail center (for HUD orbit). */
+/**
+ * Offset px from {@link HERO_CUPHOLDER_ORIGIN} — matches rail ellipse + flat top/bottom belt.
+ */
 function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: number } {
-  const pt = seatDotCenterOnRailPx(
-    index,
-    total,
-    HERO_RAIL_W_PX,
-    HERO_RAIL_H_PX,
-    HERO_CUPHOLDER_HALF_PX
-  )
-  const c = heroRailCenterPx()
-  return { ox: pt.x - c.cx, oy: pt.y - c.cy }
+  const angle = (index / total) * 2 * Math.PI - Math.PI / 2
+  const baseRadiusX = HERO_CUPHOLDER_RADIUS_X()
+  const baseRadiusY = HERO_CUPHOLDER_RADIUS_Y
+  let ox = Math.cos(angle) * baseRadiusX
+  let oy = Math.sin(angle) * baseRadiusY
+  const normalizedAngle = ((angle + Math.PI / 2) % (2 * Math.PI)) / (2 * Math.PI)
+  const isTopRegion = normalizedAngle > 0.9 || normalizedAngle < 0.1
+  const isBottomRegion = normalizedAngle > 0.4 && normalizedAngle < 0.6
+  const isCorner =
+    (normalizedAngle > 0.125 && normalizedAngle < 0.375) ||
+    (normalizedAngle > 0.625 && normalizedAngle < 0.875)
+  if (isTopRegion) {
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
+    oy = -291.6 + bowAmount
+  } else if (isBottomRegion) {
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
+    oy = 291.6 - bowAmount
+  } else if (isCorner) {
+    ox = Math.cos(angle) * (baseRadiusX + 0.81)
+    oy = Math.sin(angle) * (baseRadiusY + 0.81)
+  }
+  return { ox, oy }
 }
 
-function heroSeatCupholderPx(index: number, total: number): { leftPx: number; topPx: number } {
-  const pt = seatDotCenterOnRailPx(
-    index,
-    total,
-    HERO_RAIL_W_PX,
-    HERO_RAIL_H_PX,
-    HERO_CUPHOLDER_HALF_PX
-  )
-  return { leftPx: pt.x, topPx: pt.y }
+function heroSeatRimPx(index: number, total: number): { leftPx: number; topPx: number } {
+  const { ox, oy } = heroSeatCupOffsets(index, total)
+  return {
+    leftPx: HERO_CUPHOLDER_ORIGIN.left + ox,
+    topPx: HERO_CUPHOLDER_ORIGIN.top + oy,
+  }
 }
 
-/** Visual center-ish under pot / community arc (px, rail-local coords). */
+/** Visual center-ish under pot / community arc (px, same coords as cupholders). */
 const HERO_TABLE_POT_ANCHOR = {
   get cx() {
-    return Math.round(heroRailCenterPx().cx)
+    return Math.round(HERO_CUPHOLDER_CENTER_X() + 12)
   },
-  get cy() {
-    return Math.round(heroRailCenterPx().cy + 5)
+  cy: 298,
+} as const
+const HERO_CUPHOLDER_ORIGIN = {
+  get left() {
+    return HERO_CUPHOLDER_CENTER_X()
   },
+  top: HERO_CUPHOLDER_CENTER_Y,
 } as const
 function heroFeltPointTowardPot(
   rimLeftPx: number,
@@ -1256,6 +1266,13 @@ function DisplayTableLive({
   /** Negative = move felt + seats up in fullscreen; embedded venue uses overlay HUD + full-height plane, so keep 0 to center vertically. */
   const displayTableLiftPx = variant === 'embedded' ? 0 : -88
 
+  const gwFallback = typeof window !== 'undefined' ? window.innerWidth : 1280
+  const ghFallback = typeof window !== 'undefined' ? window.innerHeight : 720
+  const gw = gamePlaneSize.w > 0 ? gamePlaneSize.w : gwFallback
+  const gh = gamePlaneSize.h > 0 ? gamePlaneSize.h : ghFallback
+  const fdW = isEmbedded ? EMBEDDED_FELT_LAYOUT_W : gw
+  const fdH = isEmbedded ? EMBEDDED_FELT_LAYOUT_H : gh
+
   /**
    * Pixel offset of the player HUD box center from the game plane center (same coords as `fdW`×`fdH`).
    * Used by `getPlayerPosition`, dealing flight paths, and chip flights — do not parse `calc(50% + … - 55px)` with parseFloat
@@ -1286,18 +1303,10 @@ function DisplayTableLive({
     }
   }
 
-  const gwFallback = typeof window !== 'undefined' ? window.innerWidth : 1280
-  const ghFallback = typeof window !== 'undefined' ? window.innerHeight : 720
-  /** Game plane px — animations are authored against this rectangle. */
-  const gw = gamePlaneSize.w > 0 ? gamePlaneSize.w : gwFallback
-  const gh = gamePlaneSize.h > 0 ? gamePlaneSize.h : ghFallback
   /** Shell px — overlays (chips/toasts) anchored to layout root (viewport in fullscreen mode). */
   const sw = shellSize.w > 0 ? shellSize.w : gwFallback
   const sh = shellSize.h > 0 ? shellSize.h : ghFallback
 
-  /** Coordinate space for dealing/community math (matches the positioned subtree). */
-  const fdW = isEmbedded ? EMBEDDED_FELT_LAYOUT_W : gw
-  const fdH = isEmbedded ? EMBEDDED_FELT_LAYOUT_H : gh
   const embeddedHorizPad = 36
   /** Seats/cards protrude vertically beyond nominal layout px; shrinking scale avoids top/bottom clip. */
   const embeddedSeatOverhangY = 120
@@ -1865,28 +1874,19 @@ function DisplayTableLive({
           >
             {/* Table shadow */}
             <div
-              className="absolute inset-0 bg-black/40 blur-lg transform translate-y-2"
-              style={{
-                width: HERO_RAIL_SHADOW_W_PX,
-                height: HERO_RAIL_SHADOW_H_PX,
-                borderRadius: heroRailBorderRadiusCss(),
-              }}
+              className="absolute inset-0 rounded-full bg-black/40 blur-lg transform translate-y-2"
+              style={{ width: HERO_RAIL_SHADOW_W_PX, height: HERO_RAIL_SHADOW_H_PX }}
             />
             
             {/* Table base/rail */}
             <div
-              className="bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 border-8 border-amber-600 shadow-2xl relative"
-              style={{
-                width: HERO_RAIL_W_PX,
-                height: HERO_RAIL_H_PX,
-                borderRadius: heroRailBorderRadiusCss(),
-              }}
+              className="bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative"
+              style={{ width: HERO_RAIL_W_PX, height: HERO_RAIL_H_PX }}
             >
                             {/* FELT SURFACE - Direct application to rail padding */}
               <div
-                className="absolute inset-2 border-4 border-amber-500"
+                className="absolute inset-2 rounded-full border-4 border-amber-500"
                 style={{
-                  borderRadius: heroRailBorderRadiusCss(),
                   background: `
                     repeating-linear-gradient(
                       45deg,
@@ -1916,10 +1916,7 @@ function DisplayTableLive({
 
               {/* Cup holders centered on the middle rail stripe - one per player */}
               {displayGameState.players.map((_, index) => {
-                const { leftPx, topPx } = heroSeatCupholderPx(
-                  index,
-                  displayGameState.players.length
-                )
+                const { leftPx, topPx } = heroSeatRimPx(index, displayGameState.players.length)
                 const actingHere = heroBettingHud.acting === index && heroBettingHud.open
                 return (
                   <div
@@ -1932,8 +1929,8 @@ function DisplayTableLive({
                     style={{
                       left: `${leftPx}px`,
                       top: `${topPx}px`,
-                      width: `${HERO_CUPHOLDER_SIZE_PX}px`,
-                      height: `${HERO_CUPHOLDER_SIZE_PX}px`,
+                      width: '32px',
+                      height: '32px',
                     }}
                   />
                 )
@@ -1942,7 +1939,7 @@ function DisplayTableLive({
               {/* Seat assets on felt — blinds rail-tight, stacks deeper inward, tangentially split */}
               {displayGameState.players.map((player, index) => {
                 const total = displayGameState.players.length
-                const { leftPx: rimLeft, topPx: rimTop } = heroSeatCupholderPx(index, total)
+                const { leftPx: rimLeft, topPx: rimTop } = heroSeatRimPx(index, total)
                 const { blindPx, chipPx } = heroFeltSeatAssetPositions(rimLeft, rimTop, index)
                 const blindPills = heroSeatBlindMarkerPills(index, blindSeatMarkers, 'onFelt')
                 const dimStack = player.hasFolded === true
