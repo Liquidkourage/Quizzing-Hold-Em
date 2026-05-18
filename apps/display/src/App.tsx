@@ -50,12 +50,15 @@ const HOLE_MIDJOIN_REVEAL_MS = 800
 const HOLE_DEAL_FLIGHT_X_NUDGE_PX = -1
 const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -5
 const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.08
-/** Community flight-only nudge (plane px) after DOM measure. */
-const COMMUNITY_DEAL_FLIGHT_X_NUDGE_PX = -2
-const COMMUNITY_DEAL_FLIGHT_Y_NUDGE_PX = 3
+/** Community flight-only nudge (plane px) after DOM measure — positive X = right, positive Y = down. */
+const COMMUNITY_DEAL_FLIGHT_X_NUDGE_PX = 10
+const COMMUNITY_DEAL_FLIGHT_Y_NUDGE_PX = 12
 const COMMUNITY_CARD_SLOT_W_PX = 64
 const COMMUNITY_CARD_SLOT_H_PX = 96
 const COMMUNITY_CARD_SLOT_SCALE = 1.5
+/** {@link NumericPlayingCard} `small` + 10px margin — must match static community anchors. */
+const COMMUNITY_PLAYING_CARD_LAYOUT_W_PX = COMMUNITY_CARD_SLOT_W_PX + 2 * PLAYING_CARD_MARGIN_PX
+const COMMUNITY_PLAYING_CARD_LAYOUT_H_PX = COMMUNITY_CARD_SLOT_H_PX + 2 * PLAYING_CARD_MARGIN_PX
 
 function holeCardLayoutLeftFromPanelCenterPx(cardIndex: number): number {
   const rowHalfW = HOLE_HAND_ROW_W_PX / 2
@@ -98,11 +101,29 @@ function holeCardVisualTopLeftInPlanePx(
 
 type CardPlaneEndpoint = { x: number; y: number; scale: number }
 
+function communityCardRectToPlaneEndpoint(
+  planeRoot: HTMLElement,
+  cardRect: DOMRect
+): CardPlaneEndpoint | null {
+  const planeRect = planeRoot.getBoundingClientRect()
+  if (planeRect.width < 1 || planeRect.height < 1) return null
+  const planeScaleX = planeRoot.clientWidth / planeRect.width
+  const planeScaleY = planeRoot.clientHeight / planeRect.height
+  const scaleFromW = (cardRect.width * planeScaleX) / COMMUNITY_PLAYING_CARD_LAYOUT_W_PX
+  const scaleFromH = (cardRect.height * planeScaleY) / COMMUNITY_PLAYING_CARD_LAYOUT_H_PX
+  return {
+    x: (cardRect.left - planeRect.left) * planeScaleX,
+    y: (cardRect.top - planeRect.top) * planeScaleY,
+    scale: (scaleFromW + scaleFromH) / 2,
+  }
+}
+
 function tuneCommunityDealFlightEndpoint(endpoint: CardPlaneEndpoint): CardPlaneEndpoint {
   return {
     x: endpoint.x + COMMUNITY_DEAL_FLIGHT_X_NUDGE_PX,
     y: endpoint.y + COMMUNITY_DEAL_FLIGHT_Y_NUDGE_PX,
-    scale: endpoint.scale,
+    // Static board uses CSS scale(1.5) on `small` cards — match that on the flight layer.
+    scale: COMMUNITY_CARD_SLOT_SCALE,
   }
 }
 
@@ -837,7 +858,7 @@ function DisplayTableLive({
       for (let i = 0; i < cardCount; i++) {
         const anchor = communityCardAnchorRefs.current[i]
         if (!anchor) continue
-        const pt = holeCardRectToPlaneEndpoint(root, anchor.getBoundingClientRect())
+        const pt = communityCardRectToPlaneEndpoint(root, anchor.getBoundingClientRect())
         if (pt) next.set(i, pt)
       }
     }
