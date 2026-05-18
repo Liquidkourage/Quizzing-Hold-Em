@@ -465,6 +465,9 @@ export function dealCommunityCards(state: GameState): GameState {
     return -1;
   };
 
+  const currentPlayerIndex = findNextToAct();
+  const isBettingOpen = currentPlayerIndex >= 0;
+
   return {
     ...state,
     phase: 'betting',
@@ -473,8 +476,8 @@ export function dealCommunityCards(state: GameState): GameState {
       communityCards,
       bettingRound: 2,
       currentBet: 0,
-      currentPlayerIndex: findNextToAct(),
-      isBettingOpen: true,
+      currentPlayerIndex: isBettingOpen ? currentPlayerIndex : -1,
+      isBettingOpen,
       playerBets: {},
       lastSeatBettingAction: Array.from({ length: state.players.length }, () => null),
     },
@@ -559,17 +562,25 @@ function isBettingComplete(state: GameState): boolean {
   if (!state.round.isBettingOpen) return true;
   const cur = state.round.currentBet || 0;
   const bets = state.round.playerBets || {};
+  const lastActions = state.round.lastSeatBettingAction ?? [];
   let activeCount = 0;
-  for (const p of state.players) {
+  let actedCount = 0;
+  for (let i = 0; i < state.players.length; i++) {
+    const p = state.players[i]!;
     if (p.hasFolded) continue;
     if (p.isAllIn) continue;
     if (!inChipContest(p)) continue;
     activeCount++;
     const contributed = bets[p.id] || 0;
     if (contributed !== cur) return false;
+    if (lastActions[i] != null) actedCount++;
   }
-  // If zero or one active players remain, betting is trivially complete
-  return true;
+  if (activeCount <= 1) return true;
+  // Matched bets with a live wager on the street — no further calls needed.
+  if (cur > 0) return true;
+  // currentBet === 0: require a full check-around, not merely “everyone at $0”
+  // (fresh post-board streets reset playerBets and would otherwise auto-close).
+  return actedCount >= activeCount;
 }
 
 /**
