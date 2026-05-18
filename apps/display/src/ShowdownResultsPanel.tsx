@@ -26,7 +26,7 @@ function HoleCards({
 }) {
   if (folded || holes == null) {
     return (
-      <span className="text-[0.65rem] font-bold uppercase tracking-wider text-white/25 sm:text-xs">
+      <span className="text-[0.6rem] font-bold uppercase tracking-wider text-white/25 sm:text-[0.65rem]">
         Mucked
       </span>
     )
@@ -34,11 +34,14 @@ function HoleCards({
 
   if (compact) {
     return (
-      <motion.div className="flex items-center -space-x-1.5" aria-label={`Hole cards ${formatHoleDigits(holes)}`}>
+      <motion.div
+        className="flex items-center justify-center -space-x-1.5"
+        aria-label={`Hole cards ${formatHoleDigits(holes)}`}
+      >
         {holes.map((d, i) => (
           <span
             key={i}
-            className="inline-flex h-8 w-6 items-center justify-center rounded border border-cyan-300/50 bg-gradient-to-b from-slate-800 to-slate-950 font-mono text-sm font-black tabular-nums text-cyan-100 shadow-[0_2px_6px_rgba(0,0,0,0.5)] first:rotate-[-6deg] last:rotate-[6deg]"
+            className="inline-flex h-7 w-5 items-center justify-center rounded border border-cyan-300/50 bg-gradient-to-b from-slate-800 to-slate-950 font-mono text-xs font-black tabular-nums text-cyan-100 shadow-[0_2px_6px_rgba(0,0,0,0.5)] first:rotate-[-7deg] last:rotate-[7deg]"
           >
             {d}
           </span>
@@ -49,10 +52,10 @@ function HoleCards({
 
   return (
     <motion.div
-      className="flex items-end justify-center -space-x-8"
+      className="flex items-end justify-center -space-x-7"
       aria-label={`Hole cards ${formatHoleDigits(holes)}`}
     >
-      <div className="origin-bottom -rotate-6 scale-[0.72] sm:scale-[0.78]">
+      <motion.div className="origin-bottom -rotate-6 scale-[0.68] sm:scale-[0.74]">
         <NumericPlayingCard
           digit={holes[0]}
           size="small"
@@ -61,8 +64,8 @@ function HoleCards({
           neonVariant="matrix"
           animated={false}
         />
-      </div>
-      <div className="origin-bottom rotate-6 scale-[0.72] sm:scale-[0.78]">
+      </motion.div>
+      <motion.div className="origin-bottom rotate-6 scale-[0.68] sm:scale-[0.74]">
         <NumericPlayingCard
           digit={holes[1]}
           size="small"
@@ -71,12 +74,12 @@ function HoleCards({
           neonVariant="matrix"
           animated={false}
         />
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
 
-function PlayerShowdownRow({
+function PlayerShowdownPod({
   row,
   correctAnswer,
   isWinner,
@@ -98,102 +101,105 @@ function PlayerShowdownRow({
 
   if (compact) {
     return (
-      <motion.li
-        initial={{ opacity: 0, x: -6 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className={`flex items-center gap-2 rounded-md border px-2 py-1.5 ${
+      <motion.div
+        role="group"
+        aria-label={`${row.name}, seat ${row.seat}`}
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.04 }}
+        className={`flex flex-col items-center gap-1 rounded-lg border px-1.5 py-1.5 text-center ${
           isWinner
-            ? 'border-amber-400/55 bg-amber-950/40 shadow-[0_0_12px_rgba(251,191,36,0.15)]'
+            ? 'border-amber-400/55 bg-amber-950/45 shadow-[0_0_10px_rgba(251,191,36,0.2)]'
             : row.hasFolded
               ? 'border-white/8 bg-black/25 opacity-60'
               : 'border-white/12 bg-black/35'
         }`}
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-amber-600/40 bg-amber-950/80 font-mono text-[0.65rem] font-bold text-amber-200">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-amber-600/40 bg-amber-950/80 font-mono text-[0.6rem] font-bold text-amber-200">
           {row.seat}
         </span>
-        <span className="min-w-0 flex-1 truncate text-xs font-bold text-white/90">{row.name}</span>
+        <span className="max-w-full truncate text-[0.65rem] font-bold leading-tight text-white/90">
+          {row.name}
+        </span>
         <HoleCards holes={row.holes} folded={row.hasFolded} compact />
-        <span className="shrink-0 font-mono text-xs font-bold tabular-nums text-amber-200">
+        <span className="font-mono text-[0.7rem] font-black tabular-nums text-amber-200">
           {hasGuess ? row.submitted : '—'}
         </span>
-      </motion.li>
+      </motion.div>
     )
   }
 
   return (
-    <motion.li
+    <motion.div
+      role="group"
+      aria-label={`${row.name}, seat ${row.seat}`}
       layout
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.07, type: 'spring', stiffness: 280, damping: 24 }}
-      className={`relative grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 rounded-xl border px-3 py-3 sm:gap-4 sm:px-4 sm:py-3.5 ${
+      initial={{ opacity: 0, scale: 0.88, y: 12 }}
+      animate={{ opacity: 1, scale: isWinner ? 1.04 : 1, y: 0 }}
+      transition={{ delay: index * 0.06, type: 'spring', stiffness: 280, damping: 22 }}
+      className={`relative flex w-[8.25rem] flex-col items-center gap-2 rounded-2xl border px-2.5 pb-3 pt-3 sm:w-[9.5rem] sm:gap-2.5 sm:px-3 sm:pb-3.5 sm:pt-3.5 ${
         isWinner
-          ? 'border-amber-400/70 bg-gradient-to-r from-amber-950/55 via-amber-900/25 to-transparent shadow-[0_0_28px_rgba(251,191,36,0.22),inset_0_1px_0_rgba(255,236,180,0.12)]'
+          ? 'z-10 border-amber-400/75 bg-gradient-to-b from-amber-950/70 via-amber-900/35 to-black/50 shadow-[0_0_32px_rgba(251,191,36,0.28),inset_0_1px_0_rgba(255,236,180,0.14)]'
           : row.hasFolded
-            ? 'border-white/10 bg-black/30 opacity-55'
-            : 'border-white/15 bg-black/40'
+            ? 'border-white/10 bg-black/35 opacity-55'
+            : 'border-white/15 bg-black/45'
       }`}
     >
       {isWinner ? (
         <motion.div
-          className="pointer-events-none absolute -left-px top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-amber-200 via-amber-500 to-amber-800"
-          layoutId="showdown-winner-rail"
+          className="pointer-events-none absolute -inset-px rounded-2xl ring-2 ring-amber-300/50"
+          layoutId="showdown-winner-ring"
         />
       ) : null}
 
       <motion.div
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 font-mono text-lg font-black tabular-nums ${
+        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 font-mono text-base font-black tabular-nums sm:h-11 sm:w-11 sm:text-lg ${
           isWinner
-            ? 'border-amber-300/80 bg-amber-950 text-amber-100 shadow-[0_0_16px_rgba(251,191,36,0.35)]'
+            ? 'border-amber-300/80 bg-amber-950 text-amber-100 shadow-[0_0_14px_rgba(251,191,36,0.4)]'
             : 'border-amber-800/50 bg-slate-950/90 text-amber-200/90'
         }`}
       >
         {row.seat}
       </motion.div>
 
-      <div className="min-w-0">
-        <p className="truncate text-lg font-bold tracking-tight text-white sm:text-xl">{row.name}</p>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/45">
-          {row.hasFolded ? 'Folded' : isWinner ? 'Closest guess · pot winner' : hasGuess ? 'In the hand' : 'No submission'}
-        </p>
-      </div>
+      <p className="max-w-full truncate text-center text-sm font-bold leading-tight text-white sm:text-base">
+        {row.name}
+      </p>
 
-      <div className="flex justify-center px-1">
-        <HoleCards holes={row.holes} folded={row.hasFolded} compact={false} />
-      </div>
+      <HoleCards holes={row.holes} folded={row.hasFolded} compact={false} />
 
-      <div className="text-right">
-        <p className="text-[0.65rem] font-bold uppercase tracking-wider text-white/45">Guess</p>
-        <p className="font-mono text-2xl font-black tabular-nums text-amber-100 sm:text-3xl">
+      <motion.div
+        className="flex min-h-[2.75rem] w-full flex-col items-center justify-center rounded-lg border border-amber-500/25 px-2 py-1.5"
+        style={SHOWDOWN_FELT_STYLE}
+      >
+        <p className="text-[0.55rem] font-bold uppercase tracking-[0.14em] text-amber-200/70">Guess</p>
+        <p className="font-mono text-xl font-black tabular-nums text-amber-100 sm:text-2xl">
           {hasGuess ? row.submitted : '—'}
         </p>
-      </div>
-
-      <motion.div className="min-w-[4.5rem] text-right">
-        {!row.hasFolded && distance != null ? (
-          <>
-            <p className="text-[0.65rem] font-bold uppercase tracking-wider text-white/45">Off by</p>
-            <p
-              className={`font-mono text-xl font-black tabular-nums sm:text-2xl ${
-                isWinner ? 'text-emerald-300' : 'text-white/75'
-              }`}
-            >
-              {distance}
-            </p>
-          </>
-        ) : (
-          <span className="text-sm font-semibold text-white/35">—</span>
-        )}
-        {isWinner ? (
-          <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-500/20 px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-wider text-amber-100">
-            <PokerChip size="sm" />
-            Winner
-          </span>
-        ) : null}
       </motion.div>
-    </motion.li>
+
+      {!row.hasFolded && distance != null ? (
+        <p
+          className={`text-center font-mono text-sm font-black tabular-nums sm:text-base ${
+            isWinner ? 'text-emerald-300' : 'text-white/65'
+          }`}
+        >
+          <span className="text-[0.55rem] font-bold uppercase tracking-wider text-white/40">Off by </span>
+          {distance}
+        </p>
+      ) : (
+        <p className="text-center text-xs font-semibold text-white/35">
+          {row.hasFolded ? 'Folded' : 'No guess'}
+        </p>
+      )}
+
+      {isWinner ? (
+        <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-500/25 px-2 py-0.5 text-[0.6rem] font-black uppercase tracking-wider text-amber-100">
+          <PokerChip size="sm" />
+          Winner
+        </span>
+      ) : null}
+    </motion.div>
   )
 }
 
@@ -223,9 +229,13 @@ export default function ShowdownResultsPanel({
             {correctAnswer ?? '—'}
           </p>
         </div>
-        <ul className="max-h-48 space-y-1 overflow-y-auto overscroll-y-contain">
+        <div
+          className="grid max-h-52 grid-cols-2 gap-1.5 overflow-y-auto overscroll-y-contain sm:grid-cols-3"
+          role="group"
+          aria-label="Showdown results by seat"
+        >
           {activeRows.map((row, idx) => (
-            <PlayerShowdownRow
+            <PlayerShowdownPod
               key={`${row.seat}:${row.name}`}
               row={row}
               correctAnswer={correctAnswer}
@@ -234,7 +244,7 @@ export default function ShowdownResultsPanel({
               index={idx}
             />
           ))}
-        </ul>
+        </div>
       </motion.div>
     )
   }
@@ -245,13 +255,11 @@ export default function ShowdownResultsPanel({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      {/* Felt surface */}
       <div className="absolute inset-0 opacity-95" style={SHOWDOWN_FELT_STYLE} />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,220,120,0.12),transparent_55%)]" />
+      <motion.div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,220,120,0.12),transparent_55%)]" />
 
       <div className="relative z-10 p-5 sm:p-7 md:p-8">
-        {/* Header */}
-        <div className="mb-6 flex flex-col items-center gap-2 text-center sm:mb-8">
+        <div className="mb-5 flex flex-col items-center gap-2 text-center sm:mb-7">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-200/75 sm:text-sm">
             Showdown
           </p>
@@ -260,9 +268,8 @@ export default function ShowdownResultsPanel({
           </h2>
         </div>
 
-        {/* Answer medallion */}
         <motion.div
-          className="mx-auto mb-8 flex max-w-md flex-col items-center"
+          className="mx-auto mb-6 flex max-w-md flex-col items-center sm:mb-8"
           key={String(correctAnswer ?? 'na')}
           initial={{ scale: 0.88, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -301,13 +308,12 @@ export default function ShowdownResultsPanel({
           </p>
         </motion.div>
 
-        {/* Winner callout */}
         {winnerName ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.15 }}
-            className="mb-6 flex items-center justify-center gap-3 rounded-xl border border-amber-400/50 bg-black/45 px-4 py-3 backdrop-blur-sm sm:mb-8"
+            className="mb-5 flex items-center justify-center gap-3 rounded-xl border border-amber-400/50 bg-black/45 px-4 py-3 backdrop-blur-sm sm:mb-7"
           >
             <PokerChip size="md" />
             <p className="text-center text-lg font-black uppercase tracking-wide text-amber-100 sm:text-xl">
@@ -317,10 +323,13 @@ export default function ShowdownResultsPanel({
           </motion.div>
         ) : null}
 
-        {/* Player rail */}
-        <ul className="space-y-2.5 sm:space-y-3">
+        <motion.div
+          className="flex flex-wrap items-end justify-center gap-3 sm:gap-4"
+          role="group"
+          aria-label="Showdown results by seat"
+        >
           {activeRows.map((row, idx) => (
-            <PlayerShowdownRow
+            <PlayerShowdownPod
               key={`${row.seat}:${row.name}`}
               row={row}
               correctAnswer={correctAnswer}
@@ -329,7 +338,7 @@ export default function ShowdownResultsPanel({
               index={idx}
             />
           ))}
-        </ul>
+        </motion.div>
       </div>
     </motion.div>
   )
