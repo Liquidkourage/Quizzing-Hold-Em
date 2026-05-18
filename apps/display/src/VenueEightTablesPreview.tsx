@@ -12,11 +12,17 @@ import seatChipStackImg from './assets/seat-chip-stack.png'
 import DisplayTableLive from './App.tsx'
 import type { VenueFeaturedWatch } from './useVenueWallFeaturedWatch.ts'
 import ShowdownResultsPanel from './ShowdownResultsPanel'
-import { showdownCorrectAnswerFromTile, showdownRowsFromTile } from './showdownDisplay'
+import VenueMultiTableShowdown from './VenueMultiTableShowdown'
+import {
+  showdownCorrectAnswerFromTile,
+  showdownRowsFromTile,
+  sortShowdownRowsByDistance,
+} from './showdownDisplay'
 import {
   buildVenueWallTileRows,
   SEATING_SPOTLIGHT_CYCLE_SEC,
   SHOWDOWN_SPOTLIGHT_CYCLE_SEC,
+  shouldUseVenueShowdownWall,
   VENUE_WALL_SEAT_SLOTS,
 } from './venueWallModel'
 
@@ -798,9 +804,15 @@ function phaseAccent(ph: string) {
 type VenueMosaicTableCardProps = {
   row: DisplayVenueTileSnapshot
   isSpotlightThumb?: boolean
+  /** Center wall shows full results — crawl tiles only need a winner line. */
+  hideShowdownResults?: boolean
 }
 
-function VenueMosaicTableCard({ row, isSpotlightThumb }: VenueMosaicTableCardProps) {
+function VenueMosaicTableCard({
+  row,
+  isSpotlightThumb,
+  hideShowdownResults = false,
+}: VenueMosaicTableCardProps) {
   const tn = row.tableNum
   const seats = row.seated
   const pot = row.pot
@@ -890,19 +902,34 @@ function VenueMosaicTableCard({ row, isSpotlightThumb }: VenueMosaicTableCardPro
         </dl>
 
         {inShowdown && showdownRows.length > 0 ? (
-          <div
-            className="rounded-lg p-1"
-            style={{
-              background: 'linear-gradient(180deg, #5c3d1e 0%, #3d2810 100%)',
-              boxShadow: 'inset 0 1px 0 rgba(255,220,160,0.1)',
-            }}
-          >
-            <ShowdownResultsPanel
-              compact
-              correctAnswer={showdownAnswer}
-              rows={showdownRows}
-            />
-          </div>
+          hideShowdownResults ? (
+            <motion.div className="rounded-lg border border-amber-500/30 bg-amber-950/35 px-2 py-1.5 text-center">
+              <p className="text-[0.6rem] font-bold uppercase tracking-wider text-amber-200/70">Winner</p>
+              <p className="truncate text-xs font-black text-amber-50 sm:text-sm">
+                {(() => {
+                  const { winnerKey } = sortShowdownRowsByDistance(showdownRows, showdownAnswer)
+                  const winner = showdownRows.find(
+                    (r) => `${r.seat}:${r.name}` === winnerKey && r.name.trim() !== ''
+                  )
+                  return winner?.name ?? '—'
+                })()}
+              </p>
+            </motion.div>
+          ) : (
+            <div
+              className="rounded-lg p-1"
+              style={{
+                background: 'linear-gradient(180deg, #5c3d1e 0%, #3d2810 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,220,160,0.1)',
+              }}
+            >
+              <ShowdownResultsPanel
+                compact
+                correctAnswer={showdownAnswer}
+                rows={showdownRows}
+              />
+            </div>
+          )
         ) : null}
       </article>
   )
@@ -1025,10 +1052,12 @@ function VenueAllTablesCrawl({
   tiles,
   spotlightTableNum,
   prefersReducedMotion,
+  hideShowdownResults = false,
 }: {
   tiles: DisplayVenueTileSnapshot[]
   spotlightTableNum: number
   prefersReducedMotion: boolean
+  hideShowdownResults?: boolean
 }) {
   const durationSec = Math.max(36, Math.min(120, Math.max(1, tiles.length) * 8))
   const doubled = useMemo(() => [...tiles, ...tiles], [tiles])
@@ -1076,6 +1105,7 @@ function VenueAllTablesCrawl({
       key={key}
       row={row}
       isSpotlightThumb={row.tableNum === spotlightTableNum}
+      hideShowdownResults={hideShowdownResults}
     />
   )
 
@@ -1163,6 +1193,7 @@ export default function VenueEightTablesPreview({
   }, [answerDeadlineMs])
 
   const tileRows = useMemo(() => buildVenueWallTileRows(wall), [wall])
+  const useShowdownWall = shouldUseVenueShowdownWall(tileRows)
 
   const hasLiveWall = wall != null && wall.tiles != null && wall.tiles.length > 0
   const showHeadline =
@@ -1238,11 +1269,13 @@ export default function VenueEightTablesPreview({
         ) : seatingHeroRow ? (
           <section
             aria-label={
-              showShowdownTour
-                ? 'Showdown tour; full results on each felt in focus'
-                : showRotatingTour
-                  ? 'Seating spotlight tour; live felt in focus'
-                  : 'Venue floor featured table'
+              useShowdownWall
+                ? 'Venue showdown wall; all tables in reveal'
+                : showShowdownTour
+                  ? 'Showdown tour; full results on each felt in focus'
+                  : showRotatingTour
+                    ? 'Seating spotlight tour; live felt in focus'
+                    : 'Venue floor featured table'
             }
             className="mx-auto flex w-full max-w-none flex-col gap-2 overflow-visible sm:gap-3"
           >
@@ -1304,6 +1337,18 @@ export default function VenueEightTablesPreview({
               </motion.div>
             ) : null}
 
+            {useShowdownWall ? (
+              <>
+                {!showHeadline ? (
+                  <motion.div className="pointer-events-none mb-2 w-[clamp(7.5rem,min(26vw,10rem),12rem)] sm:mb-3 sm:w-[clamp(8.5rem,min(24vw,11rem),13rem)]">
+                    <div className="w-full shadow-black/70 drop-shadow-xl" style={{ aspectRatio: '958 / 592' }}>
+                      <QuizzEmWordmark layout="fill" />
+                    </div>
+                  </motion.div>
+                ) : null}
+                <VenueMultiTableShowdown tiles={tileRows} />
+              </>
+            ) : (
             <motion.article
               className="relative w-full overflow-hidden rounded-2xl border-2 border-yellow-400/85 bg-black/55 shadow-xl backdrop-blur-md"
               initial={skipMountIntro ? false : { opacity: 0, y: 10 }}
@@ -1358,6 +1403,7 @@ export default function VenueEightTablesPreview({
                 </div>
               ) : null}
             </motion.article>
+            )}
           </section>
         ) : null}
       </main>
@@ -1461,6 +1507,7 @@ export default function VenueEightTablesPreview({
           tiles={tileRows}
           spotlightTableNum={seatingHeroRow.tableNum}
           prefersReducedMotion={prefersReducedMotion}
+          hideShowdownResults={useShowdownWall}
         />
       ) : null}
       {showRoster ? <VenueScrollingRoster tiles={tileRows} /> : null}

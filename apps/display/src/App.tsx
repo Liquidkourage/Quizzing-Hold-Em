@@ -478,6 +478,8 @@ type DisplayTableLiveProps = {
    * numbered table or has not arrived (display sockets follow a single spotlight session).
    */
   venueHeroTile?: DisplayVenueTileSnapshot | null
+  /** Venue wall shows {@link VenueMultiTableShowdown} — skip single-table overlay on embedded felt. */
+  suppressShowdownOverlay?: boolean
 }
 
 function DisplayTableLive({
@@ -485,6 +487,7 @@ function DisplayTableLive({
   variant = 'fullscreen',
   hideQuestionBanner = false,
   venueHeroTile = null,
+  suppressShowdownOverlay = false,
 }: DisplayTableLiveProps) {
   const isEmbedded = variant === 'embedded'
 
@@ -2069,7 +2072,7 @@ function DisplayTableLive({
       </div>
 
       {/* Showdown Overlay */}
-      {displayGameState.phase === 'showdown' && (
+      {displayGameState.phase === 'showdown' && !(isEmbedded && suppressShowdownOverlay) && (
         <motion.div className={`${dockCls} inset-0 z-[60] flex items-center justify-center p-3 sm:p-6`}>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(20,80,45,0.35),rgba(0,0,0,0.88)_70%)] backdrop-blur-md" />
           <motion.div

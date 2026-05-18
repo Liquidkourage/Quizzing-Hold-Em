@@ -89,11 +89,17 @@ export function showdownTableNums(tileRows: DisplayVenueTileSnapshot[]): number[
   return tileRows.filter((t) => t.phase === 'showdown').map((t) => t.tableNum)
 }
 
+/** Venue wall shows every showdown table in the center grid — no hero rotation tour. */
+export function shouldUseVenueShowdownWall(tileRows: DisplayVenueTileSnapshot[]): boolean {
+  return showdownTableNums(tileRows).length > 0
+}
+
 /** Multiple felts in showdown with no host pin — cycle hero so TV shows each full overlay. */
 export function shouldRotateShowdownTour(
   tileRows: DisplayVenueTileSnapshot[],
   hostFocusTable: number | null
 ): boolean {
   if (hostFocusTable != null) return false
+  if (shouldUseVenueShowdownWall(tileRows)) return false
   return showdownTableNums(tileRows).length > 1
 }
