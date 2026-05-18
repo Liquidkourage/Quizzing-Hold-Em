@@ -50,9 +50,12 @@ const HOLE_MIDJOIN_REVEAL_MS = 800
 const HOLE_DEAL_FLIGHT_X_NUDGE_PX = -1
 const HOLE_DEAL_FLIGHT_Y_NUDGE_PX = -5
 const HOLE_DEAL_FLIGHT_SCALE_MULT = 1.08
-/** Community flight-only nudge (plane px) after DOM measure — positive X = right, positive Y = down. */
-const COMMUNITY_DEAL_FLIGHT_X_NUDGE_PX = 10
-const COMMUNITY_DEAL_FLIGHT_Y_NUDGE_PX = 12
+/** Static community anchor offset from computed card center (plane-local px). */
+const COMMUNITY_BOARD_ANCHOR_X_OFFSET_PX = 36
+const COMMUNITY_BOARD_ANCHOR_Y_OFFSET_PX = 37
+/** Extra flight-only nudge after DOM measure — positive X = right, positive Y = down. */
+const COMMUNITY_DEAL_FLIGHT_X_NUDGE_PX = 4
+const COMMUNITY_DEAL_FLIGHT_Y_NUDGE_PX = 6
 const COMMUNITY_CARD_SLOT_W_PX = 64
 const COMMUNITY_CARD_SLOT_H_PX = 96
 const COMMUNITY_CARD_SLOT_SCALE = 1.5
@@ -1652,8 +1655,13 @@ function DisplayTableLive({
                       const totalWidth = 5 * cardWidth + 4 * cardSpacing
                       const startX = -(totalWidth / 2) - (cardWidth + cardSpacing) * 0.75
                       const cardX = startX + dealingCard.cardIndex * (cardWidth + cardSpacing) + cardWidth / 2
-                      const left = cardX - (cardWidth * COMMUNITY_CARD_SLOT_SCALE) / 2 + 42
-                      const top = -(COMMUNITY_CARD_SLOT_H_PX * COMMUNITY_CARD_SLOT_SCALE) / 2 + 43
+                      const left =
+                        cardX -
+                        (cardWidth * COMMUNITY_CARD_SLOT_SCALE) / 2 +
+                        COMMUNITY_BOARD_ANCHOR_X_OFFSET_PX
+                      const top =
+                        -(COMMUNITY_CARD_SLOT_H_PX * COMMUNITY_CARD_SLOT_SCALE) / 2 +
+                        COMMUNITY_BOARD_ANCHOR_Y_OFFSET_PX
                       return {
                         x: fdW / 2 + left,
                         y: fdH / 2 - 48 + displayTableLiftPx + top,
@@ -2006,8 +2014,13 @@ function DisplayTableLive({
                           ref={(el) => registerCommunityCardAnchor(i, el)}
                           className="absolute"
                           style={{
-                            left: cardX - (cardWidth * COMMUNITY_CARD_SLOT_SCALE) / 2 + 42,
-                            top: -(COMMUNITY_CARD_SLOT_H_PX * COMMUNITY_CARD_SLOT_SCALE) / 2 + 43,
+                            left:
+                              cardX -
+                              (cardWidth * COMMUNITY_CARD_SLOT_SCALE) / 2 +
+                              COMMUNITY_BOARD_ANCHOR_X_OFFSET_PX,
+                            top:
+                              -(COMMUNITY_CARD_SLOT_H_PX * COMMUNITY_CARD_SLOT_SCALE) / 2 +
+                              COMMUNITY_BOARD_ANCHOR_Y_OFFSET_PX,
                             transform: `scale(${COMMUNITY_CARD_SLOT_SCALE})`,
                             transformOrigin: '0 0',
                           }}
