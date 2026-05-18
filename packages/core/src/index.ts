@@ -64,6 +64,20 @@ export interface RoundState {
   playerBets?: Record<string, number>; // contributions this betting round by playerId
   /** Indexed by `players[]` seat; cleared at each new wagering street. */
   lastSeatBettingAction?: (SeatBettingAction | null)[];
+  /** Total chips committed this hand (both wagering rounds); drives side-pot eligibility at payout. */
+  handContributions?: Record<string, number>;
+}
+
+/** Contestable pot layer — only `eligiblePlayerIds` may win it (trivia-closest at showdown). */
+export interface SidePot {
+  amount: number;
+  eligiblePlayerIds: string[];
+}
+
+export interface SidePotSettlement {
+  pots: SidePot[];
+  /** Uncalled excess returned to the bettor (not in any side pot). */
+  returns: Record<string, number>;
 }
 
 export interface GameState {
@@ -332,6 +346,7 @@ export function createEmptyGame(code: string, hostId: string = '', tableId: stri
       currentPlayerIndex: -1,
       isBettingOpen: false,
       playerBets: {},
+      handContributions: {},
     },
     players: [],
   };
@@ -428,6 +443,7 @@ export function dealInitialCards(state: GameState): GameState {
   let playersAfterBlinds = updatedPlayers;
   let pot = state.round.pot;
   const playerBets: Record<string, number> = {};
+  const handContributions: Record<string, number> = {};
 
   const postBlind = (idx: number, amount: number) => {
     if (idx < 0 || idx >= playersAfterBlinds.length || amount <= 0) return;
@@ -439,6 +455,7 @@ export function dealInitialCards(state: GameState): GameState {
     );
     pot += contribution;
     playerBets[player.id] = (playerBets[player.id] || 0) + contribution;
+    handContributions[player.id] = (handContributions[player.id] || 0) + contribution;
   };
 
   postBlind(smallBlindIndex, state.smallBlind);
@@ -470,10 +487,60 @@ export function dealInitialCards(state: GameState): GameState {
       currentPlayerIndex: isBettingOpen ? currentPlayerIndex : -1,
       isBettingOpen,
       playerBets,
+      handContributions,
       pot,
       lastSeatBettingAction: Array.from({ length: playersAfterBlinds.length }, () => null),
     },
   };
+}
+
+/**
+ * Build main + side pots from unequal all-ins. Folded players' chips stay in the pot but they are not eligible to win.
+ * Single-eligible layers (uncalled overbet) are returned instead of contested.
+ */
+export function buildSidePotSettlement(
+  contributions: Record<string, number>,
+  foldedByPlayerId: Record<string, boolean>
+): SidePotSettlement {
+  const entries = Object.entries(contributions)
+    .map(([id, amount]) => ({
+      id,
+      amount: typeof amount === 'number' && Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0,
+      folded: foldedByPlayerId[id] === true,
+    }))
+    .filter((e) => e.amount > 0);
+
+  if (entries.length === 0) return { pots: [], returns: {} };
+
+  const levels = [...new Set(entries.map((e) => e.amount))].sort((a, b) => a - b);
+  const pots: SidePot[] = [];
+  const returns: Record<string, number> = {};
+  let prev = 0;
+
+  for (const level of levels) {
+    const increment = level - prev;
+    if (increment <= 0) continue;
+
+    const atLevel = entries.filter((e) => e.amount >= level);
+    const eligible = atLevel.filter((e) => !e.folded);
+    const layerTotal = increment * atLevel.length;
+
+    if (eligible.length === 0) {
+      for (const e of atLevel) {
+        returns[e.id] = (returns[e.id] || 0) + increment;
+      }
+    } else if (eligible.length === 1 && atLevel.length === 1) {
+      returns[eligible[0]!.id] = (returns[eligible[0]!.id] || 0) + layerTotal;
+    } else {
+      pots.push({
+        amount: layerTotal,
+        eligiblePlayerIds: eligible.map((e) => e.id),
+      });
+    }
+    prev = level;
+  }
+
+  return { pots, returns };
 }
 
 /**
@@ -659,12 +726,16 @@ export function placeBet(state: GameState, playerId: string, amount: number): Ga
     }
     return player;
   });
+  const handContributions = { ...(state.round.handContributions || {}) };
+  handContributions[playerId] = (handContributions[playerId] || 0) + amount;
+
   return {
     ...state,
-    round: { 
-      ...state.round, 
+    round: {
+      ...state.round,
       pot: state.round.pot + amount,
-      playerBets: { ...(state.round.playerBets || {}), [playerId]: ((state.round.playerBets || {})[playerId] || 0) + amount }
+      playerBets: { ...(state.round.playerBets || {}), [playerId]: ((state.round.playerBets || {})[playerId] || 0) + amount },
+      handContributions,
     },
     players: updatedPlayers,
   };
@@ -985,11 +1056,22 @@ export function determineTriviaWinners(state: GameState): { winnerIds: string[];
 
 /** Winners eligible to receive `{@link payoutPotSplitAmong}` this wave (closest answer among chip contestants only). */
 export function determineChipPotTriviaWinners(state: GameState): { winnerIds: string[]; distance: number } | null {
+  const eligible = state.players.filter((p) => inChipContest(p) && !p.hasFolded).map((p) => p.id);
+  return determineChipPotTriviaWinnersAmong(state, eligible);
+}
+
+/** Closest trivia answer among a subset of seats (side-pot eligibility). */
+export function determineChipPotTriviaWinnersAmong(
+  state: GameState,
+  eligiblePlayerIds: readonly string[]
+): { winnerIds: string[]; distance: number } | null {
   const q = state.round.question;
   if (!q) return null;
+  const eligible = new Set(eligiblePlayerIds);
   let bestDistance = Infinity;
   for (const player of state.players) {
-    if (!inChipContest(player) || player.hasFolded || player.submittedAnswer === undefined) continue;
+    if (!eligible.has(player.id) || !inChipContest(player) || player.hasFolded || player.submittedAnswer === undefined)
+      continue;
     const distance = Math.abs(player.submittedAnswer - q.answer);
     if (distance < bestDistance) bestDistance = distance;
   }
@@ -997,6 +1079,7 @@ export function determineChipPotTriviaWinners(state: GameState): { winnerIds: st
   const winnerIds = state.players
     .filter(
       (p) =>
+        eligible.has(p.id) &&
         inChipContest(p) &&
         !p.hasFolded &&
         p.submittedAnswer !== undefined &&
@@ -1013,19 +1096,19 @@ export function determineWinner(state: GameState): { winnerId: string; distance:
   return { winnerId: tw.winnerIds[0]!, distance: tw.distance };
 }
 
-/** Split whole pot evenly in whole dollars; remainder $1 chips go to earliest ids in `winnerIds`. */
-export function payoutPotSplitAmong(state: GameState, winnerIds: string[]): GameState {
-  const pot = state.round.pot;
+/** Split `amount` from the table pot evenly in whole dollars; remainder $1 to earliest ids in `winnerIds`. */
+export function payoutPotAmountAmong(state: GameState, winnerIds: string[], amount: number): GameState {
+  const pay = Math.min(Math.max(0, Math.floor(amount)), state.round.pot);
   const ids = [...new Set(winnerIds)].filter((id) => {
     const p = state.players.find((x) => x.id === id);
     return p != null && inChipContest(p);
   });
-  if (pot <= 0 || ids.length === 0) {
-    return { ...state, round: { ...state.round, pot: 0 } };
+  if (pay <= 0 || ids.length === 0) {
+    return { ...state, round: { ...state.round, pot: state.round.pot - pay } };
   }
   const n = ids.length;
-  const baseShare = Math.floor(pot / n);
-  let remainder = pot - baseShare * n;
+  const baseShare = Math.floor(pay / n);
+  let remainder = pay - baseShare * n;
   const extraById = new Map<string, number>();
   for (let i = 0; i < n; i++) {
     const id = ids[i]!;
@@ -1037,7 +1120,74 @@ export function payoutPotSplitAmong(state: GameState, winnerIds: string[]): Game
     const add = extraById.get(p.id);
     return add ? { ...p, bankroll: p.bankroll + add } : p;
   });
-  return { ...state, round: { ...state.round, pot: 0 }, players };
+  return { ...state, round: { ...state.round, pot: state.round.pot - pay }, players };
+}
+
+/** Split whole pot evenly in whole dollars; remainder $1 chips go to earliest ids in `winnerIds`. */
+export function payoutPotSplitAmong(state: GameState, winnerIds: string[]): GameState {
+  return payoutPotAmountAmong(state, winnerIds, state.round.pot);
+}
+
+function payoutPotToEligibleSurvivors(state: GameState, eligiblePlayerIds: string[], amount: number): GameState {
+  const trivia = determineChipPotTriviaWinnersAmong(state, eligiblePlayerIds);
+  if (trivia && trivia.winnerIds.length > 0) {
+    return payoutPotAmountAmong(state, trivia.winnerIds, amount);
+  }
+  const alive = eligiblePlayerIds.filter((id) => {
+    const p = state.players.find((x) => x.id === id);
+    return p != null && inChipContest(p) && !p.hasFolded;
+  });
+  if (alive.length > 0) return payoutPotAmountAmong(state, alive, amount);
+  const seated = eligiblePlayerIds.filter((id) => {
+    const p = state.players.find((x) => x.id === id);
+    return p != null && inChipContest(p);
+  });
+  return seated.length > 0 ? payoutPotAmountAmong(state, seated, amount) : state;
+}
+
+/** Pay the hand using side pots when {@link RoundState.handContributions} is present. */
+export function payoutHandWithSidePots(state: GameState): GameState {
+  const contributions = state.round.handContributions ?? {};
+  const hasContribs = Object.values(contributions).some((v) => typeof v === 'number' && v > 0);
+  if (!hasContribs) return payoutLegacySinglePot(state);
+
+  const foldedByPlayerId: Record<string, boolean> = {};
+  for (const p of state.players) foldedByPlayerId[p.id] = p.hasFolded;
+
+  const { pots, returns } = buildSidePotSettlement(contributions, foldedByPlayerId);
+  let s = state;
+
+  for (const [id, amt] of Object.entries(returns)) {
+    if (amt <= 0) continue;
+    const pay = Math.min(amt, s.round.pot);
+    s = {
+      ...s,
+      round: { ...s.round, pot: s.round.pot - pay },
+      players: s.players.map((p) => (p.id === id ? { ...p, bankroll: p.bankroll + pay } : p)),
+    };
+  }
+
+  for (const pot of pots) {
+    if (pot.amount <= 0) continue;
+    s = payoutPotToEligibleSurvivors(s, pot.eligiblePlayerIds, pot.amount);
+  }
+
+  return { ...s, round: { ...s.round, pot: 0 } };
+}
+
+function payoutLegacySinglePot(state: GameState): GameState {
+  const pendingPot = state.round.pot;
+  if (pendingPot <= 0) return { ...state, round: { ...state.round, pot: 0 } };
+
+  const triviaChip = determineChipPotTriviaWinners(state);
+  if (triviaChip && triviaChip.winnerIds.length > 0) {
+    return payoutPotSplitAmong(state, triviaChip.winnerIds);
+  }
+  const alive = playerIdsStillInChipContest(state);
+  if (alive.length === 1) return payoutPotSplitAmong(state, alive);
+  if (alive.length >= 2) return payoutPotSplitAmong(state, alive);
+  const seated = state.players.filter((p) => inChipContest(p)).map((p) => p.id);
+  return seated.length > 0 ? payoutPotSplitAmong(state, seated) : { ...state, round: { ...state.round, pot: 0 } };
 }
 
 export function payoutWinner(state: GameState, winnerId: string): GameState {
@@ -1058,26 +1208,8 @@ function answerRoundPointsGained(snapshotPlayer: Pick<PlayerState, 'submittedAns
 export function endRound(state: GameState): GameState {
   if (state.phase !== 'showdown') return state;
 
-  const pendingPot = state.round.pot;
-  let afterPayout = state;
+  const afterPayout = payoutHandWithSidePots(state);
   const snapById = new Map(state.players.map((p) => [p.id, p]));
-
-  const triviaChip = determineChipPotTriviaWinners(state);
-  if (triviaChip && triviaChip.winnerIds.length > 0 && pendingPot > 0) {
-    afterPayout = payoutPotSplitAmong(state, triviaChip.winnerIds);
-  } else if (pendingPot > 0) {
-    const alive = playerIdsStillInChipContest(state);
-    if (alive.length === 1) {
-      afterPayout = payoutPotSplitAmong(state, alive);
-    } else if (alive.length >= 2) {
-      afterPayout = payoutPotSplitAmong(state, alive);
-    } else {
-      const seated = state.players.filter((p) => inChipContest(p)).map((p) => p.id);
-      afterPayout = seated.length > 0 ? payoutPotSplitAmong(state, seated) : { ...state, round: { ...state.round, pot: 0 } };
-    }
-  } else {
-    afterPayout = { ...state, round: { ...state.round, pot: 0 } };
-  }
 
   const q = state.round.question;
   const clearedPlayers: PlayerState[] = afterPayout.players.map((p) => {
@@ -1111,6 +1243,7 @@ export function endRound(state: GameState): GameState {
       currentPlayerIndex: -1,
       isBettingOpen: false,
       playerBets: {},
+      handContributions: {},
     },
     players: clearedPlayers,
   };
