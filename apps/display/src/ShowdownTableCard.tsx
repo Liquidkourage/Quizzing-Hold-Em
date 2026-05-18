@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion'
 import { formatTriviaNumber } from '@qhe/core'
 import { PokerChip } from '@qhe/ui'
+import { ShowdownFiveCardsUsed } from './showdownCardChips'
 import {
-  formatHoleDigits,
   sortShowdownRowsByDistance,
   type ShowdownResultRow,
 } from './showdownDisplay'
@@ -33,7 +33,7 @@ function MiniRow({
 
   return (
     <div
-      className={`flex min-w-0 items-center gap-2 rounded-md border px-2 py-1.5 ${
+      className={`grid min-w-0 grid-cols-2 items-start gap-x-2 gap-y-1 rounded-md border px-2 py-1.5 ${
         isWinner
           ? 'border-amber-400/55 bg-amber-950/45'
           : row.hasFolded
@@ -41,20 +41,27 @@ function MiniRow({
             : 'border-white/10 bg-black/30'
       }`}
     >
-      <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[0.65rem] font-black tabular-nums ${
-          isWinner ? 'bg-amber-500/25 text-amber-100' : 'bg-black/40 text-white/70'
-        }`}
-      >
-        {row.seat}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-bold text-white sm:text-sm">{row.name}</p>
-        <p className="truncate font-mono text-[0.65rem] tabular-nums text-white/45">
-          {row.hasFolded ? 'Folded' : formatHoleDigits(row.holes)}
-        </p>
+      <div className="col-span-2 flex min-w-0 items-center gap-1.5">
+        <span
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[0.65rem] font-black tabular-nums ${
+            isWinner ? 'bg-amber-500/25 text-amber-100' : 'bg-black/40 text-white/70'
+          }`}
+        >
+          {row.seat}
+        </span>
+        <p className="min-w-0 flex-1 truncate text-xs font-bold text-white sm:text-sm">{row.name}</p>
+        {isWinner ? <PokerChip size="sm" className="shrink-0 opacity-90" /> : null}
       </div>
-      <div className="shrink-0 text-right">
+
+      <div className="min-w-0">
+        <p className="mb-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-white/40">
+          Cards used
+        </p>
+        <ShowdownFiveCardsUsed row={row} size="sm" />
+      </div>
+
+      <div className="text-right">
+        <p className="text-[0.55rem] font-bold uppercase tracking-wider text-white/40">Guess</p>
         <p className="font-mono text-xs font-black tabular-nums text-amber-100 sm:text-sm">
           {hasGuess ? formatTriviaNumber(row.submitted) : '—'}
         </p>
@@ -68,7 +75,6 @@ function MiniRow({
           </p>
         ) : null}
       </div>
-      {isWinner ? <PokerChip size="sm" className="shrink-0 opacity-90" /> : null}
     </div>
   )
 }
@@ -115,18 +121,20 @@ export default function ShowdownTableCard({
       ) : null}
 
       <div
-        className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-y-contain p-2 sm:p-2.5"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-2 sm:p-2.5"
         role="group"
         aria-label={`Table ${tableNum} showdown results`}
       >
-        {activeRows.map((row) => (
-          <MiniRow
-            key={`${row.seat}:${row.name}`}
-            row={row}
-            correctAnswer={correctAnswer}
-            isWinner={winnerKey === `${row.seat}:${row.name}`}
-          />
-        ))}
+        <div className="grid grid-cols-2 gap-1.5">
+          {activeRows.map((row) => (
+            <MiniRow
+              key={`${row.seat}:${row.name}`}
+              row={row}
+              correctAnswer={correctAnswer}
+              isWinner={winnerKey === `${row.seat}:${row.name}`}
+            />
+          ))}
+        </div>
       </div>
     </motion.article>
   )

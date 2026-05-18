@@ -1,7 +1,9 @@
 import {
   answerCompositionForPlayer,
   communityIndicesFromAnswerComposition,
+  inferAnswerComposition,
   type GameState,
+  type NumericCard,
 } from '@qhe/core'
 import type { DisplayVenueTileSnapshot } from '@qhe/net'
 
@@ -71,10 +73,26 @@ export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownRe
       const g = guesses?.[i]
       if (typeof g === 'number' && Number.isFinite(g)) submitted = g
     }
-    const answerCommunityIndices =
+    let answerCommunityIndices =
       !hasFolded && submitted != null
         ? communityIndicesForPlayer(null, communityPicks?.[i] ?? null)
         : []
+    if (
+      !hasFolded &&
+      submitted != null &&
+      answerCommunityIndices.length === 0 &&
+      holePair != null &&
+      communityBoard != null &&
+      communityBoard.length >= 5
+    ) {
+      const hand: NumericCard[] = [
+        { digit: holePair[0] as NumericCard['digit'] },
+        { digit: holePair[1] as NumericCard['digit'] },
+      ]
+      const community = communityBoard.slice(0, 5).map((d) => ({ digit: d as NumericCard['digit'] }))
+      const comp = inferAnswerComposition(hand, community, submitted)
+      answerCommunityIndices = communityIndicesForPlayer(comp, undefined)
+    }
     rows.push({
       seat: i + 1,
       name,
