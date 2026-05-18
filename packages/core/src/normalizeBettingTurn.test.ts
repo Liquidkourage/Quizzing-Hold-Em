@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createEmptyGame, dealCommunityCards, dealInitialCards, normalizeBettingTurn } from './index'
 
 describe('normalizeBettingTurn', () => {
-  it('closes wagering when the action seat has folded', () => {
+  it('advances off a folded action seat when another player can still act', () => {
     let gs = createEmptyGame('T', '', '1')
     gs = {
       ...gs,
@@ -20,8 +20,8 @@ describe('normalizeBettingTurn', () => {
       },
     }
     const next = normalizeBettingTurn(gs)
-    expect(next.round.isBettingOpen).toBe(false)
-    expect(next.round.currentPlayerIndex).toBe(-1)
+    expect(next.round.isBettingOpen).toBe(true)
+    expect(next.round.currentPlayerIndex).toBe(1)
   })
 
   it('advances off an all-in seat when another player still owes action', () => {
@@ -76,5 +76,29 @@ describe('normalizeBettingTurn', () => {
     const next = normalizeBettingTurn(gs)
     expect(next.round.isBettingOpen).toBe(true)
     expect(next.round.currentPlayerIndex).toBeGreaterThanOrEqual(0)
+  })
+
+  it('keeps an unopened street open for a lone remaining actor', () => {
+    let gs = createEmptyGame('T', '', '1')
+    gs = {
+      ...gs,
+      phase: 'betting',
+      players: [
+        { id: 'a', name: 'A', bankroll: 500, hand: [], hasFolded: true, isAllIn: false },
+        { id: 'b', name: 'B', bankroll: 500, hand: [], hasFolded: false, isAllIn: false },
+      ],
+      round: {
+        ...gs.round,
+        bettingRound: 2,
+        isBettingOpen: true,
+        currentPlayerIndex: 1,
+        currentBet: 0,
+        playerBets: {},
+        lastSeatBettingAction: [null, null],
+      },
+    }
+    const next = normalizeBettingTurn(gs)
+    expect(next.round.isBettingOpen).toBe(true)
+    expect(next.round.currentPlayerIndex).toBe(1)
   })
 })

@@ -575,7 +575,17 @@ function isBettingComplete(state: GameState): boolean {
     if (contributed !== cur) return false;
     if (lastActions[i] != null) actedCount++;
   }
-  if (activeCount <= 1) return true;
+  if (activeCount === 0) return true;
+  // Lone actor on an unopened street still needs to check/raise (common post-board).
+  if (activeCount === 1 && cur === 0) {
+    for (let i = 0; i < state.players.length; i++) {
+      const p = state.players[i]!;
+      if (p.hasFolded || p.isAllIn || !inChipContest(p)) continue;
+      return lastActions[i] != null;
+    }
+    return true;
+  }
+  if (activeCount === 1) return true;
   // Matched bets with a live wager on the street — no further calls needed.
   if (cur > 0) return true;
   // currentBet === 0: require a full check-around, not merely “everyone at $0”

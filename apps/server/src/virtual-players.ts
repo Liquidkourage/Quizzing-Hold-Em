@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto'
-import type { GameState } from '@qhe/core'
 import {
   addPlayer,
   removePlayer,
@@ -12,6 +11,8 @@ import {
   nearestLegalAnswerToTarget,
   rehearsalSeatDisplayName,
   normalizeBettingTurn,
+  inChipContest,
+  type GameState,
 } from '@qhe/core'
 
 /** Synthetic seats — never collide with Socket.IO ids. */
@@ -64,6 +65,21 @@ function vpAmountToCall(state: GameState, playerId: string): number {
   return Math.max(0, cur - contrib)
 }
 
+/** No wager on the street yet (`currentBet === 0`), e.g. fresh post-board round 2. */
+function chipStreetUnopened(state: GameState): boolean {
+  return (state.round.currentBet || 0) === 0
+}
+
+function anyActiveSeatActedThisStreet(state: GameState): boolean {
+  const last = state.round.lastSeatBettingAction ?? []
+  for (let i = 0; i < state.players.length; i++) {
+    const p = state.players[i]
+    if (!p || p.hasFolded || p.isAllIn || !inChipContest(p)) continue
+    if (last[i] != null) return true
+  }
+  return false
+}
+
 /** Human-like wagering: occasional open/raising, rarely fold useless, sometimes jam. */
 function actVirtualBetting(state: GameState, pid: string): GameState {
   const seat = state.players.find((p) => p.id === pid)
@@ -80,8 +96,16 @@ function actVirtualBetting(state: GameState, pid: string): GameState {
   }
 
   if (toCall === 0 && br > 0) {
-    // Can check — sometimes open with a minimum raise instead
-    if (Math.random() < 0.16 && br >= bb) {
+    // Can check — sometimes open with a min-raise (no blind seed on post-board streets).
+    const postBoard = (state.round.bettingRound ?? 0) >= 2
+    const unopened = chipStreetUnopened(state)
+    let openChance = 0.16
+    if (unopened && postBoard) {
+      openChance = 0.45
+    } else if (unopened && !anyActiveSeatActedThisStreet(state)) {
+      openChance = 0.28
+    }
+    if (Math.random() < openChance && br >= bb) {
       const raised = playerRaise(state, pid, bb)
       if (raised !== state) return raised
     }
