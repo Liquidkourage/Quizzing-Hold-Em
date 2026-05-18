@@ -44,7 +44,7 @@ const VENUE_HERO_CARPET_STYLE: CSSProperties = {
 const SEAT_LAYER_DOT = 'z-[20]'
 const SEAT_LAYER_FELT_CHIP_PILE = 'z-[115]'
 const SEAT_LAYER_BLIND_OUT = 'z-[117]'
-const SEAT_LAYER_CENTER_CALL_HINT = 'z-[118]'
+const SEAT_LAYER_ACTION_PANEL = 'z-[118]'
 const SEAT_LAYER_NAME_CLUSTER = 'z-[120]'
 
 /** Fixed crawl strips (Players + All tables): keep widths and page padding in sync */
@@ -483,10 +483,10 @@ function SeatRingWithLabels({
   const seatLastBettingAction = padSeatLastBettingAction(seatLastBettingActionIn)
   const prefersReducedMotion = usePrefersReducedMotion()
   const lgRing =
-    'mx-auto aspect-[10/8] h-auto max-h-[min(min(68svh,57dvh),39rem)] w-[min(100%,calc(100dvw-2.5rem),54.625rem)] max-w-full shrink-0'
+    'mx-auto aspect-[10/8] h-auto max-h-[min(min(68svh,57dvh),68.25rem)] w-[min(100%,calc(100dvw-2.5rem),95.6rem)] max-w-full shrink-0'
   /** Must keep height so %-positioned seats/names resolve; only abs children collapsed to zero without aspect. */
   const mdRing =
-    'mx-auto aspect-[10/8] h-auto w-full max-w-[min(100%,21rem)] shrink-0 sm:max-w-[min(100%,22rem)]'
+    'mx-auto aspect-[10/8] h-auto w-full max-w-[min(100%,36.75rem)] shrink-0 sm:max-w-[min(100%,38.5rem)]'
   const wrap = size === 'lg' ? lgRing : mdRing
   const dot = size === 'lg' ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]' : 'h-8 w-8'
   /** Larger rim marker for the player on the clock — reads from the back of the room. */
@@ -578,9 +578,10 @@ function SeatRingWithLabels({
           showSeatBettingActions &&
           actingCallAmount != null &&
           typeof actingCallAmount === 'number'
-        /** Toward table center: call/size hint reads on felt (no separate Action badge). */
-        const actionChipLeftPct = (seatRim.leftPct + 50) * 0.5
-        const actionChipTopPct = (seatRim.topPct + 50) * 0.5
+        const showActionPanel = Boolean(lastBetAct != null || showActingCallLine)
+        /** Below the name/stack cluster — keeps CHECK / CALL off the felt center. */
+        const actionPanelBelowPx =
+          (size === 'lg' ? 44 : 36) + (feltSeatStacks && size === 'lg' ? 10 : 0)
         const seatDotClass = (() => {
           if (isActing && prefersReducedMotion) {
             return 'border-[3px] border-amber-200/95 bg-neutral-950 shadow-[0_0_14px_rgba(234,179,8,0.4)]'
@@ -629,27 +630,6 @@ function SeatRingWithLabels({
                 }
               />
             </div>
-            {isActing && showActingCallLine ? (
-              <div
-                className={`pointer-events-none absolute ${SEAT_LAYER_CENTER_CALL_HINT} flex -translate-x-1/2 -translate-y-1/2 flex-col items-center ${
-                  size === 'lg' ? '-mt-2' : ''
-                }`}
-                style={{
-                  left: `${actionChipLeftPct}%`,
-                  top: `${actionChipTopPct}%`,
-                }}
-              >
-                <span
-                  className={
-                    size === 'lg'
-                      ? 'max-w-[min(100vw-2rem,22rem)] whitespace-normal rounded-xl border-2 border-amber-300/45 bg-neutral-950/95 px-3 py-2 text-center text-base font-bold tabular-nums leading-snug text-amber-50 shadow-[0_0_24px_rgba(251,191,36,0.25)] ring-2 ring-amber-400/25 sm:max-w-[24rem] sm:px-3.5 sm:py-2.5 sm:text-lg md:text-xl [text-shadow:0_1px_3px_rgba(0,0,0,1)]'
-                      : 'max-w-[min(90vw,14rem)] whitespace-normal rounded-lg border-2 border-amber-300/35 bg-neutral-950/95 px-2.5 py-1.5 text-center text-xs font-bold tabular-nums leading-snug text-amber-50 shadow-md ring-1 ring-amber-400/30 sm:max-w-[16rem] sm:px-3 sm:py-2 sm:text-sm md:text-base [text-shadow:0_1px_2px_rgba(0,0,0,1)]'
-                  }
-                >
-                  {formatActingCallHint(actingCallAmount ?? 0)}
-                </span>
-              </div>
-            ) : null}
             {(() => {
               if (blindSeats == null) return null
               const tags = blindTagsForSeat(i, blindSeats)
@@ -742,12 +722,7 @@ function SeatRingWithLabels({
                   {raw}
                 </span>
                 {(() => {
-                  const showDupStackForBettingTag =
-                    showSeatBettingActions &&
-                    lastBetAct != null &&
-                    Boolean(feltSeatStacks && size === 'lg' && raw)
-                  const showMonoStackUnderName =
-                    !(feltSeatStacks && size === 'lg') || showDupStackForBettingTag
+                  const showMonoStackUnderName = !(feltSeatStacks && size === 'lg')
                   return (
                     <>
                       {showMonoStackUnderName ? (
@@ -759,20 +734,42 @@ function SeatRingWithLabels({
                           {formatVenueBankroll(chips)}
                         </span>
                       ) : null}
-                      {lastBetAct != null ? (
-                        <span
-                          className={`mt-1 block max-w-full truncate border-2 px-1.5 py-0.5 font-black uppercase leading-tight tracking-wide shadow-md ${
-                            size === 'lg'
-                              ? 'text-sm sm:text-base md:text-lg'
-                              : 'text-[0.7rem] sm:text-xs md:text-sm'
-                          } ${seatBettingActionPillClass(lastBetAct)}`}
-                        >
-                          {seatBettingActionLabel(lastBetAct)}
-                        </span>
-                      ) : null}
                     </>
                   )
                 })()}
+              </div>
+            ) : null}
+            {raw && showActionPanel ? (
+              <div
+                className={`pointer-events-none absolute ${SEAT_LAYER_ACTION_PANEL} flex flex-col items-center gap-1 text-center`}
+                style={{
+                  left: `${labelPos.leftPct}%`,
+                  top: `${labelPos.topPct}%`,
+                  transform: `translate(-50%, calc(-50% + ${labelVy + actionPanelBelowPx}px))`,
+                }}
+              >
+                {showActingCallLine ? (
+                  <span
+                    className={
+                      size === 'lg'
+                        ? 'max-w-[min(100vw-2rem,20rem)] whitespace-normal rounded-lg border-2 border-amber-300/45 bg-neutral-950/95 px-2.5 py-1.5 text-sm font-bold tabular-nums leading-snug text-amber-50 shadow-md ring-1 ring-amber-400/25 sm:text-base'
+                        : 'max-w-[min(90vw,12rem)] whitespace-normal rounded-md border-2 border-amber-300/35 bg-neutral-950/95 px-2 py-1 text-[0.65rem] font-bold tabular-nums leading-snug text-amber-50 shadow-md sm:text-xs'
+                    }
+                  >
+                    {formatActingCallHint(actingCallAmount ?? 0)}
+                  </span>
+                ) : null}
+                {lastBetAct != null ? (
+                  <span
+                    className={`max-w-full truncate border-2 px-1.5 py-0.5 font-black uppercase leading-tight tracking-wide shadow-md ${
+                      size === 'lg'
+                        ? 'text-sm sm:text-base md:text-lg'
+                        : 'text-[0.7rem] sm:text-xs md:text-sm'
+                    } ${seatBettingActionPillClass(lastBetAct)}`}
+                  >
+                    {seatBettingActionLabel(lastBetAct)}
+                  </span>
+                ) : null}
               </div>
             ) : null}
           </div>

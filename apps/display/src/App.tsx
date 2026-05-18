@@ -160,13 +160,21 @@ function tuneHoleCardDealFlightEndpoint(endpoint: CardPlaneEndpoint): CardPlaneE
   }
 }
 
+/** Hero felt authoring scale (rail oval, cupholders, seat HUD orbit). */
+const HERO_TABLE_SCALE = 1.75
+
+const HERO_RAIL_W_PX = Math.round(810 * HERO_TABLE_SCALE)
+const HERO_RAIL_H_PX = Math.round(605 * HERO_TABLE_SCALE)
+const HERO_RAIL_SHADOW_W_PX = Math.round(842 * HERO_TABLE_SCALE)
+const HERO_RAIL_SHADOW_H_PX = Math.round(637 * HERO_TABLE_SCALE)
+
 /**
- * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of 810×605 rail box origin.
+ * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of rail box origin.
  */
 function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: number } {
   const angle = (index / total) * 2 * Math.PI - Math.PI / 2
-  const baseRadiusX = 392
-  const baseRadiusY = 316
+  const baseRadiusX = 392 * HERO_TABLE_SCALE
+  const baseRadiusY = 316 * HERO_TABLE_SCALE
   let ox = Math.cos(angle) * baseRadiusX
   let oy = Math.sin(angle) * baseRadiusY
   const normalizedAngle = ((angle + Math.PI / 2) % (2 * Math.PI)) / (2 * Math.PI)
@@ -176,21 +184,27 @@ function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: num
     (normalizedAngle > 0.125 && normalizedAngle < 0.375) ||
     (normalizedAngle > 0.625 && normalizedAngle < 0.875)
   if (isTopRegion) {
-    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
-    oy = -291.6 + bowAmount
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3 * HERO_TABLE_SCALE
+    oy = -291.6 * HERO_TABLE_SCALE + bowAmount
   } else if (isBottomRegion) {
-    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
-    oy = 291.6 - bowAmount
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3 * HERO_TABLE_SCALE
+    oy = 291.6 * HERO_TABLE_SCALE - bowAmount
   } else if (isCorner) {
-    ox = Math.cos(angle) * (baseRadiusX + 0.81)
-    oy = Math.sin(angle) * (baseRadiusY + 0.81)
+    ox = Math.cos(angle) * (baseRadiusX + 0.81 * HERO_TABLE_SCALE)
+    oy = Math.sin(angle) * (baseRadiusY + 0.81 * HERO_TABLE_SCALE)
   }
   return { ox, oy }
 }
 
 /** Visual center-ish under pot / community arc on authoring table (px, same coords as cupholders). */
-const HERO_TABLE_POT_ANCHOR = { cx: 406, cy: 298 } as const
-const HERO_CUPHOLDER_ORIGIN = { left: 394, top: 293 } as const
+const HERO_TABLE_POT_ANCHOR = {
+  cx: Math.round(406 * HERO_TABLE_SCALE),
+  cy: Math.round(298 * HERO_TABLE_SCALE),
+} as const
+const HERO_CUPHOLDER_ORIGIN = {
+  left: Math.round(394 * HERO_TABLE_SCALE),
+  top: Math.round(293 * HERO_TABLE_SCALE),
+} as const
 
 function heroFeltPointTowardPot(
   rimLeftPx: number,
@@ -259,19 +273,6 @@ const HERO_SEAT_BETTING_ACTION_PILL_CLASS: Record<SeatBettingAction, string> = {
   raise: 'border-amber-500/45 bg-amber-950/90 text-amber-100',
   fold: 'border-rose-400/45 bg-rose-950/92 text-rose-100',
   allIn: 'border-violet-500/45 bg-violet-950/90 text-violet-100',
-}
-
-/** On-felt “to call” cue — between acting seat rim and pot anchor, stable in table-local px. */
-function heroWagerCallBubblePositionPx(
-  actingIndex: number,
-  total: number,
-  towardPotFrac = 0.42
-): { leftPx: number; topPx: number } {
-  const { ox, oy } = heroSeatCupOffsets(actingIndex, total)
-  const rimLeft = HERO_CUPHOLDER_ORIGIN.left + ox
-  const rimTop = HERO_CUPHOLDER_ORIGIN.top + oy
-  const p = heroFeltPointTowardPot(rimLeft, rimTop, towardPotFrac)
-  return { leftPx: p.leftPx, topPx: p.topPx }
 }
 
 function displayPhaseLabel(phase: GamePhase, round?: GameState['round']): string {
@@ -1257,7 +1258,7 @@ function DisplayTableLive({
     const cupholderDistance = Math.sqrt(cupholderX * cupholderX + cupholderY * cupholderY) || 1
     const directionX = cupholderX / cupholderDistance
     const directionY = cupholderY / cupholderDistance
-    let extensionDistance = 142
+    let extensionDistance = 142 * HERO_TABLE_SCALE
     const isCornerPosition = index % 2 === 1
     extensionDistance = isCornerPosition ? extensionDistance * 1.1 : extensionDistance * 0.9
     const playerX = cupholderX + directionX * extensionDistance
@@ -1775,15 +1776,6 @@ function DisplayTableLive({
                     Seat {heroDisplayedSeatNumber(player, index + 1)}
                   </div>
                   <div className="mb-1 text-base font-bold text-yellow-400">{player.name}</div>
-                  {heroBettingHud.showSeatPills && lastBetAct != null && (
-                    <div className="mt-0.5 flex justify-center">
-                      <span
-                        className={`inline-flex items-center justify-center rounded-md border px-2.5 py-0.5 text-[11px] font-extrabold tracking-wide shadow-md md:text-xs ${HERO_SEAT_BETTING_ACTION_PILL_CLASS[lastBetAct]}`}
-                      >
-                        {HERO_SEAT_BETTING_ACTION_LABELS[lastBetAct]}
-                      </span>
-                    </div>
-                  )}
                   <div className="sr-only">${formatHeroStackMoney(player.bankroll)}</div>
                   
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
@@ -1831,6 +1823,29 @@ function DisplayTableLive({
                     <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-red-400 font-bold text-sm">FOLDED</div>
                   )}
                 </div>
+                {(heroBettingHud.showSeatPills && lastBetAct != null) ||
+                (actingHere &&
+                  heroBettingHud.showCallBubble &&
+                  heroBettingHud.callLabel != null) ? (
+                  <div className="pointer-events-none absolute left-1/2 top-full z-40 mt-2 flex w-max max-w-[min(92vw,14rem)] -translate-x-1/2 flex-col items-center gap-1.5 sm:max-w-[16rem]">
+                    {actingHere &&
+                    heroBettingHud.showCallBubble &&
+                    heroBettingHud.callLabel != null ? (
+                      <div className="w-full rounded-lg border border-amber-300/45 bg-neutral-950/95 px-2.5 py-1.5 text-center shadow-md ring-1 ring-amber-400/25">
+                        <p className="font-mono text-xs font-bold tabular-nums leading-snug text-amber-50 sm:text-sm">
+                          {heroBettingHud.callLabel}
+                        </p>
+                      </div>
+                    ) : null}
+                    {heroBettingHud.showSeatPills && lastBetAct != null ? (
+                      <span
+                        className={`inline-flex w-full items-center justify-center rounded-md border px-2.5 py-0.5 text-[11px] font-extrabold tracking-wide shadow-md md:text-xs ${HERO_SEAT_BETTING_ACTION_PILL_CLASS[lastBetAct]}`}
+                      >
+                        {HERO_SEAT_BETTING_ACTION_LABELS[lastBetAct]}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
               </motion.div>
             )
           })}
@@ -1841,10 +1856,16 @@ function DisplayTableLive({
             style={{ top: `calc(50% + ${displayTableLiftPx}px)` }}
           >
             {/* Table shadow */}
-            <div className="absolute inset-0 w-[842px] h-[637px] bg-black/40 rounded-full blur-lg transform translate-y-2"></div>
+            <div
+              className="absolute inset-0 bg-black/40 rounded-full blur-lg transform translate-y-2"
+              style={{ width: HERO_RAIL_SHADOW_W_PX, height: HERO_RAIL_SHADOW_H_PX }}
+            />
             
             {/* Table base/rail */}
-            <div className="w-[810px] h-[605px] bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative">
+            <div
+              className="bg-gradient-to-br from-amber-800 via-amber-700 to-amber-900 rounded-full border-8 border-amber-600 shadow-2xl relative"
+              style={{ width: HERO_RAIL_W_PX, height: HERO_RAIL_H_PX }}
+            >
                             {/* FELT SURFACE - Direct application to rail padding */}
               <div 
                 className="absolute inset-2 rounded-full border-4 border-amber-500"
@@ -1941,29 +1962,6 @@ function DisplayTableLive({
                 )
               })}
 
-              {heroBettingHud.showCallBubble && heroBettingHud.callLabel != null && heroBettingHud.acting != null ? (
-                (() => {
-                  const n = displayGameState.players.length
-                  const { leftPx, topPx } = heroWagerCallBubblePositionPx(heroBettingHud.acting, n)
-                  return (
-                    <div
-                      className="pointer-events-none absolute z-[128] max-w-[min(92vw,520px)] -translate-x-1/2 -translate-y-1/2 px-2"
-                      style={{ left: `${leftPx}px`, top: `${topPx}px` }}
-                      aria-live="polite"
-                    >
-                      <div className="rounded-2xl border border-cyan-400/50 bg-black/78 px-5 py-3 text-center shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-md md:px-6 md:py-3.5">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/90 md:text-xs">
-                          Action
-                        </div>
-                        <div className="mt-1 text-balance text-base font-bold leading-snug text-cyan-50 sm:text-lg md:text-xl">
-                          {heroBettingHud.callLabel}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })()
-              ) : null}
-              
               {/* Pot display - positioned higher */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-36 text-center">
                 <div className="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2 relative overflow-visible">
