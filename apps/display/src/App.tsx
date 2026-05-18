@@ -160,21 +160,23 @@ function tuneHoleCardDealFlightEndpoint(endpoint: CardPlaneEndpoint): CardPlaneE
   }
 }
 
-/** Hero felt authoring scale (rail oval, cupholders, seat HUD orbit). */
-const HERO_TABLE_SCALE = 1.75
-
-const HERO_RAIL_W_PX = Math.round(810 * HERO_TABLE_SCALE)
-const HERO_RAIL_H_PX = Math.round(605 * HERO_TABLE_SCALE)
-const HERO_RAIL_SHADOW_W_PX = Math.round(842 * HERO_TABLE_SCALE)
-const HERO_RAIL_SHADOW_H_PX = Math.round(637 * HERO_TABLE_SCALE)
+/** Horizontal elongation only — wider rail, same height as the original 810×605 authoring. */
+const HERO_TABLE_WIDTH_SCALE = 1.75
+const HERO_RAIL_BASE_W_PX = 810
+const HERO_RAIL_BASE_H_PX = 605
+const HERO_RAIL_W_PX = Math.round(HERO_RAIL_BASE_W_PX * HERO_TABLE_WIDTH_SCALE)
+const HERO_RAIL_H_PX = HERO_RAIL_BASE_H_PX
+const HERO_RAIL_W_EXTRA_PX = (HERO_RAIL_W_PX - HERO_RAIL_BASE_W_PX) / 2
+const HERO_RAIL_SHADOW_W_PX = Math.round(842 * HERO_TABLE_WIDTH_SCALE)
+const HERO_RAIL_SHADOW_H_PX = 637
 
 /**
  * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of rail box origin.
  */
 function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: number } {
   const angle = (index / total) * 2 * Math.PI - Math.PI / 2
-  const baseRadiusX = 392 * HERO_TABLE_SCALE
-  const baseRadiusY = 316 * HERO_TABLE_SCALE
+  const baseRadiusX = 392 * HERO_TABLE_WIDTH_SCALE
+  const baseRadiusY = 316
   let ox = Math.cos(angle) * baseRadiusX
   let oy = Math.sin(angle) * baseRadiusY
   const normalizedAngle = ((angle + Math.PI / 2) % (2 * Math.PI)) / (2 * Math.PI)
@@ -184,26 +186,26 @@ function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: num
     (normalizedAngle > 0.125 && normalizedAngle < 0.375) ||
     (normalizedAngle > 0.625 && normalizedAngle < 0.875)
   if (isTopRegion) {
-    const bowAmount = Math.abs(Math.cos(angle)) * 24.3 * HERO_TABLE_SCALE
-    oy = -291.6 * HERO_TABLE_SCALE + bowAmount
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
+    oy = -291.6 + bowAmount
   } else if (isBottomRegion) {
-    const bowAmount = Math.abs(Math.cos(angle)) * 24.3 * HERO_TABLE_SCALE
-    oy = 291.6 * HERO_TABLE_SCALE - bowAmount
+    const bowAmount = Math.abs(Math.cos(angle)) * 24.3
+    oy = 291.6 - bowAmount
   } else if (isCorner) {
-    ox = Math.cos(angle) * (baseRadiusX + 0.81 * HERO_TABLE_SCALE)
-    oy = Math.sin(angle) * (baseRadiusY + 0.81 * HERO_TABLE_SCALE)
+    ox = Math.cos(angle) * (baseRadiusX + 0.81 * HERO_TABLE_WIDTH_SCALE)
+    oy = Math.sin(angle) * (baseRadiusY + 0.81)
   }
   return { ox, oy }
 }
 
 /** Visual center-ish under pot / community arc on authoring table (px, same coords as cupholders). */
 const HERO_TABLE_POT_ANCHOR = {
-  cx: Math.round(406 * HERO_TABLE_SCALE),
-  cy: Math.round(298 * HERO_TABLE_SCALE),
+  cx: Math.round(406 + HERO_RAIL_W_EXTRA_PX),
+  cy: 298,
 } as const
 const HERO_CUPHOLDER_ORIGIN = {
-  left: Math.round(394 * HERO_TABLE_SCALE),
-  top: Math.round(293 * HERO_TABLE_SCALE),
+  left: Math.round(394 + HERO_RAIL_W_EXTRA_PX),
+  top: 293,
 } as const
 
 function heroFeltPointTowardPot(
@@ -1258,7 +1260,7 @@ function DisplayTableLive({
     const cupholderDistance = Math.sqrt(cupholderX * cupholderX + cupholderY * cupholderY) || 1
     const directionX = cupholderX / cupholderDistance
     const directionY = cupholderY / cupholderDistance
-    let extensionDistance = 142 * HERO_TABLE_SCALE
+    let extensionDistance = 142
     const isCornerPosition = index % 2 === 1
     extensionDistance = isCornerPosition ? extensionDistance * 1.1 : extensionDistance * 0.9
     const playerX = cupholderX + directionX * extensionDistance

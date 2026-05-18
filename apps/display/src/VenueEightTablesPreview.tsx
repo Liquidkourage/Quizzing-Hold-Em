@@ -179,6 +179,9 @@ const TABLE_FELT_INSET_RIGHT = 0.08
 const TABLE_FELT_INSET_BOTTOM = 0.15
 const TABLE_FELT_INSET_LEFT = 0.08
 
+/** Horizontal elongation of venue felts — same height, wider seat orbit (matches hero felt width scale). */
+const VENUE_FELT_RX_SCALE = 1.75
+
 const TABLE_FELT_ELLIPSE = (() => {
   const innerW = 1 - TABLE_FELT_INSET_LEFT - TABLE_FELT_INSET_RIGHT
   const innerH = 1 - TABLE_FELT_INSET_TOP - TABLE_FELT_INSET_BOTTOM
@@ -202,7 +205,7 @@ function feltEllipsePct(seatIndex: number, radialScale: number): { leftPct: numb
   const c = Math.cos(θ)
   const s = Math.sin(θ)
   return {
-    leftPct: (cx + rx * radialScale * c) * 100,
+    leftPct: (cx + rx * VENUE_FELT_RX_SCALE * radialScale * c) * 100,
     topPct: (cy + ry * radialScale * s) * 100,
   }
 }
@@ -310,7 +313,7 @@ function ellipseRimPxAndOutwardNormal(
 ): { rimX: number; rimY: number; ux: number; uy: number; Rx: number; Ry: number } {
   const θ = seatThetaRad(seatIndex)
   const { cx, cy, rx, ry } = TABLE_FELT_ELLIPSE
-  const Rx = rx * w
+  const Rx = rx * w * VENUE_FELT_RX_SCALE
   const Ry = ry * h
   const cxx = cx * w
   const cyy = cy * h
@@ -482,11 +485,12 @@ function SeatRingWithLabels({
   const seatFolded = padSeatFolded(seatFoldedIn)
   const seatLastBettingAction = padSeatLastBettingAction(seatLastBettingActionIn)
   const prefersReducedMotion = usePrefersReducedMotion()
+  /** 17.5/8 = (10/8)×1.75 width — wider oval, same vertical size as the original 10/8 ring. */
   const lgRing =
-    'mx-auto aspect-[10/8] h-auto max-h-[min(min(68svh,57dvh),68.25rem)] w-[min(100%,calc(100dvw-2.5rem),95.6rem)] max-w-full shrink-0'
+    'mx-auto aspect-[17.5/8] h-auto max-h-[min(min(68svh,57dvh),39rem)] w-[min(100%,calc(100dvw-2.5rem),95.6rem)] max-w-full shrink-0'
   /** Must keep height so %-positioned seats/names resolve; only abs children collapsed to zero without aspect. */
   const mdRing =
-    'mx-auto aspect-[10/8] h-auto w-full max-w-[min(100%,36.75rem)] shrink-0 sm:max-w-[min(100%,38.5rem)]'
+    'mx-auto aspect-[17.5/8] h-auto w-full max-w-[min(100%,36.75rem)] shrink-0 sm:max-w-[min(100%,38.5rem)]'
   const wrap = size === 'lg' ? lgRing : mdRing
   const dot = size === 'lg' ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]' : 'h-8 w-8'
   /** Larger rim marker for the player on the clock — reads from the back of the room. */
