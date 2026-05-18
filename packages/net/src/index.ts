@@ -220,7 +220,7 @@ export interface ServerToClientEvents {
   toast: (message: string) => void
   ack: (ack: ServerAck) => void
   dealingCards: () => void
-  dealingCommunityCards: () => void
+  dealingCommunityCards: (payload?: { tableNum: number }) => void
   seated: (info: { tableId: string }) => void
   /** Sent only to sockets in HOST:{venue} — bank, setlists, active rundown */
   hostLibrary: (snapshot: HostLibrarySnapshot) => void

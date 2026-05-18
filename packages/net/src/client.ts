@@ -152,7 +152,7 @@ export function onDealingCards(callback: () => void) {
   }
 }
 
-export function onDealingCommunityCards(callback: () => void) {
+export function onDealingCommunityCards(callback: (payload?: { tableNum: number }) => void) {
   if (!socket) return () => {}
 
   socket.on('dealingCommunityCards', callback)

@@ -465,7 +465,7 @@ function DisplayTableLive({
   const [isDealing, setIsDealing] = useState(false)
   
   // Use ref to store the latest animation function to avoid dependency cycles
-  const triggerCommunityDealingAnimationRef = useRef<(() => void) | null>(null)
+  const beginCommunityDealAnimationRef = useRef<((payload?: { tableNum: number }) => void) | null>(null)
   /** Same subtree as dealing flights — convert anchor `getBoundingClientRect` to plane px. */
   const feltLayerRef = useRef<HTMLDivElement>(null)
   const holeCardAnchorRefs = useRef<(HTMLDivElement | null)[][]>([])
@@ -495,9 +495,19 @@ function DisplayTableLive({
 
   const spotlightRoundKeyRef = useRef<string | null>(null)
   const isDealingRef = useRef(false)
+  const isDealingCommunityRef = useRef(false)
   const midJoinHoleRevealTimerRef = useRef<number | null>(null)
   const pendingSpotlightRevealRef = useRef(false)
+  const communityDealAnimationRequestedRef = useRef(false)
+  const prevCommunityCardCountRef = useRef(0)
+  const communityDealTimersRef = useRef<number[]>([])
   isDealingRef.current = isDealing
+  isDealingCommunityRef.current = isDealingCommunity
+
+  const clearCommunityDealTimers = useCallback(() => {
+    for (const id of communityDealTimersRef.current) window.clearTimeout(id)
+    communityDealTimersRef.current = []
+  }, [])
 
   const revealPersistedCardsFromDisplayState = useCallback((gs: GameState) => {
     const anyHole = gs.players.some((p) => p.hand.length > 0)
@@ -522,6 +532,9 @@ function DisplayTableLive({
     setIsDealingCommunity(false)
     setDealingCommunityCards([])
     setShowDeck(false)
+    communityDealAnimationRequestedRef.current = false
+    prevCommunityCardCountRef.current = 0
+    clearCommunityDealTimers()
     pendingHoleDealQueueRef.current = null
     setHasDealtCards(false)
     setHasDealtCommunityCards(false)
@@ -536,7 +549,7 @@ function DisplayTableLive({
         pendingSpotlightRevealRef.current = false
       }
     }
-  }, [feltTableHint, revealPersistedCardsFromDisplayState])
+  }, [feltTableHint, revealPersistedCardsFromDisplayState, clearCommunityDealTimers])
 
   useEffect(() => {
     const tid = feltTableHint.trim()
@@ -660,16 +673,6 @@ function DisplayTableLive({
       }
     }
   }, [feltHasPersistedHoleCards, feltHasPersistedCommunityCards, isDealing, gameState?.round?.roundId])
-
-  useEffect(() => {
-    if (!feltHasPersistedCommunityCards || isDealingCommunity) return
-    const id = window.setTimeout(() => {
-      if (!isDealingCommunity) {
-        setHasDealtCommunityCards(true)
-      }
-    }, HOLE_MIDJOIN_REVEAL_MS)
-    return () => window.clearTimeout(id)
-  }, [feltHasPersistedCommunityCards, isDealingCommunity, gameState?.round?.roundId])
 
   const blindSeatMarkers = useMemo(
     () =>
@@ -956,64 +959,105 @@ function DisplayTableLive({
     refreshCommunityDealEndpoints,
   ])
 
-  // Function to trigger community card dealing animation
-  const triggerCommunityDealingAnimation = useCallback(() => {
-    const currentGameState = displayGameState
-    
-    // ONLY use server community cards - NO RANDOM FALLBACK
-    if (currentGameState.round.communityCards.length === 0) {
-      return // Don't run animation if no server cards
-    }
-    
-    // Use server community cards
-    const cardsToUse = currentGameState.round.communityCards.map(card => ({ digit: card.digit }))
-    
-    // IMMEDIATELY set the shared community cards so static display uses the same values
-    setSharedCommunityCards(cardsToUse)
-    
-    // Start animation immediately with these cards (dealing state already set by event listener)
-    setDealingCommunityCards([])
-    setShowDeck(true) // Show deck for community cards animation
-    
-    // Create dealing cards using the cards to use
-    const cards: Array<{id: string, cardIndex: number, digit: number, isRevealed: boolean}> = []
-    
-    cardsToUse.forEach((card, index) => {
-      cards.push({
+  const scheduleCommunityDealTimer = useCallback((fn: () => void, ms: number) => {
+    const id = window.setTimeout(fn, ms)
+    communityDealTimersRef.current.push(id)
+  }, [])
+
+  const runCommunityDealAnimationForState = useCallback(
+    (gs: GameState) => {
+      if (gs.round.communityCards.length === 0) return false
+
+      clearCommunityDealTimers()
+      const cardsToUse = gs.round.communityCards.map((card) => ({ digit: card.digit }))
+      setSharedCommunityCards(cardsToUse)
+      setDealingCommunityCards([])
+      setShowDeck(true)
+
+      const cards = cardsToUse.map((card, index) => ({
         id: `community-dealing-${index}`,
         cardIndex: index,
         digit: card.digit,
-        isRevealed: false // Start face down
+        isRevealed: false as const,
+      }))
+
+      cards.forEach((card, index) => {
+        scheduleCommunityDealTimer(() => {
+          setDealingCommunityCards((prev) => [...prev, card])
+        }, index * 200)
       })
-    })
-    
-    // Phase 1: Deal cards face down
-    cards.forEach((card, index) => {
-      setTimeout(() => {
-        setDealingCommunityCards(prev => [...prev, card])
-      }, index * 200) // 200ms delay between each card
-    })
-    
-    // Phase 2: Reveal all cards after dealing
-    setTimeout(() => {
-      setDealingCommunityCards(prev => prev.map(card => ({ ...card, isRevealed: true })))
-    }, cards.length * 200 + 500) // Wait for all cards to be dealt + 500ms
-    
-    // Phase 3: End animation and update server state with these cards
-    setTimeout(() => {
-      setIsDealingCommunity(false)
-      setDealingCommunityCards([])
-      setShowDeck(false) // Hide deck after community cards deal
-      setHasDealtCommunityCards(true) // Mark that community cards have been dealt
-      
-      // No need to update demo state - we're using shared community cards state
-    }, cards.length * 200 + 500 + 1000) // Wait for dealing + reveal + 1s
-  }, [displayGameState]) // Include displayGameState to get fresh state
-  
-  // Store the latest function in the ref
+
+      const revealAtMs = cards.length * 200 + 500
+      scheduleCommunityDealTimer(() => {
+        setDealingCommunityCards((prev) => prev.map((c) => ({ ...c, isRevealed: true })))
+      }, revealAtMs)
+
+      scheduleCommunityDealTimer(() => {
+        setIsDealingCommunity(false)
+        setDealingCommunityCards([])
+        setShowDeck(false)
+        setHasDealtCommunityCards(true)
+        communityDealAnimationRequestedRef.current = false
+      }, revealAtMs + 1000)
+
+      return true
+    },
+    [clearCommunityDealTimers, scheduleCommunityDealTimer],
+  )
+
+  const beginCommunityDealAnimation = useCallback(
+    (payload?: { tableNum: number }) => {
+      const tid = heroFeltTableId
+      if (payload?.tableNum != null && tid !== '' && String(payload.tableNum) !== tid) {
+        return
+      }
+
+      if (prefersReducedMotion) {
+        const gs = gameStateRef.current
+        if (gs != null && gs.round.communityCards.length > 0) {
+          setSharedCommunityCards(gs.round.communityCards.map((c) => ({ digit: c.digit })))
+          setHasDealtCommunityCards(true)
+        }
+        communityDealAnimationRequestedRef.current = false
+        setIsDealingCommunity(false)
+        return
+      }
+
+      if (isDealingCommunityRef.current) return
+
+      communityDealAnimationRequestedRef.current = true
+      setIsDealingCommunity(true)
+      setHasDealtCommunityCards(false)
+      clearCommunityDealTimers()
+
+      const attemptRun = (tryNum: number) => {
+        const gs = gameStateRef.current
+        if (gs != null && gs.round.communityCards.length > 0) {
+          runCommunityDealAnimationForState(gs)
+          return
+        }
+        if (tryNum >= 15) {
+          setIsDealingCommunity(false)
+          communityDealAnimationRequestedRef.current = false
+          return
+        }
+        scheduleCommunityDealTimer(() => attemptRun(tryNum + 1), 100)
+      }
+
+      attemptRun(0)
+    },
+    [
+      heroFeltTableId,
+      prefersReducedMotion,
+      clearCommunityDealTimers,
+      runCommunityDealAnimationForState,
+      scheduleCommunityDealTimer,
+    ],
+  )
+
   useEffect(() => {
-    triggerCommunityDealingAnimationRef.current = triggerCommunityDealingAnimation
-  }, [triggerCommunityDealingAnimation])
+    beginCommunityDealAnimationRef.current = beginCommunityDealAnimation
+  }, [beginCommunityDealAnimation])
 
   useEffect(() => {
     const tid = feltTableHint.trim()
@@ -1040,31 +1084,30 @@ function DisplayTableLive({
   }, [feltTableHint, isEmbedded, triggerDealingAnimation])
 
   useEffect(() => {
-    const tid = feltTableHint.trim()
-    const unsubscribe = onDealingCommunityCards(() => {
-      const gs = gameStateRef.current
-      if (isEmbedded && tid !== '' && gs != null && String(gs.tableId) !== tid) {
-        return
-      }
-
-      // IMMEDIATELY set dealing state to prevent static cards from showing
-      setIsDealingCommunity(true)
-      setHasDealtCommunityCards(false) // Hide static cards during animation
-
-      // Wait for the state update to arrive, then trigger animation
-      setTimeout(() => {
-        const latest = gameStateRef.current
-        if (isEmbedded && tid !== '' && latest != null && String(latest.tableId) !== tid) {
-          setIsDealingCommunity(false)
-          return
-        }
-        if (triggerCommunityDealingAnimationRef.current) {
-          triggerCommunityDealingAnimationRef.current()
-        }
-      }, 200) // Wait 200ms for state update to arrive
+    const unsubscribe = onDealingCommunityCards((payload) => {
+      beginCommunityDealAnimationRef.current?.(payload)
     })
     return unsubscribe
-  }, [feltTableHint, isEmbedded])
+  }, [])
+
+  /** If the board lands in state before/without the socket cue, still run the flight animation once. */
+  useEffect(() => {
+    const count = displayGameState.round.communityCards.length
+    const prev = prevCommunityCardCountRef.current
+    prevCommunityCardCountRef.current = count
+
+    if (count < 5 || prev >= 5) return
+    if (hasDealtCommunityCards || isDealingCommunity) return
+    if (communityDealAnimationRequestedRef.current) return
+    if (pendingSpotlightRevealRef.current) return
+
+    beginCommunityDealAnimationRef.current?.()
+  }, [
+    displayGameState.round.communityCards.length,
+    hasDealtCommunityCards,
+    isDealingCommunity,
+    gameState?.round?.roundId,
+  ])
 
   // Reset deal UI when the same spotlight table starts a new round (not when hopping tables).
   useEffect(() => {
@@ -1086,7 +1129,15 @@ function DisplayTableLive({
     }
     setDealingCommunityCards([])
     setIsDealingCommunity(false)
-  }, [gameState?.tableId, gameState?.round?.roundId, gameState?.players, gameState?.round?.communityCards])
+    communityDealAnimationRequestedRef.current = false
+    clearCommunityDealTimers()
+  }, [
+    gameState?.tableId,
+    gameState?.round?.roundId,
+    gameState?.players,
+    gameState?.round?.communityCards,
+    clearCommunityDealTimers,
+  ])
 
   const [answerSecondsLeft, setAnswerSecondsLeft] = useState<number | null>(null)
 

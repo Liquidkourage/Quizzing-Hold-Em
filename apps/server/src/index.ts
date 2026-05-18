@@ -2109,6 +2109,12 @@ io.on('connection', (socket) => {
                 emitVenueTableState(tk, gs)
               }
               io.to(tk).emit('dealingCommunityCards')
+              const boardTableNum = tableNumFromSessionKey(gs.code, tk)
+              if (boardTableNum != null) {
+                io.to(displayVenueRoom(normalizeVenueCode(gs.code))).emit('dealingCommunityCards', {
+                  tableNum: boardTableNum,
+                })
+              }
             } else {
               emitVenueTableState(tk, gs)
             }
