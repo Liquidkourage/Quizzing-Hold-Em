@@ -32,7 +32,7 @@ function DigitChip({
   )
 }
 
-/** The five digits used to build this player's submitted answer (2 holes + 3 board picks). */
+/** The five digits used to build this player's submitted answer (from answer composition). */
 export function ShowdownFiveCardsUsed({
   row,
   size = 'sm',
@@ -46,17 +46,7 @@ export function ShowdownFiveCardsUsed({
     )
   }
 
-  const cards: { digit: number; variant: DigitChipVariant }[] = []
-  if (row.holes != null) {
-    cards.push({ digit: row.holes[0], variant: 'hole' }, { digit: row.holes[1], variant: 'hole' })
-  }
-  const board = row.communityBoard
-  if (board != null) {
-    for (const i of row.answerCommunityIndices) {
-      const d = board[i]
-      if (typeof d === 'number') cards.push({ digit: d, variant: 'board' })
-    }
-  }
+  const cards = row.answerCards
 
   if (cards.length === 0) {
     return <span className="text-[0.6rem] text-white/35">—</span>
@@ -68,9 +58,13 @@ export function ShowdownFiveCardsUsed({
       aria-label={`Five cards used: ${cards.map((c) => c.digit).join(', ')}`}
     >
       {cards.map((c, i) => (
-        <DigitChip key={i} digit={c.digit} variant={c.variant} size={size} />
+        <DigitChip
+          key={i}
+          digit={c.digit}
+          variant={c.source === 'hole' ? 'hole' : 'board'}
+          size={size}
+        />
       ))}
     </div>
   )
 }
-

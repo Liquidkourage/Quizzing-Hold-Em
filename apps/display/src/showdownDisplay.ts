@@ -2,10 +2,14 @@ import {
   answerCompositionForPlayer,
   communityIndicesFromAnswerComposition,
   inferAnswerComposition,
+  PLAYER_ANSWER_DIGIT_CARD_COUNT,
+  type AnswerCardPick,
   type GameState,
   type NumericCard,
 } from '@qhe/core'
 import type { DisplayVenueTileSnapshot } from '@qhe/net'
+
+export type ShowdownCardUsed = { digit: number; source: 'hole' | 'community' }
 
 export type ShowdownResultRow = {
   seat: number
@@ -17,6 +21,55 @@ export type ShowdownResultRow = {
   communityBoard: readonly number[] | null
   /** Board indices 0–4 this player used in their composed answer. */
   answerCommunityIndices: number[]
+  /** Exactly five picks (0–2 holes + 3–5 board) used to build `submitted`. */
+  answerCards: readonly ShowdownCardUsed[]
+}
+
+function inferCompositionForShowdown(
+  holePair: readonly [number, number] | null,
+  communityBoard: readonly number[] | null,
+  submitted: number | null
+): readonly AnswerCardPick[] | null {
+  if (
+    holePair == null ||
+    communityBoard == null ||
+    communityBoard.length < 5 ||
+    submitted == null
+  ) {
+    return null
+  }
+  const hand: NumericCard[] = [
+    { digit: holePair[0] as NumericCard['digit'] },
+    { digit: holePair[1] as NumericCard['digit'] },
+  ]
+  const community = communityBoard
+    .slice(0, 5)
+    .map((d) => ({ digit: d as NumericCard['digit'] }))
+  return inferAnswerComposition(hand, community, submitted)
+}
+
+/** Map stored/inferred composition to the five digits actually used (not both holes by default). */
+export function cardsUsedFromComposition(
+  composition: readonly AnswerCardPick[] | null | undefined,
+  holes: readonly [number, number] | null,
+  board: readonly number[] | null
+): ShowdownCardUsed[] {
+  if (composition == null || composition.length !== PLAYER_ANSWER_DIGIT_CARD_COUNT) return []
+  const out: ShowdownCardUsed[] = []
+  for (const pick of composition) {
+    if (pick.source === 'hole') {
+      if (holes == null || pick.index < 0 || pick.index > 1) return []
+      out.push({ digit: holes[pick.index]!, source: 'hole' })
+    } else if (pick.source === 'community') {
+      if (board == null || pick.index < 0 || pick.index > 4) return []
+      const d = board[pick.index]
+      if (typeof d !== 'number') return []
+      out.push({ digit: d, source: 'community' })
+    } else {
+      return []
+    }
+  }
+  return out
 }
 
 function communityIndicesForPlayer(
@@ -73,26 +126,15 @@ export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownRe
       const g = guesses?.[i]
       if (typeof g === 'number' && Number.isFinite(g)) submitted = g
     }
-    let answerCommunityIndices =
+    const composition =
       !hasFolded && submitted != null
-        ? communityIndicesForPlayer(null, communityPicks?.[i] ?? null)
+        ? inferCompositionForShowdown(holePair, communityBoard, submitted)
+        : null
+    const answerCommunityIndices =
+      !hasFolded && submitted != null
+        ? communityIndicesForPlayer(composition, communityPicks?.[i] ?? null)
         : []
-    if (
-      !hasFolded &&
-      submitted != null &&
-      answerCommunityIndices.length === 0 &&
-      holePair != null &&
-      communityBoard != null &&
-      communityBoard.length >= 5
-    ) {
-      const hand: NumericCard[] = [
-        { digit: holePair[0] as NumericCard['digit'] },
-        { digit: holePair[1] as NumericCard['digit'] },
-      ]
-      const community = communityBoard.slice(0, 5).map((d) => ({ digit: d as NumericCard['digit'] }))
-      const comp = inferAnswerComposition(hand, community, submitted)
-      answerCommunityIndices = communityIndicesForPlayer(comp, undefined)
-    }
+    const answerCards = cardsUsedFromComposition(composition, holePair, communityBoard)
     rows.push({
       seat: i + 1,
       name,
@@ -101,6 +143,7 @@ export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownRe
       hasFolded,
       communityBoard,
       answerCommunityIndices,
+      answerCards,
     })
   }
   return rows
@@ -118,10 +161,14 @@ export function showdownRowsFromGameState(gs: GameState): ShowdownResultRow[] {
         : null
     const submitted =
       !p.hasFolded && typeof p.submittedAnswer === 'number' ? p.submittedAnswer : null
-    const composition =
+    let composition =
       submitted != null ? answerCompositionForPlayer(p, gs.round.communityCards) : null
+    if (composition == null && submitted != null) {
+      composition = inferCompositionForShowdown(holes, communityBoard, submitted)
+    }
     const answerCommunityIndices =
       submitted != null ? communityIndicesForPlayer(composition, undefined) : []
+    const answerCards = cardsUsedFromComposition(composition, holes, communityBoard)
     return {
       seat: i + 1,
       name: p.name,
@@ -130,6 +177,7 @@ export function showdownRowsFromGameState(gs: GameState): ShowdownResultRow[] {
       hasFolded: p.hasFolded,
       communityBoard,
       answerCommunityIndices,
+      answerCards,
     }
   })
 }
@@ -159,6 +207,7 @@ export function sortShowdownRowsByDistance(
         hasFolded,
         communityBoard,
         answerCommunityIndices,
+        answerCards,
       }) => ({
         seat,
         name,
@@ -167,6 +216,7 @@ export function sortShowdownRowsByDistance(
         hasFolded,
         communityBoard,
         answerCommunityIndices,
+        answerCards,
       })
     ),
     winnerKey: winner,
