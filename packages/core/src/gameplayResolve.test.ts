@@ -6,6 +6,7 @@ import {
   determineChipPotTriviaWinners,
   determineTriviaWinners,
   endRound,
+  foldPlayer,
   isSubmittedAnswerComposableFromDeal,
   nearlyEqualNumbers,
 } from './index'
@@ -179,5 +180,25 @@ describe('endRound', () => {
     expect(gs.players.find((p) => p.id === 'a')!.answerPoints).toBe(100)
     expect(gs.players.find((p) => p.id === 'b')!.answerPoints).toBe(100)
     expect(gs.players.find((p) => p.id === 'a')!.pointsOnly).toBe(true)
+  })
+})
+
+describe('foldPlayer', () => {
+  it('mucks hole cards when a player folds', () => {
+    let gs = createEmptyGame('T', 'h1')
+    gs = addPlayer(gs, 'p1', 'Alice')
+    gs = {
+      ...gs,
+      players: [
+        {
+          ...gs.players[0]!,
+          hand: [{ digit: 3 }, { digit: 7 }],
+          hasFolded: false,
+        },
+      ],
+    }
+    gs = foldPlayer(gs, 'p1')
+    expect(gs.players[0]!.hasFolded).toBe(true)
+    expect(gs.players[0]!.hand).toEqual([])
   })
 })

@@ -745,7 +745,9 @@ export function adminSetBlinds(state: GameState, smallBlind: number, bigBlind: n
 export function foldPlayer(state: GameState, playerId: string): GameState {
   const seat = getSeatIndexByPlayerId(state, playerId);
   if (seat >= 0 && state.players[seat]?.pointsOnly) return state;
-  const updatedPlayers = state.players.map(player => (player.id === playerId ? { ...player, hasFolded: true } : player));
+  const updatedPlayers = state.players.map((player) =>
+    player.id === playerId ? { ...player, hasFolded: true, hand: [] } : player,
+  );
   // Advance turn if the folder was the one to act
   let nextIndex = state.round.currentPlayerIndex ?? -1;
   const folderIndex = getSeatIndexByPlayerId(state, playerId);

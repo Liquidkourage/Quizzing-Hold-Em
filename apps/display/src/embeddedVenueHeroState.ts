@@ -121,7 +121,7 @@ export function embeddedHeroDisplayState(
         id: `venue-wall-seat-${tid}-${i}`,
         name,
         bankroll,
-        hand: holeHandFromTileSeat(tile, i),
+        hand: folded ? [] : holeHandFromTileSeat(tile, i),
         hasFolded: folded,
         isAllIn: false,
         ...(submittedAnswer !== undefined ? { submittedAnswer } : {}),

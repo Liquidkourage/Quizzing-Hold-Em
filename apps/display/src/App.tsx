@@ -1678,6 +1678,7 @@ function DisplayTableLive({
                   
                   {/* Player's hand - docked at bottom edge with overlapping cards */}
                   {(() => {
+                    if (player.hasFolded) return null
                     const handToShow =
                       player.hand.length > 0 ? player.hand : (postDealHoleHands[index] ?? [])
                     const showRealHand =
@@ -1705,11 +1706,7 @@ function DisplayTableLive({
                                 digit={showRealHand && card ? card.digit : 0}
                                 variant="cyan"
                                 size="normal"
-                                faceDown={
-                                  !showRealHand ||
-                                  displayGameState.phase !== 'showdown' ||
-                                  player.hasFolded
-                                }
+                                faceDown={!showRealHand || displayGameState.phase !== 'showdown'}
                                 backDesign="star"
                               />
                             </motion.div>

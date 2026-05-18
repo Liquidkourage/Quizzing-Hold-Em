@@ -1427,7 +1427,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
         gs.phase === 'showdown')
     const seatHoleDigits = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
       const p = gs.players[i]
-      if (p == null || p.hand.length < 2) return null
+      if (p == null || p.hasFolded || p.hand.length < 2) return null
       const d0 = p.hand[0]?.digit
       const d1 = p.hand[1]?.digit
       if (
