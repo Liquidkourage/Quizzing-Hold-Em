@@ -176,8 +176,11 @@ function seatBettingActionPillClass(action: SeatBettingAction): string {
 }
 
 /** Mini-table wrapper aspect (width / height). */
-const VENUE_RING_ASPECT_MD = 11 / 5
+const VENUE_RING_ASPECT_MD = 8 / 5
 const VENUE_RING_ASPECT_LG = 14 / 8
+
+/** Inward from outer rail edge toward felt (1 = on outer boundary). */
+const MOSAIC_SEAT_DOT_RADIAL_SCALE = 0.96
 
 /** Amber rail — mosaic uses full wrapper; full mode insets slightly. */
 const VENUE_RAIL_INSET_TOP = 0.02
@@ -526,19 +529,19 @@ function SeatRingWithLabels({
   /** Spotlight hero — wide capsule; mosaic tiles use smaller md ring below. */
   const lgRing =
     'mx-auto aspect-[14/8] h-auto max-h-[min(min(68svh,57dvh),36rem)] w-[min(100%,calc(100dvw-2.5rem),68rem)] max-w-full shrink-0'
-  /** Mosaic crawl — wide flat-top capsule, fixed height. */
+  /** Mosaic crawl — stadium capsule, narrower than crawl column so dots read on the rail. */
   const mdRing = isMosaic
-    ? 'relative mx-auto aspect-[11/5] h-[9.5rem] w-full max-w-full shrink-0'
+    ? 'relative mx-auto aspect-[8/5] h-[8.75rem] w-full max-w-[16.5rem] shrink-0'
     : 'mx-auto aspect-[13/8] h-auto w-full max-w-[min(100%,22rem)] shrink-0 sm:max-w-[min(100%,23rem)]'
   const wrap = size === 'lg' ? lgRing : mdRing
   const dot = isMosaic
-    ? 'h-[1.35rem] w-[1.35rem] border-[1.5px]'
+    ? 'h-[1.2rem] w-[1.2rem] border-[1.5px]'
     : size === 'lg'
       ? 'h-[2.8375rem] w-[2.8375rem] sm:h-[3.15rem] sm:w-[3.15rem]'
       : 'h-7 w-7'
   /** Larger rim marker for the player on the clock — reads from the back of the room. */
   const dotActing = isMosaic
-    ? 'h-[1.65rem] w-[1.65rem] border-[2px] ring-2 ring-cyan-400/70'
+    ? 'h-[1.45rem] w-[1.45rem] border-[2px] ring-2 ring-cyan-400/70'
     : size === 'lg'
       ? 'h-[3.5rem] w-[3.5rem] sm:h-16 sm:w-16 md:h-[4.25rem] md:w-[4.25rem]'
       : 'h-10 w-10 sm:h-11 sm:w-11'
@@ -600,7 +603,7 @@ function SeatRingWithLabels({
         )
       : railBorderRadius
 
-  const mosaicDotRadiusPx = isMosaic ? 10.8 : 0
+  const mosaicDotRadiusPx = isMosaic ? 9.6 : 0
 
   return (
     <div ref={ringElRef} className={`relative overflow-visible ${wrap}`}>
@@ -647,19 +650,15 @@ function SeatRingWithLabels({
         const seatRim =
           isMosaic && railW > 0 && railH > 0
             ? (() => {
-                const railLeft = rimW * railInsetLeft
-                const railTop = rimH * railInsetTop
                 const local = seatDotCenterOnRailPct(
                   i,
                   VENUE_SEAT_SLOTS,
                   railW,
                   railH,
-                  mosaicDotRadiusPx
+                  mosaicDotRadiusPx,
+                  MOSAIC_SEAT_DOT_RADIAL_SCALE
                 )
-                return {
-                  leftPct: ((railLeft + (local.leftPct / 100) * railW) / rimW) * 100,
-                  topPct: ((railTop + (local.topPct / 100) * railH) / rimH) * 100,
-                }
+                return { leftPct: local.leftPct, topPct: local.topPct }
               })()
             : venueSeatRimPct(i, 1, rimW, rimH)
         const chipPos = venueSeatRimPct(i, chipInnerScale, rimW, rimH, 'felt')
