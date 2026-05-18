@@ -15,6 +15,8 @@ import {
   placeBet,
   foldPlayer,
   submitAnswer,
+  answerCompositionForPlayer,
+  communityIndicesFromAnswerComposition,
   revealAnswer,
   endRound,
   isSubmittedAnswerComposableFromDeal,
@@ -1451,6 +1453,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     let showdownAnswer: number | null | undefined
     let showdownQuestionText: string | null | undefined
     let seatSubmittedAnswers: (number | null)[] | undefined
+    let seatAnswerCommunityIndices: (readonly number[] | null)[] | undefined
     if (gs.phase === 'showdown' || gs.phase === 'reveal') {
       const q = gs.round.question
       if (q != null && typeof q.answer === 'number' && Number.isFinite(q.answer)) {
@@ -1463,6 +1466,14 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
         if (p == null || p.hasFolded) return null
         const sa = p.submittedAnswer
         return typeof sa === 'number' && Number.isFinite(sa) ? sa : null
+      })
+      seatAnswerCommunityIndices = Array.from({ length: VENUE_WALL_SEAT_COUNT }, (_, i) => {
+        const p = gs.players[i]
+        if (p == null || p.hasFolded || typeof p.submittedAnswer !== 'number') return null
+        const comp = answerCompositionForPlayer(p, gs.round.communityCards)
+        if (comp == null) return null
+        const idx = communityIndicesFromAnswerComposition(comp)
+        return idx.length > 0 ? idx : null
       })
     }
     tiles.push({
@@ -1480,6 +1491,10 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
       ...(communityDigits != null && communityDigits.length > 0 ? { communityDigits } : {}),
       ...(showdownAnswer != null ? { showdownAnswer, showdownQuestionText: showdownQuestionText ?? null } : {}),
       ...(seatSubmittedAnswers != null ? { seatSubmittedAnswers } : {}),
+      ...(seatAnswerCommunityIndices != null &&
+      seatAnswerCommunityIndices.some((x) => x != null && x.length > 0)
+        ? { seatAnswerCommunityIndices }
+        : {}),
       ...displayBlindSeatIndices(seated, gs.round.dealerIndex),
       currentPlayerIndex:
         typeof gs.round.currentPlayerIndex === 'number' && Number.isFinite(gs.round.currentPlayerIndex)
@@ -2296,7 +2311,12 @@ io.on('connection', (socket) => {
             })
             break
           }
-          gameState = submitAnswer(gameState, submitAnswerAction.playerId, submitAnswerAction.answer)
+          gameState = submitAnswer(
+            gameState,
+            submitAnswerAction.playerId,
+            submitAnswerAction.answer,
+            submitAnswerAction.composition
+          )
           io.to(sessionKey).emit('toast', `Answer submitted: ${submitAnswerAction.answer}`)
           socket.emit('ack', { ok: true, message: 'Answer recorded.' })
           break

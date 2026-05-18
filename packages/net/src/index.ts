@@ -71,6 +71,11 @@ export type DisplayVenueTileSnapshot = {
    * Null when folded or no submission.
    */
   seatSubmittedAnswers?: (number | null)[]
+  /**
+   * Parallel to `seatNames`: community board indices (0–4) each player used in their answer.
+   * Omitted when unknown / older servers.
+   */
+  seatAnswerCommunityIndices?: (readonly number[] | null)[]
 }
 
 /** Venue wall payload: table mosaic plus **shared trivia strip** keyed off the hottest trivia phase (prefer answering, then setup, etc.), not blindly table 1. */
@@ -188,9 +193,15 @@ export const FoldAction = z.object({
 })
 export type FoldAction = z.infer<typeof FoldAction>
 
+export const AnswerCardPick = z.object({
+  source: z.enum(['hole', 'community']),
+  index: z.number().int().min(0).max(4),
+})
+
 export const SubmitAnswerAction = z.object({
   playerId: z.string(),
-  answer: z.number()
+  answer: z.number(),
+  composition: z.array(AnswerCardPick).length(5).optional(),
 })
 export type SubmitAnswerAction = z.infer<typeof SubmitAnswerAction>
 

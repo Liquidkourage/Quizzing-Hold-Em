@@ -7,6 +7,9 @@ export type SeatBettingAction = 'check' | 'call' | 'raise' | 'fold' | 'allIn';
 
 export interface NumericCard { digit: 0|1|2|3|4|5|6|7|8|9 }
 
+/** One card tapped when composing a trivia answer (five picks per submission). */
+export type AnswerCardPick = { source: 'hole' | 'community'; index: number };
+
 export interface PlayerState {
   id: PlayerId;
   name: string;
@@ -15,6 +18,8 @@ export interface PlayerState {
   hasFolded: boolean;
   isAllIn: boolean;
   submittedAnswer?: number;
+  /** Five cards used to build `submittedAnswer`, in tap order. */
+  answerComposition?: readonly AnswerCardPick[];
   /** Cumulative trivia score across answered rounds (even when busted off chips). */
   answerPoints?: number;
   /**
@@ -173,6 +178,74 @@ export function composeNumericAnswersFromSevenDigitCards(sevenDigits: number[]):
   };
   dfs();
   return out;
+}
+
+export function communityIndicesFromAnswerComposition(
+  composition: readonly AnswerCardPick[] | undefined
+): number[] {
+  if (composition == null) return [];
+  const out: number[] = [];
+  for (const pick of composition) {
+    if (pick.source !== 'community') continue;
+    if (Number.isInteger(pick.index) && pick.index >= 0 && pick.index <= 4) {
+      out.push(pick.index);
+    }
+  }
+  return out;
+}
+
+/** Reconstruct which five cards built `answer` when composition was not stored (e.g. bots). */
+export function inferAnswerComposition(
+  hand: readonly NumericCard[],
+  community: readonly NumericCard[],
+  answer: number
+): AnswerCardPick[] | null {
+  if (hand.length < 2 || community.length < 5 || !Number.isFinite(answer)) return null;
+  const seven = [...hand.slice(0, 2), ...community.slice(0, 5)].map((c) => c.digit);
+  const path: number[] = [];
+  const used = [false, false, false, false, false, false, false];
+  let found: AnswerCardPick[] | null = null;
+
+  const pickFromSevenIndex = (i: number): AnswerCardPick =>
+    i <= 1 ? { source: 'hole', index: i } : { source: 'community', index: i - 2 };
+
+  const dfs = () => {
+    if (found) return;
+    if (path.length === PLAYER_ANSWER_DIGIT_CARD_COUNT) {
+      const five = path.map((i) => seven[i]!);
+      const vals = new Set<number>();
+      addDecimalVariantsForFiveDigits(five, vals);
+      for (const v of vals) {
+        if (nearlyEqualNumbers(v, answer)) {
+          found = path.map(pickFromSevenIndex);
+          return;
+        }
+      }
+      return;
+    }
+    for (let i = 0; i < 7; i++) {
+      if (used[i]) continue;
+      used[i] = true;
+      path.push(i);
+      dfs();
+      path.pop();
+      used[i] = false;
+      if (found) return;
+    }
+  };
+  dfs();
+  return found;
+}
+
+export function answerCompositionForPlayer(
+  player: Pick<PlayerState, 'hand' | 'submittedAnswer' | 'answerComposition'>,
+  community: readonly NumericCard[]
+): readonly AnswerCardPick[] | null {
+  if (player.answerComposition != null && player.answerComposition.length === PLAYER_ANSWER_DIGIT_CARD_COUNT) {
+    return player.answerComposition;
+  }
+  if (typeof player.submittedAnswer !== 'number') return null;
+  return inferAnswerComposition(player.hand, community, player.submittedAnswer);
 }
 
 export function isSubmittedAnswerComposableFromDeal(state: GameState, playerId: string, answer: number): boolean {
@@ -779,9 +852,23 @@ export function foldPlayer(state: GameState, playerId: string): GameState {
   return isBettingComplete(newState) ? { ...newState, round: { ...newState.round, isBettingOpen: false, currentPlayerIndex: -1 } } : newState;
 }
 
-export function submitAnswer(state: GameState, playerId: string, answer: number): GameState {
-  const updatedPlayers = state.players.map(player => 
-    player.id === playerId ? { ...player, submittedAnswer: answer } : player
+export function submitAnswer(
+  state: GameState,
+  playerId: string,
+  answer: number,
+  composition?: readonly AnswerCardPick[]
+): GameState {
+  const updatedPlayers = state.players.map((player) =>
+    player.id === playerId
+      ? {
+          ...player,
+          submittedAnswer: answer,
+          answerComposition:
+            composition != null && composition.length === PLAYER_ANSWER_DIGIT_CARD_COUNT
+              ? composition
+              : undefined,
+        }
+      : player
   );
   return { ...state, players: updatedPlayers };
 }
@@ -922,6 +1009,7 @@ export function endRound(state: GameState): GameState {
       hasFolded: false,
       isAllIn: false,
       submittedAnswer: undefined,
+      answerComposition: undefined,
     };
   });
 

@@ -7,8 +7,10 @@ import {
   determineTriviaWinners,
   endRound,
   foldPlayer,
-  isSubmittedAnswerComposableFromDeal,
+  communityIndicesFromAnswerComposition,
   formatTriviaNumber,
+  inferAnswerComposition,
+  isSubmittedAnswerComposableFromDeal,
   nearlyEqualNumbers,
 } from './index'
 import type { GameState } from './index'
@@ -22,6 +24,22 @@ describe('formatTriviaNumber', () => {
     expect(formatTriviaNumber(0.1 + 0.2)).toBe('0.3')
     expect(formatTriviaNumber(12.345)).toBe('12.345')
     expect(formatTriviaNumber(12345)).toBe('12345')
+  })
+})
+
+describe('inferAnswerComposition', () => {
+  it('recovers community indices used in a decimal answer', () => {
+    const hand = [{ digit: 1 }, { digit: 2 }]
+    const community = [
+      { digit: 3 },
+      { digit: 4 },
+      { digit: 5 },
+      { digit: 6 },
+      { digit: 7 },
+    ] as const
+    const comp = inferAnswerComposition([...hand], [...community], 12.345)
+    expect(comp).not.toBeNull()
+    expect(communityIndicesFromAnswerComposition(comp)).not.toEqual([])
   })
 })
 

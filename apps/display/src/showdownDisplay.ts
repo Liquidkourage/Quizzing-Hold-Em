@@ -1,4 +1,8 @@
-import type { GameState } from '@qhe/core'
+import {
+  answerCompositionForPlayer,
+  communityIndicesFromAnswerComposition,
+  type GameState,
+} from '@qhe/core'
 import type { DisplayVenueTileSnapshot } from '@qhe/net'
 
 export type ShowdownResultRow = {
@@ -7,6 +11,18 @@ export type ShowdownResultRow = {
   holes: readonly [number, number] | null
   submitted: number | null
   hasFolded: boolean
+  /** Full five-card board for this table (showdown). */
+  communityBoard: readonly number[] | null
+  /** Board indices 0–4 this player used in their composed answer. */
+  answerCommunityIndices: number[]
+}
+
+function communityIndicesForPlayer(
+  composition: ReturnType<typeof answerCompositionForPlayer>,
+  tileIndices: readonly number[] | null | undefined
+): number[] {
+  if (tileIndices != null && tileIndices.length > 0) return [...tileIndices]
+  return communityIndicesFromAnswerComposition(composition ?? undefined)
 }
 
 export function showdownCorrectAnswerFromTile(
@@ -16,11 +32,23 @@ export function showdownCorrectAnswerFromTile(
   return typeof a === 'number' && Number.isFinite(a) ? a : undefined
 }
 
+function communityBoardFromTile(tile: DisplayVenueTileSnapshot): readonly number[] | null {
+  const digits = tile.communityDigits
+  if (!Array.isArray(digits) || digits.length === 0) return null
+  const out: number[] = []
+  for (const d of digits) {
+    if (typeof d === 'number' && Number.isInteger(d) && d >= 0 && d <= 9) out.push(d)
+  }
+  return out.length > 0 ? out : null
+}
+
 export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownResultRow[] {
   const names = tile.seatNames ?? []
   const folded = tile.seatFolded ?? []
   const holes = tile.seatHoleDigits
   const guesses = tile.seatSubmittedAnswers
+  const communityPicks = tile.seatAnswerCommunityIndices
+  const communityBoard = communityBoardFromTile(tile)
   const rows: ShowdownResultRow[] = []
 
   for (let i = 0; i < names.length; i++) {
@@ -43,18 +71,28 @@ export function showdownRowsFromTile(tile: DisplayVenueTileSnapshot): ShowdownRe
       const g = guesses?.[i]
       if (typeof g === 'number' && Number.isFinite(g)) submitted = g
     }
+    const answerCommunityIndices =
+      !hasFolded && submitted != null
+        ? communityIndicesForPlayer(null, communityPicks?.[i] ?? null)
+        : []
     rows.push({
       seat: i + 1,
       name,
       holes: holePair,
       submitted,
       hasFolded,
+      communityBoard,
+      answerCommunityIndices,
     })
   }
   return rows
 }
 
 export function showdownRowsFromGameState(gs: GameState): ShowdownResultRow[] {
+  const communityBoard =
+    gs.round.communityCards.length > 0
+      ? gs.round.communityCards.map((c) => c.digit)
+      : null
   return gs.players.map((p, i) => {
     const holes: readonly [number, number] | null =
       !p.hasFolded && p.hand.length >= 2
@@ -62,12 +100,18 @@ export function showdownRowsFromGameState(gs: GameState): ShowdownResultRow[] {
         : null
     const submitted =
       !p.hasFolded && typeof p.submittedAnswer === 'number' ? p.submittedAnswer : null
+    const composition =
+      submitted != null ? answerCompositionForPlayer(p, gs.round.communityCards) : null
+    const answerCommunityIndices =
+      submitted != null ? communityIndicesForPlayer(composition, undefined) : []
     return {
       seat: i + 1,
       name: p.name,
       holes,
       submitted,
       hasFolded: p.hasFolded,
+      communityBoard,
+      answerCommunityIndices,
     }
   })
 }
@@ -88,13 +132,25 @@ export function sortShowdownRowsByDistance(
       ? `${ranked[0]!.seat}:${ranked[0]!.name}`
       : null
   return {
-    rows: ranked.map(({ seat, name, holes, submitted, hasFolded }) => ({
-      seat,
-      name,
-      holes,
-      submitted,
-      hasFolded,
-    })),
+    rows: ranked.map(
+      ({
+        seat,
+        name,
+        holes,
+        submitted,
+        hasFolded,
+        communityBoard,
+        answerCommunityIndices,
+      }) => ({
+        seat,
+        name,
+        holes,
+        submitted,
+        hasFolded,
+        communityBoard,
+        answerCommunityIndices,
+      })
+    ),
     winnerKey: winner,
   }
 }

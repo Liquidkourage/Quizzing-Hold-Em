@@ -16,6 +16,75 @@ type ShowdownResultsPanelProps = {
   className?: string
 }
 
+function ChosenCommunityCards({
+  board,
+  chosenIndices,
+  compact,
+}: {
+  board: readonly number[] | null
+  chosenIndices: number[]
+  compact: boolean
+}) {
+  if (board == null || board.length === 0 || chosenIndices.length === 0) return null
+
+  const chosen = new Set(chosenIndices)
+  const slots = board.slice(0, 5)
+
+  if (compact) {
+    return (
+      <div className="w-full">
+        <p className="mb-0.5 text-[0.55rem] font-bold uppercase tracking-wider text-white/45">Board picks</p>
+        <motion.div
+          className="flex items-center justify-center gap-0.5"
+          aria-label={`Community cards used: ${chosenIndices.map((i) => slots[i]).join(', ')}`}
+        >
+          {slots.map((digit, i) => (
+            <span
+              key={i}
+              className={`inline-flex h-6 w-4 items-center justify-center rounded border font-mono text-[0.65rem] font-black tabular-nums ${
+                chosen.has(i)
+                  ? 'border-emerald-400/70 bg-emerald-950/80 text-emerald-100 shadow-[0_0_8px_rgba(52,211,153,0.35)]'
+                  : 'border-white/10 bg-black/30 text-white/25'
+              }`}
+            >
+              {digit}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+    )
+  }
+
+  return (
+    <motion.div className="w-full">
+      <p className="mb-1 text-center text-[0.55rem] font-bold uppercase tracking-[0.14em] text-white/45">
+        Board picks
+      </p>
+      <motion.div
+        className="flex items-end justify-center -space-x-4"
+        aria-label={`Community cards used at positions ${[...chosen].sort((a, b) => a - b).map((i) => i + 1).join(', ')}`}
+      >
+        {slots.map((digit, i) => (
+          <motion.div
+            key={i}
+            className={`relative origin-bottom ${chosen.has(i) ? 'z-10' : 'z-0 opacity-40'}`}
+            style={{ transform: chosen.has(i) ? 'scale(0.62)' : 'scale(0.52)' }}
+          >
+            <NumericPlayingCard
+              digit={digit}
+              size="small"
+              variant="cyan"
+              style="neon"
+              neonVariant="matrix"
+              animated={false}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
+    </motion.div>
+  )
+}
+
 function HoleCards({
   holes,
   folded,
@@ -123,6 +192,11 @@ function PlayerShowdownPod({
           {row.name}
         </span>
         <HoleCards holes={row.holes} folded={row.hasFolded} compact />
+        <ChosenCommunityCards
+          board={row.communityBoard}
+          chosenIndices={row.answerCommunityIndices}
+          compact
+        />
         <span className="font-mono text-[0.7rem] font-black tabular-nums text-amber-200">
           {hasGuess ? formatTriviaNumber(row.submitted) : '—'}
         </span>
@@ -168,6 +242,12 @@ function PlayerShowdownPod({
       </p>
 
       <HoleCards holes={row.holes} folded={row.hasFolded} compact={false} />
+
+      <ChosenCommunityCards
+        board={row.communityBoard}
+        chosenIndices={row.answerCommunityIndices}
+        compact={false}
+      />
 
       <motion.div
         className="flex min-h-[2.75rem] w-full flex-col items-center justify-center rounded-lg border border-amber-500/25 px-2 py-1.5"

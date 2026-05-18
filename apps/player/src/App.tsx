@@ -193,7 +193,11 @@ function PlayerApp() {
       setTimeout(() => setToastMessage(null), 4000)
       return
     }
-    submitAnswer(composedAnswer.value, (ack: { ok: boolean; message: string }) => {
+    const composition = selectedCards.map((sc) => ({
+      source: sc.type,
+      index: sc.index,
+    }))
+    submitAnswer(composedAnswer.value, composition, (ack: { ok: boolean; message: string }) => {
       if (ack.ok) {
         setToastMessage(`Answer submitted: ${composedAnswer.display}`)
       } else {

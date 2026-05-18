@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto'
 import {
   addPlayer,
   removePlayer,
+  inferAnswerComposition,
   submitAnswer,
   foldPlayer,
   playerCheck,
@@ -157,7 +158,12 @@ function stepVirtualSimulation(state: GameState): GameState {
   if (virtualFirstNeedingAnswer && state.phase === 'answering' && state.round.question) {
     const digits = [...virtualFirstNeedingAnswer.hand, ...state.round.communityCards].map((c) => c.digit)
     const answer = nearestGuessFromDigits(digits, state.round.question.answer)
-    return submitAnswer(state, virtualFirstNeedingAnswer.id, answer)
+    const composition = inferAnswerComposition(
+      virtualFirstNeedingAnswer.hand,
+      state.round.communityCards,
+      answer
+    )
+    return submitAnswer(state, virtualFirstNeedingAnswer.id, answer, composition ?? undefined)
   }
 
   if (state.phase !== 'betting' || state.round.isBettingOpen === false) return state

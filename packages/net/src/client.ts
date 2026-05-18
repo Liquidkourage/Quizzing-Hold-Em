@@ -482,11 +482,21 @@ export function allIn(callback?: (ack: ServerAck) => void) {
   if (callback) socket.once('ack', callback)
 }
 
-export function submitAnswer(answer: number, callback?: (ack: ServerAck) => void) {
+export function submitAnswer(
+  answer: number,
+  composition?: Array<{ source: 'hole' | 'community'; index: number }>,
+  callback?: (ack: ServerAck) => void
+) {
   if (!socket) return
-  socket.emit('action', { 
-    type: 'submitAnswer', 
-    payload: { playerId: socket.id, answer } 
+  const cb = typeof composition === 'function' ? composition : callback
+  const picks = typeof composition === 'function' ? undefined : composition
+  socket.emit('action', {
+    type: 'submitAnswer',
+    payload: {
+      playerId: socket.id,
+      answer,
+      ...(picks != null && picks.length === 5 ? { composition: picks } : {}),
+    },
   })
   if (callback) {
     socket.once('ack', callback)
