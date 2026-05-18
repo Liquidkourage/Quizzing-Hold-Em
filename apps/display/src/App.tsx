@@ -161,22 +161,27 @@ function tuneHoleCardDealFlightEndpoint(endpoint: CardPlaneEndpoint): CardPlaneE
 }
 
 /** Horizontal elongation only — wider rail, same height as the original 810×605 authoring. */
-const HERO_TABLE_WIDTH_SCALE = 1.75
+const HERO_TABLE_WIDTH_SCALE = 1.4
 const HERO_RAIL_BASE_W_PX = 810
 const HERO_RAIL_BASE_H_PX = 605
 const HERO_RAIL_W_PX = Math.round(HERO_RAIL_BASE_W_PX * HERO_TABLE_WIDTH_SCALE)
 const HERO_RAIL_H_PX = HERO_RAIL_BASE_H_PX
-const HERO_RAIL_W_EXTRA_PX = (HERO_RAIL_W_PX - HERO_RAIL_BASE_W_PX) / 2
 const HERO_RAIL_SHADOW_W_PX = Math.round(842 * HERO_TABLE_WIDTH_SCALE)
 const HERO_RAIL_SHADOW_H_PX = 637
+
+/** Cupholder orbit center / semi-axes tuned at 810×605; X tracks rail width so rims stay on the rail edge. */
+const HERO_CUPHOLDER_CENTER_X = () => Math.round(HERO_RAIL_W_PX / 2 - 11)
+const HERO_CUPHOLDER_CENTER_Y = 293
+const HERO_CUPHOLDER_RADIUS_X = () => Math.round(HERO_RAIL_W_PX / 2 - 13)
+const HERO_CUPHOLDER_RADIUS_Y = 316
 
 /**
  * Matches cupholder ellipse math ({@link DisplayTableLive} large felt) — offset px from top-left of rail box origin.
  */
 function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: number } {
   const angle = (index / total) * 2 * Math.PI - Math.PI / 2
-  const baseRadiusX = 392 * HERO_TABLE_WIDTH_SCALE
-  const baseRadiusY = 316
+  const baseRadiusX = HERO_CUPHOLDER_RADIUS_X()
+  const baseRadiusY = HERO_CUPHOLDER_RADIUS_Y
   let ox = Math.cos(angle) * baseRadiusX
   let oy = Math.sin(angle) * baseRadiusY
   const normalizedAngle = ((angle + Math.PI / 2) % (2 * Math.PI)) / (2 * Math.PI)
@@ -192,7 +197,7 @@ function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: num
     const bowAmount = Math.abs(Math.cos(angle)) * 24.3
     oy = 291.6 - bowAmount
   } else if (isCorner) {
-    ox = Math.cos(angle) * (baseRadiusX + 0.81 * HERO_TABLE_WIDTH_SCALE)
+    ox = Math.cos(angle) * (baseRadiusX + 0.81)
     oy = Math.sin(angle) * (baseRadiusY + 0.81)
   }
   return { ox, oy }
@@ -200,12 +205,16 @@ function heroSeatCupOffsets(index: number, total: number): { ox: number; oy: num
 
 /** Visual center-ish under pot / community arc on authoring table (px, same coords as cupholders). */
 const HERO_TABLE_POT_ANCHOR = {
-  cx: Math.round(406 + HERO_RAIL_W_EXTRA_PX),
+  get cx() {
+    return Math.round(HERO_CUPHOLDER_CENTER_X() + 12)
+  },
   cy: 298,
 } as const
 const HERO_CUPHOLDER_ORIGIN = {
-  left: Math.round(394 + HERO_RAIL_W_EXTRA_PX),
-  top: 293,
+  get left() {
+    return HERO_CUPHOLDER_CENTER_X()
+  },
+  top: HERO_CUPHOLDER_CENTER_Y,
 } as const
 
 function heroFeltPointTowardPot(
