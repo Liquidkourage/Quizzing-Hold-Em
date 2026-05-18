@@ -1462,6 +1462,7 @@ function emitDisplayVenueSnapshotNow(vnRaw: string) {
     let showdownQuestionText: string | null | undefined
     let seatSubmittedAnswers: (number | null)[] | undefined
     let seatAnswerCommunityIndices: (readonly number[] | null)[] | undefined
+    let seatChipPayout: (number | null)[] | undefined
     if (gs.phase === 'showdown' || gs.phase === 'reveal') {
       const q = gs.round.question
       if (q != null && typeof q.answer === 'number' && Number.isFinite(q.answer)) {
