@@ -2067,7 +2067,7 @@ function DisplayTableLive({
         <motion.div className={`${dockCls} inset-0 z-[60] flex items-center justify-center p-3 sm:p-6`}>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(20,80,45,0.35),rgba(0,0,0,0.88)_70%)] backdrop-blur-md" />
           <motion.div
-            className="relative w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl"
+            className="relative w-full max-w-4xl sm:max-w-5xl lg:max-w-6xl"
             initial={{ opacity: 0, scale: 0.92, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 220, damping: 22 }}
