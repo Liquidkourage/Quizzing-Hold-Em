@@ -265,8 +265,9 @@ function seatThetaRad(seatIndex: number): number {
 }
 
 /**
- * Mosaic crawl: center each seat dot on the amber rail band (midpoint between wrapper
- * outline and felt inset). Matches the painted rail better than outer-edge capsule math.
+ * Mosaic crawl: seat dots on the amber rail, evenly spaced by seat index around the table.
+ * Uses distance from the **table center** along each seat ray (outer rim vs felt inset).
+ * Do not average outer/inner hit XY — felt uses a shifted center and pulls side seats inward.
  */
 function mosaicSeatDotPct(
   seatIndex: number,
@@ -275,10 +276,15 @@ function mosaicSeatDotPct(
 ): { leftPct: number; topPct: number } {
   const ww = w > 0 ? w : MOSAIC_RING_FALLBACK_W_PX
   const hh = h > 0 ? h : MOSAIC_RING_FALLBACK_H_PX
+  const cx = ww / 2
+  const cy = hh / 2
+  const halfW = ww / 2
+  const halfH = hh / 2
   const θ = seatThetaRad(seatIndex)
   const dx = Math.cos(θ)
   const dy = Math.sin(θ)
-  const outerHit = capsuleBoundaryHitPx(ww / 2, hh / 2, ww / 2, hh / 2, dx, dy)
+
+  const outerHit = capsuleBoundaryHitPx(cx, cy, halfW, halfH, dx, dy)
   if (!outerHit) return { leftPct: 50, topPct: 50 }
 
   const felt = venueFeltBoundsFrac()
@@ -290,20 +296,15 @@ function mosaicSeatDotPct(
     dx,
     dy
   )
-  if (!innerHit) {
-    return {
-      leftPct: (outerHit.x / ww) * 100,
-      topPct: (outerHit.y / hh) * 100,
-    }
-  }
 
-  const mx = (outerHit.x + innerHit.x) / 2
-  const my = (outerHit.y + innerHit.y) / 2
-  const nLen = Math.hypot(outerHit.nx, outerHit.ny) || 1
-  const ux = outerHit.nx / nLen
-  const uy = outerHit.ny / nLen
-  const x = mx + ux * 1.25
-  const y = my + uy * 1.25
+  const outerDist = Math.hypot(outerHit.x - cx, outerHit.y - cy)
+  const innerDist = innerHit
+    ? Math.hypot(innerHit.x - cx, innerHit.y - cy)
+    : outerDist * (felt.halfW / 0.5)
+  /** ~mid-rail between felt lip and outer rim (0 = felt, 1 = outer). */
+  const railDist = innerDist + (outerDist - innerDist) * 0.58
+  const x = cx + dx * railDist
+  const y = cy + dy * railDist
   return { leftPct: (x / ww) * 100, topPct: (y / hh) * 100 }
 }
 
